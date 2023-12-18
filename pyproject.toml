@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "choice-learn-private"
+authors = [
+  { name = "VincentAuriau", email = "vincent.auriau@artefact.com" }
+]
+description = "choice-learn is a Python package designed to help you build with ease a discrete choice model."
+version = "0.0.1"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[project.urls]
+"Homepage" = "https://github.com/artefactory/choice-learn-private"
+"Documentation" = "https://artefactory.github.io/choice-learn-private"
+
+[tool.setuptools]
+packages = ["lib", "config", "tests"]
+
+[tool.ruff]
+select = [
+  "E",
+  "W",
+  "F",
+  "I",
+  "N",
+  "D",
+  "ANN",
+  "Q",
+  "RET",
+  "ARG",
+  "PTH",
+  "PD",
+] # See: https://beta.ruff.rs/docs/rules/
+ignore = ["D203", "D213", "ANN101", "ANN102"]
+line-length = 100
+target-version = "py310"
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.isort]
+known-first-party = ["lib", "config", "tests"]

@@ -1,0 +1,42 @@
+site_name: choice-learn-private
+
+theme:
+  name: "material"
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: default
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/moon-waning-crescent
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: slate
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/white-balance-sunny
+        name: Switch to light mode
+  features:
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+plugins:
+  - mkdocstrings
+  - search
+
+nav:
+  - Home: index.md
+  - Source code: code.md
