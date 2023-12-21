@@ -1,4 +1,4 @@
-"""Main classes to handle assortment data"""
+"""Main classes to handle assortment data."""
 
 import numpy as np
 import pandas as pd
@@ -7,15 +7,18 @@ from choice_modeling.data.store import Store
 
 
 class ChoiceDataset(object):
-    """
-    Version of ChoiceDataset where the choices are given as a ragged list of choices for each session.
-    It is particularly useful if several (a lot) of choices happen during the same session.
-    For example if we have the same customer buying several items during the same session, all its choices
+    """ChoiceDataset is the main class to handle assortment data minimizing RAM usage.
+
+    The choices are given as a ragged list of choices
+    for each session. It is particularly useful if several (a lot) of choices happen
+    during the same session. For example if we have the same customer buying several
+    items during the same session, all its choices
     can be regrouped under the same session_features. Limits data duplication in such cases.
 
-    The class has same methods/arguments as ChoiceDatset with a slight difference with self.choices being
-    a ragged list. The returned features in self.__getitem__ are the same as ChoiceDataset.
-    When calling __getitem__(index) we map index to a session index and a choice index within the session.
+    The class has same methods/arguments as ChoiceDatset with a slight difference with
+    self.choices being a ragged list. The returned features in self.__getitem__ are the same
+    as ChoiceDataset. When calling __getitem__(index) we map index to a session index and a
+    choice index within the session.
     """
 
     def __init__(
@@ -31,28 +34,30 @@ class ChoiceDataset(object):
         batch_size=16,
         shuffle=False,
     ):
-        """
-        Builds the ChoiceDataset
+        """Builds the ChoiceDataset.
 
         Parameters
         ----------
         items_features : tuple of (array_like, )
-            matrix of shape (num_items, num_items_features) containing the features of the items e.g. item color
+            matrix of shape (num_items, num_items_features) containing the features of the items
+            e.g. item color
         sessions_features : tuple of (array_like, )
-            matrix of shape (num_sessions, num_sess_features) containing the features of the sessions e.g. day of week
+            matrix of shape (num_sessions, num_sess_features) containing the features of the
+            sessions e.g. day of week
         sessions_items_features : tuple of (array_like, )
-            matrix of shape (num_sessions, num_items, num_ses_items_features) containing the item features varying over sessions, e.g. prices
+            matrix of shape (num_sessions, num_items, num_ses_items_features) containing the item
+            features varying over sessions, e.g. prices
         sessions_items_availabilities : array_like
-            binary matrix of shape (num_sessions, num_items) containing the availabitilies of products (1. if present 0. otherwise) over sessions
+            binary matrix of shape (num_sessions, num_items) containing the availabitilies of
+            products (1. if present 0. otherwise) over sessions
         choices: list of list
-            for each sessions we have a list of related choices. Main list has same legnth as session_features and sessions_items_features.
+            for each sessions we have a list of related choices. Main list has same legnth as
+            session_features and sessions_items_features.
         batch_size: int, optional
             size of the batches to return in __iter__ method
         suffle: bool, optional
             whether to shuffle the dataset or not
-
         """
-
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
@@ -62,7 +67,11 @@ class ChoiceDataset(object):
             self._return_items_features_tuple = False
         # items_features is already a tuple, names are given, checking consistency
         elif items_features is not None and items_features_names is not None:
-            assert len(items_features) == len(items_features_names) or items_features_names is None
+            if (
+                len(items_features) != len(items_features_names)
+                and items_features_names is not None
+            ):
+                raise ValueError("items_features shape and items_features_names shape do not match")
             self._return_items_features_tuple = True
         # In this case names are missing, still transform it as a tuple
         elif items_features is not None:
@@ -77,10 +86,14 @@ class ChoiceDataset(object):
             self._return_sessions_features_tuple = False
         # sessions_features is already a tuple, names are given, checking consistency
         elif sessions_features is not None and sessions_features_names is not None:
-            assert (
-                len(sessions_features) == len(sessions_features_names)
-                or sessions_features_names is None
-            )
+            if (
+                len(sessions_features) != len(sessions_features_names)
+                and sessions_features_names is not None
+            ):
+                raise ValueError(
+                    "sessions_features shape and sessions_features_names shape \
+                                 do not match"
+                )
             self._return_sessions_features_tuple = True
         # In this case names are missing, still transform it as a tuple
         elif sessions_features is not None:
@@ -95,10 +108,14 @@ class ChoiceDataset(object):
             self._return_sessions_items_features_tuple = False
         # sessions_items_features is already a tuple, names are given, checking consistency
         elif sessions_items_features is not None and sessions_items_features_names is not None:
-            assert (
-                len(sessions_items_features) == len(sessions_items_features_names)
-                or sessions_items_features_names is None
-            )
+            if (
+                len(sessions_items_features) != len(sessions_items_features_names)
+                and sessions_items_features_names is not None
+            ):
+                raise ValueError(
+                    "sessions_items_features shape and \
+                                    sessions_items_features_names shape do not match"
+                )
             self._return_sessions_items_features_tuple = True
         # In this case names are missing, still transform it as a tuple
         elif sessions_items_features is not None:
@@ -108,7 +125,8 @@ class ChoiceDataset(object):
         # --------- [Normalizing features types (DataFrame, List, etc...) -> np.ndarray] --------- #
         #
         # Part of this code is for handling features given as pandas.DataFrame
-        # Basically it transforms them to be internally stocked as np.ndarray and keep columns names as features names
+        # Basically it transforms them to be internally stocked as np.ndarray and keep columns
+        # names as features names
 
         # Handling items_features
         for i, feature in enumerate(items_features):
@@ -118,7 +136,7 @@ class ChoiceDataset(object):
                     feature = feature.set_index("item_id")
                 items_features = (
                     items_features[:i]
-                    + (feature.loc[np.sort(feature.index)].values,)
+                    + (feature.loc[np.sort(feature.index)].to_numpy(),)
                     + items_features[i + 1 :]
                 )
                 items_features_names = (
@@ -137,7 +155,7 @@ class ChoiceDataset(object):
                     feature = feature.set_index("session_id")
                 sessions_features = (
                     sessions_features[:i]
-                    + (feature.loc[np.sort(feature.index)].values,)
+                    + (feature.loc[np.sort(feature.index)].to_numpy(),)
                     + sessions_features[i + 1 :]
                 )
                 sessions_features_names = (
@@ -228,8 +246,8 @@ class ChoiceDataset(object):
         self.indexer = ChoiceDatasetIndexer(self)
 
     def _build_indexes(self, choices):
-        """
-        Builds the indexes dictionnary from the choices.
+        """Builds the indexes dictionnary from the choices.
+
         Particularly creates a flatten version of the choices and associates an index so that we can
         retrieve from this index the session and the corresponding choice.
 
@@ -238,7 +256,7 @@ class ChoiceDataset(object):
         choices: list of list
             raffed version of the choices
 
-        Returns:
+        Returns::
         --------
         indexes: dict
             dictionnary of indexes: {index: corresponding_session_index}
@@ -252,7 +270,7 @@ class ChoiceDataset(object):
             elif len(np.squeeze(choices).shape) == 0:
                 indexes = {i: i for i in range(len(choices))}
                 flat_choices = np.array([np.squeeze(self.ragged_choices)])
-        except:  # Ragged sequence of choices
+        except ValueError:  # Ragged sequence of choices
             indexes = {}
             flat_choices = []
             total_count = 0
@@ -264,8 +282,9 @@ class ChoiceDataset(object):
         return indexes, np.array(flat_choices)
 
     def _check_dataset(self):
-        """
-        Verifies that the shapes of the different features are consistent
+        """Verifies that the shapes of the different features are consistent.
+
+        Particularly:
             - Over number of items
             - Over number of sessions
         Verifies that the choices have coherent values
@@ -275,8 +294,9 @@ class ChoiceDataset(object):
         self._check_choices_coherence()
 
     def _check_num_items_shapes(self):
-        """
-        Verifies that the shapes of the different features are consistent over number of items
+        """Verifies that the shapes of the different features are consistent over number of items.
+
+        Particularly:
             - items_features
             - sessions_items_features
             - sessions_items_availabilities
@@ -296,23 +316,26 @@ class ChoiceDataset(object):
 
         if self.items_features is not None:
             for items_feature in self.items_features:
-                assert (
-                    items_feature.shape[0] == base_num_items
-                ), f"shapes are (f{items_feature.shape[0]}, {base_num_items})"
+                if items_feature.shape[0] != base_num_items:
+                    raise ValueError(f"shapes are (f{items_feature.shape[0]}, {base_num_items})")
 
         if self.sessions_items_features is not None:
             for sessions_items_feature in self.sessions_items_features:
-                assert (
-                    sessions_items_feature.shape[1] == base_num_items
-                ), f"shapes are (f{sessions_items_feature.shape[1]}, {base_num_items})"
+                if sessions_items_feature.shape[1] != base_num_items:
+                    raise ValueError(
+                        f"shapes are (f{sessions_items_feature.shape[1]}, {base_num_items})"
+                    )
         if self.sessions_items_availabilities is not None:
-            assert (
-                self.sessions_items_availabilities.shape[1] == base_num_items
-            ), f"shapes are (f{self.sessions_items_availabilities.shape[1]}, {base_num_items})"
+            if self.sessions_items_availabilities.shape[1] != base_num_items:
+                raise ValueError(
+                    f"shapes are (f{self.sessions_items_availabilities.shape[1]}, \
+                                 {base_num_items})"
+                )
 
     def _check_num_sessions_shapes(self):
-        """
-        Verifies that the shapes of the different features are consistent over number of sessions
+        """Verifies that the shapes of the different features are consistent over nb of sessions.
+
+        Particularly:
             - sessions_features
             - sessions_items_features
             - sessions_items_availabilities
@@ -323,30 +346,37 @@ class ChoiceDataset(object):
 
         if self.sessions_features is not None:
             for sessions_feature in self.sessions_features:
-                assert (
-                    sessions_feature.shape[0] == base_num_sessions
-                ), f"shapes are: ({sessions_feature.shape[0]}, {base_num_sessions})"
+                if sessions_feature.shape[0] != base_num_sessions:
+                    raise ValueError(
+                        f"shapes are ({sessions_feature.shape[0]}, {base_num_sessions})"
+                    )
 
         if self.sessions_items_features is not None:
             for sessions_items_feature in self.sessions_items_features:
-                assert (
-                    sessions_items_feature.shape[0] == base_num_sessions
-                ), f"shapes are: ({sessions_items_feature.shape[0]}, {base_num_sessions})"
+                if sessions_items_feature.shape[0] != base_num_sessions:
+                    raise ValueError(
+                        f"shapes are: ({sessions_items_feature.shape[0]}, \
+                                     {base_num_sessions})"
+                    )
         if self.sessions_items_availabilities is not None:
-            assert (
-                self.sessions_items_availabilities.shape[0] == base_num_sessions
-            ), f"shapes are: ({self.sessions_items_availabilities.shape[0]}, {base_num_sessions})"
+            if self.sessions_items_availabilities.shape[0] != base_num_sessions:
+                raise ValueError(
+                    f"shapes are: ({self.sessions_items_availabilities.shape[0]}, \
+                        {base_num_sessions})"
+                )
 
     def _check_choices_coherence(self):
-        """
-        Verifies that the choices are coherent with the number of items present in other features.
+        """Verifies that the choices are coherent with the nb of items present in other features.
+
         Particularly:
             - There is no choice index higher than detected number of items
             - All items are present at least once in the choices
         """
-        msg = f"Choices values not coherent with number of items given in features. In particular, \
-        max value of choices is {np.max(self.choices)} while number of items is {self.base_num_items}"
-        assert np.max(self.choices) < self.base_num_items, msg
+        if np.max(self.choices) > self.base_num_items:
+            msg = f"Choices values not coherent with number of items given in features.  \
+            In particular, max value of choices is {np.max(self.choices)} while number of  \
+            items is {self.base_num_items}"
+            raise ValueError(msg)
 
         unique_choices = set(np.unique(self.choices).flatten())
         missing_choices = set(np.arange(start=0, stop=self.base_num_items, step=1)) - unique_choices
@@ -354,8 +384,9 @@ class ChoiceDataset(object):
             print(f"Some choices never happen in the dataset: {missing_choices}")
 
     def _check_types(self):
-        """
-        Checks types of elements and store it in order to return right types.
+        """Checks types of elements and store it in order to return right types.
+
+        Particularly:
             - Either int32 or float32 consistently for features.
                 float32 is to be preferred unless One-Hot encoding is used.
             - float32 for sessions_items_availabilities
@@ -395,19 +426,24 @@ class ChoiceDataset(object):
         return return_types
 
     def _check_names(self):
+        """Verifies that the names given to features are consistent with the features themselves."""
         if self.items_features_names is not None:
             for name, features in zip(self.items_features_names, self.items_features):
                 if name is not None:
-                    assert (
-                        len(name) == features.shape[1]
-                    ), f"Specififed items_features_names has length {len(name)} while items_features has {features.shape[1]} elements"
+                    if len(name) != features.shape[1]:
+                        raise ValueError(
+                            f"Specififed items_features_names has \
+                    length {len(name)} while items_features has {features.shape[1]} elements"
+                        )
 
         if self.sessions_features_names is not None:
             for name, features in zip(self.sessions_features_names, self.sessions_features):
                 if name is not None:
-                    assert (
-                        len(name) == features.shape[1]
-                    ), f"Specififed sessions_features_names has length {len(name)} while sessions_features has {features.shape[1]} elements"
+                    if len(name) != features.shape[1]:
+                        raise ValueError(
+                            f"Specified sessions_features_names has \
+                    length {len(name)} while sessions_features has {features.shape[1]} elements"
+                        )
 
         if self.sessions_items_features_names is not None:
             for (
@@ -415,25 +451,27 @@ class ChoiceDataset(object):
                 features,
             ) in zip(self.sessions_items_features_names, self.sessions_items_features):
                 if name is not None:
-                    assert (
-                        len(name) == features.shape[1]
-                    ), f"Specififed sessions_items_features_names has length {len(name)} while sessions_items_features has {features.shape[1]} elements"
+                    if len(name) != features.shape[1]:
+                        raise ValueError(
+                            f"Specified \
+                        sessions_items_features_names has length {len(name)} while \
+                        sessions_items_features has {features.shape[1]} elements"
+                        )
 
     def __len__(self):
         """Returns length of the dataset e.g. total number of sessions.
 
         Returns:
-        --------
+        -------
         int
             total number of sessions
         """
         return self.base_num_sessions
 
     def get_num_items(self):
-        """
-        Method to access the total number of different items
+        """Method to access the total number of different items.
 
-        Returns
+        Returns:
         -------
         int
             total number of different items
@@ -441,11 +479,11 @@ class ChoiceDataset(object):
         return self.base_num_items
 
     def get_num_sessions(self):
-        """
-        Method to access the total number of different sessions.
+        """Method to access the total number of different sessions.
+
         Redundant with __len__ method.
 
-        Returns
+        Returns:
         -------
         int
             total number of different sessions
@@ -453,10 +491,9 @@ class ChoiceDataset(object):
         return len(self)
 
     def get_num_choices(self):
-        """
-        Method to access the total number of different sessions
+        """Method to access the total number of different sessions.
 
-        Returns
+        Returns:
         -------
         int
             total number of different sessions
@@ -486,7 +523,7 @@ class ChoiceDataset(object):
         features : list
             List of columns of df that represents the items_features (for sessions_items_features)
 
-        Returns
+        Returns:
         -------
         np.ndarray of shape (n_sessions, n_items, n_features)
             Corresponding sessions_items_features
@@ -520,7 +557,7 @@ class ChoiceDataset(object):
                     item_df = sess_df.loc[sess_df[items_id_column] == item]
                     if len(item_df) > 0:
                         if features is not None:
-                            sess_feats.append(item_df[features].values[0])
+                            sess_feats.append(item_df[features].to_numpy()[0])
                         sess_av.append(1)
                     else:
                         if features is not None:
@@ -566,12 +603,11 @@ class ChoiceDataset(object):
         choices_column: str, optional
             Name of the column containing the choices, default is "choice"
 
-        Returns
+        Returns:
         -------
         ChoiceDataset
             corresponding ChoiceDataset
         """
-
         # Ordering items and sessions by id
         items = np.sort(df[items_id_column].unique())
         sessions = np.sort(df[sessions_id_column].unique())
@@ -579,7 +615,7 @@ class ChoiceDataset(object):
         if items_features_columns is not None:
             items_features = df[items_features_columns + [items_id_column]].drop_duplicates()
             items_features = items_features.set_index(items_id_column)
-            items_features = (items_features.loc[items].values,)
+            items_features = (items_features.loc[items].to_numpy(),)
 
             items_features_columns = (items_features_columns,)
         else:
@@ -590,7 +626,7 @@ class ChoiceDataset(object):
                 sessions_features_columns + [sessions_id_column]
             ].drop_duplicates()
             sessions_features = sessions_features.set_index(sessions_id_column)
-            sessions_features = (sessions_features.loc[sessions].values,)
+            sessions_features = (sessions_features.loc[sessions].to_numpy(),)
 
             sessions_features_columns = (sessions_features_columns,)
         else:
@@ -616,7 +652,7 @@ class ChoiceDataset(object):
         if choice_mode == "item_id":
             choices = df[[choices_column, sessions_id_column]].drop_duplicates(sessions_id_column)
             choices = choices.set_index(sessions_id_column)
-            choices = choices.loc[sessions].values
+            choices = choices.loc[sessions].to_numpy()
             # items is the value (str) of the item
             choices = [np.where(items == c)[0] for c in choices]
         elif choice_mode == "one_zero":
@@ -626,7 +662,7 @@ class ChoiceDataset(object):
             choices = (
                 choices.loc[sessions][items_id_column]
                 .map({k: v for v, k in enumerate(items)})
-                .values
+                .to_numpy()
             )
         else:
             raise ValueError(
@@ -645,14 +681,16 @@ class ChoiceDataset(object):
         )
 
     def save(self):
+        """Method to save the dataset."""
         raise NotImplementedError
 
     def summary(self):
+        """Method to display a summary of the dataset."""
         raise NotImplementedError
 
     def get_choice_batch(self, choice_index):
-        """
-        Method to access data within the ListChoiceDataset from its index.
+        """Method to access data within the ListChoiceDataset from its index.
+
         One index corresponds to a choice within a session.
 
         Return order:
@@ -694,7 +732,8 @@ class ChoiceDataset(object):
                     else sessions_feature.iloc[sessions_indexes]
                     for i, sessions_feature in enumerate(self.sessions_features)
                 )
-                # sessions_features were not given as a tuple, so we return do not return it as a tuple
+                # sessions_features were not given as a tuple, so we return do not return it
+                # as a tuple
                 if not self._return_sessions_features_tuple:
                     sessions_features = sessions_features[0]
 
@@ -709,7 +748,8 @@ class ChoiceDataset(object):
                     else sessions_items_feature.iloc[sessions_indexes]
                     for i, sessions_items_feature in enumerate(self.sessions_items_features)
                 )
-                # sessions_items_features were not given as a tuple, so we return do not return it as a tuple
+                # sessions_items_features were not given as a tuple, so we return do not return
+                # it as a tuple
                 if not self._return_sessions_items_features_tuple:
                     sessions_items_features = sessions_items_features[0]
 
@@ -730,7 +770,7 @@ class ChoiceDataset(object):
                 choice,
             )
 
-        elif isinstance(choice_index, slice):
+        if isinstance(choice_index, slice):
             return self.get_choice_batch(list(range(*choice_index.indices(self.choices.shape[0]))))
 
         session_index = self.indexes[choice_index]
@@ -777,7 +817,7 @@ class ChoiceDataset(object):
         indexes : np.ndarray
             indexes of the sessions to keep, shape should be (num_sessions,)
 
-        Returns
+        Returns:
         -------
         ChoiceDataset
             ChoiceDataset with only the sessions indexed by indexes
@@ -806,11 +846,10 @@ class ChoiceDataset(object):
         )
 
     def batch(self, batch_size=None, shuffle=None, sample_weight=None):
-        """
-        Iterates over dataset return batches of length self.batch_size
+        """Iterates over dataset return batches of length self.batch_size.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         batch_size : int
             batch size to set
         shuffle: bool
@@ -836,9 +875,12 @@ class ChoiceDataset(object):
         while yielded_size < num_choices:
             # Return sample_weight if not None, for index matching
             if sample_weight is not None:
-                yield self.get_choice_batch(
-                    indexes[yielded_size : yielded_size + batch_size].tolist()
-                ), sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()]
+                yield (
+                    self.get_choice_batch(
+                        indexes[yielded_size : yielded_size + batch_size].tolist()
+                    ),
+                    sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()],
+                )
             else:
                 yield self.get_choice_batch(
                     indexes[yielded_size : yielded_size + batch_size].tolist()
@@ -851,4 +893,5 @@ class ChoiceDataset(object):
 
     @property
     def iloc(self):
+        """Indexer."""
         return self.indexer
