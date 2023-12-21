@@ -30,7 +30,7 @@ repos:
         name: Security check (bandit)
         entry: bandit
         types: [python]
-        args: ["-x", "tests", --recusrive, lib]
+        args: ["-x", "tests", --recursive, lib]
         language: system
       - id: pytest-check
         name: Tests (pytest)
