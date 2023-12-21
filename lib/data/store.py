@@ -1,18 +1,19 @@
+"""Different classes to optimize RAM usage with repeated features over time."""
 import numpy as np
 from choice_modeling.data.indexer import OneHotStoreIndexer, StoreIndexer
 
 
 class Store(object):
-    """Class to keep OneHotStore and FeaturesStore with same parent"""
+    """Class to keep OneHotStore and FeaturesStore with same parent."""
 
     def __init__(self, indexes=None, values=None, sequence=None, name=None, indexer=StoreIndexer):
-        """
-        Builds the store
+        """Builds the store.
 
         Parameters
         ----------
         indexes : array_like or None
-            list of indexes of features to store. If None is given, indexes are created from apparition order of values
+            list of indexes of features to store. If None is given, indexes are created from
+            apparition order of values
         values : array_like
             list of values of features to store
         sequence : array_like
@@ -29,49 +30,52 @@ class Store(object):
         if sequence is not None and values is not None:
             try:
                 width = len(values[0])
-            except:
+            except TypeError:
                 width = 1
             self.shape = (len(sequence), width)
 
         self.indexer = indexer(self)
 
     def _get_store_element(self, index):
-        """
-        Returns the features stored at index index. Compared to __getitem__, it does take the index-th
-        element of sequence but the index-th element of the store.
+        """Getter method over self.sequence.
+
+        Returns the features stored at index index. Compared to __getitem__, it does take
+        the index-th element of sequence but the index-th element of the store.
 
         Parameters
         ----------
         index : (int, list, slice)
             index argument of the feature
 
-        Returns
-        -------
+        Returns:
+        --------
         array_like
             features corresponding to the index index in self.store
         """
         if isinstance(index, list):
             return [self.store[i] for i in index]
-        else:
-            return self.store[index]
+        # else:
+        return self.store[index]
 
     def __len__(self):
+        """Returns the length of the sequence of apparition of the features."""
         return len(self.sequence)
 
     @property
     def iloc(self):
+        """Indexing attribute."""
         return self.indexer
 
 
 class FeaturesStore(Store):
-    """
-    Base class to store features and a sequence of apparitions.
+    """Base class to store features and a sequence of apparitions.
+
     Mainly useful when features are repeated frequently over the sequence.
     An example would be to store the features of a customers (supposing that the same customers come
     several times over the work sequence) and to save which customer is concerned for each choice.
 
-    Attributes
-    ----------
+    Attributes:
+    -----------
     store : dict
         Dictionary stocking features that can be called from indexes: {index: features}
     shape : tuple
@@ -86,8 +90,7 @@ class FeaturesStore(Store):
 
     @classmethod
     def from_dict(cls, values_dict, sequence):
-        """
-        Instantiates the FeaturesStore from a dictionary of values
+        """Instantiates the FeaturesStore from a dictionary of values.
 
         Parameters
         ----------
@@ -96,8 +99,8 @@ class FeaturesStore(Store):
         sequence : array_like
             sequence of apparitions of the features
 
-        Returns
-        -------
+        Returns:
+        --------
         FeaturesStore created from the values in the dictionnary
         """
         # Check uniform shape of values
@@ -107,8 +110,8 @@ class FeaturesStore(Store):
 
     @classmethod
     def from_list(cls, values_list, sequence):
-        """
-        Instantiates the FeaturesStore from a list of values
+        """Instantiates the FeaturesStore from a list of values.
+
         Creates indexes for each value
 
         Parameters
@@ -118,8 +121,8 @@ class FeaturesStore(Store):
         sequence : array_like
             sequence of apparitions of the features
 
-        Returns
-        -------
+        Returns:
+        --------
         FeaturesStore
         """
         # Check uniform shape of list
@@ -127,16 +130,15 @@ class FeaturesStore(Store):
         return cls(indexes=list(range(len(values_list))), values=values_list, sequence=sequence)
 
     def __getitem__(self, sequence_index):
-        """
-        Subsets self with sequence_index
+        """Subsets self with sequence_index.
 
         Parameters
         ----------
         sequence_index : (int, list, slice)
             index position of the sequence
 
-        Returns
-        -------
+        Returns:
+        --------
         array_like
             features corresponding to the sequence_index-th position of sequence
         """
@@ -154,8 +156,9 @@ class FeaturesStore(Store):
         return FeaturesStore.from_dict(store, new_sequence)
 
     def astype(self, dtype):
-        """
-        Changes the dtype of the features. The type of the features should implement the astype method.
+        """Changes the dtype of the features.
+
+        The type of the features should implement the astype method.
         Typically, should work like np.ndarrays.
 
         Parameters
@@ -168,8 +171,9 @@ class FeaturesStore(Store):
 
 
 class OneHotStore(Store):
-    """
-    Specific FeaturesStore for one hot features storage. Inherits from FeaturesStore.
+    """Specific FeaturesStore for one hot features storage.
+
+    Inherits from FeaturesStore.
     For example can be used to store a OneHot representation of the days of week.
 
     Has the same attributes as FeaturesStore, only differs whit some One-Hot optimized methods.
@@ -183,15 +187,16 @@ class OneHotStore(Store):
         name=None,
         dtype=np.float32,
     ):
-        """
-        Builds the OneHot features store
+        """Builds the OneHot features store.
 
         Parameters
         ----------
         indexes : array_like or None
-            list of indexes of features to store. If None is given, indexes are created from apparition order of values
+            list of indexes of features to store. If None is given, indexes are created from
+            apparition order of values
         values : array_like or None
-            list of values of features to store that must be One-Hot. If None given they are created from order of apparition in sequence
+            list of values of features to store that must be One-Hot. If None given they are created
+            from order of apparition in sequence
         sequence : array_like
             sequence of apparitions of the features
         name: string, optional
@@ -212,17 +217,18 @@ class OneHotStore(Store):
     @classmethod
     def from_sequence(cls, sequence):
         """Creates a OneHotFeatureStore from a sequence of apparition.
-        One Hot vector are created from the order of apparition in the sequence: feature vectors created
-        have a length of the number of different values in the sequence and the 1 is positioned in order of
-        first appartitions in the sequence.
+
+        One Hot vector are created from the order of apparition in the sequence: feature vectors
+        created have a length of the number of different values in the sequence and the 1 is
+        positioned in order of first appartitions in the sequence.
 
         Parameters
         ----------
         sequence : array-like
             Sequence of apparitions of values, or indexes. Will be used to index self.store
 
-        Returns
-        -------
+        Returns:
+        --------
         FeatureStore
             Created from the sequence.
         """
@@ -238,8 +244,8 @@ class OneHotStore(Store):
         sequence_index : (int, list, slice)
             index from sequence of element to get
 
-        Returns
-        -------
+        Returns:
+        --------
         np.ndarray
             OneHot features corresponding to the sequence_index-th position of sequence
         """
