@@ -62,7 +62,7 @@ class Store(object):
         return len(self.sequence)
 
     @property
-    def iloc(self):
+    def batch(self):
         """Indexing attribute."""
         return self.indexer
 
