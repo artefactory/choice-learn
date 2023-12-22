@@ -266,7 +266,9 @@ class ChoiceDatasetIndexer(Indexer):
             )
 
         if isinstance(choice_index, slice):
-            return self.__getitem__(list(range(*choice_index.indices(self.choices.shape[0]))))
+            return self.__getitem__(
+                list(range(*choice_index.indices(self.choice_dataset.choices.shape[0])))
+            )
 
         if isinstance(choice_index, int):
             items_features = self._get_items_features()
