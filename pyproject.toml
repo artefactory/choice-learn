@@ -17,7 +17,7 @@ requires-python = ">=3.8"
 "Documentation" = "https://artefactory.github.io/choice-learn-private"
 
 [tool.setuptools]
-packages = ["lib", "config", "tests"]
+packages = ["choice_learn", "config", "tests"]
 
 [tool.ruff]
 select = [
@@ -62,7 +62,7 @@ convention = "google"
 quote-style = "double"
 
 [tool.ruff.isort]
-known-first-party = ["lib", "config", "tests"]
+known-first-party = ["choice_learn", "config", "tests"]
 
 [tool.bandit]
 exclude_dirs = ["tests/"]
