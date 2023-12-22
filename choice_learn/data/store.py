@@ -145,7 +145,6 @@ class FeaturesStore(Store):
         """
         if isinstance(sequence_index, int):
             sequence_index = [sequence_index]
-        print(sequence_index, type(self.sequence))
         new_sequence = self.sequence[sequence_index]
         store = {}
         for k, v in self.store.items():

@@ -99,6 +99,8 @@ class OneHotStoreIndexer(Indexer):
             for i, j in enumerate(sequence_index):
                 one_hot[i, self.store.store[self.store.sequence[j]]] = 1
             return one_hot.astype(self.store.dtype)
+        if isinstance(sequence_index, slice):
+            return self[list(range(*sequence_index.indices(len(self.store.sequence))))]
         # else:
         one_hot = np.zeros(self.shape[1])
         one_hot[self.store.store[self.store.sequence[sequence_index]]] = 1
@@ -264,7 +266,9 @@ class ChoiceDatasetIndexer(Indexer):
             )
 
         if isinstance(choice_index, slice):
-            return self.__getitem__(list(range(*choice_index.indices(self.choices.shape[0]))))
+            return self.__getitem__(
+                list(range(*choice_index.indices(self.choice_dataset.choices.shape[0])))
+            )
 
         if isinstance(choice_index, int):
             items_features = self._get_items_features()

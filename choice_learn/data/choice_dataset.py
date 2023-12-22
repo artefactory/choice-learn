@@ -452,7 +452,7 @@ class ChoiceDataset(object):
                 features,
             ) in zip(self.sessions_items_features_names, self.sessions_items_features):
                 if name is not None:
-                    if len(name) != features.shape[1]:
+                    if len(name) != features.shape[2]:
                         raise ValueError(
                             f"Specified \
                         sessions_items_features_names has length {len(name)} while \
@@ -669,7 +669,6 @@ class ChoiceDataset(object):
             raise ValueError(
                 f"choice_mode {choice_mode} not recognized. Must be in ['item_id', 'one_zero']"
             )
-
         return ChoiceDataset(
             items_features=items_features,
             sessions_features=sessions_features,
@@ -711,7 +710,7 @@ class ChoiceDataset(object):
         else:
             print("No sessions features registered")
 
-        if self.sessions_featuresitems_features is not None:
+        if self.sessions_items_features is not None:
             print(f"Session Items features: {self.sessions_items_features_names}")
         if self.sessions_items_features is not None:
             print(
