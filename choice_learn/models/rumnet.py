@@ -1,6 +1,7 @@
 """Implementation of RUMnet for easy use."""
 import tensorflow as tf
-from choice_modeling.models.base_model import ChoiceModel
+
+from choice_learn.models.base_model import ChoiceModel
 
 
 class PaperRUMnet(ChoiceModel):

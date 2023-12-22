@@ -2,8 +2,9 @@
 
 import numpy as np
 import pandas as pd
-from choice_modeling.data.indexer import ChoiceDatasetIndexer
-from choice_modeling.data.store import Store
+
+from choice_learn.data.indexer import ChoiceDatasetIndexer
+from choice_learn.data.store import Store
 
 
 class ChoiceDataset(object):
@@ -686,7 +687,39 @@ class ChoiceDataset(object):
 
     def summary(self):
         """Method to display a summary of the dataset."""
-        raise NotImplementedError
+        print("Summary of the dataset:")
+        print("Number of items:", self.get_num_items())
+        print("Number of sessions:", self.get_num_sessions())
+        print(
+            "Number of choices:",
+            self.get_num_choices(),
+            "Averaging",
+            self.get_num_choices() / self.get_num_sessions(),
+            "choices per session",
+        )
+        if self.items_features is not None:
+            print(f"Items features: {self.items_features_names}")
+        if self.items_features is not None:
+            print(f"{sum([f.shape[1] for f in self.items_features])} items features")
+        else:
+            print("No items features registered")
+
+        if self.sessions_features is not None:
+            print(f"Sessions features: {self.sessions_features_names}")
+        if self.sessions_features is not None:
+            print(f"{sum([f.shape[1] for f in self.sessions_features])} session features")
+        else:
+            print("No sessions features registered")
+
+        if self.sessions_featuresitems_features is not None:
+            print(f"Session Items features: {self.sessions_items_features_names}")
+        if self.sessions_items_features is not None:
+            print(
+                f"{sum([f.shape[2] for f in self.sessions_items_features])} sessions \
+                  items features"
+            )
+        else:
+            print("No sessions items features registered")
 
     def get_choice_batch(self, choice_index):
         """Method to access data within the ListChoiceDataset from its index.
@@ -845,7 +878,7 @@ class ChoiceDataset(object):
             sessions_items_features_names=self.sessions_items_features_names,
         )
 
-    def batch(self, batch_size=None, shuffle=None, sample_weight=None):
+    def old_batch(self, batch_size=None, shuffle=None, sample_weight=None):
         """Iterates over dataset return batches of length self.batch_size.
 
         Parameters
@@ -892,6 +925,50 @@ class ChoiceDataset(object):
                 yielded_size += 2 * num_choices
 
     @property
-    def iloc(self):
+    def batch(self):
         """Indexer."""
         return self.indexer
+
+    def iter_batch(self, batch_size=None, shuffle=None, sample_weight=None):
+        """Iterates over dataset return batches of length self.batch_size.
+
+        Newer version.
+
+        Parameters
+        ----------
+        batch_size : int
+            batch size to set
+        shuffle: bool
+            Whether or not to shuffle the dataset
+        sample_weight : Iterable
+            list of weights to be returned with the right indexing during the shuffling
+        """
+        if batch_size is None:
+            batch_size = self.batch_size
+        if shuffle is None:
+            shuffle = self.shuffle
+        if batch_size == -1:
+            batch_size = self.get_num_choices()
+
+        # Get indexes for each choice
+        num_choices = self.get_num_choices()
+        indexes = np.arange(num_choices)
+        # Shuffle indexes
+        if shuffle and not batch_size == -1:
+            indexes = np.random.permutation(indexes)
+
+        yielded_size = 0
+        while yielded_size < num_choices:
+            # Return sample_weight if not None, for index matching
+            if sample_weight is not None:
+                yield (
+                    self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()],
+                    sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()],
+                )
+            else:
+                yield self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()]
+            yielded_size += batch_size
+
+            # Special exit strategy for batch_size = -1
+            if batch_size == -1:
+                yielded_size += 2 * num_choices

@@ -1,6 +1,7 @@
 """Different classes to optimize RAM usage with repeated features over time."""
 import numpy as np
-from choice_modeling.data.indexer import OneHotStoreIndexer, StoreIndexer
+
+from choice_learn.data.indexer import OneHotStoreIndexer, StoreIndexer
 
 
 class Store(object):
@@ -22,7 +23,7 @@ class Store(object):
             name of the features store -- not used at the moment
         """
         if indexes is None:
-            indexes = list(range(values))
+            indexes = list(range(len(values)))
         self.store = {k: v for (k, v) in zip(indexes, values)}
         self.sequence = np.array(sequence)
         self.name = name
@@ -62,7 +63,7 @@ class Store(object):
         return len(self.sequence)
 
     @property
-    def iloc(self):
+    def batch(self):
         """Indexing attribute."""
         return self.indexer
 
