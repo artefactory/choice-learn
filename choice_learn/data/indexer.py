@@ -99,6 +99,8 @@ class OneHotStoreIndexer(Indexer):
             for i, j in enumerate(sequence_index):
                 one_hot[i, self.store.store[self.store.sequence[j]]] = 1
             return one_hot.astype(self.store.dtype)
+        if isinstance(sequence_index, slice):
+            return self[list(range(*sequence_index.indices(len(self.store.sequence))))]
         # else:
         one_hot = np.zeros(self.shape[1])
         one_hot[self.store.store[self.store.sequence[sequence_index]]] = 1
