@@ -2,8 +2,9 @@
 
 import numpy as np
 import pandas as pd
-from choice_modeling.data.indexer import ChoiceDatasetIndexer
-from choice_modeling.data.store import Store
+
+from choice_learn.data.indexer import ChoiceDatasetIndexer
+from choice_learn.data.store import Store
 
 
 class ChoiceDataset(object):

@@ -60,7 +60,7 @@ class StoreIndexer(Indexer):
         if isinstance(sequence_index, slice):
             return [
                 self.store.store[self.store.sequence[i]]
-                for i in range(*sequence_index.indices(len(self.sequence)))
+                for i in range(*sequence_index.indices(len(self.store.sequence)))
             ]
         return self.store.store[self.store.sequence[sequence_index]]
 
