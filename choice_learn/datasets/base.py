@@ -119,8 +119,8 @@ def load_swissmetro(
     data = data.astype(int)
 
     items = ["TRAIN", "SM", "CAR"]
-    items_features = []
-    session_features = [
+    items_features_names = []
+    session_features_names = [
         "GROUP",
         "PURPOSE",
         "FIRST",
@@ -134,25 +134,28 @@ def load_swissmetro(
         "ORIGIN",
         "DEST",
     ]
-    sessions_items_features = ["TT", "CO", "HE"]
-    sessions_items_features = [
-        [f"{item}_{feature}" for feature in sessions_items_features] for item in items
+    sessions_items_features_names = ["TT", "CO", "HE"]
+    sessions_items_features_names = [
+        [f"{item}_{feature}" for feature in sessions_items_features_names] for item in items
     ]
     sessions_items_availabilities = ["TRAIN_AV", "SM_AV", "CAR_AV"]
     choice_column = "CHOICE"
 
     if add_items_one_hot:
         items_features = np.eye(len(items), dtype=np.float64)
+        items_features_names = [f"oh_{item}" for item in items]
     else:
         items_features = None
+        items_features_names = None
 
     # Adding dummy CAR_HE feature as 0 for consistency
     names.append("CAR_HE")
     data = np.hstack([data, np.zeros((data.shape[0], 1))])
 
-    session_features = slice_from_names(data, session_features, names)
+    session_features = slice_from_names(data, session_features_names, names)
     sessions_items_features = np.stack(
-        [slice_from_names(data, features, names) for features in sessions_items_features], axis=-1
+        [slice_from_names(data, features, names) for features in sessions_items_features_names],
+        axis=-1,
     )
     sessions_items_availabilities = slice_from_names(data, sessions_items_availabilities, names)
     choices = data[:, names.index(choice_column)]
@@ -183,6 +186,9 @@ def load_swissmetro(
         sessions_items_features=sessions_items_features,
         sessions_items_availabilities=sessions_items_availabilities,
         choices=choices,
+        items_features_names=items_features_names,
+        sessions_features_names=session_features_names,
+        sessions_items_features_names=sessions_items_features_names,
     )
 
 
