@@ -130,77 +130,82 @@ class ChoiceDataset(object):
         # names as features names
 
         # Handling items_features
-        for i, feature in enumerate(items_features):
-            if isinstance(feature, pd.DataFrame):
-                # Ordering items by id ?
-                if "item_id" in feature.columns:
-                    feature = feature.set_index("item_id")
-                items_features = (
-                    items_features[:i]
-                    + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                    + items_features[i + 1 :]
-                )
-                items_features_names = (
-                    items_features_names[:i]
-                    + (feature.columns.tolist(),)
-                    + items_features_names[i + 1 :]
-                )
-            elif isinstance(feature, list):
-                items_features = items_features[:i] + (np.array(feature),) + items_features[i + 1 :]
+        if items_features is not None:
+            for i, feature in enumerate(items_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering items by id ?
+                    if "item_id" in feature.columns:
+                        feature = feature.set_index("item_id")
+                    items_features = (
+                        items_features[:i]
+                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                        + items_features[i + 1 :]
+                    )
+                    items_features_names = (
+                        items_features_names[:i]
+                        + (feature.columns.tolist(),)
+                        + items_features_names[i + 1 :]
+                    )
+                elif isinstance(feature, list):
+                    items_features = (
+                        items_features[:i] + (np.array(feature),) + items_features[i + 1 :]
+                    )
 
         # Handling sessions_features
-        for i, feature in enumerate(sessions_features):
-            if isinstance(feature, pd.DataFrame):
-                # Ordering sessions by id ?
-                if "session_id" in feature.columns:
-                    feature = feature.set_index("session_id")
-                sessions_features = (
-                    sessions_features[:i]
-                    + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                    + sessions_features[i + 1 :]
-                )
-                sessions_features_names = (
-                    sessions_features_names[:i]
-                    + (feature.columns.tolist(),)
-                    + sessions_features_names[i + 1 :]
-                )
-            elif isinstance(feature, list):
-                sessions_features = (
-                    sessions_features[:i] + (np.array(feature),) + sessions_features[i + 1 :]
-                )
+        if sessions_features is not None:
+            for i, feature in enumerate(sessions_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering sessions by id ?
+                    if "session_id" in feature.columns:
+                        feature = feature.set_index("session_id")
+                    sessions_features = (
+                        sessions_features[:i]
+                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                        + sessions_features[i + 1 :]
+                    )
+                    sessions_features_names = (
+                        sessions_features_names[:i]
+                        + (feature.columns.tolist(),)
+                        + sessions_features_names[i + 1 :]
+                    )
+                elif isinstance(feature, list):
+                    sessions_features = (
+                        sessions_features[:i] + (np.array(feature),) + sessions_features[i + 1 :]
+                    )
 
         # Handling sessions_items_features
-        for i, feature in enumerate(sessions_items_features):
-            if isinstance(feature, pd.DataFrame):
-                # Ordering sessions and items by id ?
-                if "session_id" not in feature.columns:
-                    feature["session_id"] = feature.index
-                items_index = np.sort(feature.item_id.unique())
-                sessions_index = np.sort(feature.session_id.unique())
-                names = [f for f in feature.columns if f != "session_id" and f != "item_id"]
+        if sessions_items_features is not None:
+            for i, feature in enumerate(sessions_items_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering sessions and items by id ?
+                    if "session_id" not in feature.columns:
+                        feature["session_id"] = feature.index
+                    items_index = np.sort(feature.item_id.unique())
+                    sessions_index = np.sort(feature.session_id.unique())
+                    names = [f for f in feature.columns if f != "session_id" and f != "item_id"]
 
-                (
-                    feature,
-                    sessions_items_availabilities,
-                ) = self._sessions_items_features_df_to_np(
-                    feature, items_index, sessions_index, feature.columns.tolist()
-                )
+                    (
+                        feature,
+                        sessions_items_availabilities,
+                    ) = self._sessions_items_features_df_to_np(
+                        feature, items_index, sessions_index, feature.columns.tolist()
+                    )
 
-                sessions_items_features = (
-                    sessions_items_features[:i] + feature + sessions_items_features[i + 1 :]
-                )
+                    sessions_items_features = (
+                        sessions_items_features[:i] + feature + sessions_items_features[i + 1 :]
+                    )
 
-                sessions_items_features_names = (
-                    sessions_items_features_names[:i]
-                    + (names,)
-                    + sessions_items_features_names[i + 1 :]
-                )
-            elif isinstance(feature, list):
-                sessions_items_features = (
-                    sessions_items_features[:i]
-                    + (np.array(feature),)
-                    + sessions_items_features[i + 1 :]
-                )
+                    sessions_items_features_names = (
+                        sessions_items_features_names[:i]
+                        + (names,)
+                        + sessions_items_features_names[i + 1 :]
+                    )
+                elif isinstance(feature, list):
+                    sessions_items_features = (
+                        sessions_items_features[:i]
+                        + (np.array(feature),)
+                        + sessions_items_features[i + 1 :]
+                    )
 
         if isinstance(sessions_items_availabilities, list):
             sessions_items_availabilities = np.array(sessions_items_availabilities)
