@@ -4,6 +4,7 @@ import gzip
 from importlib import resources
 
 import numpy as np
+import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
 
@@ -64,7 +65,7 @@ def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
         compressed_file = gzip.open(compressed_file, mode="rt", encoding=encoding)
         names = next(compressed_file)
         names = names.replace("\n", "")
-        data = np.loadtxt(compressed_file, delimiter=",", dtype=int)
+        data = np.loadtxt(compressed_file, delimiter=",", dtype=object)
 
     return names.split(","), data
 
@@ -115,6 +116,8 @@ def load_swissmetro(
     """
     data_file_name = "swissmetro.csv.gz"
     names, data = load_gzip(data_file_name)
+    data = data.astype(int)
+
     items = ["TRAIN", "SM", "CAR"]
     items_features = []
     session_features = [
@@ -183,6 +186,74 @@ def load_swissmetro(
     )
 
 
-def load_modecanada():
-    """_summary_."""
-    pass
+def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
+    """Load and return the ModeCanada dataset from Koppleman et al. (1993).
+
+    Parameters
+    ----------
+    one_hot_cat_data : bool, optional
+        Whether to transform categorical data as OneHot, by default False
+    add_items_one_hot : bool, optional
+        Whether to add a OneHot encoding of items as items_features, by default False
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False
+    return_desc : bool, optional
+        Whether to return the description, by default False
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded ModeCanada dataset
+    """
+    data_file_name = "ModeCanada.csv.gz"
+    names, data = load_gzip(data_file_name)
+    names = [name.replace('"', "") for name in names]
+    canada_df = pd.DataFrame(data[:, 1:], index=data[:, 0].astype(int), columns=names[1:])
+    canada_df["alt"] = canada_df.apply(lambda row: row.alt.replace('"', ""), axis=1)
+    # Just some typing
+    canada_df.income = canada_df.income.astype("float32")
+
+    items = ["air", "bus", "car", "train"]
+    items_features = []
+    session_features = ["income"]
+    sessions_items_features = ["cost", "freq", "ovt", "ivt"]
+    choice_column = "choice"
+
+    if add_items_one_hot:
+        canada_df["oh_air"] = canada_df.apply(
+            lambda row: 1.0 if row.alt == items[0] else 0.0, axis=1
+        )
+        canada_df["oh_bus"] = canada_df.apply(
+            lambda row: 1.0 if row.alt == items[1] else 0.0, axis=1
+        )
+        canada_df["oh_car"] = canada_df.apply(
+            lambda row: 1.0 if row.alt == items[2] else 0.0, axis=1
+        )
+        canada_df["oh_train"] = canada_df.apply(
+            lambda row: 1.0 if row.alt == items[3] else 0.0, axis=1
+        )
+        items_features = ["oh_air", "oh_bus", "oh_car", "oh_train"]
+    else:
+        items_features = None
+
+    if return_desc:
+        # TODO
+        pass
+    if as_frame:
+        # TODO
+        pass
+
+    for col in canada_df.columns:
+        canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
+
+    return ChoiceDataset.from_single_df(
+        df=canada_df,
+        items_features_columns=items_features,
+        sessions_features_columns=session_features,
+        sessions_items_features_columns=sessions_items_features,
+        items_id_column="alt",
+        sessions_id_column="case",
+        choices_column=choice_column,
+        choice_mode="one_zero",
+    )
