@@ -8,9 +8,9 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 import tqdm
-from choice_modeling.tf_ops import (
+
+from choice_learn.tf_ops import (
     CustomCategoricalCrossEntropy,
-    availability_softmax,
     custom_softmax,
 )
 
@@ -163,7 +163,7 @@ class ChoiceModel(object):
             # Probabilities of selected product
             available_utilities = tf.gather_nd(indices=choices_nd, params=final_utilities)
             """
-            probabilities = availability_softmax(all_u, availabilities_batch, axis=-1)
+            # probabilities = availability_softmax(all_u, availabilities_batch, axis=-1)
             probabilities = custom_softmax(
                 all_u, availabilities_batch, normalize_exit=self.normalize_non_buy, axis=-1
             )
@@ -226,7 +226,7 @@ class ChoiceModel(object):
             if sample_weight is not None:
                 if verbose > 0:
                     inner_range = tqdm.tqdm(
-                        choice_dataset.batch(
+                        choice_dataset.iter_batch(
                             shuffle=True, sample_weight=sample_weight, batch_size=batch_size
                         ),
                         total=int(len(choice_dataset) / np.max([1, batch_size])),
@@ -234,7 +234,7 @@ class ChoiceModel(object):
                         leave=False,
                     )
                 else:
-                    inner_range = choice_dataset.batch(
+                    inner_range = choice_dataset.iter_batch(
                         shuffle=True, sample_weight=sample_weight, batch_size=batch_size
                     )
 
@@ -270,13 +270,13 @@ class ChoiceModel(object):
             else:
                 if verbose > 0:
                     inner_range = tqdm.tqdm(
-                        choice_dataset.batch(shuffle=True, batch_size=batch_size),
+                        choice_dataset.iter_batch(shuffle=True, batch_size=batch_size),
                         total=int(len(choice_dataset) / np.max([batch_size, 1])),
                         position=1,
                         leave=False,
                     )
                 else:
-                    inner_range = choice_dataset.batch(shuffle=True, batch_size=batch_size)
+                    inner_range = choice_dataset.iter_batch(shuffle=True, batch_size=batch_size)
                 for batch_nb, (
                     items_batch,
                     sessions_batch,
@@ -329,7 +329,7 @@ class ChoiceModel(object):
                     sessions_items_batch,
                     availabilities_batch,
                     choices_batch,
-                ) in enumerate(val_dataset.batch(shuffle=False, batch_size=batch_size)):
+                ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
                     test_losses.append(
@@ -407,7 +407,7 @@ class ChoiceModel(object):
             items_batch, sessions_batch, sessions_items_batch, availabilities_batch, choices_batch
         )
         # Compute probabilities from utilities & availabilties
-        probabilities = availability_softmax(utilities, availabilities_batch, axis=-1)
+        # probabilities = availability_softmax(utilities, availabilities_batch, axis=-1)
         probabilities = custom_softmax(
             utilities, availabilities_batch, normalize_exit=self.normalize_non_buy, axis=-1
         )
@@ -492,7 +492,7 @@ class ChoiceModel(object):
             sessions_items_batch,
             availabilities_batch,
             choices_batch,
-        ) in choice_dataset.batch():
+        ) in choice_dataset.iter_batch():
             _, probabilities = self.batch_predict(
                 items_batch,
                 sessions_batch,
@@ -529,7 +529,7 @@ class ChoiceModel(object):
             sessions_items_batch,
             availabilities_batch,
             choices_batch,
-        ) in choice_dataset.batch(batch_size=batch_size):
+        ) in choice_dataset.iter_batch(batch_size=batch_size):
             loss, _ = self.batch_predict(
                 items_batch,
                 sessions_batch,
