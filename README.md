@@ -10,9 +10,10 @@
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn-private/blob/main/.pre-commit-config.yaml)
 </div>
 
-TODO: if not done already, check out the [Skaff documentation](https://artefact.roadie.so/catalog/default/component/repo-builder-ds/docs/) for more information about the generated repository.
+Choice-Learn is a Python package designed to help you build with ease discrete choice models.
+The package provides ready to use datasets and different models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
 
-choice-learn is a Python package designed to help you build with ease a discrete choice model.
+This repository contains a private version of the package.
 
 ## Table of Contents
 
@@ -27,21 +28,12 @@ choice-learn is a Python package designed to help you build with ease a discrete
 
 To install the required packages in a virtual environment, run the following command:
 
+** pip-install not possible yet, to come soon**
 ```bash
-make install
-```
-
-TODO: Choose between conda and venv if necessary or let the Makefile as is and copy/paste the [MORE INFO installation section](MORE_INFO.md#eased-installation) to explain how to choose between conda and venv.
-
-A complete list of available commands can be found using the following command:
-
-```bash
-make help
+pip install choice-learn
 ```
 
 ## Usage
-
-TODO: Add usage instructions here
 
 ## Documentation
 
