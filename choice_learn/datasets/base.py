@@ -177,8 +177,7 @@ def load_swissmetro(
         # TODO
         pass
     if as_frame:
-        # TODO
-        pass
+        return pd.DataFrame(data, columns=names)
 
     return ChoiceDataset(
         items_features=items_features,
@@ -246,12 +245,12 @@ def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
     if return_desc:
         # TODO
         pass
-    if as_frame:
-        # TODO
-        pass
 
     for col in canada_df.columns:
         canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
+
+    if as_frame:
+        return canada_df
 
     return ChoiceDataset.from_single_df(
         df=canada_df,
