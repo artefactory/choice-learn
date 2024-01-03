@@ -425,3 +425,27 @@ def test_iter_batch():
         assert batch[3].shape[1] == 3
         assert batch[4].shape[0] == 2 or batch[4].shape[0] == 1
     assert batch_nb == 1
+
+    def test_filter():
+        """Tests the filter method."""
+        dataset = ChoiceDataset(
+            items_features=items_features,
+            sessions_features=sessions_features,
+            sessions_items_features=sessions_items_features,
+            sessions_items_availabilities=sessions_items_availabilities,
+            choices=choices,
+        )
+        filtered_dataset = dataset.filter([True, False, True])
+        assert len(filtered_dataset) == 2
+        assert (filtered_dataset.items_features[0] == dataset.items_features[0]).all()
+        assert (filtered_dataset.sessions_features[0] == dataset.sessions_features[0][[0, 2]]).all()
+        assert (
+            filtered_dataset.sessions_items_features[0]
+            == dataset.sessions_items_features[0][[0, 2]]
+        ).all()
+        assert (
+            filtered_dataset.sessions_items_availabilities
+            == dataset.sessions_items_availabilities[[0, 2]]
+        ).all()
+        assert (filtered_dataset.choices == dataset.choices[[0, 2]]).all()
+        assert (filtered_dataset.choices == [0, 1]).all()
