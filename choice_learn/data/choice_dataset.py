@@ -976,3 +976,16 @@ class ChoiceDataset(object):
             # Special exit strategy for batch_size = -1
             if batch_size == -1:
                 yielded_size += 2 * num_choices
+
+    def filter(self, bool_list):
+        """Filter over sessions indexes following bool.
+
+        Parameters
+        ----------
+        bool_list : list of boolean
+            list of booleans of length self.get_num_sessions() to filter sessions.
+            True to keep, False to discard.
+        """
+        indexes = list(range(len(bool_list)))
+        indexes = [i for i, keep in zip(indexes, bool_list) if keep]
+        return self[indexes]
