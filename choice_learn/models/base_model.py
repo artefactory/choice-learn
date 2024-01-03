@@ -648,12 +648,12 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        dataset : _type_
-            _description_
-        n_epochs : _type_
-            _description_
-        tolerance : _type_, optional
-            _description_, by default 1e-8
+        dataset : ChoiceDataset
+            Dataset to be used for coefficients estimations
+        n_epochs : int
+            Maximum number of epochs allowed to reach minimum
+        tolerance : float, optional
+            Maximum tolerance accepted, by default 1e-8
 
         Returns:
         --------
