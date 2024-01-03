@@ -22,14 +22,20 @@ This repository contains a private version of the package.
 
 - [choice-learn-private](#choice-learn-private)
   - [Table of Contents](#table-of-contents)
+  - [What's in there ?](#whats-in-there)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)
-  - [Repository Structure](#repository-structure)
+  - [Citation](#citation)
 
 ## What's in there ?
 
 ## Getting Started - Fast Track
+
+You can find the following notebooks to help you getting started with the package:
+- [Introduction to data management](notebooks/choice_learn_introduction_data.ipynb)
+- [Introduction to modelling with the conditional logit model on ModeCanada dataaset](notebooks/choice_learn_introduction_clogit.ipynb)
+- [Introduction to custom modelling with the ModeCanada dataset](notebooks/custom_model.ipynb)
 
 ## Installation
 
