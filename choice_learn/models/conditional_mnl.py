@@ -288,7 +288,7 @@ class ConditionalMNL(ChoiceModel):
         tf.Tensor
             Utilities corresponding of shape (n_sessions, n_items)
         """
-        del choices_batch, verbose
+        _ = choices_batch
 
         num_items = availabilities_batch.shape[1]
         num_sessions = availabilities_batch.shape[0]
@@ -329,10 +329,11 @@ class ConditionalMNL(ChoiceModel):
                     ### Need reshaping here
                     sessions_items_utilities.append(s_i_u)
                 else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility\
-                            computations"
-                    )
+                    if verbose > 1:
+                        print(
+                            f"Feature {feat} is in dataset but has no weight assigned in utility\
+                                computations"
+                        )
 
         # Session features
         for i, feat_tuple in enumerate(self._sessions_features_names):
