@@ -16,6 +16,8 @@
 Choice-Learn is a Python package designed to help you build with ease discrete choice models.
 The package provides ready to use datasets and different models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
 
+Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
+
 This repository contains a private version of the package.
 
 ## Table of Contents
@@ -55,12 +57,16 @@ git clone git@github.com:artefactory/choice-learn-private.git
 
 ### Dependencies
 Choice-Learn requires the following:
-- Python (>=...)
-- NumPy (>=...)
-- TensorFlow (>=...)
-- pandas ?
+- Python (>=3.8)
+- NumPy (>=1.24)
+- TensorFlow (>=2.13)
+- pandas (>=1.5)
 
 ## Usage
+```python
+from choice_learn.data import ChoiceDataset
+from choice_learn.models import ConditionalMNL
+```
 
 ## Documentation
 
