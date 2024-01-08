@@ -4,6 +4,7 @@ pre-commit==3.3.3
 pytest==7.3.2
 mkdocs==1.4.3
 mkdocs-material==9.1.15
+mkdocs-nbconvert==0.2.1
 mkdocstrings-python==1.1.2
 bandit==1.7.5
 nbstripout==0.6.1
