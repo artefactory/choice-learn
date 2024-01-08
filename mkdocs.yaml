@@ -23,6 +23,8 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+  logo: choice_learn_official_logo.png
+  favicon: choice_learn_official_logo.png
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -36,7 +38,18 @@ markdown_extensions:
 plugins:
   - mkdocstrings
   - search
+  - mkdocs-jupyter
 
 nav:
-  - Home: index.md
-  - Source code: code.md
+  - HomePage: index.md
+  - tutorials.md
+  - How-To Guides:
+    - Introduction: how-to-guides.md
+    - ChoiceDataset Usage: choice_dataset_usage.md
+  - References:
+    - references_data.md
+    - Choice Models:
+      - Base Model: references_base_model.md
+      - Conditional Logit: references_clogit.md
+      - RUMnet: references_rumnet.md
+  - explanations.md
