@@ -55,9 +55,9 @@ class ChoiceDataset(object):
             for each sessions we have a list of related choices. Main list has same legnth as
             session_features and sessions_items_features.
         batch_size: int, optional
-            size of the batches to return in __iter__ method
-        suffle: bool, optional
-            whether to shuffle the dataset or not
+            size of the batches to return in __iter__ method, default is 16
+        shuffle: bool, optional
+            whether to shuffle the dataset or not, default is False
         """
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
@@ -257,8 +257,8 @@ class ChoiceDataset(object):
         Particularly creates a flatten version of the choices and associates an index so that we can
         retrieve from this index the session and the corresponding choice.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices: list of list
             raffed version of the choices
 

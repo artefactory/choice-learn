@@ -36,16 +36,25 @@ markdown_extensions:
   - pymdownx.superfences
 
 plugins:
-  - mkdocstrings
-  - search
-  - mkdocs-jupyter
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          docstring_style: numpy
+        rendering:
+          show_source: true
+- search
+- nbconvert:
+      input_dir: notebooks
+      recursive: true
+      output_dir: notebooks
 
 nav:
   - HomePage: index.md
   - tutorials.md
   - How-To Guides:
     - Introduction: how-to-guides.md
-    - ChoiceDataset Usage: choice_dataset_usage.md
+    - ChoiceDataset Usage: notebooks/choice_learn_introduction_data.md
   - References:
     - references_data.md
     - Choice Models:
