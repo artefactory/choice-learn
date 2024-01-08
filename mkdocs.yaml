@@ -46,7 +46,6 @@ plugins:
 - search
 - nbconvert:
       input_dir: notebooks
-      recursive: true
       output_dir: notebooks
 
 nav:
