@@ -2,7 +2,11 @@ name: Deploy MkDocs to GitHub Pages
 
 on:
   push:
-    branch: [main]
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
 
 jobs:
   deploy-docs:

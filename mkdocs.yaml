@@ -54,10 +54,15 @@ nav:
   - How-To Guides:
     - Introduction: how-to-guides.md
     - ChoiceDataset Usage: notebooks/choice_learn_introduction_data.md
+    - Conditional Logit Estimation: notebooks/choice_learn_introduction_clogit.md
+    - Custom Choice Model Creation: notebooks/choice_learn_introduction_data.md
   - References:
-    - references_data.md
+    - Data:
+      - ChoiceDataset: references/data/references_choice_dataset.md
+      - Features Storage: references/data/references_store.md
+      - Available Datasets: references/data/references_dataset.md
     - Choice Models:
-      - Base Model: references_base_model.md
-      - Conditional Logit: references_clogit.md
-      - RUMnet: references_rumnet.md
+      - Base Model: references/models/references_base_model.md
+      - Conditional Logit: references/models/references_clogit.md
+      - RUMnet: references/models/references_rumnet.md
   - explanations.md
