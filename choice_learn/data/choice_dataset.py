@@ -25,12 +25,14 @@ class ChoiceDataset(object):
     def __init__(
         self,
         choices,  # Should not have None as default value ?
-        available_items_features, # MUST INCLUDE item_id column; possible: column "available" binaire
-        contexts_features=None, # as many context as choices.  values or ids (look at key)
-        features_by_ids=None, # list of FeaturesById --> requires to have df with col "_id"
-        #choices_features_names=None, # optional way to provide keys
-        #items_features_names=None, # optional way to provide keys
-        shuffle=False,
+        fixed_items_features=None,
+        contexts_features=None,  # as many context as choices.  values or ids (look at key)
+        contexts_items_features=None,  # MUST INCLUDE item_id column; possible: column "available" binary
+        contexts_items_availabilities=None,
+        features_by_ids=None,  # list of (name, FeaturesStorage) --> requires to have df with col "_id"
+        fixed_items_features_names=None,
+        contexts_features_names=None,
+        contexts_items_features_names=None,
     ):
         """Builds the ChoiceDataset.
 
@@ -50,13 +52,11 @@ class ChoiceDataset(object):
             # Done to keep a logical order of arguments, and has logic: choices have to be specified
             raise ValueError("Choices must be specified, got None")
 
-        assert len(choices) == len(available_items)
-        assert contexts_features is None or len(choices) == len(contexts_features)
-
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
-        items_features = None # to pass this part
+
+        items_features = None  # to pass this part
         if items_features is not None:
             if not isinstance(items_features, tuple):
                 items_features = (items_features,)
@@ -68,7 +68,9 @@ class ChoiceDataset(object):
                     len(items_features) != len(items_features_names)
                     and items_features_names is not None
                 ):
-                    raise ValueError("items_features shape and items_features_names shape do not match")
+                    raise ValueError(
+                        "items_features shape and items_features_names shape do not match"
+                    )
                 self._return_items_features_tuple = True
             # In this case names are missing, still transform it as a tuple
             else:
@@ -80,7 +82,7 @@ class ChoiceDataset(object):
         if contexts_features is not None:
             if not isinstance(contexts_features, tuple):
                 contexts_features = (contexts_features,)
-                #choices_features_names = (choices_features_names,)
+                # choices_features_names = (choices_features_names,)
                 self._return_choices_features_tuple = False
             # choices_features is already a tuple, names are given, checking consistency
             elif choices_features_names is not None:
@@ -105,28 +107,30 @@ class ChoiceDataset(object):
         # names as features names
 
         # Handling items_features
-        if items_features is not None:
-            for i, feature in enumerate(items_features):
+        if fixed_items_features is not None:
+            for i, feature in enumerate(fixed_items_features):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering items by id ?
                     if "item_id" in feature.columns:
                         feature = feature.set_index("item_id")
-                    items_features = (
-                        items_features[:i]
+                    fixed_items_features = (
+                        fixed_items_features[:i]
                         + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                        + items_features[i + 1 :]
+                        + fixed_items_features[i + 1 :]
                     )
-                    items_features_names = (
-                        items_features_names[:i]
+                    fixed_items_features_names = (
+                        fixed_items_features_names[:i]
                         + (feature.columns.tolist(),)
-                        + items_features_names[i + 1 :]
+                        + fixed_items_features_names[i + 1 :]
                     )
                 elif isinstance(feature, list):
-                    items_features = (
-                        items_features[:i] + (np.array(feature),) + items_features[i + 1 :]
+                    fixed_items_features = (
+                        fixed_items_features[:i]
+                        + (np.array(feature),)
+                        + fixed_items_features[i + 1 :]
                     )
 
-        # Handling choices_features
+        # Handling context features
         if contexts_features is not None:
             for i, feature in enumerate(contexts_features):
                 if isinstance(feature, pd.DataFrame):
@@ -138,18 +142,61 @@ class ChoiceDataset(object):
                         + (feature.loc[np.sort(feature.index)].to_numpy(),)
                         + contexts_features[i + 1 :]
                     )
-                    #choices_features_names = (
-                     #   choices_features_names[:i]
-                     #   + (feature.columns.tolist(),)
-                     #   + choices_features_names[i + 1 :]
-                    #)
                 elif isinstance(feature, list):
                     contexts_features = (
                         contexts_features[:i] + (np.array(feature),) + contexts_features[i + 1 :]
                     )
-
-        if isinstance(available_items, list):
-            available_items = np.array(available_items, dtype=object)
+        # Handling contexts_items_features
+        if contexts_items_features is not None:
+            for i, feature in enumerate(contexts_items_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering choices by id ?
+                    if "session_id" in feature.columns:
+                        if "item_id" in feature.columns:
+                            feature_array = []
+                            for sess in np.sort(feature.session_id):
+                                sess_df = feature.loc[feature.session_id == sess]
+                                sess_df = sess_df.set_index("item_id")
+                                feature_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
+                            contexts_items_features = (
+                                contexts_items_features[:i]
+                                + (np.stack(feature_array, axis=0),)
+                                + contexts_items_features[i + 1 :]
+                            )
+                        else:
+                            feature = feature.set_index("session_id")
+                            contexts_items_features = (
+                                contexts_items_features[:i]
+                                + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                                + contexts_items_features[i + 1 :]
+                            )
+                elif isinstance(feature, list):
+                    contexts_items_features = (
+                        contexts_items_features[:i]
+                        + (np.array(feature),)
+                        + contexts_items_features[i + 1 :]
+                    )
+        if contexts_items_availabilities is not None:
+            if isinstance(contexts_items_availabilities, list):
+                contexts_items_availabilities = np.array(
+                    contexts_items_availabilities, dtype=object
+                )
+            elif isinstance(contexts_items_availabilities, pd.DataFrame):
+                if "session_id" in contexts_items_availabilities.columns:
+                    if "item_id" in contexts_items_availabilities.columns:
+                        av_array = []
+                        for sess in np.sort(contexts_items_availabilities.session_id):
+                            sess_df = contexts_items_availabilities.loc[
+                                contexts_items_availabilities.session_id == sess
+                            ]
+                            sess_df = sess_df.set_index("item_id")
+                            av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
+                        contexts_items_availabilities = np.array(av_array)
+                    else:
+                        feature = feature.set_index("session_id")
+                        contexts_items_availabilities = contexts_items_availabilities.loc[
+                            np.sort(feature.index)
+                        ].to_numpy()
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
@@ -165,22 +212,22 @@ class ChoiceDataset(object):
             choices = [np.where(items == c)[0] for c in choices.choice]
 
         # Setting attributes of ChoiceDataset
+        self.fixedf_items_features = fixed_items_features
         self.contexts_features = contexts_features
-        self.available_items = available_items
+        self.contexts_items_features = contexts_items_features
+        self.context_items_availabilities = contexts_items_availabilities
+        self.choices = choices
 
-        #self.items_features_names = items_features_names
-        #self.choices_features_names = choices_features_names
+        self.fixed_items_features_names = fixed_items_features_names
+        self.contexts_features_names = contexts_features_names
+        self.contexts_items_features_names = contexts_items_features_names
 
-        self.shuffle = shuffle
-
-        self.ragged_choices = choices
-        self.indexes, self.choices = self._build_indexes(choices)
         self.n_choices = len(self.choices)
 
         # Different consitency checks to ensure everythin is coherent
-        #self._check_dataset()  # Should handle alone if np.arrays are squeezed
-        #self._return_types = self._check_types()
-        #self._check_names()
+        # self._check_dataset()  # Should handle alone if np.arrays are squeezed
+        # self._return_types = self._check_types()
+        # self._check_names()
 
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
