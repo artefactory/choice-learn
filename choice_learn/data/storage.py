@@ -6,6 +6,7 @@ import pandas as pd
 
 from choice_learn.data.indexer import StorageIndexer
 
+
 class Storage(ABC):
     """Class to keep OneHotStore and FeaturesStore with same parent."""
 
@@ -47,7 +48,7 @@ class FeaturesStorage(Storage):
             storage = values
             lengths = []
             for k, v in storage.items():
-                assert (isinstance(v, np.ndarray) | isinstance(v, list))
+                assert isinstance(v, np.ndarray) | isinstance(v, list)
                 assert len(np.array(v).shape) == 1
                 lengths.append(len(v))
             assert len(set(lengths)) == 1

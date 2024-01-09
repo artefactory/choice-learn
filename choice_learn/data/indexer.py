@@ -65,6 +65,7 @@ class StoreIndexer(Indexer):
             ]
         return self.store.store[self.store.sequence[sequence_index]]
 
+
 class StorageIndexer(Indexer):
     """Class for Ilocing/Batching FeaturesStorage."""
 
