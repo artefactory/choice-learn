@@ -59,7 +59,9 @@ class ChoiceDataset(object):
         if fixed_items_features is not None:
             if not isinstance(fixed_items_features, tuple):
                 if fixed_items_features_names is not None:
-                    assert len(fixed_items_features) == len(fixed_items_features_names), "Number of features given does not match number of features names given."
+                    assert len(fixed_items_features) == len(
+                        fixed_items_features_names
+                    ), "Number of features given does not match number of features names given."
                 self._return_items_features_tuple = False
 
                 fixed_items_features = (fixed_items_features,)
@@ -70,9 +72,7 @@ class ChoiceDataset(object):
                 # items_features is already a tuple, names are given, checking consistency
                 if fixed_items_features_names is not None:
                     for f, name in zip(fixed_items_features, fixed_items_features_names):
-                        if (
-                            len(f) != len(name)
-                        ):
+                        if len(f) != len(name):
                             raise ValueError(
                                 "items_features shape and items_features_names shape do not match"
                             )
@@ -86,7 +86,9 @@ class ChoiceDataset(object):
             if not isinstance(contexts_features, tuple):
                 self._return_choices_features_tuple = False
                 if contexts_items_features_names is not None:
-                    assert len(contexts_features) == len(contexts_features_names), "Number of features given does not match number of features names given."
+                    assert len(contexts_features) == len(
+                        contexts_features_names
+                    ), "Number of features given does not match number of features names given."
 
                 contexts_features_names = (contexts_features_names,)
                 contexts_features = (contexts_features,)
@@ -96,9 +98,7 @@ class ChoiceDataset(object):
                 self._return_contexts_features_tuple = True
                 if contexts_features_names is not None:
                     for f, name in zip(contexts_features, contexts_features_names):
-                        if (
-                            len(f) != len(name)
-                        ):
+                        if len(f) != len(name):
                             raise ValueError(
                                 "contexts_features shape and contexts_features_names shape do not match"
                             )
@@ -110,7 +110,9 @@ class ChoiceDataset(object):
         if not isinstance(contexts_items_features, tuple) and contexts_items_features is not None:
             self._return_sessions_items_features_tuple = False
             if contexts_items_features_names is not None:
-                assert len(contexts_items_features) == len(contexts_items_features_names), "Number of features given does not match number of features names given for contexts_items."
+                assert (
+                    len(contexts_items_features) == len(contexts_items_features_names)
+                ), "Number of features given does not match number of features names given for contexts_items."
             contexts_items_features = (contexts_items_features,)
             contexts_items_features_names = (contexts_items_features_names,)
 
@@ -267,9 +269,15 @@ class ChoiceDataset(object):
         if len(self.features_by_ids) == 0:
             print("No features_by_ids given.")
             return
-        
-        if self.fixed_items_features_names is None and self.contexts_features_names is None and self.contexts_items_features_names is None:
-            raise ValueError("No features_names given, match with fiven features_by_ids impossible.")
+
+        if (
+            self.fixed_items_features_names is None
+            and self.contexts_features_names is None
+            and self.contexts_items_features_names is None
+        ):
+            raise ValueError(
+                "No features_names given, match with fiven features_by_ids impossible."
+            )
 
         fixed_items_features_map = []
         contexts_features_map = []
@@ -293,7 +301,9 @@ class ChoiceDataset(object):
                     if feature == feature_by_id.name:
                         contexts_items_features_map.append((i, feature_by_id.batch))
 
-        assert len(fixed_items_features_map) + len(contexts_features_map) + len(contexts_items_features_map) == len(self.features_by_ids), "Some features_by_ids were not matched with features_names."
+        assert len(fixed_items_features_map) + len(contexts_features_map) + len(
+            contexts_items_features_map
+        ) == len(self.features_by_ids), "Some features_by_ids were not matched with features_names."
 
         self.fixed_items_features_map = fixed_items_features_map
         self.contexts_features_map = contexts_features_map
