@@ -29,7 +29,7 @@ class ChoiceDataset(object):
         contexts_features=None,  # as many context as choices.  values or ids (look at key)
         contexts_items_features=None,  # MUST INCLUDE item_id column; possible: column "available" binary
         contexts_items_availabilities=None,
-        features_by_ids=None,  # list of (name, FeaturesStorage) --> requires to have df with col "_id"
+        features_by_ids=[],  # list of (name, FeaturesStorage) --> requires to have df with col "_id"
         fixed_items_features_names=None,
         contexts_features_names=None,
         contexts_items_features_names=None,
@@ -56,49 +56,77 @@ class ChoiceDataset(object):
         # If items_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
 
-        items_features = None  # to pass this part
-        if items_features is not None:
-            if not isinstance(items_features, tuple):
-                items_features = (items_features,)
-                items_features_names = (items_features_names,)
+        if fixed_items_features is not None:
+            if not isinstance(fixed_items_features, tuple):
+                if fixed_items_features_names is not None:
+                    assert len(fixed_items_features) == len(fixed_items_features_names), "Number of features given does not match number of features names given."
                 self._return_items_features_tuple = False
-            # items_features is already a tuple, names are given, checking consistency
-            elif items_features_names is not None:
-                if (
-                    len(items_features) != len(items_features_names)
-                    and items_features_names is not None
-                ):
-                    raise ValueError(
-                        "items_features shape and items_features_names shape do not match"
-                    )
-                self._return_items_features_tuple = True
-            # In this case names are missing, still transform it as a tuple
+
+                fixed_items_features = (fixed_items_features,)
+                fixed_items_features_names = (fixed_items_features_names,)
             else:
                 self._return_items_features_tuple = True
-                items_features_names = (None,) * len(items_features)
+
+                # items_features is already a tuple, names are given, checking consistency
+                if fixed_items_features_names is not None:
+                    for f, name in zip(fixed_items_features, fixed_items_features_names):
+                        if (
+                            len(f) != len(name)
+                        ):
+                            raise ValueError(
+                                "items_features shape and items_features_names shape do not match"
+                            )
+                # In this case names are missing, still transform it as a tuple
+                else:
+                    fixed_items_features_names = (None,) * len(fixed_items_features)
 
         # If choices_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
         if contexts_features is not None:
             if not isinstance(contexts_features, tuple):
-                contexts_features = (contexts_features,)
-                # choices_features_names = (choices_features_names,)
                 self._return_choices_features_tuple = False
+                if contexts_items_features_names is not None:
+                    assert len(contexts_features) == len(contexts_features_names), "Number of features given does not match number of features names given."
+
+                contexts_features_names = (contexts_features_names,)
+                contexts_features = (contexts_features,)
+
             # choices_features is already a tuple, names are given, checking consistency
-            elif choices_features_names is not None:
-                if (
-                    len(contexts_features) != len(choices_features_names)
-                    and choices_features_names is not None
-                ):
-                    raise ValueError(
-                        "choices_features shape and choices_features_names shape \
-                                     do not match"
-                    )
-                self._return_choices_features_tuple = True
-            # In this case names are missing, still transform it as a tuple
             else:
-                self._return_choices_features_tuple = True
-                choices_features_names = (None,) * len(contexts_features)
+                self._return_contexts_features_tuple = True
+                if contexts_features_names is not None:
+                    for f, name in zip(contexts_features, contexts_features_names):
+                        if (
+                            len(f) != len(name)
+                        ):
+                            raise ValueError(
+                                "contexts_features shape and contexts_features_names shape do not match"
+                            )
+
+                # In this case names are missing, still transform it as a tuple
+                else:
+                    choices_features_names = (None,) * len(contexts_features)
+
+        if not isinstance(contexts_items_features, tuple) and contexts_items_features is not None:
+            self._return_sessions_items_features_tuple = False
+            if contexts_items_features_names is not None:
+                assert len(contexts_items_features) == len(contexts_items_features_names), "Number of features given does not match number of features names given for contexts_items."
+            contexts_items_features = (contexts_items_features,)
+            contexts_items_features_names = (contexts_items_features_names,)
+
+        # sessions_items_features is already a tuple, names are given, checking consistency
+        elif contexts_items_features is not None and contexts_items_features_names is not None:
+            for f, name in zip(contexts_items_features, contexts_items_features_names):
+                if len(f) != len(name):
+                    raise ValueError(
+                        "contexts_items_features shape and \
+                                        contexts_items_features_names shape do not match"
+                    )
+            self._return_sessions_items_features_tuple = True
+        # In this case names are missing, still transform it as a tuple
+        elif contexts_items_features is not None:
+            self._return_sessions_items_features_tuple = True
+            contexts_items_features_names = (None,) * len(contexts_items_features)
 
         # --------- [Normalizing features types (DataFrame, List, etc...) -> np.ndarray] --------- #
         #
@@ -201,30 +229,33 @@ class ChoiceDataset(object):
         # Handling choices
         # Choices must then be given as the name of the chosen item
         # Items are sorted by name and attributed an index
-        # Cannot be a list of choices yet
         if isinstance(choices, pd.DataFrame):
             # Ordering choices by id
-            if "session_id" in choices.columns:
-                choices = choices.set_index("session_id")
+            if "context_id" in choices.columns:
+                choices = choices.set_index("context_id")
             choices = choices.loc[np.sort(choices.index)]
             items = np.sort(np.unique(choices.choice))
             # items is the value (str) of the item
             choices = [np.where(items == c)[0] for c in choices.choice]
 
         # Setting attributes of ChoiceDataset
-        self.fixedf_items_features = fixed_items_features
+        self.fixed_items_features = fixed_items_features
         self.contexts_features = contexts_features
         self.contexts_items_features = contexts_items_features
         self.context_items_availabilities = contexts_items_availabilities
         self.choices = choices
 
+        self.features_by_ids = features_by_ids
+
         self.fixed_items_features_names = fixed_items_features_names
         self.contexts_features_names = contexts_features_names
         self.contexts_items_features_names = contexts_items_features_names
 
+        self._build_features_by_ids()
+
         self.n_choices = len(self.choices)
 
-        # Different consitency checks to ensure everythin is coherent
+        # Different consitency checks to ensure everything is coherent
         # self._check_dataset()  # Should handle alone if np.arrays are squeezed
         # self._return_types = self._check_types()
         # self._check_names()
@@ -232,41 +263,41 @@ class ChoiceDataset(object):
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
 
-    def _build_indexes(self, choices):
-        """Builds the indexes dictionnary from the choices.
+    def _build_features_by_ids(self):
+        if len(self.features_by_ids) == 0:
+            print("No features_by_ids given.")
+            return
+        
+        if self.fixed_items_features_names is None and self.contexts_features_names is None and self.contexts_items_features_names is None:
+            raise ValueError("No features_names given, match with fiven features_by_ids impossible.")
 
-        Particularly creates a flatten version of the choices and associates an index so that we can
-        retrieve from this index the session and the corresponding choice.
+        fixed_items_features_map = []
+        contexts_features_map = []
+        contexts_items_features_map = []
 
-        Parameters:
-        -----------
-        choices: list of list
-            raffed version of the choices
+        if self.fixed_items_features_names is not None:
+            for i, feature in self.fixed_items_features_names:
+                for j, feature_by_id in enumerate(self.features_by_ids):
+                    if feature == feature_by_id.name:
+                        fixed_items_features_map.append((i, feature_by_id.batch))
 
-        Returns::
-        --------
-        indexes: dict
-            dictionnary of indexes: {index: corresponding_session_index}
-        choices: np.ndarray
-            flattened (1D) version of the choices
-        """
-        try:  # 1 choice by session
-            if len(np.squeeze(choices).shape) == 1:
-                indexes = {i: i for i in range(len(choices))}
-                flat_choices = np.squeeze(self.ragged_choices)
-            elif len(np.squeeze(choices).shape) == 0:
-                indexes = {i: i for i in range(len(choices))}
-                flat_choices = np.array([np.squeeze(self.ragged_choices)])
-        except ValueError:  # Ragged sequence of choices
-            indexes = {}
-            flat_choices = []
-            total_count = 0
-            for sess_nb, sess in enumerate(choices):
-                for choice in sess:
-                    indexes[total_count] = sess_nb
-                    flat_choices.append(choice)
-                    total_count += 1
-        return indexes, np.array(flat_choices)
+        if self.contexts_features_names is not None:
+            for i, feature in self.contexts_features_names:
+                for j, feature_by_id in enumerate(self.features_by_ids):
+                    if feature == feature_by_id.name:
+                        contexts_features_map.append((i, feature_by_id.batch))
+
+        if self.contexts_items_features_names is not None:
+            for i, feature in self.contexts_items_features_names:
+                for j, feature_by_id in enumerate(self.features_by_ids):
+                    if feature == feature_by_id.name:
+                        contexts_items_features_map.append((i, feature_by_id.batch))
+
+        assert len(fixed_items_features_map) + len(contexts_features_map) + len(contexts_items_features_map) == len(self.features_by_ids), "Some features_by_ids were not matched with features_names."
+
+        self.fixed_items_features_map = fixed_items_features_map
+        self.contexts_features_map = contexts_features_map
+        self.contexts_items_features_map = contexts_items_features_map
 
     def _check_dataset(self):
         """Verifies that the shapes of the different features are consistent.
