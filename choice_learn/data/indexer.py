@@ -1,5 +1,6 @@
 """Indexer classes for data classes."""
 from abc import abstractmethod
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -63,6 +64,38 @@ class StoreIndexer(Indexer):
                 for i in range(*sequence_index.indices(len(self.store.sequence)))
             ]
         return self.store.store[self.store.sequence[sequence_index]]
+
+class StorageIndexer(Indexer):
+    """Class for Ilocing/Batching FeaturesStorage."""
+
+    def __init__(self, storage):
+        """StoreIndexer constructor.
+
+        Parameters
+        ----------
+        store : choice_modeling.data.store.FeaturesStore
+            Store object to be indexed.
+        """
+        self.storage = storage
+
+    def __getitem__(self, sequence_keys):
+        """Returns the features appearing at the sequence_index-th position of sequence.
+
+        Parameters
+        ----------
+        sequence_index : (int, list, slice)
+            index position of the sequence
+
+        Returns:
+        --------
+        array_like
+            features corresponding to the sequence_index-th position of sequence
+        """
+        if isinstance(sequence_keys, Iterable):
+            return np.array([self.storage.storage[key] for key in sequence_keys])
+        if isinstance(sequence_keys, slice):
+            raise ValueError("Slicing is not supported for storage")
+        return np.array(self.storage.storage[sequence_keys])
 
 
 class OneHotStoreIndexer(Indexer):
