@@ -13,7 +13,7 @@
 
 <img src="docs/choice_learn_official_logo.png" width="256">
 
-Choice-Learn is a Python package designed to help you build with ease discrete choice models.
+Choice-Learn is a Python package designed to help you build discrete choice models.
 The package provides ready to use datasets and different models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
@@ -32,11 +32,34 @@ This repository contains a private version of the package.
 
 ## What's in there ?
 
+### Data
+- Generic dataset handling with the ChoiceDataset class
+- Ready-To-Use datasets:
+  - SwissMetro from Bierlaire et al. (2001)
+  - ModeCanada from Koppelman et al. (1993)
+
+### Models
+- Ready to use models:
+  - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987)
+  - RUMnet, Aouad A.; Désir A. (2022)
+- Ready to use models to be implemented:
+  - Nested MultiNomialLogit
+  - MultiNomialLogit with latent variables (MixedLogit)
+  - TasteNet
+  - SHOPPER
+  - Others ...
+- Custom modelling is made easy by subclassing the ChoiceModel class
+
+### Different tools (to come)
+- Standardization of evaluation protocols
+- Assortment optimization from model
+- Interfaces
+
 ## Getting Started - Fast Track
 
 You can find the following notebooks to help you getting started with the package:
 - [Introduction to data management](notebooks/choice_learn_introduction_data.ipynb)
-- [Introduction to modelling with the conditional logit model on ModeCanada dataaset](notebooks/choice_learn_introduction_clogit.ipynb)
+- [Introduction to modelling with the conditional logit model on ModeCanada dataset](notebooks/choice_learn_introduction_clogit.ipynb)
 - [Introduction to custom modelling with the ModeCanada dataset](notebooks/custom_model.ipynb)
 
 ## Installation
@@ -70,21 +93,7 @@ from choice_learn.models import ConditionalMNL
 
 ## Documentation
 
-TODO: Github pages is not enabled by default, you need to enable it in the repository settings: Settings > Pages > Source: "Deploy from a branch" / Branch: "gh-pages" / Folder: "/(root)"
-
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/)
-
-To serve the documentation locally, run the following command:
-
-```bash
-mkdocs serve
-```
-
-To build it and deploy it to GitHub pages, run the following command:
-
-```bash
-make deploy_docs
-```
 
 ## Citation
 
