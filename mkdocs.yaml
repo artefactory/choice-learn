@@ -55,7 +55,7 @@ nav:
     - Introduction: how-to-guides.md
     - ChoiceDataset Usage: notebooks/choice_learn_introduction_data.md
     - Conditional Logit Estimation: notebooks/choice_learn_introduction_clogit.md
-    - Custom Choice Model Creation: notebooks/choice_learn_introduction_data.md
+    - Custom Choice Model Creation: notebooks/custom_model.md
   - References:
     - Data:
       - ChoiceDataset: references/data/references_choice_dataset.md
