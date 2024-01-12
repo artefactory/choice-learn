@@ -5,6 +5,7 @@ pytest==7.3.2
 mkdocs==1.4.3
 mkdocs-material==9.1.15
 mkdocstrings-python==1.1.2
+python-markdown-math
 bandit==1.7.5
 nbstripout==0.6.1
 ipykernel==6.24.0

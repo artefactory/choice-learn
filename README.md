@@ -88,7 +88,7 @@ Choice-Learn requires the following:
 ## Usage
 ```python
 from choice_learn.data import ChoiceDataset
-from choice_learn.models import ConditionalMNL
+from choice_learn.models import ConditionalMNL, RUMnet
 ```
 
 ## Documentation
