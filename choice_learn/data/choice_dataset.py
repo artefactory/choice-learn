@@ -199,7 +199,7 @@ class ChoiceDataset(object):
                             for sess in np.sort(feature.session_id.unique()):
                                 sess_df = feature.loc[feature.session_id == sess]
                                 sess_df = sess_df[
-                                    sess_df.columns.difference(["sess_id"])
+                                    sess_df.columns.difference(["session_id"])
                                 ].set_index("item_id")
                                 feature_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
                             contexts_items_features = (
@@ -207,12 +207,22 @@ class ChoiceDataset(object):
                                 + (np.stack(feature_array, axis=0),)
                                 + contexts_items_features[i + 1 :]
                             )
+                            contexts_items_features_names = (
+                                contexts_items_features_names[:i]
+                                + (sess_df.columns,)
+                                + contexts_items_features_names[i + 1 :]
+                            )
                         else:
                             feature = feature.set_index("session_id")
                             contexts_items_features = (
                                 contexts_items_features[:i]
                                 + (feature.loc[np.sort(feature.index)].to_numpy(),)
                                 + contexts_items_features[i + 1 :]
+                            )
+                            contexts_items_features_names = (
+                                contexts_items_features_names[:i]
+                                + (feature.columns,)
+                                + contexts_items_features_names[i + 1 :]
                             )
                     else:
                         raise ValueError("session_id column not found in contexts_items_features")
@@ -222,8 +232,6 @@ class ChoiceDataset(object):
                         + (np.array(feature),)
                         + contexts_items_features[i + 1 :]
                     )
-        print(contexts_items_features)
-        print(contexts_items_features[0].shape)
         if contexts_items_availabilities is not None:
             if isinstance(contexts_items_availabilities, list):
                 contexts_items_availabilities = np.array(
@@ -728,39 +736,43 @@ class ChoiceDataset(object):
 
     def summary(self):
         """Method to display a summary of the dataset."""
-        print("Summary of the dataset:")
+        print("%=====================================================================%")
+        print("%%% Summary of the dataset:")
+        print("%=====================================================================%")
         print("Number of items:", self.get_num_items())
-        print("Number of sessions:", self.get_num_sessions())
         print(
             "Number of choices:",
-            self.get_num_choices(),
-            "Averaging",
-            self.get_num_choices() / self.get_num_sessions(),
-            "choices per session",
+            len(self),
         )
-        if self.items_features is not None:
-            print(f"Items features: {self.items_features_names}")
-        if self.items_features is not None:
-            print(f"{sum([f.shape[1] for f in self.items_features])} items features")
+        if self.fixed_items_features is not None:
+            print(f"Fixed Items Features:")
+            print(f"{sum([f.shape[1] for f in self.fixed_items_features])} items features")
+            if self.fixed_items_features_names is not None:
+                print(f"with names: {self.fixed_items_features_names}")
         else:
             print("No items features registered")
+        print("\n")
 
-        if self.sessions_features is not None:
-            print(f"Sessions features: {self.sessions_features_names}")
-        if self.sessions_features is not None:
-            print(f"{sum([f.shape[1] for f in self.sessions_features])} session features")
+        if self.contexts_features is not None:
+            print(f"Sessions features:")
+            print(f"{sum([f.shape[1] for f in self.contexts_features])} session features")
+            if self.contexts_features_names is not None:
+                print(f"with names: {self.contexts_features_names}")
         else:
             print("No sessions features registered")
+        print("\n")
 
-        if self.sessions_items_features is not None:
-            print(f"Session Items features: {self.sessions_items_features_names}")
-        if self.sessions_items_features is not None:
+        if self.contexts_items_features is not None:
+            print(f"Session Items features:")
             print(
-                f"{sum([f.shape[2] for f in self.sessions_items_features])} sessions \
+                f"{sum([f.shape[2] for f in self.contexts_items_features])} sessions \
                   items features"
             )
+            if self.contexts_items_features_names is not None:
+                print(f"with names: {self.contexts_items_features_names}")
         else:
             print("No sessions items features registered")
+        print("%=====================================================================%")
 
     def get_choices_batch(self, choices_indexes, features=None):
         """Method to access data within the ListChoiceDataset from its index.
