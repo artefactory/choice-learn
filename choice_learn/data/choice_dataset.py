@@ -88,7 +88,7 @@ class ChoiceDataset(object):
             if not isinstance(contexts_features, tuple):
                 self._return_contexts_features_tuple = False
                 if contexts_items_features_names is not None:
-                    assert len(contexts_features) == len(
+                    assert len(contexts_features[0]) == len(
                         contexts_features_names
                     ), "Number of features given does not match number of features names given."
 
@@ -115,7 +115,7 @@ class ChoiceDataset(object):
             self._return_contexts_items_features_tuple = False
             if contexts_items_features_names is not None:
                 assert (
-                    len(contexts_items_features) == len(contexts_items_features_names)
+                    len(contexts_items_features[0][0]) == len(contexts_items_features_names)
                 ), "Number of features given does not match number of features names given for contexts_items."
             contexts_items_features = (contexts_items_features,)
             contexts_items_features_names = (contexts_items_features_names,)
@@ -196,9 +196,11 @@ class ChoiceDataset(object):
                     if "session_id" in feature.columns:
                         if "item_id" in feature.columns:
                             feature_array = []
-                            for sess in np.sort(feature.session_id):
+                            for sess in np.sort(feature.session_id.unique()):
                                 sess_df = feature.loc[feature.session_id == sess]
-                                sess_df = sess_df.set_index("item_id")
+                                sess_df = sess_df[
+                                    sess_df.columns.difference(["sess_id"])
+                                ].set_index("item_id")
                                 feature_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
                             contexts_items_features = (
                                 contexts_items_features[:i]
@@ -212,12 +214,16 @@ class ChoiceDataset(object):
                                 + (feature.loc[np.sort(feature.index)].to_numpy(),)
                                 + contexts_items_features[i + 1 :]
                             )
+                    else:
+                        raise ValueError("session_id column not found in contexts_items_features")
                 elif isinstance(feature, list):
                     contexts_items_features = (
                         contexts_items_features[:i]
                         + (np.array(feature),)
                         + contexts_items_features[i + 1 :]
                     )
+        print(contexts_items_features)
+        print(contexts_items_features[0].shape)
         if contexts_items_availabilities is not None:
             if isinstance(contexts_items_availabilities, list):
                 contexts_items_availabilities = np.array(
@@ -265,6 +271,7 @@ class ChoiceDataset(object):
         self.contexts_features_names = contexts_features_names
         self.contexts_items_features_names = contexts_items_features_names
 
+        # What about typing ? should builf after check to change it ?
         self._build_features_by_ids()
 
         self.n_choices = len(self.choices)
@@ -272,7 +279,7 @@ class ChoiceDataset(object):
         # Different consitency checks to ensure everything is coherent
         self._check_dataset()  # Should handle alone if np.arrays are squeezed
         self._return_types = self._check_types()
-        # self._check_names()
+        self._check_names()
 
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
@@ -473,8 +480,8 @@ class ChoiceDataset(object):
 
     def _check_names(self):
         """Verifies that the names given to features are consistent with the features themselves."""
-        if self.items_features_names is not None:
-            for name, features in zip(self.items_features_names, self.items_features):
+        if self.fixed_items_features_names is not None:
+            for name, features in zip(self.fixed_items_features_names, self.fixed_items_features):
                 if name is not None:
                     if len(name) != features.shape[1]:
                         raise ValueError(
@@ -482,8 +489,8 @@ class ChoiceDataset(object):
                     length {len(name)} while items_features has {features.shape[1]} elements"
                         )
 
-        if self.sessions_features_names is not None:
-            for name, features in zip(self.sessions_features_names, self.sessions_features):
+        if self.contexts_features_names is not None:
+            for name, features in zip(self.contexts_features_names, self.contexts_features):
                 if name is not None:
                     if len(name) != features.shape[1]:
                         raise ValueError(
@@ -491,17 +498,17 @@ class ChoiceDataset(object):
                     length {len(name)} while sessions_features has {features.shape[1]} elements"
                         )
 
-        if self.sessions_items_features_names is not None:
+        if self.contexts_items_features_names is not None:
             for (
                 name,
                 features,
-            ) in zip(self.sessions_items_features_names, self.sessions_items_features):
+            ) in zip(self.contexts_items_features_names, self.contexts_items_features):
                 if name is not None:
                     if len(name) != features.shape[2]:
                         raise ValueError(
                             f"Specified \
                         sessions_items_features_names has length {len(name)} while \
-                        sessions_items_features has {features.shape[1]} elements"
+                        sessions_items_features has {features.shape[2]} elements"
                         )
 
     def __len__(self):
