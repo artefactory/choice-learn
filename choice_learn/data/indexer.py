@@ -154,7 +154,7 @@ class ChoiceDatasetIndexer(Indexer):
         """
         self.choice_dataset = choice_dataset
 
-    def _get_items_features(self):
+    def _get_fixed_items_features(self):
         """Method to access items features of the ChoiceDataset.
 
         Returns:
@@ -162,20 +162,20 @@ class ChoiceDatasetIndexer(Indexer):
         tuple of np.ndarray or np.ndarray
             items_features of the ChoiceDataset
         """
-        if self.choice_dataset.items_features is None:
+        if self.choice_dataset.fixed_items_features is None:
             items_features = None
         else:
             items_features = tuple(
                 items_feature.astype(self.choice_dataset._return_types[0][i])
-                for i, items_feature in enumerate(self.choice_dataset.items_features)
+                for i, items_feature in enumerate(self.choice_dataset.fixed_items_features)
             )
             # items_features were not given as a tuple, so we return do not return it as a tuple
-            if not self.choice_dataset._return_items_features_tuple:
-                items_features = items_features[0]
+            # if not self.choice_dataset._return_items_features_tuple:
+            #     items_features = items_features[0]
 
         return items_features
 
-    def _get_sessions_features(self, sessions_indexes):
+    def _get_contexts_features(self, contexts_indexes):
         """Method to access sessions features of the ChoiceDataset.
 
         Parameters
@@ -188,31 +188,31 @@ class ChoiceDatasetIndexer(Indexer):
         tuple of np.ndarray or np.ndarray
             items_features of the ChoiceDataset
         """
-        if self.choice_dataset.sessions_features is None:
-            sessions_features = None
+        if self.choice_dataset.contexts_features is None:
+            contexts_features = None
         else:
-            sessions_features = []
-            for i, sessions_feature in enumerate(self.choice_dataset.sessions_features):
-                if hasattr(sessions_feature, "iloc"):
-                    sessions_features.append(
-                        sessions_feature.iloc[sessions_indexes].astype(
+            contexts_features = []
+            for i, contexts_feature in enumerate(self.choice_dataset.contexts_features):
+                if hasattr(contexts_feature, "batch"):
+                    contexts_features.append(
+                        contexts_feature.batch[contexts_indexes].astype(
                             self.choice_dataset._return_types[1][i]
                         )
                     )
                 else:
-                    sessions_features.append(
-                        np.stack(sessions_feature[sessions_indexes], axis=0).astype(
+                    contexts_features.append(
+                        np.stack(contexts_feature[contexts_indexes], axis=0).astype(
                             self.choice_dataset._return_types[1][i]
                         )
                     )
             # sessions_features were not given as a tuple, so we return do not return it as a tuple
-            if not self.choice_dataset._return_sessions_features_tuple:
-                sessions_features = sessions_features[0]
-            else:
-                sessions_features = tuple(sessions_features)
-        return sessions_features
+            # if not self.choice_dataset._return_contexts_features_tuple:
+            #     contexts_features = contexts_feature[0]
+            # else:
+            #     contexts_features = tuple(contexts_features)
+        return contexts_features
 
-    def _get_sessions_items_features(self, sessions_indexes):
+    def _get_contexts_items_features(self, contexts_indexes):
         """Method to access sessions items features of the ChoiceDataset.
 
         Parameters
@@ -225,28 +225,28 @@ class ChoiceDatasetIndexer(Indexer):
         tuple of np.ndarray or np.ndarray
             items_features of the ChoiceDataset
         """
-        if self.choice_dataset.sessions_items_features is None:
+        if self.choice_dataset.contexts_items_features is None:
             return None
-        sessions_items_features = []
-        for i, sessions_items_feature in enumerate(self.choice_dataset.sessions_items_features):
-            if hasattr(sessions_items_feature, "iloc"):
-                sessions_items_features.append(
-                    sessions_items_feature.iloc[sessions_indexes].astype(self._return_types[2][i])
+        contexts_items_features = []
+        for i, contexts_items_feature in enumerate(self.choice_dataset.contexts_items_features):
+            if hasattr(contexts_items_feature, "iloc"):
+                contexts_items_features.append(
+                    contexts_items_feature.iloc[contexts_indexes].astype(self._return_types[2][i])
                 )
             else:
-                sessions_items_features.append(
-                    np.stack(sessions_items_feature[sessions_indexes], axis=0).astype(
+                contexts_items_features.append(
+                    np.stack(contexts_items_feature[contexts_indexes], axis=0).astype(
                         self.choice_dataset._return_types[2][i]
                     )
                 )
         # sessions_items_features were not given as a tuple, thus we do not return it as a tuple
-        if self.choice_dataset._return_sessions_items_features_tuple:
-            sessions_items_features = tuple(sessions_items_features)
-        else:
-            sessions_items_features = sessions_items_features[0]
-        return sessions_items_features
+        # if self.choice_dataset._return_contexts_items_features_tuple:
+        #     contexts_items_features = tuple(contexts_items_features)
+        # else:
+        #     contexts_items_features = contexts_items_features[0]
+        return contexts_items_features
 
-    def __getitem__(self, choice_index):
+    def __getitem__(self, choices_indexes):
         """Method to access data within the ChoiceDataset from its index.
 
         One index corresponds to a choice within a session.
@@ -263,80 +263,122 @@ class ChoiceDatasetIndexer(Indexer):
             indexes of the choices (that will be mapped to choice & session indexes) to return
 
         """
-        if isinstance(choice_index, list):
-            items_features = self._get_items_features()
+        if isinstance(choices_indexes, list):
+            fixed_items_features = self._get_fixed_items_features()
+
             # Get the session indexes
-            sessions_indexes = [self.choice_dataset.indexes[i] for i in choice_index]
+            contexts_features = self._get_contexts_features(choices_indexes)
+            contexts_items_features = self._get_contexts_items_features(choices_indexes)
 
-            sessions_features = self._get_sessions_features(sessions_indexes)
-            sessions_items_features = self._get_sessions_items_features(sessions_indexes)
-
-            if self.choice_dataset.sessions_items_availabilities is None:
-                sessions_items_availabilities = None
+            if self.choice_dataset.contexts_items_availabilities is None:
+                contexts_items_availabilities = None
             else:
-                if hasattr(self.choice_dataset.sessions_items_availabilities, "iloc"):
-                    sessions_items_availabilities = (
-                        self.choice_dataset.sessions_items_availabilities.iloc[
-                            sessions_indexes
+                if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
+                    contexts_items_availabilities = (
+                        self.choice_dataset.contexts_items_availabilities.batch[
+                            choices_indexes
                         ].astype(self.choice_dataset._return_types[3])
                     )
                 else:
-                    sessions_items_availabilities = (
-                        self.choice_dataset.sessions_items_availabilities[sessions_indexes].astype(
+                    contexts_items_availabilities = (
+                        self.choice_dataset.contexts_items_availabilities[choices_indexes].astype(
                             self.choice_dataset._return_types[3]
                         )
                     )
 
-            choice = self.choice_dataset.choices[choice_index].astype(
+            for indexes, func in self.choice_dataset.fixed_items_features_map:
+                fixed_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = func[
+                    fixed_items_features[indexes[0]][:, indexes[1]]
+                ]
+            for indexes, func in self.choice_dataset.contexts_features_map:
+                contexts_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = func[
+                    contexts_features[indexes[0]][:, indexes[1]]
+                ]
+            for indexes, func in self.choice_dataset.contexts_items_features_map:
+                contexts_items_features[indexes[0]][:, :, indexes[1] : indexes[1] + 1] = func[
+                    contexts_items_features[indexes[0]][:, :, indexes[1]]
+                ]
+            # items_features were not given as a tuple, so we return do not return it as a tuple
+            if not self.choice_dataset._return_items_features_tuple:
+                fixed_items_features = fixed_items_features[0]
+            if not self.choice_dataset._return_contexts_features_tuple:
+                contexts_features = contexts_features[0]
+            # sessions_items_features were not given as a tuple, so we return do not return
+            # it as a tuple
+            if not self.choice_dataset._return_contexts_items_features_tuple:
+                contexts_items_features = contexts_items_features[0]
+
+            choices = self.choice_dataset.choices[choices_indexes].astype(
                 self.choice_dataset._return_types[4]
             )
 
             return (
-                items_features,
-                sessions_features,
-                sessions_items_features,
-                sessions_items_availabilities,
-                choice,
+                fixed_items_features,
+                contexts_features,
+                contexts_items_features,
+                contexts_items_availabilities,
+                choices,
             )
 
-        if isinstance(choice_index, slice):
+        if isinstance(choices_indexes, slice):
             return self.__getitem__(
-                list(range(*choice_index.indices(self.choice_dataset.choices.shape[0])))
+                list(range(*choices_indexes.indices(self.choice_dataset.choices.shape[0])))
             )
 
-        if isinstance(choice_index, int):
-            items_features = self._get_items_features()
+        if isinstance(choices_indexes, int):
+            fixed_items_features = self._get_fixed_items_features()
             # Get the session indexes
-            sessions_indexes = self.choice_dataset.indexes[choice_index]
 
-            sessions_features = self._get_sessions_features(sessions_indexes)
-            sessions_items_features = self._get_sessions_items_features(sessions_indexes)
+            contexts_features = self._get_contexts_features(choices_indexes)
+            contexts_items_features = self._get_contexts_items_features(choices_indexes)
 
-            if self.choice_dataset.sessions_items_availabilities is None:
-                sessions_items_availabilities = None
+            if self.choice_dataset.contexts_items_availabilities is None:
+                contexts_items_availabilities = None
             else:
-                if hasattr(self.choice_dataset.sessions_items_availabilities, "iloc"):
-                    sessions_items_availabilities = (
-                        self.choice_dataset.sessions_items_availabilities.iloc[
-                            sessions_indexes
+                if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
+                    contexts_items_availabilities = (
+                        self.choice_dataset.contexts_items_availabilities.iloc[
+                            choices_indexes
                         ].astype(self.choice_dataset._return_types[3])
                     )
                 else:
-                    sessions_items_availabilities = (
-                        self.choice_dataset.sessions_items_availabilities[sessions_indexes].astype(
+                    contexts_items_availabilities = (
+                        self.choice_dataset.contexts_items_availabilities[choices_indexes].astype(
                             self.choice_dataset._return_types[3]
                         )
                     )
+            for indexes, func in self.choice_dataset.fixed_items_features_map:
+                fixed_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = func[
+                    fixed_items_features[indexes[0]][:, indexes[1]]
+                ]
+            for indexes, func in self.choice_dataset.contexts_features_map:
+                contexts_features[indexes[0]][indexes[1] : indexes[1] + 1] = func[
+                    contexts_features[indexes[0]][indexes[1]]
+                ]
+            for indexes, func in self.choice_dataset.contexts_items_features_map:
+                contexts_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = func[
+                    contexts_items_features[indexes[0]][:, indexes[1]]
+                ]
 
-            choice = self.choice_dataset.choices[choice_index].astype(
+            # items_features were not given as a tuple, so we return do not return it as a tuple
+            if not self.choice_dataset._return_items_features_tuple:
+                fixed_items_features = fixed_items_features[0]
+            if not self.choice_dataset._return_contexts_features_tuple:
+                contexts_features = contexts_features[0]
+            # sessions_items_features were not given as a tuple, so we return do not return
+            # it as a tuple
+            if not self.choice_dataset._return_contexts_items_features_tuple:
+                contexts_items_features = contexts_items_features[0]
+
+            choice = self.choice_dataset.choices[choices_indexes].astype(
                 self.choice_dataset._return_types[4]
             )
 
             return (
-                items_features,
-                sessions_features,
-                sessions_items_features,
-                sessions_items_availabilities,
+                fixed_items_features,
+                contexts_features,
+                contexts_items_features,
+                contexts_items_availabilities,
                 choice,
             )
         raise NotImplementedError
