@@ -26,9 +26,9 @@ class ChoiceDataset(object):
         choices,  # Should not have None as default value ?
         fixed_items_features=None,
         contexts_features=None,  # as many context as choices.  values or ids (look at key)
-        contexts_items_features=None,  # MUST INCLUDE item_id column; possible: column "available" binary
+        contexts_items_features=None,
         contexts_items_availabilities=None,
-        features_by_ids=[],  # list of (name, FeaturesStorage) --> requires to have df with col "_id"
+        features_by_ids=[],  # list of (name, FeaturesStorage)
         fixed_items_features_names=None,
         contexts_features_names=None,
         contexts_items_features_names=None,
@@ -37,16 +37,33 @@ class ChoiceDataset(object):
 
         Parameters
         ----------
-        items_features : tuple of (array_like, )
+        choices: list or np.ndarray
+            list of chosen items indexes
+        fixed_items_features : tuple of (array_like, )
             matrix of shape (num_items, num_items_features) containing the features of the items
-            e.g. item color
-        choices: list of list
-            for each choice we have a list of related choices. Main list has same legnth as
-            session_features.
-        suffle: bool, optional
-            whether to shuffle the dataset or not
+            that never change, e.g. item color, default is None
+        contexts_features : tuple of (array_like, )
+            matrix of shape (num_choices, num_contexts_features) containing the features of the
+            different contexts that are common to all items (e.g. store features,
+            customer features, etc...)
+        contexts_items_features : tuple of (array_like, ), default is None
+            matrix of shape (num_choices, num_items, num_contexts_items_features)
+            containing the features
+            of the items that change over time (e.g. price, promotion, etc...), default is None
+        contexts_items_availabilities : array_like
+            matrix of shape (num_choices, num_items) containing the availabilities of the items
+            over the different choices, default is None
+        features_by_ids : list of (name, FeaturesStorage)
+            List of Storage objects. Their name must correspond to a feature name
+            among fixed_items, contexts,
+            contexts_items and their ids must match to those features values. Default is []
+        fixed_items_features_names : tuple of (array_like, )
+            list of names of the fixed_items_features, default is None
+        contexts_features_names : tuple of (array_like, )
+            list of names of the contexts_features, default is None
+        contexts_items_features_names : tuple of (array_like, )
+            list of names of the contexts_items_features, default is None
         """
-
         if choices is None:
             # Done to keep a logical order of arguments, and has logic: choices have to be specified
             raise ValueError("Choices must be specified, got None")
@@ -58,9 +75,11 @@ class ChoiceDataset(object):
         if fixed_items_features is not None:
             if not isinstance(fixed_items_features, tuple):
                 if fixed_items_features_names is not None:
-                    assert len(fixed_items_features) == len(
-                        fixed_items_features_names
-                    ), "Number of features given does not match number of features names given."
+                    if len(fixed_items_features) == len(fixed_items_features_names):
+                        raise ValueError(
+                            """Number of features given does not match number
+                                         of features names given."""
+                        )
                 self._return_items_features_tuple = False
 
                 fixed_items_features = (fixed_items_features,)
@@ -87,9 +106,11 @@ class ChoiceDataset(object):
             if not isinstance(contexts_features, tuple):
                 self._return_contexts_features_tuple = False
                 if contexts_items_features_names is not None:
-                    assert len(contexts_features[0]) == len(
-                        contexts_features_names
-                    ), "Number of features given does not match number of features names given."
+                    if len(contexts_features[0]) == len(contexts_features_names):
+                        raise ValueError(
+                            """Number of features given does not match
+                                         number of features names given."""
+                        )
 
                 contexts_features_names = (contexts_features_names,)
                 contexts_features = (contexts_features,)
@@ -101,7 +122,8 @@ class ChoiceDataset(object):
                     for f, name in zip(contexts_features, contexts_features_names):
                         if len(f[0]) != len(name):
                             raise ValueError(
-                                "contexts_features shape and contexts_features_names shape do not match"
+                                """contexts_features shape and contexts_features_names
+                                shape do not match"""
                             )
 
                 # In this case names are missing, still transform it as a tuple
@@ -113,9 +135,11 @@ class ChoiceDataset(object):
         if not isinstance(contexts_items_features, tuple) and contexts_items_features is not None:
             self._return_contexts_items_features_tuple = False
             if contexts_items_features_names is not None:
-                assert (
-                    len(contexts_items_features[0][0]) == len(contexts_items_features_names)
-                ), "Number of features given does not match number of features names given for contexts_items."
+                if len(contexts_items_features[0][0]) != len(contexts_items_features_names):
+                    raise ValueError(
+                        """Number of features given does not match
+                                     number of features names given for contexts_items."""
+                    )
             contexts_items_features = (contexts_items_features,)
             contexts_items_features_names = (contexts_items_features_names,)
 
@@ -124,7 +148,8 @@ class ChoiceDataset(object):
             for f, name in zip(contexts_items_features, contexts_items_features_names):
                 if len(f[0][0]) != len(name):
                     raise ValueError(
-                        "contexts_items_features shape and contexts_items_features_names shape do not match"
+                        """contexts_items_features shape and
+                        contexts_items_features_names shape do not match"""
                     )
             self._return_contexts_items_features_tuple = True
         # In this case names are missing, still transform it as a tuple
@@ -295,6 +320,20 @@ class ChoiceDataset(object):
         self.indexer = ChoiceDatasetIndexer(self)
 
     def _build_features_by_ids(self):
+        """Builds mapping function.
+
+        Those mapping functions are so that at indexing,
+        the features are rebuilt with the features by id.
+
+        Returns:
+        --------
+        tuple
+            indexes and features_by_id of fixed_items_features
+        tuple
+            indexes and features_by_id of contexts_features
+        tuple
+            indexes and features_by_id of contexts_items_features
+        """
         if len(self.features_by_ids) == 0:
             print("No features_by_ids given.")
             return [], [], []
@@ -336,9 +375,10 @@ class ChoiceDataset(object):
                             if column_name == feature_by_id.name:
                                 contexts_items_features_map.append(((i, j), feature_by_id))
 
-        assert len(fixed_items_features_map) + len(contexts_features_map) + len(
+        if len(fixed_items_features_map) + len(contexts_features_map) + len(
             contexts_items_features_map
-        ) == len(self.features_by_ids), "Some features_by_ids were not matched with features_names."
+        ) == len(self.features_by_ids):
+            raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return fixed_items_features_map, contexts_features_map, contexts_items_features_map
 
@@ -569,9 +609,9 @@ class ChoiceDataset(object):
         contexts_index,
         features,
         items_id_column="item_id",
-        contexts_id_column="session_id",
+        contexts_id_column="contexts_id",
     ):
-        """Builds sessions_items_features and sessions_items_availabilities from dataframe.
+        """Builds contexts_items_features and contexts_items_availabilities from dataframe.
 
         Parameters
         ----------
@@ -579,20 +619,24 @@ class ChoiceDataset(object):
             Dataframe containing all the features for each item and sessions
         items_index : list
             List of items
-        sessions_index : list
+        contexts_index : list
             List of sessions
         features : list
             List of columns of df that represents the items_features (for sessions_items_features)
+        items_id_column: str, optional
+            Name of the column containing the item ids, default is "items_id"
+        contexts_id_column: str, optional
+            Name of the column containing the sessions ids, default is "contexts_id"
 
         Returns:
         -------
-        np.ndarray of shape (n_sessions, n_items, n_features)
-            Corresponding sessions_items_features
-        np.ndarray of shape (n_sessions, n_items)
+        np.ndarray of shape (n_choices, n_items, n_features)
+            Corresponding contexts_items_features
+        np.ndarray of shape (n_choices, n_items)
             Corresponding availabilities
         """
         try:
-            features.remove("session_id")
+            features.remove("context_id")
         except ValueError:
             pass
         try:
@@ -637,9 +681,9 @@ class ChoiceDataset(object):
     def from_single_df(
         cls,
         df,
-        fixed_items_features_columns,
-        contexts_features_columns,
-        contexts_items_features_columns,
+        fixed_items_features_columns=None,
+        contexts_features_columns=None,
+        contexts_items_features_columns=None,
         items_id_column="item_id",
         contexts_id_column="context_id",
         choices_column="choice",
@@ -651,18 +695,21 @@ class ChoiceDataset(object):
         ----------
         df : pandas.DataFrame
             dataframe in Long format
-        items_features_columns : list
-            Columns of the dataframe that are item features
-        sessions_features_columns : list
-            Columns of the dataframe that are session features
-        sessions_items_features_columns : list
-            Columns of the dataframe that are session-item features
+        fixed_items_features_columns : list
+            Columns of the dataframe that are item features, default is None
+        contexts_features_columns : list
+            Columns of the dataframe that are contexts features, default is None
+        contexts_items_features_columns : list
+            Columns of the dataframe that are context-item features, default is None
         items_id_column: str, optional
             Name of the column containing the item ids, default is "items_id"
-        sessions_id_column: str, optional
-            Name of the column containing the sessions ids, default is "sessions_id"
+        contexts_id_column: str, optional
+            Name of the column containing the sessions ids, default is "contexts_id"
         choices_column: str, optional
             Name of the column containing the choices, default is "choice"
+        choice_mode: str, optional
+            How choice is indicated in df, either "items_name" or "one_zero",
+            default is "items_name"
 
         Returns:
         -------
@@ -795,10 +842,25 @@ class ChoiceDataset(object):
 
         Parameters
         ----------
-        index : int or list of int or slice
+        choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
+        features : list of str, optional
+            list of features to return. None returns all of them, default is None.
 
+        Returns:
+        --------
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different items
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different contexts
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different contexts_items
+        array_like
+            array containing the availabilities of the different items
+        array_like
+            array containing the choices (indexes of chosen items)
         """
+        _ = features
         if isinstance(choices_indexes, list):
             if self.fixed_items_features is None:
                 fixed_items_features = None
@@ -969,8 +1031,8 @@ class ChoiceDataset(object):
 
         Parameters
         ----------
-        indexes : np.ndarray
-            indexes of the sessions to keep, shape should be (num_sessions,)
+        choices_indexes : np.ndarray
+            indexes of the contexts / choices to keep, shape should be (num_choices,)
 
         Returns:
         -------
@@ -1002,7 +1064,7 @@ class ChoiceDataset(object):
 
     @property
     def batch(self):
-        """Indexer."""
+        """Indexer. Corresponds to get_choice_batch, but with [] logic."""
         return self.indexer
 
     def iter_batch(self, batch_size, shuffle=None, sample_weight=None):
