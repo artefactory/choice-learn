@@ -51,6 +51,8 @@ class FeaturesStorage(Storage):
                 assert isinstance(v, np.ndarray) | isinstance(v, list)
                 assert len(np.array(v).shape) == 1
                 lengths.append(len(v))
+                if isinstance(v, list):
+                    storage[k] = np.array(v)
             assert len(set(lengths)) == 1
 
         elif isinstance(values, pd.DataFrame):
@@ -63,7 +65,7 @@ class FeaturesStorage(Storage):
         elif isinstance(values, list) or isinstance(values, np.ndarray):
             if ids is None:
                 ids = list(range(len(values)))
-            storage = {k: v for (k, v) in zip(ids, values)}
+            storage = {k: np.array(v) for (k, v) in zip(ids, values)}
         else:
             raise ValueError("values must be a dict, a DataFrame, a list or a numpy array")
 
@@ -74,7 +76,7 @@ class FeaturesStorage(Storage):
         self.shape = (len(self), len(next(iter(self.storage.values()))))
         self.indexer = indexer(self)
 
-    def _get_store_element(self, index):
+    def get_element_from_index(self, index):
         """Getter method over self.sequence.
 
         Returns the features stored at index index. Compared to __getitem__, it does take
@@ -90,10 +92,8 @@ class FeaturesStorage(Storage):
         array_like
             features corresponding to the index index in self.store
         """
-        if isinstance(index, list):
-            return [self.store[i] for i in index]
-        # else:
-        return self.store[index]
+        keys = list(self.storage.keys())[index]
+        return self.storage[keys]
 
     def __len__(self):
         """Returns the length of the sequence of apparition of the features."""
@@ -109,6 +109,17 @@ class FeaturesStorage(Storage):
         """
         sub_storage = {k: self.storage[k] for k in keys}
         return FeaturesStorage(values=sub_storage, values_names=self.values_names, name=self.name)
+
+    def get_storage_type(self):
+        """Functions to access stored elements dtypes.
+
+        Returns:
+        --------
+        tuple
+            tuple of dtypes of the stored elements, as returned by np.dtype
+        """
+        element = self.get_element_from_index(0)
+        return element.dtype
 
     @property
     def batch(self):
