@@ -67,6 +67,7 @@ class ChoiceDataset(object):
         if choices is None:
             # Done to keep a logical order of arguments, and has logic: choices have to be specified
             raise ValueError("Choices must be specified, got None")
+        choices = np.array(choices)
 
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
@@ -766,7 +767,7 @@ class ChoiceDataset(object):
             choices = choices.set_index(contexts_id_column)
             choices = choices.loc[sessions].to_numpy()
             # items is the value (str) of the item
-            choices = [np.where(items == c)[0] for c in choices]
+            choices = np.squeeze([np.where(items == c)[0] for c in choices])
         elif choice_mode == "one_zero":
             choices = df[[items_id_column, choices_column, contexts_id_column]]
             choices = choices.loc[choices[choices_column] == 1]
@@ -1048,21 +1049,45 @@ class ChoiceDataset(object):
         elif isinstance(choices_indexes, slice):
             return self.__getitem__(list(range(*choices_indexes.indices(len(self.choices)))))
 
-        return ChoiceDataset(
-            fixed_items_features=self.fixed_items_features,
-            contexts_features=tuple(
+        if self.fixed_items_features[0] is None:
+            fixed_items_features = None
+        else:
+            fixed_items_features = self.fixed_items_features
+        if self.contexts_features[0] is None:
+            contexts_features = None
+        else:
+            contexts_features = tuple(
                 self.contexts_features[i][choices_indexes]
                 for i in range(len(self.contexts_features))
-            ),
-            contexts_items_features=tuple(
+            )
+        if self.contexts_items_features[0] is None:
+            contexts_items_features = None
+        else:
+            contexts_items_features = tuple(
                 self.contexts_items_features[i][choices_indexes]
                 for i in range(len(self.contexts_items_features))
-            ),
+            )
+        if self.fixed_items_features_names[0] is None:
+            fixed_items_features_names = None
+        else:
+            fixed_items_features_names = self.fixed_items_features_names
+        if self.contexts_features_names[0] is None:
+            contexts_features_names = None
+        else:
+            contexts_features_names = self.contexts_features_names
+        if self.contexts_items_features_names[0] is None:
+            contexts_items_features_names = None
+        else:
+            contexts_items_features_names = self.contexts_items_features_names
+        return ChoiceDataset(
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
             contexts_items_availabilities=self.contexts_items_availabilities[choices_indexes],
             choices=[self.choices[i] for i in choices_indexes],
-            fixed_items_features_names=self.fixed_items_features_names,
-            contexts_features_names=self.contexts_features_names,
-            contexts_items_features_names=self.contexts_items_features_names,
+            fixed_items_features_names=fixed_items_features_names,
+            contexts_features_names=contexts_features_names,
+            contexts_items_features_names=contexts_items_features_names,
             features_by_ids=self.features_by_ids,
         )
 
