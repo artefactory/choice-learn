@@ -115,8 +115,10 @@ class FeaturesStorage(Storage):
         array_like
             features corresponding to the index index in self.store
         """
-        keys = list(self.storage.keys())[index]
-        return self.storage[keys]
+        if isinstance(index, int):
+            index = [index]
+        keys = [list(self.storage.keys())[i] for i in index]
+        return self.batch[keys]
 
     def __len__(self):
         """Returns the length of the sequence of apparition of the features."""
@@ -135,6 +137,8 @@ class FeaturesStorage(Storage):
         FeaturesStorage
             Subset of the FeaturesStorage, with only the features whose id is in id_keys
         """
+        if not isinstance(id_keys, list):
+            id_keys = [id_keys]
         sub_storage = {k: self.storage[k] for k in id_keys}
         return FeaturesStorage(values=sub_storage, values_names=self.values_names, name=self.name)
 

@@ -1,6 +1,5 @@
 """Indexer classes for data classes."""
 from abc import abstractmethod
-from collections.abc import Iterable
 
 import numpy as np
 
@@ -92,7 +91,7 @@ class StorageIndexer(Indexer):
         array_like
             features corresponding to the sequence_keys
         """
-        if isinstance(sequence_keys, Iterable):
+        if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
             return np.array([self.storage.storage[key] for key in sequence_keys])
         if isinstance(sequence_keys, slice):
             raise ValueError("Slicing is not supported for storage")
