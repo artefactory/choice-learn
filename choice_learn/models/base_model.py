@@ -472,13 +472,15 @@ class ChoiceModel(object):
         # Load optimizer step
         return cls
 
-    def predict_probas(self, choice_dataset):
+    def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each session and each product of a ChoiceDataset.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
+        batch_size : int, optional
+            Batch size to use for the prediction, by default -1
 
         Returns:
         --------
@@ -492,7 +494,7 @@ class ChoiceModel(object):
             sessions_items_batch,
             availabilities_batch,
             choices_batch,
-        ) in choice_dataset.iter_batch():
+        ) in choice_dataset.iter_batch(batch_size=batch_size):
             _, probabilities = self.batch_predict(
                 items_batch,
                 sessions_batch,
@@ -504,7 +506,7 @@ class ChoiceModel(object):
 
         return tf.concat(stacked_probabilities, axis=0)
 
-    def evaluate(self, choice_dataset, batch_size=None):
+    def evaluate(self, choice_dataset, batch_size=-1):
         """Evaluates the model for each session and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
@@ -520,8 +522,6 @@ class ChoiceModel(object):
         np.ndarray (n_sessions, n_items)
             Choice probabilties for each session and each product
         """
-        if batch_size is None:
-            batch_size = choice_dataset.batch_size
         batch_losses = []
         for (
             items_batch,
