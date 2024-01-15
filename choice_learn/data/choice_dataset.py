@@ -90,7 +90,7 @@ class ChoiceDataset(object):
                 # items_features is already a tuple, names are given, checking consistency
                 if fixed_items_features_names is not None:
                     for f, name in zip(fixed_items_features, fixed_items_features_names):
-                        if len(f) != len(name):
+                        if len(f[0]) != len(name):
                             raise ValueError(
                                 "items_features shape and items_features_names shape do not match"
                             )
@@ -106,10 +106,12 @@ class ChoiceDataset(object):
             if not isinstance(contexts_features, tuple):
                 self._return_contexts_features_tuple = False
                 if contexts_items_features_names is not None:
-                    if len(contexts_features[0]) == len(contexts_features_names):
+                    if len(contexts_features[0]) != len(contexts_features_names):
                         raise ValueError(
-                            """Number of features given does not match
-                                         number of features names given."""
+                            f"""Number of features given does not match
+                                         number of features names given:
+                                           {len(contexts_features[0])} and
+                                            {len(contexts_features_names)}"""
                         )
 
                 contexts_features_names = (contexts_features_names,)
@@ -137,8 +139,10 @@ class ChoiceDataset(object):
             if contexts_items_features_names is not None:
                 if len(contexts_items_features[0][0]) != len(contexts_items_features_names):
                     raise ValueError(
-                        """Number of features given does not match
-                                     number of features names given for contexts_items."""
+                        f"""Number of features given does not match
+                                     number of features names given for contexts_items:
+                                     {len(contexts_items_features[0][0])} and
+                                     {len(contexts_items_features_names)}"""
                     )
             contexts_items_features = (contexts_items_features,)
             contexts_items_features_names = (contexts_items_features_names,)
@@ -195,8 +199,8 @@ class ChoiceDataset(object):
             for i, feature in enumerate(contexts_features):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering choices by id ?
-                    if "session_id" in feature.columns:
-                        feature = feature.set_index("session_id")
+                    if "context_id" in feature.columns:
+                        feature = feature.set_index("context_id")
                     contexts_features = (
                         contexts_features[:i]
                         + (feature.loc[np.sort(feature.index)].to_numpy(),)
@@ -216,13 +220,13 @@ class ChoiceDataset(object):
             for i, feature in enumerate(contexts_items_features):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering choices by id ?
-                    if "session_id" in feature.columns:
+                    if "context_id" in feature.columns:
                         if "item_id" in feature.columns:
                             feature_array = []
-                            for sess in np.sort(feature.session_id.unique()):
-                                sess_df = feature.loc[feature.session_id == sess]
+                            for sess in np.sort(feature.context_id.unique()):
+                                sess_df = feature.loc[feature.context_id == sess]
                                 sess_df = sess_df[
-                                    sess_df.columns.difference(["session_id"])
+                                    sess_df.columns.difference(["context_id"])
                                 ].set_index("item_id")
                                 feature_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
                             contexts_items_features = (
@@ -236,7 +240,7 @@ class ChoiceDataset(object):
                                 + contexts_items_features_names[i + 1 :]
                             )
                         else:
-                            feature = feature.set_index("session_id")
+                            feature = feature.set_index("context_id")
                             contexts_items_features = (
                                 contexts_items_features[:i]
                                 + (feature.loc[np.sort(feature.index)].to_numpy(),)
@@ -248,7 +252,7 @@ class ChoiceDataset(object):
                                 + contexts_items_features_names[i + 1 :]
                             )
                     else:
-                        raise ValueError("session_id column not found in contexts_items_features")
+                        raise ValueError("context_id column not found in contexts_items_features")
                 elif isinstance(feature, list):
                     contexts_items_features = (
                         contexts_items_features[:i]
@@ -261,18 +265,18 @@ class ChoiceDataset(object):
                     contexts_items_availabilities, dtype=object
                 )
             elif isinstance(contexts_items_availabilities, pd.DataFrame):
-                if "session_id" in contexts_items_availabilities.columns:
+                if "context_id" in contexts_items_availabilities.columns:
                     if "item_id" in contexts_items_availabilities.columns:
                         av_array = []
-                        for sess in np.sort(contexts_items_availabilities.session_id):
+                        for sess in np.sort(contexts_items_availabilities.context_id):
                             sess_df = contexts_items_availabilities.loc[
-                                contexts_items_availabilities.session_id == sess
+                                contexts_items_availabilities.context__id == sess
                             ]
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
                         contexts_items_availabilities = np.array(av_array)
                     else:
-                        feature = feature.set_index("session_id")
+                        feature = feature.set_index("context_id")
                         contexts_items_availabilities = contexts_items_availabilities.loc[
                             np.sort(feature.index)
                         ].to_numpy()
@@ -687,7 +691,7 @@ class ChoiceDataset(object):
         items_id_column="item_id",
         contexts_id_column="context_id",
         choices_column="choice",
-        choice_mode="items_name",
+        choice_mode="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe.
 
@@ -709,7 +713,7 @@ class ChoiceDataset(object):
             Name of the column containing the choices, default is "choice"
         choice_mode: str, optional
             How choice is indicated in df, either "items_name" or "one_zero",
-            default is "items_name"
+            default is "items_id"
 
         Returns:
         -------
@@ -757,7 +761,7 @@ class ChoiceDataset(object):
             else None
         )
 
-        if choice_mode == "item_id":
+        if choice_mode == "items_id":
             choices = df[[choices_column, contexts_id_column]].drop_duplicates(contexts_id_column)
             choices = choices.set_index(contexts_id_column)
             choices = choices.loc[sessions].to_numpy()
@@ -766,7 +770,7 @@ class ChoiceDataset(object):
         elif choice_mode == "one_zero":
             choices = df[[items_id_column, choices_column, contexts_id_column]]
             choices = choices.loc[choices[choices_column] == 1]
-            choices = choices = choices.set_index(contexts_id_column)
+            choices = choices.set_index(contexts_id_column)
             choices = (
                 choices.loc[sessions][items_id_column]
                 .map({k: v for v, k in enumerate(items)})
@@ -774,7 +778,7 @@ class ChoiceDataset(object):
             )
         else:
             raise ValueError(
-                f"choice_mode {choice_mode} not recognized. Must be in ['item_id', 'one_zero']"
+                f"choice_mode {choice_mode} not recognized. Must be in ['items_id', 'one_zero']"
             )
         return ChoiceDataset(
             fixed_items_features=items_features,
@@ -1067,7 +1071,7 @@ class ChoiceDataset(object):
         """Indexer. Corresponds to get_choice_batch, but with [] logic."""
         return self.indexer
 
-    def iter_batch(self, batch_size, shuffle=None, sample_weight=None):
+    def iter_batch(self, batch_size, shuffle=False, sample_weight=None):
         """Iterates over dataset return batches of length batch_size.
 
         Newer version.
@@ -1081,8 +1085,6 @@ class ChoiceDataset(object):
         sample_weight : Iterable
             list of weights to be returned with the right indexing during the shuffling
         """
-        if shuffle is None:
-            shuffle = self.shuffle
         if batch_size == -1:
             batch_size = len(self)
         # Get indexes for each choice
