@@ -1,3 +1,3 @@
-# Welcome to the documentation!
+# Welcome to the choice-learn documentation!
 
-For more information, make sure to check the [Material for MkDocs documentation](https://squidfunk.github.io/mkdocs-material/getting-started/)
+A toolbox for choice-modeling

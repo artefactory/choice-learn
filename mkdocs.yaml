@@ -23,6 +23,8 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+  logo: choice_learn_official_logo.png
+  favicon: choice_learn_official_logo.png
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -35,11 +37,35 @@ markdown_extensions:
   - mdx_math
 
 plugins:
-  - mkdocstrings
-  - search
-extra_javascript:
+- extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          docstring_style: numpy
+        rendering:
+          show_source: true
+- search
+- nbconvert:
+      input_dir: notebooks
+      output_dir: notebooks
 
 nav:
-  - Home: index.md
-  - Source code: code.md
+  - HomePage: index.md
+  - tutorials.md
+  - How-To Guides:
+    - Introduction: how-to-guides.md
+    - ChoiceDataset Usage: notebooks/choice_learn_introduction_data.md
+    - Conditional Logit Estimation: notebooks/choice_learn_introduction_clogit.md
+    - Custom Choice Model Creation: notebooks/custom_model.md
+  - References:
+    - Data:
+      - ChoiceDataset: references/data/references_choice_dataset.md
+      - Features Storage: references/data/references_store.md
+      - Available Datasets: references/data/references_dataset.md
+    - Choice Models:
+      - Base Model: references/models/references_base_model.md
+      - Conditional Logit: references/models/references_clogit.md
+      - RUMnet: references/models/references_rumnet.md
+  - explanations.md

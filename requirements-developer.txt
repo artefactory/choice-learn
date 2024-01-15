@@ -2,9 +2,11 @@
 ruff==0.1.2
 pre-commit==3.3.3
 pytest==7.3.2
-mkdocs==1.4.3
-mkdocs-material==9.1.15
-mkdocstrings-python==1.1.2
+python-markdown-math
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+mkdocs-nbconvert==0.2.1
+mkdocstrings-python==1.7.5
 python-markdown-math
 bandit==1.7.5
 nbstripout==0.6.1
