@@ -4,7 +4,7 @@ import pytest
 
 from choice_learn.data.choice_dataset import ChoiceDataset
 
-items_features = [
+fixed_items_features = [
     [1, 2],  # item 1 [size, weight]
     [2, 4],  # item 2 [size, weight]
     [1.5, 1.5],  # item 3 [size, weight]
@@ -17,19 +17,19 @@ items_features = [
 # Customer 2 bought item 3 at session 2
 
 choices = [0, 2, 1]
-sessions_items_availabilities = [
+contexts_items_availabilities = [
     [1, 1, 1],  # All items available at session 1
     [1, 1, 1],  # All items available at session 2
     [0, 1, 1],  # Item 1 not available at session 3
 ]
 
-sessions_features = [
+contexts_features = [
     [100, 20],  # session 1, customer 1 [budget, age]
     [200, 40],  # session 2, customer 2 [budget, age]
     [80, 20],  # session 3, customer 1 [budget, age]
 ]
 
-sessions_items_features = [
+contexts_items_features = [
     [
         [100, 0],  # Session 1, Item 1 [price, promotion]
         [140, 0],  # Session 1, Item 2 [price, promotion]
@@ -53,19 +53,10 @@ def test_instantiate_len():
     """Test the __init__ method."""
     choices = [0, 2, 1]
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
-        choices=choices,
-    )
-    assert len(dataset) == 3
-    choices = [[0], [1, 2], [2, 1, 1, 1]]
-    dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
     assert len(dataset) == 3
@@ -76,10 +67,10 @@ def test_fail_instantiate():
     choices = [0, 1]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -93,10 +84,10 @@ def test_fail_instantiate_2():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -109,10 +100,10 @@ def test_fail_instantiate_3():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -125,10 +116,10 @@ def test_fail_instantiate_10():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=sessions_items_availabilities,
             choices=choices,
         )
 
@@ -142,10 +133,10 @@ def test_fail_instantiate_4():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=sessions_items_availabilities,
             choices=choices,
         )
 
@@ -158,10 +149,10 @@ def test_fail_instantiate_5():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=sessions_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -175,10 +166,10 @@ def test_fail_instantiate_6():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=sessions_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -199,10 +190,10 @@ def test_fail_instantiate_7():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=sessions_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -226,10 +217,10 @@ def test_fail_instantiate_8():
     ]
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=sessions_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -239,10 +230,10 @@ def test_fail_instantiate_9():
     choices = [0, 4, 2]  # choices higher than nb of items
     with pytest.raises(ValueError):
         ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
 
@@ -250,15 +241,14 @@ def test_fail_instantiate_9():
 def test_shape():
     """Tests get shape methods."""
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
 
     assert dataset.get_num_items() == 3
-    assert dataset.get_num_sessions() == 3
     assert dataset.get_num_choices() == 3
 
 
@@ -269,7 +259,7 @@ def test_from_df():
             "item_id": [0, 1, 2, 0, 1, 2, 1, 2],
             "items_feat_1": [1, 2, 1.5, 1, 2, 1.5, 2, 1.5],
             "items_feat_2": [2, 4, 1.5, 2, 4, 1.5, 4, 1.5],
-            "session_id": [0, 0, 0, 1, 1, 1, 2, 2],
+            "context_id": [0, 0, 0, 1, 1, 1, 2, 2],
             "session_feat_1": [100, 100, 100, 200, 200, 200, 80, 80],
             "session_feat_2": [20, 20, 20, 40, 40, 40, 20, 20],
             "session_item_feat_1": [100, 140, 200, 100, 120, 200, 120, 180],
@@ -279,27 +269,29 @@ def test_from_df():
     )
     cd_test = ChoiceDataset.from_single_df(
         features_df,
-        items_features_columns=["items_feat_1", "items_feat_2"],
-        sessions_features_columns=["session_feat_1", "session_feat_2"],
-        sessions_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
-        choice_mode="item_id",
+        fixed_items_features_columns=["items_feat_1", "items_feat_2"],
+        contexts_features_columns=["session_feat_1", "session_feat_2"],
+        contexts_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
+        choice_mode="items_id",
     )
     ground_truth_cd = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
-    assert (cd_test.items_features[0] == ground_truth_cd.items_features[0]).all()
-    assert (cd_test.sessions_features[0] == ground_truth_cd.sessions_features[0]).all()
+    assert (cd_test.fixed_items_features[0] == ground_truth_cd.fixed_items_features[0]).all()
+    assert (cd_test.contexts_features[0] == ground_truth_cd.contexts_features[0]).all()
     assert (
-        cd_test.sessions_items_features[0].astype("float32")
-        == ground_truth_cd.sessions_items_features[0].astype("float32")
+        cd_test.contexts_items_features[0].astype("float32")
+        == ground_truth_cd.contexts_items_features[0].astype("float32")
     ).all()
     assert (
-        cd_test.sessions_items_availabilities == ground_truth_cd.sessions_items_availabilities
+        cd_test.contexts_items_availabilities == ground_truth_cd.contexts_items_availabilities
     ).all()
+    print(cd_test.choices)
+    print(cd_test.fixed_items_features)
     assert (cd_test.choices == ground_truth_cd.choices).all()
 
     features_df = pd.DataFrame(
@@ -307,7 +299,7 @@ def test_from_df():
             "item_id": [0, 1, 2, 0, 1, 2, 1, 2],
             "items_feat_1": [1, 2, 1.5, 1, 2, 1.5, 2, 1.5],
             "items_feat_2": [2, 4, 1.5, 2, 4, 1.5, 4, 1.5],
-            "session_id": [0, 0, 0, 1, 1, 1, 2, 2],
+            "context_id": [0, 0, 0, 1, 1, 1, 2, 2],
             "session_feat_1": [100, 100, 100, 200, 200, 200, 80, 80],
             "session_feat_2": [20, 20, 20, 40, 40, 40, 20, 20],
             "session_item_feat_1": [100, 140, 200, 100, 120, 200, 120, 180],
@@ -317,26 +309,26 @@ def test_from_df():
     )
     cd_test = ChoiceDataset.from_single_df(
         features_df,
-        items_features_columns=["items_feat_1", "items_feat_2"],
-        sessions_features_columns=["session_feat_1", "session_feat_2"],
-        sessions_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
+        fixed_items_features_columns=["items_feat_1", "items_feat_2"],
+        contexts_features_columns=["session_feat_1", "session_feat_2"],
+        contexts_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
         choice_mode="one_zero",
     )
     ground_truth_cd = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
-    assert (cd_test.items_features[0] == ground_truth_cd.items_features[0]).all()
-    assert (cd_test.sessions_features[0] == ground_truth_cd.sessions_features[0]).all()
+    assert (cd_test.fixed_items_features[0] == ground_truth_cd.fixed_items_features[0]).all()
+    assert (cd_test.contexts_features[0] == ground_truth_cd.contexts_features[0]).all()
     assert (
-        cd_test.sessions_items_features[0].astype("float32")
-        == ground_truth_cd.sessions_items_features[0].astype("float32")
+        cd_test.contexts_items_features[0].astype("float32")
+        == ground_truth_cd.contexts_items_features[0].astype("float32")
     ).all()
     assert (
-        cd_test.sessions_items_availabilities == ground_truth_cd.sessions_items_availabilities
+        cd_test.contexts_items_availabilities == ground_truth_cd.contexts_items_availabilities
     ).all()
     assert (cd_test.choices == ground_truth_cd.choices).all()
 
@@ -344,10 +336,10 @@ def test_from_df():
 def test_summary():
     """Tests summary method."""
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
     dataset.summary()
@@ -357,21 +349,21 @@ def test_summary():
 def test_getitem():
     """Tests getitem method."""
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
 
     sub_dataset = dataset[[0, 1]]
-    assert (sub_dataset.items_features[0] == dataset.items_features[0]).all()
-    assert (sub_dataset.sessions_features[0] == dataset.sessions_features[0][[0, 1]]).all()
+    assert (sub_dataset.fixed_items_features[0] == dataset.fixed_items_features[0]).all()
+    assert (sub_dataset.contexts_features[0] == dataset.contexts_features[0][[0, 1]]).all()
     assert (
-        sub_dataset.sessions_items_features[0] == dataset.sessions_items_features[0][[0, 1]]
+        sub_dataset.contexts_items_features[0] == dataset.contexts_items_features[0][[0, 1]]
     ).all()
     assert (
-        sub_dataset.sessions_items_availabilities == dataset.sessions_items_availabilities[[0, 1]]
+        sub_dataset.contexts_items_availabilities == dataset.contexts_items_availabilities[[0, 1]]
     ).all()
     assert (sub_dataset.choices == dataset.choices[[0, 1]]).all()
     assert (sub_dataset.choices == [0, 2]).all()
@@ -380,17 +372,17 @@ def test_getitem():
 def test_batch():
     """Tests the batch method."""
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
     batch = dataset.batch[[0, 1]]
-    assert (batch[0] == items_features).all()
-    assert (batch[1] == sessions_features[:2]).all()
-    assert (batch[2] == sessions_items_features[:2]).all()
-    assert (batch[3] == sessions_items_availabilities[:2]).all()
+    assert (batch[0] == fixed_items_features).all()
+    assert (batch[1] == contexts_features[:2]).all()
+    assert (batch[2] == contexts_items_features[:2]).all()
+    assert (batch[3] == contexts_items_availabilities[:2]).all()
     assert (batch[4] == choices[:2]).all()
 
     sliced_batch = dataset.batch[:2]
@@ -411,10 +403,10 @@ def test_batch():
 def test_iter_batch():
     """Tests the iter_batch method."""
     dataset = ChoiceDataset(
-        items_features=items_features,
-        sessions_features=sessions_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=fixed_items_features,
+        contexts_features=contexts_features,
+        contexts_items_features=contexts_items_features,
+        contexts_items_availabilities=contexts_items_availabilities,
         choices=choices,
     )
     for batch_nb, batch in enumerate(dataset.iter_batch(batch_size=2)):
@@ -429,10 +421,10 @@ def test_iter_batch():
     def test_filter():
         """Tests the filter method."""
         dataset = ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
         filtered_dataset = dataset.filter([True, False, True])
