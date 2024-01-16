@@ -752,6 +752,7 @@ class ChoiceDataset(object):
             items_features_columns = (fixed_items_features_columns,)
         else:
             items_features = None
+            items_features_columns = None
 
         if contexts_features_columns is not None:
             contexts_features = df[
@@ -763,6 +764,7 @@ class ChoiceDataset(object):
             contexts_features_columns = (contexts_features_columns,)
         else:
             contexts_features = None
+            contexts_features_columns = None
 
         (
             contexts_items_features,
@@ -825,34 +827,35 @@ class ChoiceDataset(object):
             "Number of choices:",
             len(self),
         )
+        print("%=====================================================================%")
         if self.fixed_items_features is not None:
-            print("Fixed Items Features:")
-            print(f"{sum([f.shape[1] for f in self.fixed_items_features])} items features")
+            print(" Fixed Items Features:")
+            print(f" {sum([f.shape[1] for f in self.fixed_items_features])} items features")
             if self.fixed_items_features_names is not None:
-                print(f"with names: {self.fixed_items_features_names}")
+                print(f" with names: {self.fixed_items_features_names}")
         else:
-            print("No items features registered")
+            print(" No items features registered")
         print("\n")
 
         if self.contexts_features is not None:
-            print("Sessions features:")
-            print(f"{sum([f.shape[1] for f in self.contexts_features])} session features")
+            print(" Contexts features:")
+            print(f" {sum([f.shape[1] for f in self.contexts_features])} context features")
             if self.contexts_features_names is not None:
-                print(f"with names: {self.contexts_features_names}")
+                print(f" with names: {self.contexts_features_names}")
         else:
-            print("No sessions features registered")
+            print(" No sessions features registered")
         print("\n")
 
         if self.contexts_items_features is not None:
-            print("Session Items features:")
+            print(" Contexts Items features:")
             print(
-                f"{sum([f.shape[2] for f in self.contexts_items_features])} sessions \
-                  items features"
+                f""" {sum([f.shape[2] for f in self.contexts_items_features])} context
+                 items features"""
             )
             if self.contexts_items_features_names is not None:
-                print(f"with names: {self.contexts_items_features_names}")
+                print(f" with names: {self.contexts_items_features_names}")
         else:
-            print("No sessions items features registered")
+            print(" No sessions items features registered")
         print("%=====================================================================%")
         return ""
 

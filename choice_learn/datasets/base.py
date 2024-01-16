@@ -180,14 +180,14 @@ def load_swissmetro(
         return pd.DataFrame(data, columns=names)
 
     return ChoiceDataset(
-        items_features=items_features,
-        sessions_features=session_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=items_features,
+        contexts_features=session_features,
+        contexts_items_features=sessions_items_features,
+        contexts_items_availabilities=sessions_items_availabilities,
         choices=choices,
-        items_features_names=items_features_names,
-        sessions_features_names=session_features_names,
-        sessions_items_features_names=sessions_items_features_names,
+        fixed_items_features_names=items_features_names,
+        contexts_features_names=session_features_names,
+        contexts_items_features_names=sessions_items_features_names,
     )
 
 
@@ -239,7 +239,7 @@ def load_modecanada(
 
     items = ["air", "bus", "car", "train"]
     items_features = []
-    session_features = ["income"]
+    session_features = ["income", "dist", "urban"]
     sessions_items_features = ["cost", "freq", "ovt", "ivt"]
     choice_column = "choice"
 
@@ -257,13 +257,12 @@ def load_modecanada(
             lambda row: 1.0 if row.alt == items[3] else 0.0, axis=1
         )
         items_features = ["oh_air", "oh_bus", "oh_car", "oh_train"]
-    else:
-        items_features = None
 
     if add_is_public:
         canada_df["is_public"] = canada_df.apply(
             lambda row: 0.0 if row.alt == "car" else 1.0, axis=1
         )
+        items_features.append("is_public")
 
     if return_desc:
         # TODO
@@ -355,13 +354,16 @@ def load_modecanada(
             choices,
         )
 
+    if len(items_features) == 0:
+        items_features = None
+
     return ChoiceDataset.from_single_df(
         df=canada_df,
-        items_features_columns=items_features,
-        sessions_features_columns=session_features,
-        sessions_items_features_columns=sessions_items_features,
+        fixed_items_features_columns=items_features,
+        contexts_features_columns=session_features,
+        contexts_items_features_columns=sessions_items_features,
         items_id_column="alt",
-        sessions_id_column="case",
+        contexts_id_column="case",
         choices_column=choice_column,
         choice_mode="one_zero",
     )
