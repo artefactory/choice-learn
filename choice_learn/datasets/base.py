@@ -180,37 +180,55 @@ def load_swissmetro(
         return pd.DataFrame(data, columns=names)
 
     return ChoiceDataset(
-        items_features=items_features,
-        sessions_features=session_features,
-        sessions_items_features=sessions_items_features,
-        sessions_items_availabilities=sessions_items_availabilities,
+        fixed_items_features=items_features,
+        contexts_features=session_features,
+        contexts_items_features=sessions_items_features,
+        contexts_items_availabilities=sessions_items_availabilities,
         choices=choices,
-        items_features_names=items_features_names,
-        sessions_features_names=session_features_names,
-        sessions_items_features_names=sessions_items_features_names,
+        fixed_items_features_names=items_features_names,
+        contexts_features_names=session_features_names,
+        contexts_items_features_names=sessions_items_features_names,
     )
 
 
-def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
+def load_modecanada(
+    add_items_one_hot=False,
+    add_is_public=False,
+    as_frame=False,
+    return_desc=False,
+    choice_mode="one_zero",
+    split_features=False,
+    to_wide=False,
+):
     """Load and return the ModeCanada dataset from Koppleman et al. (1993).
 
     Parameters
     ----------
     one_hot_cat_data : bool, optional
-        Whether to transform categorical data as OneHot, by default False
+        Whether to transform categorical data as OneHot, by default False.
+    add_is_public : bool, optional
+        Whether to add the is_public feature, by default False.
     add_items_one_hot : bool, optional
         Whether to add a OneHot encoding of items as items_features, by default False
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
-        by default False
+        by default False.
     return_desc : bool, optional
-        Whether to return the description, by default False
+        Whether to return the description, by default False.
+    choice_mode : str, optional, among ["one_zero", "items_id"]
+        mode indicating how the choice is encoded, by default "one_zero".
+    split_features : bool, optional
+        Whether to split features by type in different dataframes, by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
 
     Returns:
     --------
     ChoiceDataset
         Loaded ModeCanada dataset
     """
+    _ = to_wide
     data_file_name = "ModeCanada.csv.gz"
     names, data = load_gzip(data_file_name)
     names = [name.replace('"', "") for name in names]
@@ -221,7 +239,7 @@ def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
 
     items = ["air", "bus", "car", "train"]
     items_features = []
-    session_features = ["income"]
+    session_features = ["income", "dist", "urban"]
     sessions_items_features = ["cost", "freq", "ovt", "ivt"]
     choice_column = "choice"
 
@@ -239,8 +257,12 @@ def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
             lambda row: 1.0 if row.alt == items[3] else 0.0, axis=1
         )
         items_features = ["oh_air", "oh_bus", "oh_car", "oh_train"]
-    else:
-        items_features = None
+
+    if add_is_public:
+        canada_df["is_public"] = canada_df.apply(
+            lambda row: 0.0 if row.alt == "car" else 1.0, axis=1
+        )
+        items_features.append("is_public")
 
     if return_desc:
         # TODO
@@ -249,16 +271,99 @@ def load_modecanada(add_items_one_hot=False, as_frame=False, return_desc=False):
     for col in canada_df.columns:
         canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
 
+    if choice_mode == "items_id":
+        # We need to transform how the choice is encoded to add the chosen item id
+        named_choice = [0] * len(canada_df)
+        for n_row, row in canada_df.iterrows():
+            if row.choice == 0:
+                sub_df = canada_df[canada_df.case == row.case]
+                choice = sub_df.loc[sub_df.choice == 1].alt.to_numpy()[0]
+                named_choice[n_row - 1] = choice
+
+        for n_row, row in canada_df.iterrows():
+            if row.choice == 1:
+                named_choice[n_row - 1] = row.alt
+
+        canada_df["choice"] = named_choice
+
     if as_frame:
+        if split_features:
+            if add_is_public:
+                fixed_items_features = pd.DataFrame(
+                    {"item_id": ["car", "train", "bus", "air"], "is_public": [0, 1, 1, 1]}
+                )
+            else:
+                fixed_items_features = None
+            contexts_features = canada_df[["case", "income", "dist", "urban"]].drop_duplicates()
+            contexts_features = contexts_features.rename(columns={"case": "context_id"})
+
+            contexts_items_features = canada_df[["case", "alt", "freq", "cost", "ivt", "ovt"]]
+            contexts_items_features = contexts_items_features.rename(
+                columns={"case": "context_id", "alt": "item_id"}
+            )
+
+            choices = canada_df.loc[canada_df.choice == 1][["case", "alt"]]
+            choices = choices.rename(columns={"case": "context_id", "alt": "choice"})
+
+            return fixed_items_features, contexts_features, contexts_items_features, choices
         return canada_df
+
+    if split_features:
+        # Order of item_id is alphabetical: air, bus, car, train
+        if add_is_public:
+            fixed_items_features = np.array([[1.0], [1.0], [0.0], [1.0]])
+        else:
+            fixed_items_features = None
+        contexts_features = (
+            canada_df[["case", "income", "dist", "urban"]]
+            .drop_duplicates()[["income", "dist", "urban"]]
+            .to_numpy()
+        )
+
+        cif = []
+        ci_av = []
+        for context in canada_df.case.unique():
+            context_df = canada_df.loc[canada_df.case == context]
+            # Order of item_id is alphabetical: air, bus, car, train
+            cf = []
+            cav = []
+            for item in ["air", "bus", "car", "train"]:
+                if item in context_df.alt.unique():
+                    cf.append(
+                        context_df.loc[context_df.alt == item][
+                            ["freq", "cost", "ivt", "ovt"]
+                        ].to_numpy()[0]
+                    )
+                    cav.append(1)
+                else:
+                    cf.append([0.0, 0.0, 0.0, 0.0])
+                    cav.append(0)
+            cif.append(cf)
+            ci_av.append(cav)
+        contexts_items_features = np.array(cif)
+        contexts_items_availabilities = np.array(ci_av)
+
+        choices = np.squeeze(canada_df.loc[canada_df.choice == 1]["alt"].to_numpy())
+        choices = np.array([["air", "bus", "car", "train"].index(c) for c in choices])
+
+        return (
+            fixed_items_features,
+            contexts_features,
+            contexts_items_features,
+            contexts_items_availabilities,
+            choices,
+        )
+
+    if len(items_features) == 0:
+        items_features = None
 
     return ChoiceDataset.from_single_df(
         df=canada_df,
-        items_features_columns=items_features,
-        sessions_features_columns=session_features,
-        sessions_items_features_columns=sessions_items_features,
+        fixed_items_features_columns=items_features,
+        contexts_features_columns=session_features,
+        contexts_items_features_columns=sessions_items_features,
         items_id_column="alt",
-        sessions_id_column="case",
+        contexts_id_column="case",
         choices_column=choice_column,
         choice_mode="one_zero",
     )

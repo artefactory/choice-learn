@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from choice_learn.data.indexer import ChoiceDatasetIndexer
-from choice_learn.data.store import Store
 
 
 class ChoiceDataset(object):
@@ -24,104 +23,146 @@ class ChoiceDataset(object):
 
     def __init__(
         self,
-        items_features=None,
-        sessions_features=None,
-        sessions_items_features=None,
-        items_features_names=None,
-        sessions_features_names=None,
-        sessions_items_features_names=None,
-        sessions_items_availabilities=None,
-        choices=None,  # Should not have None as default value ?
-        batch_size=16,
-        shuffle=False,
+        choices,  # Should not have None as default value ?
+        fixed_items_features=None,
+        contexts_features=None,  # as many context as choices.  values or ids (look at key)
+        contexts_items_features=None,
+        contexts_items_availabilities=None,
+        features_by_ids=[],  # list of (name, FeaturesStorage)
+        fixed_items_features_names=None,
+        contexts_features_names=None,
+        contexts_items_features_names=None,
     ):
         """Builds the ChoiceDataset.
 
         Parameters
         ----------
-        items_features : tuple of (array_like, )
+        choices: list or np.ndarray
+            list of chosen items indexes
+        fixed_items_features : tuple of (array_like, )
             matrix of shape (num_items, num_items_features) containing the features of the items
-            e.g. item color
-        sessions_features : tuple of (array_like, )
-            matrix of shape (num_sessions, num_sess_features) containing the features of the
-            sessions e.g. day of week
-        sessions_items_features : tuple of (array_like, )
-            matrix of shape (num_sessions, num_items, num_ses_items_features) containing the item
-            features varying over sessions, e.g. prices
-        sessions_items_availabilities : array_like
-            binary matrix of shape (num_sessions, num_items) containing the availabitilies of
-            products (1. if present 0. otherwise) over sessions
-        choices: list of list
-            for each sessions we have a list of related choices. Main list has same legnth as
-            session_features and sessions_items_features.
-        batch_size: int, optional
-            size of the batches to return in __iter__ method, default is 16
-        shuffle: bool, optional
-            whether to shuffle the dataset or not, default is False
+            that never change, e.g. item color, default is None
+        contexts_features : tuple of (array_like, )
+            matrix of shape (num_choices, num_contexts_features) containing the features of the
+            different contexts that are common to all items (e.g. store features,
+            customer features, etc...)
+        contexts_items_features : tuple of (array_like, ), default is None
+            matrix of shape (num_choices, num_items, num_contexts_items_features)
+            containing the features
+            of the items that change over time (e.g. price, promotion, etc...), default is None
+        contexts_items_availabilities : array_like
+            matrix of shape (num_choices, num_items) containing the availabilities of the items
+            over the different choices, default is None
+        features_by_ids : list of (name, FeaturesStorage)
+            List of Storage objects. Their name must correspond to a feature name
+            among fixed_items, contexts,
+            contexts_items and their ids must match to those features values. Default is []
+        fixed_items_features_names : tuple of (array_like, )
+            list of names of the fixed_items_features, default is None
+        contexts_features_names : tuple of (array_like, )
+            list of names of the contexts_features, default is None
+        contexts_items_features_names : tuple of (array_like, )
+            list of names of the contexts_items_features, default is None
         """
+        if choices is None:
+            # Done to keep a logical order of arguments, and has logic: choices have to be specified
+            raise ValueError("Choices must be specified, got None")
+
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
-        if not isinstance(items_features, tuple) and items_features is not None:
-            items_features = (items_features,)
-            items_features_names = (items_features_names,)
-            self._return_items_features_tuple = False
-        # items_features is already a tuple, names are given, checking consistency
-        elif items_features is not None and items_features_names is not None:
-            if (
-                len(items_features) != len(items_features_names)
-                and items_features_names is not None
-            ):
-                raise ValueError("items_features shape and items_features_names shape do not match")
-            self._return_items_features_tuple = True
-        # In this case names are missing, still transform it as a tuple
-        elif items_features is not None:
-            self._return_items_features_tuple = True
-            items_features_names = (None,) * len(items_features)
 
-        # If sessions_features is not given as tuple, transform it internally as a tuple
-        # A bit longer because can be None and need to also handle names
-        if not isinstance(sessions_features, tuple) and sessions_features is not None:
-            sessions_features = (sessions_features,)
-            sessions_features_names = (sessions_features_names,)
-            self._return_sessions_features_tuple = False
-        # sessions_features is already a tuple, names are given, checking consistency
-        elif sessions_features is not None and sessions_features_names is not None:
-            if (
-                len(sessions_features) != len(sessions_features_names)
-                and sessions_features_names is not None
-            ):
-                raise ValueError(
-                    "sessions_features shape and sessions_features_names shape \
-                                 do not match"
-                )
-            self._return_sessions_features_tuple = True
-        # In this case names are missing, still transform it as a tuple
-        elif sessions_features is not None:
-            self._return_sessions_features_tuple = True
-            sessions_features_names = (None,) * len(sessions_features)
+        if fixed_items_features is not None:
+            if not isinstance(fixed_items_features, tuple):
+                if fixed_items_features_names is not None:
+                    if len(fixed_items_features) == len(fixed_items_features_names):
+                        raise ValueError(
+                            """Number of features given does not match number
+                                         of features names given."""
+                        )
+                self._return_items_features_tuple = False
 
-        # If sessions_items_features is not given as tuple, transform it internally as a tuple
+                fixed_items_features = (fixed_items_features,)
+                fixed_items_features_names = (fixed_items_features_names,)
+            else:
+                self._return_items_features_tuple = True
+
+                # items_features is already a tuple, names are given, checking consistency
+                if fixed_items_features_names is not None:
+                    for f, name in zip(fixed_items_features, fixed_items_features_names):
+                        if len(f[0]) != len(name):
+                            raise ValueError(
+                                "items_features shape and items_features_names shape do not match"
+                            )
+                # In this case names are missing, still transform it as a tuple
+                else:
+                    fixed_items_features_names = (None,) * len(fixed_items_features)
+        else:
+            self._return_items_features_tuple = True
+
+        # If choices_features is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
-        if not isinstance(sessions_items_features, tuple) and sessions_items_features is not None:
-            sessions_items_features = (sessions_items_features,)
-            sessions_items_features_names = (sessions_items_features_names,)
-            self._return_sessions_items_features_tuple = False
+        if contexts_features is not None:
+            if not isinstance(contexts_features, tuple):
+                self._return_contexts_features_tuple = False
+                if contexts_items_features_names is not None:
+                    if len(contexts_features[0]) != len(contexts_features_names):
+                        raise ValueError(
+                            f"""Number of features given does not match
+                                         number of features names given:
+                                           {len(contexts_features[0])} and
+                                            {len(contexts_features_names)}"""
+                        )
+
+                contexts_features_names = (contexts_features_names,)
+                contexts_features = (contexts_features,)
+
+            # choices_features is already a tuple, names are given, checking consistency
+            else:
+                self._return_contexts_features_tuple = True
+                if contexts_features_names is not None:
+                    for f, name in zip(contexts_features, contexts_features_names):
+                        if len(f[0]) != len(name):
+                            raise ValueError(
+                                """contexts_features shape and contexts_features_names
+                                shape do not match"""
+                            )
+
+                # In this case names are missing, still transform it as a tuple
+                else:
+                    contexts_features_names = (None,) * len(contexts_features)
+        else:
+            self._return_contexts_features_tuple = True
+
+        if not isinstance(contexts_items_features, tuple) and contexts_items_features is not None:
+            self._return_contexts_items_features_tuple = False
+            if contexts_items_features_names is not None:
+                if len(contexts_items_features[0][0]) != len(contexts_items_features_names):
+                    raise ValueError(
+                        f"""Number of features given does not match
+                                     number of features names given for contexts_items:
+                                     {len(contexts_items_features[0][0])} and
+                                     {len(contexts_items_features_names)}"""
+                    )
+            contexts_items_features = (contexts_items_features,)
+            contexts_items_features_names = (contexts_items_features_names,)
+
         # sessions_items_features is already a tuple, names are given, checking consistency
-        elif sessions_items_features is not None and sessions_items_features_names is not None:
-            if (
-                len(sessions_items_features) != len(sessions_items_features_names)
-                and sessions_items_features_names is not None
-            ):
-                raise ValueError(
-                    "sessions_items_features shape and \
-                                    sessions_items_features_names shape do not match"
-                )
-            self._return_sessions_items_features_tuple = True
+        elif contexts_items_features is not None and contexts_items_features_names is not None:
+            for f, name in zip(contexts_items_features, contexts_items_features_names):
+                if len(f[0][0]) != len(name):
+                    raise ValueError(
+                        """contexts_items_features shape and
+                        contexts_items_features_names shape do not match"""
+                    )
+            self._return_contexts_items_features_tuple = True
         # In this case names are missing, still transform it as a tuple
-        elif sessions_items_features is not None:
-            self._return_sessions_items_features_tuple = True
-            sessions_items_features_names = (None,) * len(sessions_items_features)
+        elif contexts_items_features is not None:
+            self._return_contexts_items_features_tuple = True
+            contexts_items_features_names = (None,) * len(contexts_items_features)
+
+        else:
+            self._return_contexts_items_features_tuple = True
 
         # --------- [Normalizing features types (DataFrame, List, etc...) -> np.ndarray] --------- #
         #
@@ -130,120 +171,171 @@ class ChoiceDataset(object):
         # names as features names
 
         # Handling items_features
-        if items_features is not None:
-            for i, feature in enumerate(items_features):
+        if fixed_items_features is not None:
+            for i, feature in enumerate(fixed_items_features):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering items by id ?
                     if "item_id" in feature.columns:
                         feature = feature.set_index("item_id")
-                    items_features = (
-                        items_features[:i]
+                    fixed_items_features = (
+                        fixed_items_features[:i]
                         + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                        + items_features[i + 1 :]
+                        + fixed_items_features[i + 1 :]
                     )
-                    items_features_names = (
-                        items_features_names[:i]
+                    fixed_items_features_names = (
+                        fixed_items_features_names[:i]
                         + (feature.columns.tolist(),)
-                        + items_features_names[i + 1 :]
+                        + fixed_items_features_names[i + 1 :]
                     )
                 elif isinstance(feature, list):
-                    items_features = (
-                        items_features[:i] + (np.array(feature),) + items_features[i + 1 :]
-                    )
-
-        # Handling sessions_features
-        if sessions_features is not None:
-            for i, feature in enumerate(sessions_features):
-                if isinstance(feature, pd.DataFrame):
-                    # Ordering sessions by id ?
-                    if "session_id" in feature.columns:
-                        feature = feature.set_index("session_id")
-                    sessions_features = (
-                        sessions_features[:i]
-                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                        + sessions_features[i + 1 :]
-                    )
-                    sessions_features_names = (
-                        sessions_features_names[:i]
-                        + (feature.columns.tolist(),)
-                        + sessions_features_names[i + 1 :]
-                    )
-                elif isinstance(feature, list):
-                    sessions_features = (
-                        sessions_features[:i] + (np.array(feature),) + sessions_features[i + 1 :]
-                    )
-
-        # Handling sessions_items_features
-        if sessions_items_features is not None:
-            for i, feature in enumerate(sessions_items_features):
-                if isinstance(feature, pd.DataFrame):
-                    # Ordering sessions and items by id ?
-                    if "session_id" not in feature.columns:
-                        feature["session_id"] = feature.index
-                    items_index = np.sort(feature.item_id.unique())
-                    sessions_index = np.sort(feature.session_id.unique())
-                    names = [f for f in feature.columns if f != "session_id" and f != "item_id"]
-
-                    (
-                        feature,
-                        sessions_items_availabilities,
-                    ) = self._sessions_items_features_df_to_np(
-                        feature, items_index, sessions_index, feature.columns.tolist()
-                    )
-
-                    sessions_items_features = (
-                        sessions_items_features[:i] + feature + sessions_items_features[i + 1 :]
-                    )
-
-                    sessions_items_features_names = (
-                        sessions_items_features_names[:i]
-                        + (names,)
-                        + sessions_items_features_names[i + 1 :]
-                    )
-                elif isinstance(feature, list):
-                    sessions_items_features = (
-                        sessions_items_features[:i]
+                    fixed_items_features = (
+                        fixed_items_features[:i]
                         + (np.array(feature),)
-                        + sessions_items_features[i + 1 :]
+                        + fixed_items_features[i + 1 :]
                     )
 
-        if isinstance(sessions_items_availabilities, list):
-            sessions_items_availabilities = np.array(sessions_items_availabilities)
+        # Handling context features
+        if contexts_features is not None:
+            for i, feature in enumerate(contexts_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering choices by id ?
+                    if "context_id" in feature.columns:
+                        feature = feature.set_index("context_id")
+                    contexts_features = (
+                        contexts_features[:i]
+                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                        + contexts_features[i + 1 :]
+                    )
+                    contexts_features_names = (
+                        contexts_features_names[:i]
+                        + (feature.columns,)
+                        + contexts_features_names[i + 1 :]
+                    )
+                elif isinstance(feature, list):
+                    contexts_features = (
+                        contexts_features[:i] + (np.array(feature),) + contexts_features[i + 1 :]
+                    )
+        # Handling contexts_items_features
+        if contexts_items_features is not None:
+            for i, feature in enumerate(contexts_items_features):
+                if isinstance(feature, pd.DataFrame):
+                    # Ordering choices by id ?
+                    if "context_id" in feature.columns:
+                        if "item_id" in feature.columns:
+                            all_items = np.sort(feature.item_id.unique())
+                            feature_array = []
+                            temp_availabilities = []
+                            for sess in np.sort(feature.context_id.unique()):
+                                sess_df = feature.loc[feature.context_id == sess]
+                                sess_df = sess_df[
+                                    sess_df.columns.difference(["context_id"])
+                                ].set_index("item_id")
+                                sess_feature = []
+                                sessions_availabilities = []
+                                for item in all_items:
+                                    if item in sess_df.index:
+                                        sess_feature.append(sess_df.loc[item].to_numpy())
+                                        sessions_availabilities.append(1)
+                                    else:
+                                        sess_feature.append(np.zeros(len(sess_df.columns)))
+                                        sessions_availabilities.append(0)
+                                feature_array.append(sess_feature)
+                                temp_availabilities.append(sessions_availabilities)
+                            contexts_items_features = (
+                                contexts_items_features[:i]
+                                + (np.stack(feature_array, axis=0),)
+                                + contexts_items_features[i + 1 :]
+                            )
+                            contexts_items_features_names = (
+                                contexts_items_features_names[:i]
+                                + (sess_df.columns,)
+                                + contexts_items_features_names[i + 1 :]
+                            )
+                            if (
+                                contexts_items_availabilities is None
+                                and len(np.unique(temp_availabilities)) > 1
+                            ):
+                                contexts_items_availabilities = np.array(temp_availabilities)
+                        else:
+                            feature = feature.set_index("context_id")
+                            contexts_items_features = (
+                                contexts_items_features[:i]
+                                + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                                + contexts_items_features[i + 1 :]
+                            )
+                            contexts_items_features_names = (
+                                contexts_items_features_names[:i]
+                                + (feature.columns,)
+                                + contexts_items_features_names[i + 1 :]
+                            )
+                    else:
+                        raise ValueError("context_id column not found in contexts_items_features")
+                elif isinstance(feature, list):
+                    contexts_items_features = (
+                        contexts_items_features[:i]
+                        + (np.array(feature),)
+                        + contexts_items_features[i + 1 :]
+                    )
+        if contexts_items_availabilities is not None:
+            if isinstance(contexts_items_availabilities, list):
+                contexts_items_availabilities = np.array(
+                    contexts_items_availabilities, dtype=object
+                )
+            elif isinstance(contexts_items_availabilities, pd.DataFrame):
+                if "context_id" in contexts_items_availabilities.columns:
+                    if "item_id" in contexts_items_availabilities.columns:
+                        av_array = []
+                        for sess in np.sort(contexts_items_availabilities.context_id):
+                            sess_df = contexts_items_availabilities.loc[
+                                contexts_items_availabilities.context_id == sess
+                            ]
+                            sess_df = sess_df.set_index("item_id")
+                            av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
+                        contexts_items_availabilities = np.array(av_array)
+                    else:
+                        feature = feature.set_index("context_id")
+                        contexts_items_availabilities = contexts_items_availabilities.loc[
+                            np.sort(feature.index)
+                        ].to_numpy()
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
         # Items are sorted by name and attributed an index
-        # Cannot be a list of choices yet
         if isinstance(choices, pd.DataFrame):
-            # Ordering sessions by id
-            if "session_id" in choices.columns:
-                choices = choices.set_index("session_id")
+            # Ordering choices by id
+            if "context_id" in choices.columns:
+                choices = choices.set_index("context_id")
             choices = choices.loc[np.sort(choices.index)]
             items = np.sort(np.unique(choices.choice))
             # items is the value (str) of the item
             choices = [np.where(items == c)[0] for c in choices.choice]
+            choices = np.squeeze(choices)
+        elif isinstance(choices, list):
+            choices = np.array(choices)
 
         # Setting attributes of ChoiceDataset
-        self.items_features = items_features
-        self.sessions_features = sessions_features
-        self.sessions_items_features = sessions_items_features
-        self.sessions_items_availabilities = sessions_items_availabilities
+        self.fixed_items_features = fixed_items_features
+        self.contexts_features = contexts_features
+        self.contexts_items_features = contexts_items_features
+        self.contexts_items_availabilities = contexts_items_availabilities
+        self.choices = choices
 
-        self.items_features_names = items_features_names
-        self.sessions_features_names = sessions_features_names
-        self.sessions_items_features_names = sessions_items_features_names
+        self.features_by_ids = features_by_ids
 
-        self.batch_size = batch_size
-        self.shuffle = shuffle
+        self.fixed_items_features_names = fixed_items_features_names
+        self.contexts_features_names = contexts_features_names
+        self.contexts_items_features_names = contexts_items_features_names
 
-        if choices is None:
-            # Done to keep a logical order of arguments, and has logic: choices have to be specified
-            raise ValueError("Choices must be specified, got None")
-        self.ragged_choices = choices
-        self.indexes, self.choices = self._build_indexes(choices)
+        # What about typing ? should builf after check to change it ?
+        (
+            self.fixed_items_features_map,
+            self.contexts_features_map,
+            self.contexts_items_features_map,
+        ) = self._build_features_by_ids()
+
         self.n_choices = len(self.choices)
 
-        # Different consitency checks to ensure everythin is coherent
+        # Different consitency checks to ensure everything is coherent
         self._check_dataset()  # Should handle alone if np.arrays are squeezed
         self._return_types = self._check_types()
         self._check_names()
@@ -251,48 +343,75 @@ class ChoiceDataset(object):
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
 
-    def _build_indexes(self, choices):
-        """Builds the indexes dictionnary from the choices.
+    def _build_features_by_ids(self):
+        """Builds mapping function.
 
-        Particularly creates a flatten version of the choices and associates an index so that we can
-        retrieve from this index the session and the corresponding choice.
+        Those mapping functions are so that at indexing,
+        the features are rebuilt with the features by id.
 
-        Parameters
-        ----------
-        choices: list of list
-            raffed version of the choices
-
-        Returns::
+        Returns:
         --------
-        indexes: dict
-            dictionnary of indexes: {index: corresponding_session_index}
-        choices: np.ndarray
-            flattened (1D) version of the choices
+        tuple
+            indexes and features_by_id of fixed_items_features
+        tuple
+            indexes and features_by_id of contexts_features
+        tuple
+            indexes and features_by_id of contexts_items_features
         """
-        try:  # 1 choice by session
-            if len(np.squeeze(choices).shape) == 1:
-                indexes = {i: i for i in range(len(choices))}
-                flat_choices = np.squeeze(self.ragged_choices)
-            elif len(np.squeeze(choices).shape) == 0:
-                indexes = {i: i for i in range(len(choices))}
-                flat_choices = np.array([np.squeeze(self.ragged_choices)])
-        except ValueError:  # Ragged sequence of choices
-            indexes = {}
-            flat_choices = []
-            total_count = 0
-            for sess_nb, sess in enumerate(choices):
-                for choice in sess:
-                    indexes[total_count] = sess_nb
-                    flat_choices.append(choice)
-                    total_count += 1
-        return indexes, np.array(flat_choices)
+        if len(self.features_by_ids) == 0:
+            print("No features_by_ids given.")
+            return [], [], []
+
+        if (
+            self.fixed_items_features_names is None
+            and self.contexts_features_names is None
+            and self.contexts_items_features_names is None
+        ):
+            raise ValueError(
+                "No features_names given, match with fiven features_by_ids impossible."
+            )
+
+        fixed_items_features_map = []
+        contexts_features_map = []
+        contexts_items_features_map = []
+
+        if self.fixed_items_features_names is not None:
+            for i, feature in enumerate(self.fixed_items_features_names):
+                if feature is not None:
+                    for j, column_name in enumerate(feature):
+                        for feature_by_id in self.features_by_ids:
+                            if column_name == feature_by_id.name:
+                                fixed_items_features_map.append(((i, j), feature_by_id))
+
+        if self.contexts_features_names is not None:
+            for i, feature in enumerate(self.contexts_features_names):
+                if feature is not None:
+                    for j, column_name in enumerate(feature):
+                        for feature_by_id in self.features_by_ids:
+                            if column_name == feature_by_id.name:
+                                contexts_features_map.append(((i, j), feature_by_id))
+
+        if self.contexts_items_features_names is not None:
+            for i, feature in enumerate(self.contexts_items_features_names):
+                if feature is not None:
+                    for k, column_name in enumerate(feature):
+                        for feature_by_id in self.features_by_ids:
+                            if column_name == feature_by_id.name:
+                                contexts_items_features_map.append(((i, j), feature_by_id))
+
+        if len(fixed_items_features_map) + len(contexts_features_map) + len(
+            contexts_items_features_map
+        ) == len(self.features_by_ids):
+            raise ValueError("Some features_by_ids were not matched with features_names.")
+
+        return fixed_items_features_map, contexts_features_map, contexts_items_features_map
 
     def _check_dataset(self):
         """Verifies that the shapes of the different features are consistent.
 
         Particularly:
             - Over number of items
-            - Over number of sessions
+            - Over number of choices
         Verifies that the choices have coherent values
         """
         self._check_num_items_shapes()
@@ -308,33 +427,33 @@ class ChoiceDataset(object):
             - sessions_items_availabilities
         Sets the argument base_num_items
         """
-        if self.items_features is not None:
-            base_num_items = self.items_features[0].shape[0]
-        elif self.sessions_items_features is not None:
-            base_num_items = self.sessions_items_features[0].shape[1]
-        elif self.sessions_items_availabilities is not None:
-            base_num_items = self.sessions_items_availabilities.shape[1]
+        if self.fixed_items_features is not None:
+            base_num_items = self.fixed_items_features[0].shape[0]
+        elif self.contexts_items_features is not None:
+            base_num_items = self.contexts_items_features[0].shape[1]
+        elif self.contexts_items_availabilities is not None:
+            base_num_items = self.contexts_items_availabilities.shape[1]
         else:
             raise ValueError(
                 "No items features, sessions items features or items availabilities are defined"
             )
         self.base_num_items = base_num_items
 
-        if self.items_features is not None:
-            for items_feature in self.items_features:
+        if self.fixed_items_features is not None:
+            for items_feature in self.fixed_items_features:
                 if items_feature.shape[0] != base_num_items:
                     raise ValueError(f"shapes are (f{items_feature.shape[0]}, {base_num_items})")
 
-        if self.sessions_items_features is not None:
-            for sessions_items_feature in self.sessions_items_features:
+        if self.contexts_items_features is not None:
+            for sessions_items_feature in self.contexts_items_features:
                 if sessions_items_feature.shape[1] != base_num_items:
                     raise ValueError(
                         f"shapes are (f{sessions_items_feature.shape[1]}, {base_num_items})"
                     )
-        if self.sessions_items_availabilities is not None:
-            if self.sessions_items_availabilities.shape[1] != base_num_items:
+        if self.contexts_items_availabilities is not None:
+            if self.contexts_items_availabilities.shape[1] != base_num_items:
                 raise ValueError(
-                    f"shapes are (f{self.sessions_items_availabilities.shape[1]}, \
+                    f"shapes are (f{self.contexts_items_availabilities.shape[1]}, \
                                  {base_num_items})"
                 )
 
@@ -347,27 +466,27 @@ class ChoiceDataset(object):
             - sessions_items_availabilities
         Sets self.base_num_sessions argument.
         """
-        base_num_sessions = len(self.ragged_choices)
+        base_num_sessions = len(self.choices)
         self.base_num_sessions = base_num_sessions
 
-        if self.sessions_features is not None:
-            for sessions_feature in self.sessions_features:
+        if self.contexts_features is not None:
+            for sessions_feature in self.contexts_features:
                 if sessions_feature.shape[0] != base_num_sessions:
                     raise ValueError(
                         f"shapes are ({sessions_feature.shape[0]}, {base_num_sessions})"
                     )
 
-        if self.sessions_items_features is not None:
-            for sessions_items_feature in self.sessions_items_features:
+        if self.contexts_items_features is not None:
+            for sessions_items_feature in self.contexts_items_features:
                 if sessions_items_feature.shape[0] != base_num_sessions:
                     raise ValueError(
                         f"shapes are: ({sessions_items_feature.shape[0]}, \
                                      {base_num_sessions})"
                     )
-        if self.sessions_items_availabilities is not None:
-            if self.sessions_items_availabilities.shape[0] != base_num_sessions:
+        if self.contexts_items_availabilities is not None:
+            if self.contexts_items_availabilities.shape[0] != base_num_sessions:
                 raise ValueError(
-                    f"shapes are: ({self.sessions_items_availabilities.shape[0]}, \
+                    f"shapes are: ({self.contexts_items_availabilities.shape[0]}, \
                         {base_num_sessions})"
                 )
 
@@ -401,30 +520,40 @@ class ChoiceDataset(object):
         return_types = []
 
         item_types = []
-        if self.items_features is not None:
-            for item_feat in self.items_features:
+        if self.fixed_items_features is not None:
+            for item_feat in self.fixed_items_features:
                 if np.issubdtype(item_feat[0].dtype, np.integer):
                     item_types.append(np.int32)
                 else:
                     item_types.append(np.float32)
+
+        for indexes, f_by_id in self.fixed_items_features_map:
+            sample_dtype = f_by_id.get_storage_types()
+            item_types[indexes[0]] = sample_dtype
         return_types.append(tuple(item_types))
 
         session_types = []
-        if self.sessions_features is not None:
-            for sessions_feat in self.sessions_features:
+        if self.contexts_features is not None:
+            for sessions_feat in self.contexts_features:
                 if np.issubdtype(sessions_feat[0].dtype, np.integer):
                     session_types.append(np.int32)
                 else:
                     session_types.append(np.float32)
+        for indexes, f_by_id in self.contexts_features_map:
+            sample_dtype = f_by_id.get_storage_type()
+            session_types[indexes[0]] = sample_dtype
         return_types.append(tuple(session_types))
 
         session_item_types = []
-        if self.sessions_items_features is not None:
-            for session_item_feat in self.sessions_items_features:
+        if self.contexts_items_features is not None:
+            for session_item_feat in self.contexts_items_features:
                 if np.issubdtype(session_item_feat[0].dtype, np.integer):
                     session_item_types.append(np.int32)
                 else:
                     session_item_types.append(np.float32)
+        for indexes, f_by_id in self.contexts_items_features_map:
+            sample_dtype = f_by_id.get_storage_types()
+            session_item_types[indexes[0]] = sample_dtype
         return_types.append(tuple(session_item_types))
         return_types.append(np.float32)
         return_types.append(np.int32)
@@ -433,8 +562,8 @@ class ChoiceDataset(object):
 
     def _check_names(self):
         """Verifies that the names given to features are consistent with the features themselves."""
-        if self.items_features_names is not None:
-            for name, features in zip(self.items_features_names, self.items_features):
+        if self.fixed_items_features_names is not None:
+            for name, features in zip(self.fixed_items_features_names, self.fixed_items_features):
                 if name is not None:
                     if len(name) != features.shape[1]:
                         raise ValueError(
@@ -442,8 +571,8 @@ class ChoiceDataset(object):
                     length {len(name)} while items_features has {features.shape[1]} elements"
                         )
 
-        if self.sessions_features_names is not None:
-            for name, features in zip(self.sessions_features_names, self.sessions_features):
+        if self.contexts_features_names is not None:
+            for name, features in zip(self.contexts_features_names, self.contexts_features):
                 if name is not None:
                     if len(name) != features.shape[1]:
                         raise ValueError(
@@ -451,28 +580,28 @@ class ChoiceDataset(object):
                     length {len(name)} while sessions_features has {features.shape[1]} elements"
                         )
 
-        if self.sessions_items_features_names is not None:
+        if self.contexts_items_features_names is not None:
             for (
                 name,
                 features,
-            ) in zip(self.sessions_items_features_names, self.sessions_items_features):
+            ) in zip(self.contexts_items_features_names, self.contexts_items_features):
                 if name is not None:
                     if len(name) != features.shape[2]:
                         raise ValueError(
                             f"Specified \
                         sessions_items_features_names has length {len(name)} while \
-                        sessions_items_features has {features.shape[1]} elements"
+                        sessions_items_features has {features.shape[2]} elements"
                         )
 
     def __len__(self):
-        """Returns length of the dataset e.g. total number of sessions.
+        """Returns length of the dataset e.g. total number of choices.
 
         Returns:
         -------
         int
-            total number of sessions
+            total number of choices
         """
-        return self.base_num_sessions
+        return len(self.choices)
 
     def get_num_items(self):
         """Method to access the total number of different items.
@@ -484,39 +613,29 @@ class ChoiceDataset(object):
         """
         return self.base_num_items
 
-    def get_num_sessions(self):
-        """Method to access the total number of different sessions.
+    def get_num_choices(self):
+        """Method to access the total number of different choices.
 
         Redundant with __len__ method.
 
         Returns:
         -------
         int
-            total number of different sessions
+            total number of different choices
         """
         return len(self)
 
-    def get_num_choices(self):
-        """Method to access the total number of different sessions.
-
-        Returns:
-        -------
-        int
-            total number of different sessions
-        """
-        return self.n_choices
-
     @classmethod
-    def _sessions_items_features_df_to_np(
+    def _contexts_items_features_df_to_np(
         cls,
         df,
         items_index,
-        sessions_index,
+        contexts_index,
         features,
         items_id_column="item_id",
-        sessions_id_column="session_id",
+        contexts_id_column="contexts_id",
     ):
-        """Builds sessions_items_features and sessions_items_availabilities from dataframe.
+        """Builds contexts_items_features and contexts_items_availabilities from dataframe.
 
         Parameters
         ----------
@@ -524,20 +643,24 @@ class ChoiceDataset(object):
             Dataframe containing all the features for each item and sessions
         items_index : list
             List of items
-        sessions_index : list
+        contexts_index : list
             List of sessions
         features : list
             List of columns of df that represents the items_features (for sessions_items_features)
+        items_id_column: str, optional
+            Name of the column containing the item ids, default is "items_id"
+        contexts_id_column: str, optional
+            Name of the column containing the sessions ids, default is "contexts_id"
 
         Returns:
         -------
-        np.ndarray of shape (n_sessions, n_items, n_features)
-            Corresponding sessions_items_features
-        np.ndarray of shape (n_sessions, n_items)
+        np.ndarray of shape (n_choices, n_items, n_features)
+            Corresponding contexts_items_features
+        np.ndarray of shape (n_choices, n_items)
             Corresponding availabilities
         """
         try:
-            features.remove("session_id")
+            features.remove("context_id")
         except ValueError:
             pass
         try:
@@ -545,17 +668,17 @@ class ChoiceDataset(object):
         except ValueError:
             pass
 
-        sessions_items_features = []
-        sessions_items_availabilities = []
-        for sess in sessions_index:
-            sess_df = df.loc[df[sessions_id_column] == sess]
+        contexts_items_features = []
+        contexts_items_availabilities = []
+        for sess in contexts_index:
+            sess_df = df.loc[df[contexts_id_column] == sess]
 
             if len(sess_df) == len(items_index):
                 sess_df = sess_df.T
                 sess_df.columns = sess_df.loc[items_id_column]
                 if features is not None:
-                    sessions_items_features.append(sess_df[items_index].loc[features].T.values)
-                sessions_items_availabilities.append(np.ones(len(items_index)))
+                    contexts_items_features.append(sess_df[items_index].loc[features].T.values)
+                contexts_items_availabilities.append(np.ones(len(items_index)))
             else:
                 sess_feats = []
                 sess_av = []
@@ -569,26 +692,26 @@ class ChoiceDataset(object):
                         if features is not None:
                             sess_feats.append(np.zeros(len(features)))
                         sess_av.append(0)
-                sessions_items_features.append(sess_feats)
-                sessions_items_availabilities.append(sess_av)
+                contexts_items_features.append(sess_feats)
+                contexts_items_availabilities.append(sess_av)
 
         if features is not None:
-            sessions_items_features = (np.array(sessions_items_features),)
+            sessions_items_features = (np.array(contexts_items_features),)
         else:
             sessions_items_features = None
-        return sessions_items_features, np.array(sessions_items_availabilities)
+        return sessions_items_features, np.array(contexts_items_availabilities)
 
     @classmethod
     def from_single_df(
         cls,
         df,
-        items_features_columns,
-        sessions_features_columns,
-        sessions_items_features_columns,
+        fixed_items_features_columns=None,
+        contexts_features_columns=None,
+        contexts_items_features_columns=None,
         items_id_column="item_id",
-        sessions_id_column="session_id",
+        contexts_id_column="context_id",
         choices_column="choice",
-        choice_mode="items_name",
+        choice_mode="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe.
 
@@ -596,18 +719,21 @@ class ChoiceDataset(object):
         ----------
         df : pandas.DataFrame
             dataframe in Long format
-        items_features_columns : list
-            Columns of the dataframe that are item features
-        sessions_features_columns : list
-            Columns of the dataframe that are session features
-        sessions_items_features_columns : list
-            Columns of the dataframe that are session-item features
+        fixed_items_features_columns : list
+            Columns of the dataframe that are item features, default is None
+        contexts_features_columns : list
+            Columns of the dataframe that are contexts features, default is None
+        contexts_items_features_columns : list
+            Columns of the dataframe that are context-item features, default is None
         items_id_column: str, optional
             Name of the column containing the item ids, default is "items_id"
-        sessions_id_column: str, optional
-            Name of the column containing the sessions ids, default is "sessions_id"
+        contexts_id_column: str, optional
+            Name of the column containing the sessions ids, default is "contexts_id"
         choices_column: str, optional
             Name of the column containing the choices, default is "choice"
+        choice_mode: str, optional
+            How choice is indicated in df, either "items_name" or "one_zero",
+            default is "items_id"
 
         Returns:
         -------
@@ -616,55 +742,57 @@ class ChoiceDataset(object):
         """
         # Ordering items and sessions by id
         items = np.sort(df[items_id_column].unique())
-        sessions = np.sort(df[sessions_id_column].unique())
+        sessions = np.sort(df[contexts_id_column].unique())
 
-        if items_features_columns is not None:
-            items_features = df[items_features_columns + [items_id_column]].drop_duplicates()
+        if fixed_items_features_columns is not None:
+            items_features = df[fixed_items_features_columns + [items_id_column]].drop_duplicates()
             items_features = items_features.set_index(items_id_column)
             items_features = (items_features.loc[items].to_numpy(),)
 
-            items_features_columns = (items_features_columns,)
+            items_features_columns = (fixed_items_features_columns,)
         else:
             items_features = None
+            items_features_columns = None
 
-        if sessions_features_columns is not None:
-            sessions_features = df[
-                sessions_features_columns + [sessions_id_column]
+        if contexts_features_columns is not None:
+            contexts_features = df[
+                contexts_features_columns + [contexts_id_column]
             ].drop_duplicates()
-            sessions_features = sessions_features.set_index(sessions_id_column)
-            sessions_features = (sessions_features.loc[sessions].to_numpy(),)
+            contexts_features = contexts_features.set_index(contexts_id_column)
+            contexts_features = (contexts_features.loc[sessions].to_numpy(),)
 
-            sessions_features_columns = (sessions_features_columns,)
+            contexts_features_columns = (contexts_features_columns,)
         else:
-            sessions_features = None
+            contexts_features = None
+            contexts_features_columns = None
 
         (
-            sessions_items_features,
-            sessions_items_availabilities,
-        ) = cls._sessions_items_features_df_to_np(
+            contexts_items_features,
+            contexts_items_availabilities,
+        ) = cls._contexts_items_features_df_to_np(
             df,
             items_index=items,
-            sessions_index=sessions,
-            features=sessions_items_features_columns,
+            contexts_index=sessions,
+            features=contexts_items_features_columns,
             items_id_column=items_id_column,
-            sessions_id_column=sessions_id_column,
+            contexts_id_column=contexts_id_column,
         )
-        sessions_items_features_columns = (
-            (sessions_items_features_columns,)
-            if sessions_items_features_columns is not None
+        contexts_items_features_columns = (
+            (contexts_items_features_columns,)
+            if contexts_items_features_columns is not None
             else None
         )
 
-        if choice_mode == "item_id":
-            choices = df[[choices_column, sessions_id_column]].drop_duplicates(sessions_id_column)
-            choices = choices.set_index(sessions_id_column)
+        if choice_mode == "items_id":
+            choices = df[[choices_column, contexts_id_column]].drop_duplicates(contexts_id_column)
+            choices = choices.set_index(contexts_id_column)
             choices = choices.loc[sessions].to_numpy()
             # items is the value (str) of the item
-            choices = [np.where(items == c)[0] for c in choices]
+            choices = np.squeeze([np.where(items == c)[0] for c in choices])
         elif choice_mode == "one_zero":
-            choices = df[[items_id_column, choices_column, sessions_id_column]]
+            choices = df[[items_id_column, choices_column, contexts_id_column]]
             choices = choices.loc[choices[choices_column] == 1]
-            choices = choices = choices.set_index(sessions_id_column)
+            choices = choices.set_index(contexts_id_column)
             choices = (
                 choices.loc[sessions][items_id_column]
                 .map({k: v for v, k in enumerate(items)})
@@ -672,17 +800,17 @@ class ChoiceDataset(object):
             )
         else:
             raise ValueError(
-                f"choice_mode {choice_mode} not recognized. Must be in ['item_id', 'one_zero']"
+                f"choice_mode {choice_mode} not recognized. Must be in ['items_id', 'one_zero']"
             )
         return ChoiceDataset(
-            items_features=items_features,
-            sessions_features=sessions_features,
-            sessions_items_features=sessions_items_features,
-            sessions_items_availabilities=sessions_items_availabilities,
+            fixed_items_features=items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
-            items_features_names=items_features_columns,
-            sessions_features_names=sessions_features_columns,
-            sessions_items_features_names=sessions_items_features_columns,
+            fixed_items_features_names=items_features_columns,
+            contexts_features_names=contexts_features_columns,
+            contexts_items_features_names=contexts_items_features_columns,
         )
 
     def save(self):
@@ -691,250 +819,308 @@ class ChoiceDataset(object):
 
     def summary(self):
         """Method to display a summary of the dataset."""
-        print("Summary of the dataset:")
+        print("%=====================================================================%")
+        print("%%% Summary of the dataset:")
+        print("%=====================================================================%")
         print("Number of items:", self.get_num_items())
-        print("Number of sessions:", self.get_num_sessions())
         print(
             "Number of choices:",
-            self.get_num_choices(),
-            "Averaging",
-            self.get_num_choices() / self.get_num_sessions(),
-            "choices per session",
+            len(self),
         )
-        if self.items_features is not None:
-            print(f"Items features: {self.items_features_names}")
-        if self.items_features is not None:
-            print(f"{sum([f.shape[1] for f in self.items_features])} items features")
+        print("%=====================================================================%")
+        if self.fixed_items_features is not None:
+            print(" Fixed Items Features:")
+            print(f" {sum([f.shape[1] for f in self.fixed_items_features])} items features")
+            if self.fixed_items_features_names is not None:
+                print(f" with names: {self.fixed_items_features_names}")
         else:
-            print("No items features registered")
+            print(" No items features registered")
+        print("\n")
 
-        if self.sessions_features is not None:
-            print(f"Sessions features: {self.sessions_features_names}")
-        if self.sessions_features is not None:
-            print(f"{sum([f.shape[1] for f in self.sessions_features])} session features")
+        if self.contexts_features is not None:
+            print(" Contexts features:")
+            print(f" {sum([f.shape[1] for f in self.contexts_features])} context features")
+            if self.contexts_features_names is not None:
+                print(f" with names: {self.contexts_features_names}")
         else:
-            print("No sessions features registered")
+            print(" No sessions features registered")
+        print("\n")
 
-        if self.sessions_items_features is not None:
-            print(f"Session Items features: {self.sessions_items_features_names}")
-        if self.sessions_items_features is not None:
+        if self.contexts_items_features is not None:
+            print(" Contexts Items features:")
             print(
-                f"{sum([f.shape[2] for f in self.sessions_items_features])} sessions \
-                  items features"
+                f""" {sum([f.shape[2] for f in self.contexts_items_features])} context
+                 items features"""
             )
+            if self.contexts_items_features_names is not None:
+                print(f" with names: {self.contexts_items_features_names}")
         else:
-            print("No sessions items features registered")
+            print(" No sessions items features registered")
+        print("%=====================================================================%")
+        return ""
 
-    def get_choice_batch(self, choice_index):
+    def get_choices_batch(self, choices_indexes, features=None):
         """Method to access data within the ListChoiceDataset from its index.
 
         One index corresponds to a choice within a session.
 
         Return order:
-            - Fixed item features
-            - Session features
-            - Session item features
-            - Items availabilities
-            - Choice
+            - df_chosen_item, df of length batch_size
+            - dfs_available_items, list of lentch batch_size of dfs of length n_available_items
 
         Parameters
         ----------
-        index : int or list of int or slice
+        choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
+        features : list of str, optional
+            list of features to return. None returns all of them, default is None.
 
+        Returns:
+        --------
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different items
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different contexts
+        tuple of (array_like, )
+            tuple of arrays containing the features of the different contexts_items
+        array_like
+            array containing the availabilities of the different items
+        array_like
+            array containing the choices (indexes of chosen items)
         """
-        if isinstance(choice_index, list):
-            if self.items_features is None:
-                items_features = None
+        _ = features
+        if isinstance(choices_indexes, list):
+            if self.fixed_items_features is None:
+                fixed_items_features = None
             else:
-                items_features = tuple(
-                    items_feature.astype(self._return_types[0][i])
-                    for i, items_feature in enumerate(self.items_features)
+                fixed_items_features = list(
+                    items_feature
+                    # .astype(self._return_types[0][i])
+                    for i, items_feature in enumerate(self.fixed_items_features)
                 )
-                # items_features were not given as a tuple, so we return do not return it as a tuple
-                if not self._return_items_features_tuple:
-                    items_features = items_features[0]
 
-            # Get the session indexes
-            sessions_indexes = [self.indexes[i] for i in choice_index]
-
-            if self.sessions_features is None:
-                sessions_features = None
+            if self.contexts_features is None:
+                contexts_features = None
             else:
-                sessions_features = tuple(
-                    np.stack(sessions_feature[sessions_indexes], axis=0).astype(
-                        self._return_types[1][i]
-                    )
-                    if not isinstance(sessions_feature, Store)
-                    else sessions_feature.iloc[sessions_indexes]
-                    for i, sessions_feature in enumerate(self.sessions_features)
+                contexts_features = list(
+                    contexts_features[choices_indexes]
+                    # .astype(self._return_types[1][i])
+                    for i, contexts_features in enumerate(self.contexts_features)
                 )
                 # sessions_features were not given as a tuple, so we return do not return it
                 # as a tuple
-                if not self._return_sessions_features_tuple:
-                    sessions_features = sessions_features[0]
 
-            if self.sessions_items_features is None:
-                sessions_items_features = None
+            if self.contexts_items_features is None:
+                contexts_items_features = None
             else:
-                sessions_items_features = tuple(
-                    np.stack(sessions_items_feature[sessions_indexes], axis=0).astype(
+                contexts_items_features = list(
+                    contexts_items_feature[choices_indexes]
+                    # .astype(self._return_types[2][i])
+                    for i, contexts_items_feature in enumerate(self.contexts_items_features)
+                )
+
+            if self.contexts_items_availabilities is None:
+                contexts_items_availabilities = np.ones((len(choices_indexes), self.base_num_items))
+            else:
+                contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
+                # .astype(self._return_types[3])
+
+            choices = self.choices[choices_indexes].astype(self._return_types[4])
+
+            for indexes, f_by_id in self.fixed_items_features_map:
+                fixed_items_features[indexes[0]] = np.concatenate(
+                    [
+                        fixed_items_features[indexes[0]][:, : indexes[1]],
+                        f_by_id.batch[fixed_items_features[indexes[0]][:, indexes[1]]],
+                        fixed_items_features[indexes[0]][:, indexes[1] + 1 :],
+                    ],
+                    axis=1,
+                )
+            for indexes, f_by_id in self.contexts_features_map:
+                contexts_features[indexes[0]] = np.concatenate(
+                    [
+                        contexts_features[indexes[0]][:, : indexes[1]],
+                        f_by_id.batch[contexts_features[indexes[0]][:, indexes[1]]],
+                        contexts_features[indexes[0]][:, indexes[1] + 1 :],
+                    ],
+                    axis=1,
+                )
+            for indexes, f_by_id in self.contexts_items_features_map:
+                contexts_items_features[indexes[0]][
+                    :, :, indexes[1] : indexes[1] + 1
+                ] = f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]]
+                contexts_items_features[indexes[0]] = np.concatenate(
+                    [
+                        contexts_items_features[indexes[0]][:, :, : indexes[1]],
+                        f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]],
+                        contexts_items_features[indexes[0]][:, :, indexes[1] + 1 :],
+                    ],
+                    axis=2,
+                )
+
+            if fixed_items_features is not None:
+                for i in range(len(fixed_items_features)):
+                    fixed_items_features[i] = fixed_items_features[i].astype(
+                        self._return_types[0][i]
+                    )
+                # items_features were not given as a tuple, so we return do not return it as a tuple
+                if not self._return_items_features_tuple:
+                    fixed_items_features = fixed_items_features[0]
+                else:
+                    fixed_items_features = tuple(fixed_items_features)
+
+            if contexts_features is not None:
+                for i in range(len(contexts_features)):
+                    contexts_features[i] = contexts_features[i].astype(self._return_types[1][i])
+                if not self._return_contexts_features_tuple:
+                    contexts_features = contexts_features[0]
+                else:
+                    contexts_features = tuple(contexts_features)
+
+            if contexts_items_features is not None:
+                for i in range(len(contexts_items_features)):
+                    contexts_items_features[i] = contexts_items_features[i].astype(
                         self._return_types[2][i]
                     )
-                    if not isinstance(sessions_items_feature, Store)
-                    else sessions_items_feature.iloc[sessions_indexes]
-                    for i, sessions_items_feature in enumerate(self.sessions_items_features)
-                )
                 # sessions_items_features were not given as a tuple, so we return do not return
                 # it as a tuple
-                if not self._return_sessions_items_features_tuple:
-                    sessions_items_features = sessions_items_features[0]
-
-            if self.sessions_items_availabilities is None:
-                sessions_items_availabilities = None
-            else:
-                sessions_items_availabilities = self.sessions_items_availabilities[
-                    sessions_indexes
-                ].astype(self._return_types[3])
-
-            choice = self.choices[choice_index].astype(self._return_types[4])
+                if not self._return_contexts_items_features_tuple:
+                    contexts_items_features = contexts_items_features[0]
+                else:
+                    contexts_items_features = tuple(contexts_items_features)
 
             return (
-                items_features,
-                sessions_features,
-                sessions_items_features,
-                sessions_items_availabilities,
-                choice,
+                fixed_items_features,
+                contexts_features,
+                contexts_items_features,
+                contexts_items_availabilities,
+                choices,
             )
 
-        if isinstance(choice_index, slice):
-            return self.get_choice_batch(list(range(*choice_index.indices(self.choices.shape[0]))))
-
-        session_index = self.indexes[choice_index]
-        choice = self.choices[choice_index]
-
-        if self.items_features is None:
-            items_features = None
-        else:
-            items_features = tuple(items_feature for items_feature in self.items_features)
-
-        if self.sessions_features is None:
-            sessions_features = None
-        else:
-            sessions_features = tuple(
-                sessions_feature[session_index] for sessions_feature in self.sessions_features
+        if isinstance(choices_indexes, slice):
+            return self.get_choice_batch(
+                list(range(*choices_indexes.indices(self.choices.shape[0])))
             )
 
-        if self.sessions_items_features is None:
-            sessions_items_features = None
+        ### New
+        choice = self.choices[choices_indexes]
+
+        # fif = self.fif ?
+        if self.fixed_items_features is None:
+            fixed_items_features = None
         else:
-            sessions_items_features = tuple(
-                sessions_items_feature[session_index]
-                for sessions_items_feature in self.sessions_items_features
+            fixed_items_features = tuple(
+                items_feature for items_feature in self.fixed_items_features
             )
 
-        if self.sessions_items_availabilities is None:
-            sessions_items_availabilities = None
+        if self.contexts_features is None:
+            contexts_features = None
         else:
-            sessions_items_availabilities = self.sessions_items_availabilities[session_index]
+            contexts_features = tuple(
+                contexts_feature[choices_indexes] for contexts_feature in self.contexts_features
+            )
+
+        if self.contexts_items_features is None:
+            contexts_items_features = None
+        else:
+            contexts_items_features = tuple(
+                contexts_items_feature[choices_indexes]
+                for contexts_items_feature in self.contexts_items_features
+            )
+
+        if self.contexts_items_availabilities is None:
+            contexts_items_availabilities = np.ones((self.base_num_items))
+        else:
+            contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
+
+        for indexes, f_by_id in self.fixed_items_features_map:
+            fixed_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = f_by_id.batch[
+                fixed_items_features[indexes[0]][:, indexes[1]]
+            ]
+        for indexes, f_by_id in self.contexts_features_map:
+            contexts_features[indexes[0]][indexes[1] : indexes[1] + 1] = f_by_id.batch[
+                contexts_features[indexes[0]][indexes[1]]
+            ]
+        for indexes, f_by_id in self.contexts_items_features_map:
+            contexts_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = f_by_id.batch[
+                contexts_items_features[indexes[0]][:, indexes[1]]
+            ]
 
         return (
-            items_features,
-            sessions_features,
-            sessions_items_features,
-            sessions_items_availabilities,
+            fixed_items_features,
+            contexts_features,
+            contexts_items_features,
+            contexts_items_availabilities,
             choice,
         )
 
-    def __getitem__(self, session_indexes):
-        """Method to create a sub-ChoiceDataset with only a subset of sessions, from their indexes.
+    def __getitem__(self, choices_indexes):
+        """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
 
         Parameters
         ----------
-        indexes : np.ndarray
-            indexes of the sessions to keep, shape should be (num_sessions,)
+        choices_indexes : np.ndarray
+            indexes of the contexts / choices to keep, shape should be (num_choices,)
 
         Returns:
         -------
         ChoiceDataset
             ChoiceDataset with only the sessions indexed by indexes
         """
-        if isinstance(session_indexes, int):
-            session_indexes = [session_indexes]
-        elif isinstance(session_indexes, slice):
-            return self.__getitem__(list(range(*session_indexes.indices(len(self.ragged_choices)))))
+        if isinstance(choices_indexes, int):
+            choices_indexes = [choices_indexes]
+        elif isinstance(choices_indexes, slice):
+            return self.__getitem__(list(range(*choices_indexes.indices(len(self.choices)))))
 
+        if self.fixed_items_features[0] is None:
+            fixed_items_features = None
+        else:
+            fixed_items_features = self.fixed_items_features
+        if self.contexts_features[0] is None:
+            contexts_features = None
+        else:
+            contexts_features = tuple(
+                self.contexts_features[i][choices_indexes]
+                for i in range(len(self.contexts_features))
+            )
+        if self.contexts_items_features[0] is None:
+            contexts_items_features = None
+        else:
+            contexts_items_features = tuple(
+                self.contexts_items_features[i][choices_indexes]
+                for i in range(len(self.contexts_items_features))
+            )
+        if self.fixed_items_features_names[0] is None:
+            fixed_items_features_names = None
+        else:
+            fixed_items_features_names = self.fixed_items_features_names
+        if self.contexts_features_names[0] is None:
+            contexts_features_names = None
+        else:
+            contexts_features_names = self.contexts_features_names
+        if self.contexts_items_features_names[0] is None:
+            contexts_items_features_names = None
+        else:
+            contexts_items_features_names = self.contexts_items_features_names
         return ChoiceDataset(
-            items_features=self.items_features,
-            sessions_features=tuple(
-                self.sessions_features[i][session_indexes]
-                for i in range(len(self.sessions_features))
-            ),
-            sessions_items_features=tuple(
-                self.sessions_items_features[i][session_indexes]
-                for i in range(len(self.sessions_items_features))
-            ),
-            sessions_items_availabilities=self.sessions_items_availabilities[session_indexes],
-            choices=[self.ragged_choices[i] for i in session_indexes],
-            batch_size=self.batch_size,
-            items_features_names=self.items_features_names,
-            sessions_features_names=self.sessions_features_names,
-            sessions_items_features_names=self.sessions_items_features_names,
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=self.contexts_items_availabilities[choices_indexes],
+            choices=[self.choices[i] for i in choices_indexes],
+            fixed_items_features_names=fixed_items_features_names,
+            contexts_features_names=contexts_features_names,
+            contexts_items_features_names=contexts_items_features_names,
+            features_by_ids=self.features_by_ids,
         )
-
-    def old_batch(self, batch_size=None, shuffle=None, sample_weight=None):
-        """Iterates over dataset return batches of length self.batch_size.
-
-        Parameters
-        ----------
-        batch_size : int
-            batch size to set
-        shuffle: bool
-            Whether or not to shuffle the dataset
-        sample_weight : Iterable
-            list of weights to be returned with the right indexing during the shuffling
-        """
-        if batch_size is None:
-            batch_size = self.batch_size
-        if shuffle is None:
-            shuffle = self.shuffle
-        if batch_size == -1:
-            batch_size = self.get_num_choices()
-
-        # Get indexes for each choice
-        num_choices = self.get_num_choices()
-        indexes = np.arange(num_choices)
-        # Shuffle indexes
-        if shuffle and not batch_size == -1:
-            indexes = np.random.permutation(indexes)
-
-        yielded_size = 0
-        while yielded_size < num_choices:
-            # Return sample_weight if not None, for index matching
-            if sample_weight is not None:
-                yield (
-                    self.get_choice_batch(
-                        indexes[yielded_size : yielded_size + batch_size].tolist()
-                    ),
-                    sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()],
-                )
-            else:
-                yield self.get_choice_batch(
-                    indexes[yielded_size : yielded_size + batch_size].tolist()
-                )
-            yielded_size += batch_size
-
-            # Special exit strategy for batch_size = -1
-            if batch_size == -1:
-                yielded_size += 2 * num_choices
 
     @property
     def batch(self):
-        """Indexer."""
+        """Indexer. Corresponds to get_choice_batch, but with [] logic."""
         return self.indexer
 
-    def iter_batch(self, batch_size=None, shuffle=None, sample_weight=None):
-        """Iterates over dataset return batches of length self.batch_size.
+    def iter_batch(self, batch_size, shuffle=False, sample_weight=None):
+        """Iterates over dataset return batches of length batch_size.
 
         Newer version.
 
@@ -947,15 +1133,10 @@ class ChoiceDataset(object):
         sample_weight : Iterable
             list of weights to be returned with the right indexing during the shuffling
         """
-        if batch_size is None:
-            batch_size = self.batch_size
-        if shuffle is None:
-            shuffle = self.shuffle
         if batch_size == -1:
-            batch_size = self.get_num_choices()
-
+            batch_size = len(self)
         # Get indexes for each choice
-        num_choices = self.get_num_choices()
+        num_choices = len(self)
         indexes = np.arange(num_choices)
         # Shuffle indexes
         if shuffle and not batch_size == -1:
@@ -986,6 +1167,5 @@ class ChoiceDataset(object):
             list of booleans of length self.get_num_sessions() to filter sessions.
             True to keep, False to discard.
         """
-        indexes = list(range(len(bool_list)))
-        indexes = [i for i, keep in zip(indexes, bool_list) if keep]
+        indexes = [i for i, keep in enumerate(bool_list) if keep]
         return self[indexes]
