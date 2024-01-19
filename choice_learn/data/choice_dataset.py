@@ -67,7 +67,6 @@ class ChoiceDataset(object):
         if choices is None:
             # Done to keep a logical order of arguments, and has logic: choices have to be specified
             raise ValueError("Choices must be specified, got None")
-        choices = np.array(choices)
 
         # --------- [ Handling features type given as tuples or not ] --------- #
         # If items_features is not given as tuple, transform it internally as a tuple
@@ -223,13 +222,25 @@ class ChoiceDataset(object):
                     # Ordering choices by id ?
                     if "context_id" in feature.columns:
                         if "item_id" in feature.columns:
+                            all_items = np.sort(feature.item_id.unique())
                             feature_array = []
+                            temp_availabilities = []
                             for sess in np.sort(feature.context_id.unique()):
                                 sess_df = feature.loc[feature.context_id == sess]
                                 sess_df = sess_df[
                                     sess_df.columns.difference(["context_id"])
                                 ].set_index("item_id")
-                                feature_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
+                                sess_feature = []
+                                sessions_availabilities = []
+                                for item in all_items:
+                                    if item in sess_df.index:
+                                        sess_feature.append(sess_df.loc[item].to_numpy())
+                                        sessions_availabilities.append(1)
+                                    else:
+                                        sess_feature.append(np.zeros(len(sess_df.columns)))
+                                        sessions_availabilities.append(0)
+                                feature_array.append(sess_feature)
+                                temp_availabilities.append(sessions_availabilities)
                             contexts_items_features = (
                                 contexts_items_features[:i]
                                 + (np.stack(feature_array, axis=0),)
@@ -240,6 +251,11 @@ class ChoiceDataset(object):
                                 + (sess_df.columns,)
                                 + contexts_items_features_names[i + 1 :]
                             )
+                            if (
+                                contexts_items_availabilities is None
+                                and len(np.unique(temp_availabilities)) > 1
+                            ):
+                                contexts_items_availabilities = np.array(temp_availabilities)
                         else:
                             feature = feature.set_index("context_id")
                             contexts_items_features = (
@@ -271,7 +287,7 @@ class ChoiceDataset(object):
                         av_array = []
                         for sess in np.sort(contexts_items_availabilities.context_id):
                             sess_df = contexts_items_availabilities.loc[
-                                contexts_items_availabilities.context__id == sess
+                                contexts_items_availabilities.context_id == sess
                             ]
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
@@ -293,6 +309,9 @@ class ChoiceDataset(object):
             items = np.sort(np.unique(choices.choice))
             # items is the value (str) of the item
             choices = [np.where(items == c)[0] for c in choices.choice]
+            choices = np.squeeze(choices)
+        elif isinstance(choices, list):
+            choices = np.array(choices)
 
         # Setting attributes of ChoiceDataset
         self.fixed_items_features = fixed_items_features
@@ -733,6 +752,7 @@ class ChoiceDataset(object):
             items_features_columns = (fixed_items_features_columns,)
         else:
             items_features = None
+            items_features_columns = None
 
         if contexts_features_columns is not None:
             contexts_features = df[
@@ -744,6 +764,7 @@ class ChoiceDataset(object):
             contexts_features_columns = (contexts_features_columns,)
         else:
             contexts_features = None
+            contexts_features_columns = None
 
         (
             contexts_items_features,
@@ -806,35 +827,37 @@ class ChoiceDataset(object):
             "Number of choices:",
             len(self),
         )
+        print("%=====================================================================%")
         if self.fixed_items_features is not None:
-            print("Fixed Items Features:")
-            print(f"{sum([f.shape[1] for f in self.fixed_items_features])} items features")
+            print(" Fixed Items Features:")
+            print(f" {sum([f.shape[1] for f in self.fixed_items_features])} items features")
             if self.fixed_items_features_names is not None:
-                print(f"with names: {self.fixed_items_features_names}")
+                print(f" with names: {self.fixed_items_features_names}")
         else:
-            print("No items features registered")
+            print(" No items features registered")
         print("\n")
 
         if self.contexts_features is not None:
-            print("Sessions features:")
-            print(f"{sum([f.shape[1] for f in self.contexts_features])} session features")
+            print(" Contexts features:")
+            print(f" {sum([f.shape[1] for f in self.contexts_features])} context features")
             if self.contexts_features_names is not None:
-                print(f"with names: {self.contexts_features_names}")
+                print(f" with names: {self.contexts_features_names}")
         else:
-            print("No sessions features registered")
+            print(" No sessions features registered")
         print("\n")
 
         if self.contexts_items_features is not None:
-            print("Session Items features:")
+            print(" Contexts Items features:")
             print(
-                f"{sum([f.shape[2] for f in self.contexts_items_features])} sessions \
-                  items features"
+                f""" {sum([f.shape[2] for f in self.contexts_items_features])} context
+                 items features"""
             )
             if self.contexts_items_features_names is not None:
-                print(f"with names: {self.contexts_items_features_names}")
+                print(f" with names: {self.contexts_items_features_names}")
         else:
-            print("No sessions items features registered")
+            print(" No sessions items features registered")
         print("%=====================================================================%")
+        return ""
 
     def get_choices_batch(self, choices_indexes, features=None):
         """Method to access data within the ListChoiceDataset from its index.
