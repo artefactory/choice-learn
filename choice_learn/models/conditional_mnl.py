@@ -127,10 +127,20 @@ class ModelSpecification(object):
         if weight_name not in self.coefficients.keys():
             raise ValueError(f"Weight {weight_name} not in coefficients")
 
-        self.feature_to_weight[self.coefficients[weight_name]["feature_name"]] = (
-            weight_name,
-            weight_index,
-        )
+        if self.coefficients[weight_name]["feature_name"] in self.feature_to_weight.keys():
+            self.feature_to_weight[self.coefficients[weight_name]["feature_name"]].append(
+                (
+                    weight_name,
+                    weight_index,
+                )
+            )
+        else:
+            self.feature_to_weight[self.coefficients[weight_name]["feature_name"]] = [
+                (
+                    weight_name,
+                    weight_index,
+                ),
+            ]
 
     def list_features_with_weights(self):
         """Get a list of the features that have a weight to be estimated.
@@ -157,8 +167,12 @@ class ModelSpecification(object):
         int
             The index of the weight in the conditionalMNL weights.
         """
-        weight_name, weight_index = self.feature_to_weight[feature_name]
-        return self.coefficients[weight_name]["items_indexes"], weight_index
+        weights_info = self.feature_to_weight[feature_name]
+        weight_names = [weight_info[0] for weight_info in weights_info]
+        weight_indexs = [weight_info[1] for weight_info in weights_info]
+        return [
+            self.coefficients[weight_name]["items_indexes"] for weight_name in weight_names
+        ], weight_indexs
 
     @property
     def coefficients_list(self):
@@ -366,161 +380,195 @@ class ConditionalMNL(ChoiceModel):
         num_choices = availabilities_batch.shape[0]
         contexts_items_utilities = []
         # Items features
-        for i, feat_tuple in enumerate(self._items_features_names):
-            for j, feat in enumerate(feat_tuple):
-                if feat in self.params.list_features_with_weights():
-                    item_index, weight_index = self.params.get_weight_item_indexes(feat)
-
-                    s_i_u = tf.zeros((num_items,))
-                    for q, idx in enumerate(item_index):
-                        if isinstance(idx, list):
-                            for k in idx:
-                                s_i_u = tf.concat(
-                                    [
-                                        s_i_u[:k],
-                                        tf.multiply(
-                                            items_batch[i][k, j], self.weights[weight_index][:, q]
-                                        ),
-                                        s_i_u[k + 1 :],
-                                    ],
-                                    axis=0,
-                                )
-                        else:
-                            s_i_u = tf.concat(
-                                [
-                                    s_i_u[:idx],
-                                    tf.multiply(
-                                        items_batch[i][idx, j], self.weights[weight_index][:, q]
-                                    ),
-                                    s_i_u[idx + 1 :],
-                                ],
-                                axis=0,
-                            )
-                    s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
-
-                    ### Need reshaping here
-                    contexts_items_utilities.append(s_i_u)
-                else:
-                    if verbose > 1:
-                        print(
-                            f"Feature {feat} is in dataset but has no weight assigned in utility\
-                                computations"
+        if self._items_features_names is not None:
+            for i, feat_tuple in enumerate(self._items_features_names):
+                for j, feat in enumerate(feat_tuple):
+                    if feat in self.params.list_features_with_weights():
+                        print("found feat", feat)
+                        item_index_list, weight_index_list = self.params.get_weight_item_indexes(
+                            feat
                         )
-
-        # Context features
-        for i, feat_tuple in enumerate(self._contexts_features_names):
-            for j, feat in enumerate(feat_tuple):
-                if feat in self.params.list_features_with_weights():
-                    item_index, weight_index = self.params.get_weight_item_indexes(feat)
-
-                    s_i_u = tf.zeros((num_choices, num_items))
-
-                    for q, idx in enumerate(item_index):
-                        if isinstance(idx, list):
-                            for k in idx:
-                                s_i_u = tf.concat(
-                                    [
-                                        s_i_u[:, :k],
-                                        tf.expand_dims(
+                        for item_index, weight_index in zip(item_index_list, weight_index_list):
+                            s_i_u = tf.zeros((num_items,))
+                            for q, idx in enumerate(item_index):
+                                if isinstance(idx, list):
+                                    for k in idx:
+                                        s_i_u = tf.concat(
+                                            [
+                                                s_i_u[:k],
+                                                tf.multiply(
+                                                    items_batch[i][k, j],
+                                                    self.weights[weight_index][:, q],
+                                                ),
+                                                s_i_u[k + 1 :],
+                                            ],
+                                            axis=0,
+                                        )
+                                else:
+                                    s_i_u = tf.concat(
+                                        [
+                                            s_i_u[:idx],
                                             tf.multiply(
-                                                contexts_batch[i][:, j],
+                                                items_batch[i][idx, j],
                                                 self.weights[weight_index][:, q],
                                             ),
-                                            axis=-1,
-                                        ),
-                                        s_i_u[:, k + 1 :],
-                                    ],
-                                    axis=1,
-                                )
+                                            s_i_u[idx + 1 :],
+                                        ],
+                                        axis=0,
+                                    )
+                            s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
+
+                            ### Need reshaping here
+                            contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
                         else:
-                            s_i_u = tf.concat(
-                                [
-                                    s_i_u[:, :idx],
-                                    tf.expand_dims(
-                                        tf.multiply(
+                            if verbose > 1:
+                                print(
+                                    f"Feature {feat} is in dataset but has no weight assigned\
+                                          in utility computations"
+                                )
+        # Context features
+        if self._contexts_features_names is not None:
+            for i, feat_tuple in enumerate(self._contexts_features_names):
+                for j, feat in enumerate(feat_tuple):
+                    if feat in self.params.list_features_with_weights():
+                        print("found feat", feat)
+                        item_index_list, weight_index_list = self.params.get_weight_item_indexes(
+                            feat
+                        )
+                        for item_index, weight_index in zip(item_index_list, weight_index_list):
+                            s_i_u = tf.zeros((num_choices, num_items))
+                            s_i_u = [tf.zeros(num_choices) for _ in range(num_items)]
+
+                            for q, idx in enumerate(item_index):
+                                if isinstance(idx, list):
+                                    for k in idx:
+                                        """
+                                        s_i_u = tf.concat(
+                                            [
+                                                s_i_u[:, :k],
+                                                tf.expand_dims(
+                                                    tf.multiply(
+                                                        contexts_batch[i][:, j],
+                                                        self.weights[weight_index][:, q],
+                                                    ),
+                                                    axis=-1,
+                                                ),
+                                                s_i_u[:, k + 1 :],
+                                            ],
+                                            axis=1,
+                                        )
+                                        """
+                                        contexts_batch[i][:, j]
+                                        compute = tf.multiply(
                                             contexts_batch[i][:, j],
                                             self.weights[weight_index][:, q],
-                                        ),
-                                        axis=-1,
-                                    ),
-                                    s_i_u[:, idx + 1 :],
-                                ],
-                                axis=1,
-                            )
+                                        )
+                                        s_i_u[k] += compute
+                                else:
+                                    """
+                                    s_i_u = tf.concat(
+                                        [
+                                            s_i_u[:, :idx],
+                                            tf.expand_dims(
+                                                tf.multiply(
+                                                    contexts_batch[i][:, j],
+                                                    self.weights[weight_index][:, q],
+                                                ),
+                                                axis=-1,
+                                            ),
+                                            s_i_u[:, idx + 1 :],
+                                        ],
+                                        axis=1,
+                                    )
+                                    """
+                                    compute = tf.multiply(
+                                        contexts_batch[i][:, j], self.weights[weight_index][:, q]
+                                    )
+                                    s_i_u[idx] += compute
 
-                    contexts_items_utilities.append(s_i_u)
-                else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility\
-                            computations"
-                    )
+                            contexts_items_utilities.append(
+                                tf.cast(tf.stack(s_i_u, axis=1), tf.float32)
+                            )
+                        else:
+                            print(
+                                f"Feature {feat} is in dataset but has no weight assigned\
+                                    in utility computations"
+                            )
 
         # context Items features
-        for i, feat_tuple in enumerate(self._contexts_items_features_names):
-            for j, feat in enumerate(feat_tuple):
-                if feat in self.params.list_features_with_weights():
-                    item_index, weight_index = self.params.get_weight_item_indexes(feat)
-                    s_i_u = tf.zeros((num_choices, num_items))
+        if self._contexts_items_features_names is not None:
+            for i, feat_tuple in enumerate(self._contexts_items_features_names):
+                for j, feat in enumerate(feat_tuple):
+                    if feat in self.params.list_features_with_weights():
+                        print("found feat", feat)
 
-                    for q, idx in enumerate(item_index):
-                        if isinstance(idx, list):
-                            for k in idx:
-                                s_i_u = tf.concat(
-                                    [
-                                        s_i_u[:, :k],
-                                        tf.expand_dims(
-                                            tf.multiply(
-                                                contexts_items_batch[i][:, k, j],
-                                                self.weights[weight_index][:, q],
+                        item_index_list, weight_index_list = self.params.get_weight_item_indexes(
+                            feat
+                        )
+                        for item_index, weight_index in zip(item_index_list, weight_index_list):
+                            s_i_u = tf.zeros((num_choices, num_items))
+
+                            for q, idx in enumerate(item_index):
+                                if isinstance(idx, list):
+                                    for k in idx:
+                                        s_i_u = tf.concat(
+                                            [
+                                                s_i_u[:, :k],
+                                                tf.expand_dims(
+                                                    tf.multiply(
+                                                        contexts_items_batch[i][:, k, j],
+                                                        self.weights[weight_index][:, q],
+                                                    ),
+                                                    axis=-1,
+                                                ),
+                                                s_i_u[:, k + 1 :],
+                                            ],
+                                            axis=1,
+                                        )
+                                else:
+                                    s_i_u = tf.concat(
+                                        [
+                                            s_i_u[:, :idx],
+                                            tf.expand_dims(
+                                                tf.multiply(
+                                                    contexts_items_batch[i][:, idx, j],
+                                                    self.weights[weight_index][:, q],
+                                                ),
+                                                axis=-1,
                                             ),
-                                            axis=-1,
-                                        ),
-                                        s_i_u[:, k + 1 :],
-                                    ],
-                                    axis=1,
-                                )
+                                            s_i_u[:, idx + 1 :],
+                                        ],
+                                        axis=1,
+                                    )
+
+                            contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
                         else:
-                            s_i_u = tf.concat(
-                                [
-                                    s_i_u[:, :idx],
-                                    tf.expand_dims(
-                                        tf.multiply(
-                                            contexts_items_batch[i][:, idx, j],
-                                            self.weights[weight_index][:, q],
-                                        ),
-                                        axis=-1,
-                                    ),
-                                    s_i_u[:, idx + 1 :],
-                                ],
-                                axis=1,
+                            print(
+                                f"Feature {feat} is in dataset but has no weight assigned\
+                                    in utility computations"
                             )
 
-                    contexts_items_utilities.append(s_i_u)
-                else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility\
-                            computations"
+        if "intercept" in self.params.list_features_with_weights():
+            print("found feat", "intercept")
+            item_index_list, weight_index_list = self.params.get_weight_item_indexes("intercept")
+
+            for item_index, weight_index in zip(item_index_list, weight_index_list):
+                s_i_u = tf.zeros((num_items,))
+                for q, idx in enumerate(item_index):
+                    s_i_u = tf.concat(
+                        [
+                            s_i_u[:idx],
+                            self.weights[weight_index][:, q],
+                            s_i_u[idx + 1 :],
+                        ],
+                        axis=0,
                     )
 
-        if "intercept" in self.params.list_features_with_weights():
-            item_index, weight_index = self.params.get_weight_item_indexes("intercept")
+                s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
 
-            s_i_u = tf.zeros((num_items,))
-            for q, idx in enumerate(item_index):
-                s_i_u = tf.concat(
-                    [
-                        s_i_u[:idx],
-                        self.weights[weight_index][:, q],
-                        s_i_u[idx + 1 :],
-                    ],
-                    axis=0,
-                )
+                ### Need reshaping here
 
-            s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
-
-            ### Need reshaping here
-
-            contexts_items_utilities.append(s_i_u)
+                contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
 
         return tf.reduce_sum(contexts_items_utilities, axis=0)
 
