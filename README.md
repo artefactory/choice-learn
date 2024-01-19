@@ -20,11 +20,6 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
 
 This repository contains a private version of the package.
 
-## Introduction - Discrete Choice Modelling
-
-Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores.
-
-If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 ## Table of Contents
 
 - [choice-learn-private](#choice-learn-private)
@@ -36,6 +31,13 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - [Usage](#usage)
   - [Documentation](#documentation)
   - [Citation](#citation)
+
+## Introduction - Discrete Choice Modelling
+
+Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores.
+
+If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
+
 ## What's in there ?
 
 ### Data
@@ -47,7 +49,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Models
 - Ready to use models:
   - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987)
-  - RUMnet, Aouad A.; Désir A. (2022)
+  - RUMnet, Aouad A.; Désir A. (2022) [1]
 - Ready to use models to be implemented:
   - Nested MultiNomialLogit
   - MultiNomialLogit with latent variables (MixedLogit)
@@ -106,3 +108,11 @@ A detailed documentation of this project is available [here](https://artefactory
 ### Contributors
 
 ## References
+
+### Papers
+[1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad A.; Désir A. (2022)
+
+### Code and Repositories
+- [PyLogit](https://github.com/timothyb0912/pylogit)
+- [Torch Choice](https://gsbdbi.github.io/torch-choice/)
+- [1][RUMnet](https://github.com/antoinedesir/rumnet)
