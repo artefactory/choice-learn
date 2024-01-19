@@ -60,9 +60,8 @@ nav:
     - Getting Started with Conditional Logit: notebooks/choice_learn_introduction_clogit.md
   - How-To Guides:
     - Introduction: how-to-guides.md
-    - ChoiceDataset Usage: notebooks/choice_learn_introduction_data.md
-    - Conditional Logit Estimation: notebooks/choice_learn_introduction_clogit.md
-    - RUMnet Estimation: notebooks/rumnet_example.md
+    - Exhaustive example of ChoiceDataset creation: notebooks/dataset_creation.md
+    - RUMnet Usage: notebooks/rumnet_example.md
     - Custom Choice Model Creation: notebooks/custom_model.md
   - References:
     - Data:
