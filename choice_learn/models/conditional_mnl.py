@@ -384,7 +384,6 @@ class ConditionalMNL(ChoiceModel):
             for i, feat_tuple in enumerate(self._items_features_names):
                 for j, feat in enumerate(feat_tuple):
                     if feat in self.params.list_features_with_weights():
-                        print("found feat", feat)
                         item_index_list, weight_index_list = self.params.get_weight_item_indexes(
                             feat
                         )
@@ -420,12 +419,12 @@ class ConditionalMNL(ChoiceModel):
 
                             ### Need reshaping here
                             contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
-                        else:
-                            if verbose > 1:
-                                print(
-                                    f"Feature {feat} is in dataset but has no weight assigned\
-                                          in utility computations"
-                                )
+                    else:
+                        if verbose > 1:
+                            print(
+                                f"Feature {feat} is in dataset but has no weight assigned\
+                                        in utility computations"
+                            )
         # Context features
         if self._contexts_features_names is not None:
             for i, feat_tuple in enumerate(self._contexts_features_names):
@@ -489,11 +488,11 @@ class ConditionalMNL(ChoiceModel):
                             contexts_items_utilities.append(
                                 tf.cast(tf.stack(s_i_u, axis=1), tf.float32)
                             )
-                        else:
-                            print(
-                                f"Feature {feat} is in dataset but has no weight assigned\
-                                    in utility computations"
-                            )
+                    else:
+                        print(
+                            f"Feature {feat} is in dataset but has no weight assigned\
+                                in utility computations"
+                        )
 
         # context Items features
         if self._contexts_items_features_names is not None:
@@ -542,11 +541,11 @@ class ConditionalMNL(ChoiceModel):
                                     )
 
                             contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
-                        else:
-                            print(
-                                f"Feature {feat} is in dataset but has no weight assigned\
-                                    in utility computations"
-                            )
+                    else:
+                        print(
+                            f"Feature {feat} is in dataset but has no weight assigned\
+                                in utility computations"
+                        )
 
         if "intercept" in self.params.list_features_with_weights():
             print("found feat", "intercept")

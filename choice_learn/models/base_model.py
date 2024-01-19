@@ -622,11 +622,6 @@ class ChoiceModel(object):
 
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.weights)
-            print(idx)
-            print(grads)
-            tf.print(idx, grads)
-            print(len(idx))
-            print(len(grads))
             grads = tf.dynamic_stitch(idx, grads)
 
             # print out iteration & loss
