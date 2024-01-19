@@ -20,16 +20,22 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
 
 This repository contains a private version of the package.
 
+## Introduction - Discrete Choice Modelling
+
+Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores.
+
+If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 ## Table of Contents
 
 - [choice-learn-private](#choice-learn-private)
+  - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [Table of Contents](#table-of-contents)
   - [What's in there ?](#whats-in-there)
+  - [Getting Started](#getting-started---fast-track)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)
   - [Citation](#citation)
-
 ## What's in there ?
 
 ### Data
