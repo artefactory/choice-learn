@@ -13,6 +13,7 @@ class PaperRUMnet(ChoiceModel):
     https://arxiv.org/abs/2207.12877
 
     Inherits from base_model.ChoiceModel
+    TODO: Verify that all parameters are implemented.
     """
 
     def __init__(
