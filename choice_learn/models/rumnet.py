@@ -2,6 +2,7 @@
 import tensorflow as tf
 
 from choice_learn.models.base_model import ChoiceModel
+from choice_learn.tf_ops import CustomCategoricalCrossEntropy
 
 
 class PaperRUMnet(ChoiceModel):
@@ -139,17 +140,17 @@ class PaperRUMnet(ChoiceModel):
 
         # Storing weights for back-propagation
         self.weights = self.x_model.weights + self.z_model.weights + self.u_model.weights
-        self.loss = tf.keras.losses.CategoricalCrossentropy(
+        self.loss = CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
 
-    def compute_utility(
+    def compute_batch_utility(
         self,
-        items_features_batch,
-        session_features_batch,
-        session_items_features_batch,
-        availabilities_batch,
-        choices_batch,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
 
@@ -158,17 +159,17 @@ class PaperRUMnet(ChoiceModel):
 
         Parameters
         ----------
-        items_features_batch : tuple of np.ndarray (items_features)
+        fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products constant features.
-        session_features_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        session_items_features_batch :tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch :  np.ndarray
-            Choices
+            products fixed features.
+        contexts_features : tuple of np.ndarray (n_contexts, n_features)
+            Contexts-Features: features varying with contexts, shared by all products
+        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
+            Features varying with contexts and products
+        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
+            Availabilities: here for ChoiceModel signature
+        choices :  np.ndarray (n_contexts, )
+            Choices: here for ChoiceModel signature
 
         Returns:
         --------
@@ -176,11 +177,11 @@ class PaperRUMnet(ChoiceModel):
             Utility of each product for each session.
             Shape must be (n_sessions, n_items)
         """
-        del availabilities_batch, choices_batch
+        (_, _) = contexts_items_availabilities, choices
         ### Restacking of the item features
-        items_features_batch = tf.concat([*items_features_batch], axis=-1)
-        session_features_batch = tf.concat([*session_features_batch], axis=-1)
-        session_items_features_batch = tf.concat([*session_items_features_batch], axis=-1)
+        items_features_batch = tf.concat([*fixed_items_features], axis=-1)
+        session_features_batch = tf.concat([*contexts_features], axis=-1)
+        session_items_features_batch = tf.concat([*contexts_items_features], axis=-1)
 
         full_item_features = tf.stack(
             [items_features_batch] * session_items_features_batch.shape[0], axis=0
@@ -215,32 +216,30 @@ class PaperRUMnet(ChoiceModel):
     @tf.function
     def train_step(
         self,
-        items_batch,
-        sessions_batch,
-        sessions_items_batch,
-        availabilities_batch,
-        choices_batch,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
         sample_weight=None,
     ):
         """Modified version of train step, as we have to average probabilities over heterogeneities.
 
-        Mayber split into two functions?
-        One for computing probabilities, one for gradient descent ?
-        Parameters to be renamed !
         Function that represents one training step (= one gradient descent step) of the model.
+        Handles a batch of data of size n_contexts = n_choices = batch_size
 
         Parameters
         ----------
-        items_batch : tuple of np.ndarray (items_features)
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing
-            the products constant features.
-        sessions_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        sessions_items_batch : tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch : np.ndarray
+        fixed_items_features : tuple of np.ndarray (n_items, n_features)
+            Items-Features: formatting from ChoiceDataset: a matrix representing the
+            products fixed features.
+        contexts_features : tuple of np.ndarray (n_contexts, n_features)
+            Contexts-Features: features varying with contexts, shared by all products
+        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
+            Features varying with contexts and products
+        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
+            Availabilities of items
+        choices :  np.ndarray (n_contexts, )
             Choices
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
@@ -253,12 +252,12 @@ class PaperRUMnet(ChoiceModel):
         """
         with tf.GradientTape() as tape:
             ### Computation of utilities
-            all_u = self.compute_utility(
-                items_batch,
-                sessions_batch,
-                sessions_items_batch,
-                availabilities_batch,
-                choices_batch,
+            all_u = self.compute_batch_utility(
+                fixed_items_features=fixed_items_features,
+                contexts_features=contexts_features,
+                contexts_items_features=contexts_items_features,
+                contexts_items_availabilities=contexts_items_availabilities,
+                choices=choices,
             )
             probabilities = []
 
@@ -271,20 +270,20 @@ class PaperRUMnet(ChoiceModel):
 
             # Average probabilities over heterogeneities
             probabilities = tf.reduce_mean(eps_probabilities, axis=1)
-            """
-            # Test with availability normalization
-            probabilities = tf.multiply(probabilities, ia_batch)
+
+            # It is not in the paper, but let's normalize with availabilities
+            probabilities = tf.multiply(probabilities, contexts_items_availabilities)
             probabilities = tf.divide(
                 probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
             )
-            """
+
             # Probabilities of selected products
             # chosen_probabilities = tf.gather_nd(indices=choices_nd, params=probabilities)
 
             # Negative Log-Likelihood
-            nll = self.loss(
+            batch_nll = self.loss(
                 y_pred=probabilities,
-                y_true=tf.one_hot(choices_batch, depth=probabilities.shape[1]),
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
             # nll = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(
@@ -292,18 +291,18 @@ class PaperRUMnet(ChoiceModel):
             # )
             # nll = -tf.reduce_sum(tf.math.log(chosen_probabilities + self.logmin))
 
-        grads = tape.gradient(nll, self.weights)
+        grads = tape.gradient(batch_nll, self.weights)
         self.optimizer.apply_gradients(zip(grads, self.weights))
-        return nll
+        return batch_nll
 
     @tf.function
     def batch_predict(
         self,
-        items_batch,
-        sessions_batch,
-        sessions_items_batch,
-        availabilities_batch,
-        choices_batch,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
         sample_weight=None,
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
@@ -313,16 +312,16 @@ class PaperRUMnet(ChoiceModel):
 
         Parameters
         ----------
-        items_batch : tuple of np.ndarray (items_features)
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant features.
-        sessions_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        sessions_items_batch : tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch : np.ndarray
+        fixed_items_features : tuple of np.ndarray (n_items, n_features)
+            Items-Features: formatting from ChoiceDataset: a matrix representing the
+            products fixed features.
+        contexts_features : tuple of np.ndarray (n_contexts, n_features)
+            Contexts-Features: features varying with contexts, shared by all products
+        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
+            Features varying with contexts and products
+        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
+            Availabilities of items
+        choices :  np.ndarray (n_contexts, )
             Choices
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
@@ -336,36 +335,41 @@ class PaperRUMnet(ChoiceModel):
             Probabilities for each product to be chosen for each session
         """
         utilities = self.compute_utility(
-            items_batch, sessions_batch, sessions_items_batch, availabilities_batch, choices_batch
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
+            choices=choices,
         )
         probabilities = tf.nn.softmax(utilities, axis=2)
         probabilities = tf.reduce_mean(probabilities, axis=1)
 
-        # Test with availability normalization
-        """
-        probabilities = tf.multiply(probabilities, ia_batch)
+        # Normalization with availabilties
+        probabilities = tf.multiply(probabilities, contexts_items_availabilities)
         probabilities = tf.divide(
             probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
         )
-        """
-        batch_loss = self.loss(
+        batch_nll = self.loss(
             y_pred=probabilities,
-            y_true=tf.one_hot(choices_batch, depth=probabilities.shape[1]),
+            y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
             sample_weight=sample_weight,
         )
-        return batch_loss, probabilities
+        return batch_nll, probabilities
 
 
-class PaperRUMnet2(PaperRUMnet):
-    """Other implementation."""
+class CPURUMnet(PaperRUMnet):
+    """CPU-optimized Re-Implementation of the RUMnet model.
 
-    def compute_utility(
+    This implementation handles in parallel the heterogenneities so that the training is faster.
+    """
+
+    def compute_batch_utility(
         self,
-        items_features_batch,
-        session_features_batch,
-        session_items_features_batch,
-        availabilities_batch,
-        choices_batch,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
 
@@ -374,16 +378,16 @@ class PaperRUMnet2(PaperRUMnet):
 
         Parameters
         ----------
-        items_features_batch : tuple of np.ndarray (items_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing
-            the products constant features.
-        session_features_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        session_items_features_batch :tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch :  np.ndarray
+        fixed_items_features : tuple of np.ndarray (n_items, n_features)
+            Items-Features: formatting from ChoiceDataset: a matrix representing the
+            products fixed features.
+        contexts_features : tuple of np.ndarray (n_contexts, n_features)
+            Contexts-Features: features varying with contexts, shared by all products
+        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
+            Features varying with contexts and products
+        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
+            Availabilities of items
+        choices :  np.ndarray (n_contexts, )
             Choices
 
         Returns:
@@ -392,195 +396,41 @@ class PaperRUMnet2(PaperRUMnet):
             Utility of each product for each session.
             Shape must be (n_sessions, n_items)
         """
-        del availabilities_batch, choices_batch
+        (_, _) = contexts_items_availabilities, choices
         ### Restacking of the item features
-        items_features_batch = tf.concat([*items_features_batch], axis=-1)
-        session_features_batch = tf.concat([*session_features_batch], axis=-1)
-        session_items_features_batch = tf.concat([*session_items_features_batch], axis=-1)
+        stacked_fixed_items_features = tf.concat([*fixed_items_features], axis=-1)
+        stacked_contexts_features = tf.concat([*contexts_features], axis=-1)
+        stacked_contexts_items_features = tf.concat([*contexts_items_features], axis=-1)
 
         full_item_features = tf.stack(
-            [items_features_batch] * session_items_features_batch.shape[0], axis=0
+            [stacked_fixed_items_features] * stacked_contexts_items_features.shape[0], axis=0
         )
-        full_item_features = tf.concat([session_items_features_batch, full_item_features], axis=-1)
+        full_item_features = tf.concat(
+            [stacked_contexts_items_features, full_item_features], axis=-1
+        )
 
         ### Computation of utilities
         utilities = []
+        batch_size = stacked_contexts_features.shape[0]
 
         # Computation of the customer features embeddings
-        z_embeddings = self.z_model(session_features_batch)
-
-        # Iterate over items in
-        def apply_u(x):
-            return self.u_model(x)
-
-        for item_i in range(full_item_features.shape[1]):
-            # Computation of item features embeddings
-            x_embeddings = self.x_model(full_item_features[:, item_i, :])
-
-            # utilities.append([])
-
-            # Computation of utilites from embeddings, iteration over heterogeneities
-            # (eps_x * eps_z)
-            _utilities = []
-            for _x in x_embeddings:
-                for _z in z_embeddings:
-                    _u = tf.keras.layers.Concatenate()(
-                        [full_item_features[:, item_i, :], _x, session_features_batch, _z]
-                    )
-                    _utilities.append(_u)
-            utilities.append(
-                tf.map_fn(
-                    fn=apply_u, elems=tf.stack(_utilities, axis=0), fn_output_signature=tf.float32
-                )
-            )
-        ### Reshape utilities: (batch_size, num_items, heterogeneity)
-        return tf.transpose(tf.squeeze(tf.stack(utilities, axis=0), -1))
-
-
-class PaperRUMnet3(PaperRUMnet):
-    """Other Implementation."""
-
-    def compute_utility(
-        self,
-        items_features_batch,
-        session_features_batch,
-        session_items_features_batch,
-        availabilities_batch,
-        choices_batch,
-    ):
-        """Compute utility from a batch of ChoiceDataset.
-
-        Here we asssume that: item features = {fixed item features + session item features}
-                              user features = {session features}
-
-        Parameters
-        ----------
-        items_features_batch : tuple of np.ndarray (items_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant features.
-        session_features_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        session_items_features_batch :tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch :  np.ndarray
-            Choices
-
-        Returns:
-        --------
-        np.ndarray
-            Utility of each product for each session.
-            Shape must be (n_sessions, n_items)
-        """
-        del availabilities_batch, choices_batch
-        ### Restacking of the item features
-        items_features_batch = tf.concat([*items_features_batch], axis=-1)
-        session_features_batch = tf.concat([*session_features_batch], axis=-1)
-        session_items_features_batch = tf.concat([*session_items_features_batch], axis=-1)
-
-        full_item_features = tf.stack(
-            [items_features_batch] * session_items_features_batch.shape[0], axis=0
-        )
-        full_item_features = tf.concat([session_items_features_batch, full_item_features], axis=-1)
-
-        ### Computation of utilities
-        utilities = []
-
-        # Computation of the customer features embeddings
-        z_embeddings = self.z_model(session_features_batch)
-
-        # Iterate over items in assortment
-        # for item_i in range(full_item_features.shape[1]):
-        def apply_u(x):
-            # Computation of item features embeddings
-            x_embeddings = self.x_model(x)
-
-            utilities = []
-
-            # Computation of utilites from embeddings, iteration over heterogeneities
-            # (eps_x * eps_z)
-            for _x in x_embeddings:
-                for _z in z_embeddings:
-                    _u = tf.keras.layers.Concatenate()([x, _x, session_features_batch, _z])
-                    utilities.append(self.u_model(_u))
-            return tf.stack(utilities, axis=0)
-
-        utilities = tf.map_fn(fn=apply_u, elems=tf.transpose(full_item_features, perm=[1, 0, 2]))
-        ### Reshape utilities: (batch_size, num_items, heterogeneity)
-        return tf.transpose(tf.squeeze(tf.stack(utilities, axis=0), -1))
-
-
-class PaperRUMnet4(PaperRUMnet):
-    """Other Implementation."""
-
-    def compute_utility(
-        self,
-        items_features_batch,
-        session_features_batch,
-        session_items_features_batch,
-        availabilities_batch,
-        choices_batch,
-    ):
-        """Compute utility from a batch of ChoiceDataset.
-
-        Here we asssume that: item features = {fixed item features + session item features}
-                              user features = {session features}
-
-        Parameters
-        ----------
-        items_features_batch : tuple of np.ndarray (items_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing
-            the products constant features.
-        session_features_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        session_items_features_batch :tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch :  np.ndarray
-            Choices
-
-        Returns:
-        --------
-        np.ndarray
-            Utility of each product for each session.
-            Shape must be (n_sessions, n_items)
-        """
-        del availabilities_batch, choices_batch
-        ### Restacking of the item features
-        items_features_batch = tf.concat([*items_features_batch], axis=-1)
-        session_features_batch = tf.concat([*session_features_batch], axis=-1)
-        session_items_features_batch = tf.concat([*session_items_features_batch], axis=-1)
-
-        full_item_features = tf.stack(
-            [items_features_batch] * session_items_features_batch.shape[0], axis=0
-        )
-        full_item_features = tf.concat([session_items_features_batch, full_item_features], axis=-1)
-
-        ### Computation of utilities
-        utilities = []
-        batch_size = session_features_batch.shape[0]
-
-        # Computation of the customer features embeddings
-        z_embeddings = self.z_model(session_features_batch)
+        z_embeddings = self.z_model(stacked_contexts_features)
 
         # Iterate over items in assortment
         for item_i in range(full_item_features.shape[1]):
             # Computation of item features embeddings
             x_embeddings = self.x_model(full_item_features[:, item_i, :])
 
-            # utilities.append([])
-            _utilities = []
+            stacked_heterogeneities = []
             # Computation of utilites from embeddings, iteration over heterogeneities
-            # (eps_x * eps_z)
+            # eps_x * eps_z
             for _x in x_embeddings:
                 for _z in z_embeddings:
-                    _u = tf.keras.layers.Concatenate()(
-                        [full_item_features[:, item_i, :], _x, session_features_batch, _z]
+                    full_embedding = tf.keras.layers.Concatenate()(
+                        [full_item_features[:, item_i, :], _x, stacked_contexts_features, _z]
                     )
-                    _utilities.append(_u)
-            item_utilities = self.u_model(tf.concat(_utilities, axis=0))
+                    stacked_heterogeneities.append(full_embedding)
+            item_utilities = self.u_model(tf.concat(stacked_heterogeneities, axis=0))
             item_utilities = tf.stack(
                 [
                     item_utilities[batch_size * i : batch_size * (i + 1)]
@@ -593,100 +443,9 @@ class PaperRUMnet4(PaperRUMnet):
         return tf.squeeze(tf.stack(utilities, axis=1), -1)
 
 
-class PaperRUMnet5(PaperRUMnet):
-    """Other Implementation."""
-
-    def compute_utility(
-        self,
-        items_features_batch,
-        session_features_batch,
-        session_items_features_batch,
-        availabilities_batch,
-        choices_batch,
-    ):
-        """Compute utility from a batch of ChoiceDataset.
-
-        Here we asssume that: item features = {fixed item features + session item features}
-                              user features = {session features}
-
-        Parameters
-        ----------
-        items_features_batch : tuple of np.ndarray (items_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing
-            the products constant features.
-        session_features_batch : tuple of np.ndarray (sessions_features)
-            Time-Features
-        session_items_features_batch :tuple of np.ndarray (sessions_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (sessions_items_availabilities)
-        choices_batch :  np.ndarray
-            Choices
-
-        Returns:
-        --------
-        np.ndarray
-            Utility of each product for each session.
-            Shape must be (n_sessions, n_items)
-        """
-        del availabilities_batch, choices_batch
-        ### Restacking of the item features
-        items_features_batch = tf.concat([*items_features_batch], axis=-1)
-        session_features_batch = tf.concat([*session_features_batch], axis=-1)
-        session_items_features_batch = tf.concat([*session_items_features_batch], axis=-1)
-
-        full_item_features = tf.stack(
-            [items_features_batch] * session_items_features_batch.shape[0], axis=0
-        )
-        full_item_features = tf.concat([session_items_features_batch, full_item_features], axis=-1)
-
-        ### Computation of utilities
-        utilities = []
-        batch_size = session_features_batch.shape[0]
-        num_items = full_item_features.shape[1]
-
-        # Computation of the customer features embeddings
-        z_embeddings = self.z_model(session_features_batch)
-
-        _utilities = []
-        # Iterate over items in assortment
-        for item_i in range(num_items):
-            # Computation of item features embeddings
-            x_embeddings = self.x_model(full_item_features[:, item_i, :])
-
-            # utilities.append([])
-            # Computation of utilites from embeddings, iteration over heterogeneities
-            # (eps_x * eps_z)
-            for _x in x_embeddings:
-                for _z in z_embeddings:
-                    _u = tf.keras.layers.Concatenate()(
-                        [full_item_features[:, item_i, :], _x, session_features_batch, _z]
-                    )
-                    _utilities.append(_u)
-        utilities = self.u_model(tf.concat(_utilities, axis=0))
-        length_one_item = len(x_embeddings) * len(z_embeddings) * batch_size
-        reshaped_utilities = []
-        for item_i in range(num_items):
-            item_utilities = tf.stack(
-                [
-                    utilities[
-                        item_i * length_one_item + batch_size * i : item_i * length_one_item
-                        + batch_size * (i + 1)
-                    ]
-                    for i in range(len(x_embeddings) * len(z_embeddings))
-                ],
-                axis=1,
-            )
-            print(item_i, "item_u", item_utilities.shape)
-            reshaped_utilities.append(item_utilities)
-        ### Reshape utilities: (batch_size, num_items, heterogeneity)
-        utilities = tf.squeeze(tf.stack(reshaped_utilities, axis=1), -1)
-        print("u", utilities.shape)
-        # utilities = tf.stack(utilities, axis=0)
-        return utilities
-
-
-def create_ff_network(input_shape, depth, width, add_last=False, l2_regularization_coeff=0.0):
+def create_ff_network(
+    input_shape, depth, width, activation="elu", add_last=False, l2_regularization_coeff=0.0
+):
     """Base function to create a simple fully connected (Dense) network.
 
     Parameters
@@ -714,7 +473,7 @@ def create_ff_network(input_shape, depth, width, add_last=False, l2_regularizati
     out = input
     for _ in range(depth):
         out = tf.keras.layers.Dense(
-            width, activation="elu", kernel_regularizer=regularizer, use_bias=True
+            width, activation=activation, kernel_regularizer=regularizer, use_bias=True
         )(out)
     if add_last:
         out = tf.keras.layers.Dense(1, activation="linear", use_bias=False)(out)
