@@ -270,7 +270,7 @@ class PaperRUMnet(ChoiceModel):
             # probabilities.append(eps_probabilities)
 
             # Average probabilities over heterogeneities
-            probabilities = tf.reduce_mean(eps_probabilities, axis=1)
+            probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
 
             # It is not in the paper, but let's normalize with availabilities
             probabilities = tf.multiply(probabilities, contexts_items_availabilities)
@@ -913,7 +913,7 @@ class GPURUMnet(PaperRUMnet):
             eps_probabilities = tf.nn.softmax(all_u, axis=2)
 
             # Average probabilities over heterogeneities
-            probabilities = tf.reduce_mean(eps_probabilities, axis=1)
+            probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
 
             # Availability normalization
             probabilities = tf.multiply(probabilities, contexts_items_availabilities)
