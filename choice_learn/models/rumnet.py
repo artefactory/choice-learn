@@ -266,7 +266,7 @@ class PaperRUMnet(ChoiceModel):
             # for i in range(all_u.shape[2]):
             # Assortment(t) Utility
             # eps_probabilities = availability_softmax(all_u[:, :, i], ia_batch, axis=2)
-            eps_probabilities = tf.nn.softmax(all_u, axis=2)
+            eps_probabilities = tf.nn.softmax(all_u, axis=1)
             # probabilities.append(eps_probabilities)
 
             # Average probabilities over heterogeneities
@@ -335,15 +335,15 @@ class PaperRUMnet(ChoiceModel):
         tf.Tensor (batch_size, n_items)
             Probabilities for each product to be chosen for each session
         """
-        utilities = self.compute_utility(
+        utilities = self.compute_batch_utility(
             fixed_items_features=fixed_items_features,
             contexts_features=contexts_features,
             contexts_items_features=contexts_items_features,
             contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
-        probabilities = tf.nn.softmax(utilities, axis=2)
-        probabilities = tf.reduce_mean(probabilities, axis=1)
+        probabilities = tf.nn.softmax(utilities, axis=1)
+        probabilities = tf.reduce_mean(probabilities, axis=-1)
 
         # Normalization with availabilties
         probabilities = tf.multiply(probabilities, contexts_items_availabilities)
@@ -910,7 +910,7 @@ class GPURUMnet(PaperRUMnet):
                 contexts_items_availabilities=contexts_items_availabilities,
                 choices=choices,
             )
-            eps_probabilities = tf.nn.softmax(all_u, axis=2)
+            eps_probabilities = tf.nn.softmax(all_u, axis=1)
 
             # Average probabilities over heterogeneities
             probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
@@ -989,8 +989,8 @@ class GPURUMnet(PaperRUMnet):
             contexts_items_availabilities=contexts_items_availabilities,
             choices=choices,
         )
-        probabilities = tf.nn.softmax(utilities, axis=2)
-        probabilities = tf.reduce_mean(probabilities, axis=1)
+        probabilities = tf.nn.softmax(utilities, axis=1)
+        probabilities = tf.reduce_mean(probabilities, axis=-1)
 
         # Test with availability normalization
         probabilities = tf.multiply(probabilities, contexts_items_availabilities)
