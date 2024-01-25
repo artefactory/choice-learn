@@ -903,17 +903,17 @@ class GPURUMnet(PaperRUMnet):
         """
         with tf.GradientTape() as tape:
             ### Computation of utilities
-            all_u = self.compute_utility(
+            all_u = self.compute_batch_utility(
                 fixed_items_features=fixed_items_features,
                 contexts_features=contexts_features,
                 contexts_items_features=contexts_items_features,
                 contexts_items_availabilities=contexts_items_availabilities,
                 choices=choices,
             )
-            eps_probabilities = tf.nn.softmax(all_u, axis=1)
 
+            eps_probabilities = tf.nn.softmax(all_u, axis=1)
             # Average probabilities over heterogeneities
-            probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
+            probabilities = tf.reduce_mean(eps_probabilities, axis=1)
 
             # Availability normalization
             probabilities = tf.multiply(probabilities, contexts_items_availabilities)
