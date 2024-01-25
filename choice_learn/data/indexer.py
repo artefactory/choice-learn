@@ -92,7 +92,10 @@ class StorageIndexer(Indexer):
             features corresponding to the sequence_keys
         """
         if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
+            if len(np.array(sequence_keys).shape) > 1:
+                return np.stack([self.storage.batch[key] for key in sequence_keys], axis=0)
             return np.array([self.storage.storage[key] for key in sequence_keys])
+
         if isinstance(sequence_keys, slice):
             raise ValueError("Slicing is not supported for storage")
         return np.array(self.storage.storage[sequence_keys])
@@ -294,7 +297,9 @@ class ChoiceDatasetIndexer(Indexer):
 
             # Get availabilities
             if self.choice_dataset.contexts_items_availabilities is None:
-                contexts_items_availabilities = None
+                contexts_items_availabilities = np.ones(
+                    (len(choices_indexes), self.choice_dataset.base_num_items)
+                )
             else:
                 if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
                     contexts_items_availabilities = (
