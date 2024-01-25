@@ -105,7 +105,7 @@ class ChoiceDataset(object):
         if contexts_features is not None:
             if not isinstance(contexts_features, tuple):
                 self._return_contexts_features_tuple = False
-                if contexts_items_features_names is not None:
+                if contexts_features_names is not None:
                     if len(contexts_features[0]) != len(contexts_features_names):
                         raise ValueError(
                             f"""Number of features given does not match
@@ -397,7 +397,7 @@ class ChoiceDataset(object):
                     for k, column_name in enumerate(feature):
                         for feature_by_id in self.features_by_ids:
                             if column_name == feature_by_id.name:
-                                contexts_items_features_map.append(((i, j), feature_by_id))
+                                contexts_items_features_map.append(((i, k), feature_by_id))
 
         if len(fixed_items_features_map) + len(contexts_features_map) + len(
             contexts_items_features_map
@@ -552,7 +552,7 @@ class ChoiceDataset(object):
                 else:
                     session_item_types.append(np.float32)
         for indexes, f_by_id in self.contexts_items_features_map:
-            sample_dtype = f_by_id.get_storage_types()
+            sample_dtype = f_by_id.get_storage_type()
             session_item_types[indexes[0]] = sample_dtype
         return_types.append(tuple(session_item_types))
         return_types.append(np.float32)
@@ -946,13 +946,13 @@ class ChoiceDataset(object):
                     axis=1,
                 )
             for indexes, f_by_id in self.contexts_items_features_map:
-                contexts_items_features[indexes[0]][
-                    :, :, indexes[1] : indexes[1] + 1
-                ] = f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]]
+                mapped_features = f_by_id.batch[
+                    contexts_items_features[indexes[0]][:, :, indexes[1]]
+                ]
                 contexts_items_features[indexes[0]] = np.concatenate(
                     [
                         contexts_items_features[indexes[0]][:, :, : indexes[1]],
-                        f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]],
+                        mapped_features,
                         contexts_items_features[indexes[0]][:, :, indexes[1] + 1 :],
                     ],
                     axis=2,
