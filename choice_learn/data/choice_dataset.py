@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from choice_learn.data.indexer import ChoiceDatasetIndexer
+from choice_learn.data.storage import Storage
 
 
 class ChoiceDataset(object):
@@ -320,6 +321,9 @@ class ChoiceDataset(object):
         self.contexts_items_availabilities = contexts_items_availabilities
         self.choices = choices
 
+        for fid in features_by_ids:
+            if not isinstance(fid, Storage):
+                raise ValueError("FeaturesByID must be Storage object")
         self.features_by_ids = features_by_ids
 
         self.fixed_items_features_names = fixed_items_features_names
@@ -373,7 +377,7 @@ class ChoiceDataset(object):
 
         fixed_items_features_map = []
         contexts_features_map = []
-        contexts_items_features_map = []
+        contexts_items_features_map = {}
 
         if self.fixed_items_features_names is not None:
             for i, feature in enumerate(self.fixed_items_features_names):
@@ -397,10 +401,13 @@ class ChoiceDataset(object):
                     for k, column_name in enumerate(feature):
                         for feature_by_id in self.features_by_ids:
                             if column_name == feature_by_id.name:
-                                contexts_items_features_map.append(((i, k), feature_by_id))
+                                index_dict = contexts_items_features_map.get(i, {})
+                                index_dict[k] = feature_by_id
+                                contexts_items_features_map[i] = index_dict
+                                # contexts_items_features_map.append(((i, k), feature_by_id))
 
-        if len(fixed_items_features_map) + len(contexts_features_map) + len(
-            contexts_items_features_map
+        if len(fixed_items_features_map) + len(contexts_features_map) + sum(
+            [len(c.keys()) for c in contexts_items_features_map.values()]
         ) != len(self.features_by_ids):
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
@@ -551,9 +558,9 @@ class ChoiceDataset(object):
                     session_item_types.append(np.int32)
                 else:
                     session_item_types.append(np.float32)
-        for indexes, f_by_id in self.contexts_items_features_map:
-            sample_dtype = f_by_id.get_storage_type()
-            session_item_types[indexes[0]] = sample_dtype
+        for indexes, f_dict in self.contexts_items_features_map.items():
+            sample_dtype = next(iter(f_dict.values())).get_storage_type()
+            session_item_types[indexes] = sample_dtype
         return_types.append(tuple(session_item_types))
         return_types.append(np.float32)
         return_types.append(np.int32)
@@ -945,10 +952,32 @@ class ChoiceDataset(object):
                     ],
                     axis=1,
                 )
-            for indexes, f_by_id in self.contexts_items_features_map:
-                mapped_features = f_by_id.batch[
+            if len(self.contexts_items_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(list(self.contexts_items_features_map.keys())):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.contexts_items_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            contexts_items_features[tuple_index][:, :, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.contexts_items_features_map[tuple_index][feature_index].batch[
+                                contexts_items_features[tuple_index][:, :, feature_index]
+                            ]
+                        )
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+
+                contexts_items_features = mapped_features
+            print(contexts_items_features)
+            """for order, (indexes, f_by_id) in enumerate(self.contexts_items_features_map):
+                mapped_features.append(f_by_id.batch[
                     contexts_items_features[indexes[0]][:, :, indexes[1]]
-                ]
+                ])
+                mapped_features_mapping.get(indexes[0], {})[indexes[1]] = order
+
                 contexts_items_features[indexes[0]] = np.concatenate(
                     [
                         contexts_items_features[indexes[0]][:, :, : indexes[1]],
@@ -957,6 +986,7 @@ class ChoiceDataset(object):
                     ],
                     axis=2,
                 )
+            """
 
             if fixed_items_features is not None:
                 for i in range(len(fixed_items_features)):

@@ -91,6 +91,8 @@ class StorageIndexer(Indexer):
         array_like
             features corresponding to the sequence_keys
         """
+        print(sequence_keys)
+        print(self.storage.storage)
         if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
             if len(np.array(sequence_keys).shape) > 1:
                 return np.stack([self.storage.batch[key] for key in sequence_keys], axis=0)
@@ -261,14 +263,10 @@ class ChoiceDatasetIndexer(Indexer):
         contexts_items_features = []
         for i, contexts_items_feature in enumerate(self.choice_dataset.contexts_items_features):
             if hasattr(contexts_items_feature, "iloc"):
-                contexts_items_features.append(
-                    contexts_items_feature.iloc[choices_indexes].astype(self._return_types[2][i])
-                )
+                contexts_items_features.append(contexts_items_feature.iloc[choices_indexes])
             else:
                 contexts_items_features.append(
-                    np.stack(contexts_items_feature[choices_indexes], axis=0).astype(
-                        self.choice_dataset._return_types[2][i]
-                    )
+                    np.stack(contexts_items_feature[choices_indexes], axis=0)
                 )
         return contexts_items_features
 
@@ -334,13 +332,13 @@ class ChoiceDatasetIndexer(Indexer):
                     axis=1,
                 )
             for indexes, f_by_id in self.choice_dataset.contexts_items_features_map:
-                contexts_items_features[indexes[0]][
-                    :, :, indexes[1] : indexes[1] + 1
-                ] = f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]]
+                mapped_features = f_by_id.batch[
+                    contexts_items_features[indexes[0]][:, :, indexes[1]]
+                ]
                 contexts_items_features[indexes[0]] = np.concatenate(
                     [
                         contexts_items_features[indexes[0]][:, :, : indexes[1]],
-                        f_by_id.batch[contexts_items_features[indexes[0]][:, :, indexes[1]]],
+                        mapped_features,
                         contexts_items_features[indexes[0]][:, :, indexes[1] + 1 :],
                     ],
                     axis=2,
