@@ -397,50 +397,80 @@ class ChoiceDatasetIndexer(Indexer):
             contexts_features = self._get_contexts_features(choices_indexes)
             contexts_items_features = self._get_contexts_items_features(choices_indexes)
 
-            # Get availabilities
+            choice = self.choice_dataset.choices[choices_indexes]
+
             if self.choice_dataset.contexts_items_availabilities is None:
-                contexts_items_availabilities = None
+                contexts_items_availabilities = np.ones((self.choice_dataset.base_num_items))
             else:
-                if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
-                    contexts_items_availabilities = (
-                        self.choice_dataset.contexts_items_availabilities.iloc[
-                            choices_indexes
-                        ].astype(self.choice_dataset._return_types[3])
-                    )
-                else:
-                    contexts_items_availabilities = (
-                        self.choice_dataset.contexts_items_availabilities[choices_indexes].astype(
-                            self.choice_dataset._return_types[3]
-                        )
-                    )
-            # Features by ID mapping
+                contexts_items_availabilities = self.choice_dataset.contexts_items_availabilities[
+                    choices_indexes
+                ]
+
             for indexes, f_by_id in self.choice_dataset.fixed_items_features_map:
-                fixed_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = f_by_id.batch[
-                    fixed_items_features[indexes[0]][:, indexes[1]]
-                ]
+                fixed_items_features[indexes[0]] = np.concatenate(
+                    [
+                        fixed_items_features[indexes[0]][:, : indexes[1]],
+                        f_by_id.batch[fixed_items_features[indexes[0]][:, indexes[1]]],
+                        fixed_items_features[indexes[0]][:, indexes[1] + 1 :],
+                    ],
+                    axis=1,
+                )
+
             for indexes, f_by_id in self.choice_dataset.contexts_features_map:
-                contexts_features[indexes[0]][indexes[1] : indexes[1] + 1] = f_by_id.batch[
-                    contexts_features[indexes[0]][indexes[1]]
-                ]
+                contexts_features[indexes[0]] = np.concatenate(
+                    [
+                        contexts_features[indexes[0]][: indexes[1]],
+                        f_by_id.batch[contexts_features[indexes[0]][indexes[1]]],
+                        contexts_features[indexes[0]][indexes[1] + 1 :],
+                    ],
+                    axis=0,
+                )
+
             for indexes, f_by_id in self.choice_dataset.contexts_items_features_map:
                 contexts_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = f_by_id.batch[
                     contexts_items_features[indexes[0]][:, indexes[1]]
                 ]
+                contexts_items_features[indexes[0]] = np.concatenate(
+                    [
+                        contexts_items_features[indexes[0]][:, : indexes[1]],
+                        f_by_id.batch[contexts_items_features[indexes[0]][:, indexes[1]]],
+                        contexts_items_features[indexes[0]][:, indexes[1] + 1 :],
+                    ],
+                    axis=1,
+                )
 
-            # Shaping and typing
-            # items_features were not given as a tuple, so we return do not return it as a tuple
-            if not self.choice_dataset._return_items_features_tuple:
-                fixed_items_features = fixed_items_features[0]
-            if not self.choice_dataset._return_contexts_features_tuple:
-                contexts_features = contexts_features[0]
-            # sessions_items_features were not given as a tuple, so we return do not return
-            # it as a tuple
-            if not self.choice_dataset._return_contexts_items_features_tuple:
-                contexts_items_features = contexts_items_features[0]
+            if fixed_items_features is not None:
+                for i in range(len(fixed_items_features)):
+                    fixed_items_features[i] = fixed_items_features[i].astype(
+                        self.choice_dataset._return_types[0][i]
+                    )
+                # items_features were not given as a tuple, so we return do not return it as a tuple
+                if not self.choice_dataset._return_items_features_tuple:
+                    fixed_items_features = fixed_items_features[0]
+                else:
+                    fixed_items_features = tuple(fixed_items_features)
 
-            choice = self.choice_dataset.choices[choices_indexes].astype(
-                self.choice_dataset._return_types[4]
-            )
+            if contexts_features is not None:
+                for i in range(len(contexts_features)):
+                    contexts_features[i] = contexts_features[i].astype(
+                        self.choice_dataset._return_types[1][i]
+                    )
+                if not self.choice_dataset._return_contexts_features_tuple:
+                    contexts_features = contexts_features[0]
+                else:
+                    contexts_features = tuple(contexts_features)
+
+            if contexts_items_features is not None:
+                for i in range(len(contexts_items_features)):
+                    contexts_items_features[i] = contexts_items_features[i].astype(
+                        self.choice_dataset._return_types[2][i]
+                    )
+                # sessions_items_features were not given as a tuple, so we return do not return
+                # it as a tuple
+                if not self.choice_dataset._return_contexts_items_features_tuple:
+                    contexts_items_features = contexts_items_features[0]
+                else:
+                    contexts_items_features = tuple(contexts_items_features)
 
             return (
                 fixed_items_features,
