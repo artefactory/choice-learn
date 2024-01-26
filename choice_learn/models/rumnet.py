@@ -116,6 +116,8 @@ class PaperRUMnet(ChoiceModel):
             print(f"Optimizer {optimizer} not implemnted, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
 
+        self.instantiated = False
+
     def instantiate(self):
         """Instatiation of the RUMnet model.
 
@@ -144,6 +146,7 @@ class PaperRUMnet(ChoiceModel):
         self.loss = CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
+        self.instantiated = True
 
     def compute_batch_utility(
         self,
@@ -778,6 +781,7 @@ class GPURUMnet(PaperRUMnet):
             from_logits=False, label_smoothing=self.label_smoothing
         )
         self.time_dict = {}
+        self.instantiated = True
 
     def compute_batch_utility(
         self,
@@ -910,7 +914,6 @@ class GPURUMnet(PaperRUMnet):
                 contexts_items_availabilities=contexts_items_availabilities,
                 choices=choices,
             )
-            print(all_u.shape)
             eps_probabilities = tf.nn.softmax(all_u, axis=2)
             # Average probabilities over heterogeneities
             probabilities = tf.reduce_mean(eps_probabilities, axis=1)
