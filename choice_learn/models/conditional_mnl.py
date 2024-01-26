@@ -1,6 +1,10 @@
 """Conditional MNL model."""
 
+import copy
+
+import pandas as pd
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from .base_model import ChoiceModel
 
@@ -627,6 +631,12 @@ class ConditionalMNL(ChoiceModel):
             When a mode is wrongly precised.
         """
         # Possibility to stack weights to be faster ????
+        if items_features_names is None:
+            items_features_names = []
+        if contexts_features_names is None:
+            contexts_features_names = []
+        if contexts_items_features_names is None:
+            contexts_items_features_names = []
         weights = []
         weights_count = 0
         self._items_features_names = []
@@ -853,11 +863,14 @@ class ConditionalMNL(ChoiceModel):
         tf.Tensor
             Utilities corresponding of shape (n_choices, n_items)
         """
-        del availabilities_batch, choices_batch
+        _, _ = availabilities_batch, choices_batch
 
         contexts_items_utilities = []
-        num_items = items_batch[0].shape[0]
-        num_choices = contexts_batch[0].shape[0]
+        if items_batch is not None:
+            num_items = items_batch[0].shape[0]
+        else:
+            num_items = contexts_items_batch[0].shape[1]
+        num_choices = availabilities_batch.shape[0]
 
         # Items features
         for i, feat_tuple in enumerate(self._items_features_names):
@@ -970,7 +983,9 @@ class ConditionalMNL(ChoiceModel):
                     contexts_items_features_names=choice_dataset.contexts_items_features_names,
                 )
             self.instantiated = True
-        return super().fit(choice_dataset=choice_dataset, **kwargs)
+        fit = super().fit(choice_dataset=choice_dataset, **kwargs)
+        self.report = self.compute_report(choice_dataset)
+        return fit
 
     def _fit_with_lbfgs(self, choice_dataset, n_epochs, tolerance=1e-8):
         """Specific fit function to estimate the paramters with LBFGS.
@@ -1001,4 +1016,86 @@ class ConditionalMNL(ChoiceModel):
                     contexts_items_features_names=choice_dataset.contexts_items_features_names,
                 )
             self.instantiated = True
-        return super()._fit_with_lbfgs(choice_dataset, n_epochs, tolerance)
+        fit = super()._fit_with_lbfgs(choice_dataset, n_epochs, tolerance)
+        self.report = self.compute_report(choice_dataset)
+        return fit
+
+    def compute_report(self, dataset):
+        """Computes a report of the estimated weights.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns:
+        --------
+        pandas.DataFrame
+            A DF with estimation, Std Err, z_value and p_value for each coefficient.
+        """
+        weights_std = self.get_weights_std(dataset)
+        dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
+
+        names = []
+        z_values = []
+        estimations = []
+        p_z = []
+        i = 0
+        for weight in self.weights:
+            for j in range(weight.shape[1]):
+                names.append(f"{weight.name}_{j}")
+                estimations.append(weight.numpy()[0][j])
+                z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
+                p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
+                i += 1
+
+        return pd.DataFrame(
+            {
+                "Coefficient Name": names,
+                "Coefficient Estimation": estimations,
+                "Std. Err": weights_std.numpy(),
+                "z_value": z_values,
+                "P(.>z)": p_z,
+            },
+        )
+
+    def get_weights_std(self, dataset):
+        """Approximates Std Err with Hessian matrix.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns:
+        --------
+        tf.Tensor
+            Estimation of the Std Err for the weights.
+        """
+        # Loops of differentiation
+        with tf.GradientTape() as tape_1:
+            with tf.GradientTape(persistent=True) as tape_2:
+                model = copy.deepcopy(self)
+                w = tf.concat(self.weights, axis=1)
+                tape_2.watch(w)
+                tape_1.watch(w)
+                mw = []
+                index = 0
+                for _w in self.weights:
+                    mw.append(w[:, index : index + _w.shape[1]])
+                    index += _w.shape[1]
+                model.weights = mw
+                for batch in dataset.iter_batch(batch_size=-1):
+                    utilities = model.compute_utility(*batch)
+                    probabilities = tf.nn.softmax(utilities, axis=-1)
+                    loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
+                        y_pred=probabilities,
+                        y_true=tf.one_hot(dataset.choices, depth=4),
+                    )
+            # Compute the Jacobian
+            jacobian = tape_2.jacobian(loss, w)
+        # Compute the Hessian from the Jacobian
+        hessian = tape_1.batch_jacobian(jacobian, w)
+        return tf.sqrt([tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(13)])
