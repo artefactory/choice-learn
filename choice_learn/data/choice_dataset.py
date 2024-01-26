@@ -405,7 +405,7 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 contexts_items_features_map[i] = index_dict
                                 # contexts_items_features_map.append(((i, k), feature_by_id))
-
+        print(contexts_items_features_map)
         if len(fixed_items_features_map) + len(contexts_features_map) + sum(
             [len(c.keys()) for c in contexts_items_features_map.values()]
         ) != len(self.features_by_ids):
@@ -968,10 +968,10 @@ class ChoiceDataset(object):
                                 contexts_items_features[tuple_index][:, :, feature_index]
                             ]
                         )
+                        feat_ind_min = feature_index + 1
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
                 contexts_items_features = mapped_features
-            print(contexts_items_features)
             """for order, (indexes, f_by_id) in enumerate(self.contexts_items_features_map):
                 mapped_features.append(f_by_id.batch[
                     contexts_items_features[indexes[0]][:, :, indexes[1]]

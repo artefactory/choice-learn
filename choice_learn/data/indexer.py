@@ -91,8 +91,6 @@ class StorageIndexer(Indexer):
         array_like
             features corresponding to the sequence_keys
         """
-        print(sequence_keys)
-        print(self.storage.storage)
         if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
             if len(np.array(sequence_keys).shape) > 1:
                 return np.stack([self.storage.batch[key] for key in sequence_keys], axis=0)
