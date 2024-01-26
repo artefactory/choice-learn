@@ -309,38 +309,74 @@ class ChoiceDatasetIndexer(Indexer):
                             self.choice_dataset._return_types[3]
                         )
                     )
-            # Get choices
-            for indexes, f_by_id in self.choice_dataset.fixed_items_features_map:
-                fixed_items_features[indexes[0]] = np.concatenate(
-                    [
-                        fixed_items_features[indexes[0]][:, : indexes[1]],
-                        f_by_id.batch[fixed_items_features[indexes[0]][:, indexes[1]]],
-                        fixed_items_features[indexes[0]][:, indexes[1] + 1 :],
-                    ],
-                    axis=1,
-                )
-            # Features by ID mapping
-            for indexes, f_by_id in self.choice_dataset.contexts_features_map:
-                contexts_features[indexes[0]] = np.concatenate(
-                    [
-                        contexts_features[indexes[0]][:, : indexes[1]],
-                        f_by_id.batch[contexts_features[indexes[0]][:, indexes[1]]],
-                        contexts_features[indexes[0]][:, indexes[1] + 1 :],
-                    ],
-                    axis=1,
-                )
-            for indexes, f_by_id in self.choice_dataset.contexts_items_features_map:
-                mapped_features = f_by_id.batch[
-                    contexts_items_features[indexes[0]][:, :, indexes[1]]
-                ]
-                contexts_items_features[indexes[0]] = np.concatenate(
-                    [
-                        contexts_items_features[indexes[0]][:, :, : indexes[1]],
-                        mapped_features,
-                        contexts_items_features[indexes[0]][:, :, indexes[1] + 1 :],
-                    ],
-                    axis=2,
-                )
+
+            if len(self.choice_dataset.fixed_items_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.fixed_items_features_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.fixed_items_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            fixed_items_features[tuple_index][:, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.fixed_items_features_map[tuple_index][
+                                feature_index
+                            ].batch[fixed_items_features[tuple_index][:, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+
+                fixed_items_features = mapped_features
+
+            if len(self.choice_dataset.contexts_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(list(self.choice_dataset.contexts_features_map.keys())):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.contexts_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            contexts_features[tuple_index][:, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.contexts_features_map[tuple_index][
+                                feature_index
+                            ].batch[contexts_features[tuple_index][:, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+
+                contexts_features = mapped_features
+
+            if len(self.choice_dataset.contexts_items_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.contexts_items_features_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.contexts_items_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            contexts_items_features[tuple_index][:, :, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.contexts_items_features_map[tuple_index][
+                                feature_index
+                            ].batch[contexts_items_features[tuple_index][:, :, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+
+                contexts_items_features = mapped_features
+
             # Shaping and typing
             if fixed_items_features is not None:
                 for i in range(len(fixed_items_features)):
@@ -407,38 +443,72 @@ class ChoiceDatasetIndexer(Indexer):
                     choices_indexes
                 ]
 
-            for indexes, f_by_id in self.choice_dataset.fixed_items_features_map:
-                fixed_items_features[indexes[0]] = np.concatenate(
-                    [
-                        fixed_items_features[indexes[0]][:, : indexes[1]],
-                        f_by_id.batch[fixed_items_features[indexes[0]][:, indexes[1]]],
-                        fixed_items_features[indexes[0]][:, indexes[1] + 1 :],
-                    ],
-                    axis=1,
-                )
+            if len(self.choice_dataset.fixed_items_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.fixed_items_features_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.fixed_items_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            fixed_items_features[tuple_index][:, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.fixed_items_features_map[tuple_index][
+                                feature_index
+                            ].batch[fixed_items_features[tuple_index][:, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
-            for indexes, f_by_id in self.choice_dataset.contexts_features_map:
-                contexts_features[indexes[0]] = np.concatenate(
-                    [
-                        contexts_features[indexes[0]][: indexes[1]],
-                        f_by_id.batch[contexts_features[indexes[0]][indexes[1]]],
-                        contexts_features[indexes[0]][indexes[1] + 1 :],
-                    ],
-                    axis=0,
-                )
+                fixed_items_features = mapped_features
 
-            for indexes, f_by_id in self.choice_dataset.contexts_items_features_map:
-                contexts_items_features[indexes[0]][:, indexes[1] : indexes[1] + 1] = f_by_id.batch[
-                    contexts_items_features[indexes[0]][:, indexes[1]]
-                ]
-                contexts_items_features[indexes[0]] = np.concatenate(
-                    [
-                        contexts_items_features[indexes[0]][:, : indexes[1]],
-                        f_by_id.batch[contexts_items_features[indexes[0]][:, indexes[1]]],
-                        contexts_items_features[indexes[0]][:, indexes[1] + 1 :],
-                    ],
-                    axis=1,
-                )
+            if len(self.choice_dataset.contexts_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(list(self.choice_dataset.contexts_features_map.keys())):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.contexts_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            contexts_features[tuple_index][feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.contexts_features_map[tuple_index][
+                                feature_index
+                            ].batch[contexts_features[tuple_index][feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=0))
+
+                contexts_features = mapped_features
+
+            if len(self.choice_dataset.contexts_items_features_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.contexts_items_features_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.contexts_items_features_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            contexts_items_features[tuple_index][:, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.contexts_items_features_map[tuple_index][
+                                feature_index
+                            ].batch[contexts_items_features[tuple_index][:, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+
+                contexts_items_features = mapped_features
 
             if fixed_items_features is not None:
                 for i in range(len(fixed_items_features)):
@@ -480,4 +550,5 @@ class ChoiceDatasetIndexer(Indexer):
                 contexts_items_availabilities,
                 choice,
             )
+        print(f"Type{type(choices_indexes)} not handled")
         raise NotImplementedError
