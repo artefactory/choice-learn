@@ -57,6 +57,7 @@ nav:
   - Tutorials:
     - Introduction: tutorials/introduction.md
     - Getting Started with Data: notebooks/choice_learn_introduction_data.md
+    - Optimize RAM usage with Features Storage: notebooks/features_byID_example.md
     - Getting Started with Conditional Logit: notebooks/choice_learn_introduction_clogit.md
   - How-To Guides:
     - Introduction: how-to-guides.md

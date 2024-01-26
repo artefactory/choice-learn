@@ -210,6 +210,9 @@ class ChoiceModel(object):
         dict:
             Different metrics values over epochs.
         """
+        if hasattr(self, "instantiated"):
+            if not self.instantiated:
+                raise ValueError("Model not instantiated. Please call .instantiate() first.")
         losses_history = {"train_loss": []}
         t_range = tqdm.trange(n_epochs, position=0)
 
