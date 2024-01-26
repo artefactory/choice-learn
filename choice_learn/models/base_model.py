@@ -55,6 +55,7 @@ class ChoiceModel(object):
         self.callbacks.set_model(self)
 
         # Was originally in BaseMNL, moved here.
+        self.optimizer_name = optimizer
         if optimizer.lower() == "adam":
             self.optimizer = tf.keras.optimizers.Adam(lr)
         elif optimizer.lower() == "sgd":

@@ -1,7 +1,5 @@
 """Conditional MNL model."""
 
-import copy
-
 import pandas as pd
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -958,13 +956,15 @@ class ConditionalMNL(ChoiceModel):
 
         return tf.reduce_sum(contexts_items_utilities, axis=0)
 
-    def fit(self, choice_dataset, **kwargs):
+    def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
+        get_report: bool, optional
+            Whether or not to compute a report of the estimation, by default False
 
         Returns:
         --------
@@ -984,10 +984,11 @@ class ConditionalMNL(ChoiceModel):
                 )
             self.instantiated = True
         fit = super().fit(choice_dataset=choice_dataset, **kwargs)
-        self.report = self.compute_report(choice_dataset)
+        if get_report:
+            self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(self, choice_dataset, n_epochs, tolerance=1e-8):
+    def _fit_with_lbfgs(self, choice_dataset, n_epochs, tolerance=1e-8, get_report=False):
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
@@ -998,6 +999,8 @@ class ConditionalMNL(ChoiceModel):
             Number of epochs to run.
         tolerance : float, optional
             Tolerance in the research of minimum, by default 1e-8
+        get_report: bool, optional
+            Whether or not to compute a report of the estimation, by default False
 
         Returns:
         --------
@@ -1017,7 +1020,8 @@ class ConditionalMNL(ChoiceModel):
                 )
             self.instantiated = True
         fit = super()._fit_with_lbfgs(choice_dataset, n_epochs, tolerance)
-        self.report = self.compute_report(choice_dataset)
+        if get_report:
+            self.report = self.compute_report(choice_dataset)
         return fit
 
     def compute_report(self, dataset):
@@ -1077,7 +1081,7 @@ class ConditionalMNL(ChoiceModel):
         # Loops of differentiation
         with tf.GradientTape() as tape_1:
             with tf.GradientTape(persistent=True) as tape_2:
-                model = copy.deepcopy(self)
+                model = self.clone()
                 w = tf.concat(self.weights, axis=1)
                 tape_2.watch(w)
                 tape_1.watch(w)
@@ -1099,3 +1103,32 @@ class ConditionalMNL(ChoiceModel):
         # Compute the Hessian from the Jacobian
         hessian = tape_1.batch_jacobian(jacobian, w)
         return tf.sqrt([tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(13)])
+
+    def clone(self):
+        """Returns a clone of the model."""
+        clone = ConditionalMNL(
+            parameters=self.params,
+            add_exit_choice=self.normalize_non_buy,
+            optimizer=self.optimizer_name,
+        )
+        if hasattr(self, "history"):
+            clone.history = self.history
+        if hasattr(self, "is_fitted"):
+            clone.is_fitted = self.is_fitted
+        if hasattr(self, "instantiated"):
+            clone.instantiated = self.instantiated
+        clone.loss = self.loss
+        clone.label_smoothing = self.label_smoothing
+        if hasattr(self, "report"):
+            clone.report = self.report
+        if hasattr(self, "weights"):
+            clone.weights = self.weights
+        if hasattr(self, "lr"):
+            clone.lr = self.lr
+        if hasattr(self, "_items_features_names"):
+            clone._items_features_names = self._items_features_names
+        if hasattr(self, "_contexts_features_names"):
+            clone._contexts_features_names = self._contexts_features_names
+        if hasattr(self, "_contexts_items_features_names"):
+            clone._contexts_items_features_names = self._contexts_items_features_names
+        return clone
