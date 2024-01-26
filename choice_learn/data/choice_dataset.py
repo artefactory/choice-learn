@@ -364,7 +364,7 @@ class ChoiceDataset(object):
         """
         if len(self.features_by_ids) == 0:
             print("No features_by_ids given.")
-            return [], [], []
+            return {}, {}, {}
 
         if (
             self.fixed_items_features_names is None
