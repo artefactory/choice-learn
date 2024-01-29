@@ -55,13 +55,13 @@ plugins:
 nav:
   - HomePage: index.md
   - Tutorials:
-    - Introduction: tutorials/introduction.md
+    - Introduction: tutorials.md
     - Getting Started with Data: notebooks/choice_learn_introduction_data.md
-    - Optimize RAM usage with Features Storage: notebooks/features_byID_example.md
     - Getting Started with Conditional Logit: notebooks/choice_learn_introduction_clogit.md
   - How-To Guides:
     - Introduction: how-to-guides.md
     - Exhaustive example of ChoiceDataset creation: notebooks/dataset_creation.md
+    - Optimize RAM usage with Features Storage: notebooks/features_byID_example.md
     - RUMnet Usage: notebooks/rumnet_example.md
     - Custom Choice Model Creation: notebooks/custom_model.md
   - References:
