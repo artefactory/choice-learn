@@ -329,6 +329,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[fixed_items_features[tuple_index][:, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(fixed_items_features[tuple_index][feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
                 fixed_items_features = mapped_features
@@ -350,6 +351,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[contexts_features[tuple_index][:, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(contexts_features[tuple_index][:, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
                 contexts_features = mapped_features
@@ -373,6 +375,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[contexts_items_features[tuple_index][:, :, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(contexts_features[tuple_index][:, :, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
                 contexts_items_features = mapped_features
@@ -462,6 +465,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[fixed_items_features[tuple_index][:, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(fixed_items_features[tuple_index][:, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
                 fixed_items_features = mapped_features
@@ -483,6 +487,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[contexts_features[tuple_index][feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(contexts_features[tuple_index][feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=0))
 
                 contexts_features = mapped_features
@@ -506,6 +511,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[contexts_items_features[tuple_index][:, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    unstacked_feat.append(contexts_items_features[tuple_index][:, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
                 contexts_items_features = mapped_features
