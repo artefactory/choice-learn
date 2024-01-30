@@ -713,6 +713,113 @@ class ChoiceDataset(object):
         return sessions_items_features, np.array(contexts_items_availabilities)
 
     @classmethod
+    def from_single_wide_df(
+        cls,
+        df,
+        items_id,
+        fixed_items_suffixes=None,
+        contexts_features_columns=None,
+        contexts_items_features_suffixes=None,
+        contexts_items_availabilities_suffix=None,
+        choices_column="choice",
+        choice_mode="items_id",
+    ):
+        """Builds numpy arrays for ChoiceDataset from a single dataframe.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            dataframe in Wide format
+        items_id : list
+            List of items ids
+        fixed_items_suffixes : list
+            Suffixes of the columns of the dataframe that are item features, default is None
+        contexts_features_suffixes : list
+            Suffixes of the columns of the dataframe that are contexts features, default is None
+        contexts_items_suffixes : list
+            Suffixes of the columns of the dataframe that are context-item features, default is None
+        contexts_items_availabilities_suffix: list
+            Suffixes of the columns of the dataframe that are context-item availabilities,
+        choice_column: str, optional
+            Name of the column containing the choices, default is "choice"
+        choice_mode: str, optional
+            How choice is indicated in df, either "items_name" or "items_index",
+            default is "items_id"
+
+        Returns:
+        -------
+        ChoiceDataset
+            corresponding ChoiceDataset
+        """
+        if fixed_items_suffixes is not None:
+            fixed_items_features = {"item_id": []}
+            for item in items_id:
+                fixed_items_features["item_id"].append(item)
+                for feature in fixed_items_suffixes:
+                    feature_value = df[f"{feature}_{item}"].unique()
+                    if len(feature_value) > 1:
+                        raise ValueError(
+                            f"More than one value for feature {feature} for item {item}"
+                        )
+                    fixed_items_features[feature] = (
+                        fixed_items_features.get(feature, []),
+                        +[feature_value],
+                    )
+            fixed_items_features = pd.DataFrame(fixed_items_features)
+        else:
+            fixed_items_features = None
+
+        if contexts_features_columns is not None:
+            contexts_features = df[contexts_features_columns]
+        else:
+            contexts_features = None
+
+        if contexts_items_features_suffixes is not None:
+            contexts_items_features = []
+            for item in items_id:
+                columns = [f"{item}_{feature}" for feature in contexts_items_features_suffixes]
+                for col in columns:
+                    if col not in df.columns:
+                        print(
+                            f"Column {col} was not in DataFrame,\
+                            dummy creation of the feature with zeros."
+                        )
+                        df[col] = 0
+                contexts_items_features.append(df[columns].to_numpy())
+            contexts_items_features = np.stack(contexts_items_features, axis=1)
+        else:
+            contexts_items_features = None
+
+        if contexts_items_availabilities_suffix is not None:
+            if isinstance(contexts_items_availabilities_suffix, list):
+                if not len(contexts_items_availabilities_suffix) == len(items_id):
+                    raise ValueError(
+                        "You have given a list of columns for availabilities."
+                        "We consider that it is one for each item but lenght do not match"
+                    )
+                print("You have given a list of columns for availabilities.")
+                print("We consider that it is one for each item")
+                contexts_items_availabilities = df[contexts_items_availabilities_suffix].to_numpy()
+            else:
+                columns = [f"{item}_{contexts_items_availabilities_suffix}" for item in items_id]
+                contexts_items_availabilities = df[columns].to_numpy()
+        else:
+            contexts_items_availabilities = None
+
+        choices = df[choices_column]
+        if choice_mode == "items_id":
+            choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
+
+        return ChoiceDataset(
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_features_names=contexts_items_features_suffixes,
+            contexts_items_availabilities=contexts_items_availabilities,
+            choices=choices,
+        )
+
+    @classmethod
     def from_single_df(
         cls,
         df,
