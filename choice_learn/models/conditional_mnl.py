@@ -1102,7 +1102,7 @@ class ConditionalMNL(ChoiceModel):
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.batch_jacobian(jacobian, w)
-        return tf.sqrt([tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(13)])
+        return tf.sqrt([tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(w))])
 
     def clone(self):
         """Returns a clone of the model."""
