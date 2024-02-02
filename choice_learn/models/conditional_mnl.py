@@ -1001,7 +1001,9 @@ class ConditionalMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(self, choice_dataset, epochs=None, tolerance=1e-8, get_report=False):
+    def _fit_with_lbfgs(
+        self, choice_dataset, epochs=None, sample_weight=None, tolerance=1e-8, get_report=False
+    ):
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
@@ -1034,7 +1036,9 @@ class ConditionalMNL(ChoiceModel):
             self.instantiated = True
         if epochs is None:
             epochs = self.epochs
-        fit = super()._fit_with_lbfgs(choice_dataset, epochs, tolerance)
+        fit = super()._fit_with_lbfgs(
+            dataset=choice_dataset, epochs=epochs, tolerance=tolerance, sample_weight=sample_weight
+        )
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit

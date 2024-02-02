@@ -524,7 +524,7 @@ class ChoiceModel(object):
 
         return tf.concat(stacked_probabilities, axis=0)
 
-    def evaluate(self, choice_dataset, batch_size=-1):
+    def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1):
         """Evaluates the model for each context and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
@@ -554,6 +554,7 @@ class ChoiceModel(object):
                 contexts_items_features=contexts_items_features,
                 contexts_items_availabilities=contexts_items_availabilities,
                 choices=choices,
+                sample_weight=sample_weight,
             )
             batch_losses.append(loss)
         if batch_size != -1:
@@ -567,7 +568,7 @@ class ChoiceModel(object):
             batch_loss = tf.reduce_mean(batch_losses)
         return batch_loss
 
-    def _lbfgs_train_step(self, dataset):
+    def _lbfgs_train_step(self, dataset, sample_weight=None):
         """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
 
         Parameters
@@ -636,7 +637,7 @@ class ChoiceModel(object):
                 # update the parameters in the model
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
-                loss_value = self.evaluate(dataset, batch_size=-1)
+                loss_value = self.evaluate(dataset, sample_weight=sample_weight, batch_size=-1)
 
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.weights)
@@ -659,7 +660,7 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, epochs=None, tolerance=1e-8):
+    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, tolerance=1e-8):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -684,7 +685,7 @@ class ChoiceModel(object):
 
         if epochs is None:
             epochs = self.epochs
-        func = self._lbfgs_train_step(dataset)
+        func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
         init_params = tf.dynamic_stitch(func.idx, self.weights)
@@ -826,3 +827,48 @@ class DistribMimickingModel(ChoiceModel):
         if self.weights is None:
             raise ValueError("Model not fitted")
         return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
+
+
+class BaseMixtureModel(object):
+    def __init__(
+        self,
+        latent_classes,
+        model_class,
+        model_parameters,
+        fit_method,
+        epochs,
+    ):
+        self.latent_classes = latent_classes
+        self.model_parameters = model_parameters
+        self.model_class = model_class
+        self.fit_method = fit_method
+
+        self.epochs = epochs
+
+    def instantiate(self):
+        self.latent_logit = tf.Variable(tf.ones(self.latent_classes)) / self.latent_classes
+        self.models = [
+            self.model_class(**self.model_parameters) for _ in range(self.latent_classes)
+        ]
+
+    def _em_fit(self, dataset):
+        for model in self.models:
+            # model.instantiate()
+            model.fit(dataset)
+        for i in tqdm.trange(self.epochs):
+            predicted_probas = [model.predict_probas(dataset) for model in self.models]
+            predicted_probas = [
+                latent
+                * tf.gather_nd(
+                    params=proba,
+                    indices=tf.stack([tf.range(0, len(dataset), 1), dataset.choices], axis=1),
+                )
+                for latent, proba in zip(self.latent_logit, predicted_probas)
+            ]
+
+            weights = predicted_probas / tf.reduce_sum(predicted_probas, axis=0, keepdims=True)
+            for q in range(self.latent_classes):
+                print(weights[q].shape)
+                self.models[q].fit(dataset, sample_weight=weights[q])
+
+            self.latent_probas = tf.reduce_mean(weights, axis=0)
