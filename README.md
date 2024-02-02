@@ -90,8 +90,11 @@ git clone git@github.com:artefactory/choice-learn-private.git
 Choice-Learn requires the following:
 - Python (>=3.8)
 - NumPy (>=1.24)
-- TensorFlow (>=2.13)
 - pandas (>=1.5)
+For modelling you need:
+- TensorFlow (>=2.13)
+Finally, an optional requirement used for specific functions is:
+- tensorflow_probability (>=0.20.1)
 
 ## Usage
 ```python
