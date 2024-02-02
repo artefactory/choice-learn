@@ -2,7 +2,6 @@
 
 import pandas as pd
 import tensorflow as tf
-import tensorflow_probability as tfp
 
 from .base_model import ChoiceModel
 
@@ -1038,6 +1037,8 @@ class ConditionalMNL(ChoiceModel):
         pandas.DataFrame
             A DF with estimation, Std Err, z_value and p_value for each coefficient.
         """
+        import tensorflow_probability as tfp
+
         weights_std = self.get_weights_std(dataset)
         dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
