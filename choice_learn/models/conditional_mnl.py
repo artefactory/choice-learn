@@ -338,35 +338,35 @@ class ConditionalMNL(ChoiceModel):
         self._contexts_features_names = dataset.contexts_features_names
         self._contexts_items_features_names = dataset.contexts_items_features_names
 
-    def compute_utility_from_specification(
+    def compute_batch_utility_from_specification(
         self,
-        items_batch,
-        contexts_batch,
-        contexts_items_batch,
-        availabilities_batch,
-        choices_batch,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
         verbose=0,
     ):
         """Computes the utility when the model is constructed from a ModelSpecification object.
 
         Parameters
         ----------
-        tems_batch : tuple of np.ndarray (items_features)
+        fixed_items_features : tuple of np.ndarray
             Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
             constant/fixed features.
             Shape must be (n_items, n_items_features)
-        contexts_batch : tuple of np.ndarray (contexts_features)
-            Time-Features
-            Shape must be (n_choices, n_contexts_features)
-        contexts_items_batch : tuple of np.ndarray (contexts_items_features)
-            Time-Item-Features
-            Shape must be (n_choices, n_contexts_items_features)
-        availabilities_batch : np.ndarray
-            Availabilities (contexts_items_availabilities)
-            Shape must be (n_choices, n_items)
+        contexts_features : tuple of np.ndarray (contexts_features)
+            a batch of contexts features
+            Shape must be (n_contexts, n_contexts_features)
+        contexts_items_features : tuple of np.ndarray (contexts_items_features)
+            a batch of contexts items features
+            Shape must be (n_contexts, n_contexts_items_features)
+        contexts_items_availabilities : np.ndarray
+            A batch of contexts items availabilities
+            Shape must be (n_contexts, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_choices, )
+            Shape must be (n_contexts, )
         verbose : int, optional
             Parametrization of the logging outputs, by default 0
 
@@ -375,10 +375,10 @@ class ConditionalMNL(ChoiceModel):
         tf.Tensor
             Utilities corresponding of shape (n_choices, n_items)
         """
-        _ = choices_batch
+        _ = choices
 
-        num_items = availabilities_batch.shape[1]
-        num_choices = availabilities_batch.shape[0]
+        num_items = contexts_items_availabilities.shape[1]
+        num_choices = contexts_items_availabilities.shape[0]
         contexts_items_utilities = []
         # Items features
         if self._items_features_names is not None:
@@ -397,7 +397,7 @@ class ConditionalMNL(ChoiceModel):
                                             [
                                                 s_i_u[:k],
                                                 tf.multiply(
-                                                    items_batch[i][k, j],
+                                                    fixed_items_features[i][k, j],
                                                     self.weights[weight_index][:, q],
                                                 ),
                                                 s_i_u[k + 1 :],
@@ -409,7 +409,7 @@ class ConditionalMNL(ChoiceModel):
                                         [
                                             s_i_u[:idx],
                                             tf.multiply(
-                                                items_batch[i][idx, j],
+                                                fixed_items_features[i][idx, j],
                                                 self.weights[weight_index][:, q],
                                             ),
                                             s_i_u[idx + 1 :],
@@ -458,9 +458,9 @@ class ConditionalMNL(ChoiceModel):
                                             axis=1,
                                         )
                                         """
-                                        contexts_batch[i][:, j]
+                                        contexts_features[i][:, j]
                                         compute = tf.multiply(
-                                            contexts_batch[i][:, j],
+                                            contexts_features[i][:, j],
                                             self.weights[weight_index][:, q],
                                         )
                                         s_i_u[k] += compute
@@ -482,7 +482,7 @@ class ConditionalMNL(ChoiceModel):
                                     )
                                     """
                                     compute = tf.multiply(
-                                        contexts_batch[i][:, j], self.weights[weight_index][:, q]
+                                        contexts_features[i][:, j], self.weights[weight_index][:, q]
                                     )
                                     s_i_u[idx] += compute
 
@@ -516,7 +516,7 @@ class ConditionalMNL(ChoiceModel):
                                                 s_i_u[:, :k],
                                                 tf.expand_dims(
                                                     tf.multiply(
-                                                        contexts_items_batch[i][:, k, j],
+                                                        contexts_items_features[i][:, k, j],
                                                         self.weights[weight_index][:, q],
                                                     ),
                                                     axis=-1,
@@ -531,7 +531,7 @@ class ConditionalMNL(ChoiceModel):
                                             s_i_u[:, :idx],
                                             tf.expand_dims(
                                                 tf.multiply(
-                                                    contexts_items_batch[i][:, idx, j],
+                                                    contexts_items_features[i][:, idx, j],
                                                     self.weights[weight_index][:, q],
                                                 ),
                                                 axis=-1,
@@ -785,28 +785,34 @@ class ConditionalMNL(ChoiceModel):
             raise ValueError("No weights instantiated")
         return weights
 
-    def compute_utility(
-        self, items_batch, contexts_batch, contexts_items_batch, availabilities_batch, choices_batch
+    def compute_batch_utility(
+        self,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
     ):
         """Main method to compute the utility of the model. Selects the right method to compute.
 
         Parameters
         ----------
-        items_batch : tuple of np.ndarray (items_features)
+        fixed_items_features : tuple of np.ndarray
             Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
             constant/fixed features.
             Shape must be (n_items, n_items_features)
-        contexts_batch : tuple of np.ndarray (contexts_features)
-            Time-Features
-            Shape must be (n_choices, n_contexts_features)
-        contexts_items_batch : tuple of np.ndarray (contexts_items_features)
-            Time-Item-Features
-            Shape must be (n_choices, n_contexts_items_features)
-        availabilities_batch : np.ndarray
-            Availabilities (contexts_items_availabilities)
-            Shape must be (n_choices, n_items)
+        contexts_features : tuple of np.ndarray (contexts_features)
+            a batch of contexts features
+            Shape must be (n_contexts, n_contexts_features)
+        contexts_items_features : tuple of np.ndarray (contexts_items_features)
+            a batch of contexts items features
+            Shape must be (n_contexts, n_contexts_items_features)
+        contexts_items_availabilities : np.ndarray
+            A batch of contexts items availabilities
+            Shape must be (n_contexts, n_items)
         choices_batch : np.ndarray
-            Choices Shape must be (n_choices, )
+            Choices
+            Shape must be (n_contexts, )
 
         Returns:
         --------
@@ -814,44 +820,49 @@ class ConditionalMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         if isinstance(self.params, ModelSpecification):
-            return self.compute_utility_from_specification(
-                items_batch,
-                contexts_batch,
-                contexts_items_batch,
-                availabilities_batch,
-                choices_batch,
+            return self.compute_batch_utility_from_specification(
+                fixed_items_features=fixed_items_features,
+                contexts_features=contexts_features,
+                contexts_items_features=contexts_items_features,
+                contexts_items_availabilities=contexts_items_availabilities,
+                choices=choices,
             )
-        return self.compute_utility_from_dict(
-            items_batch,
-            contexts_batch,
-            contexts_items_batch,
-            availabilities_batch,
-            choices_batch,
+        return self.compute_batch_utility_from_dict(
+            fixed_items_features=fixed_items_features,
+            contexts_features=contexts_features,
+            contexts_items_features=contexts_items_features,
+            contexts_items_availabilities=contexts_items_availabilities,
+            choices=choices,
         )
 
-    def compute_utility_from_dict(
-        self, items_batch, contexts_batch, contexts_items_batch, availabilities_batch, choices_batch
+    def compute_batch_utility_from_dict(
+        self,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
     ):
         """Computes the utility when the model is constructed from a dictionnary object.
 
         Parameters
         ----------
-        items_batch : tuple of np.ndarray (items_features)
+        fixed_items_features : tuple of np.ndarray
             Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
             constant/fixed features.
             Shape must be (n_items, n_items_features)
-        contexts_batch : tuple of np.ndarray (contexts_features)
-            Time-Features
-            Shape must be (n_choices, n_contexts_features)
-        contexts_items_batch : tuple of np.ndarray (contexts_items_features)
-            Time-Item-Features
-            Shape must be (n_choices, n_contexts_items_features)
-        availabilities_batch : np.ndarray
-            Availabilities (contexts_items_availabilities)
-            Shape must be (n_choices, n_items)
+        contexts_features : tuple of np.ndarray (contexts_features)
+            a batch of contexts features
+            Shape must be (n_contexts, n_contexts_features)
+        contexts_items_features : tuple of np.ndarray (contexts_items_features)
+            a batch of contexts items features
+            Shape must be (n_contexts, n_contexts_items_features)
+        contexts_items_availabilities : np.ndarray
+            A batch of contexts items availabilities
+            Shape must be (n_contexts, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_choices, )
+            Shape must be (n_contexts, )
         verbose : int, optional
             Parametrization of the logging outputs, by default 0
 
@@ -860,14 +871,14 @@ class ConditionalMNL(ChoiceModel):
         tf.Tensor
             Utilities corresponding of shape (n_choices, n_items)
         """
-        _, _ = availabilities_batch, choices_batch
+        _ = choices
 
         contexts_items_utilities = []
-        if items_batch is not None:
-            num_items = items_batch[0].shape[0]
+        if fixed_items_features is not None:
+            num_items = fixed_items_features[0].shape[0]
         else:
-            num_items = contexts_items_batch[0].shape[1]
-        num_choices = availabilities_batch.shape[0]
+            num_items = contexts_items_features[0].shape[1]
+        num_choices = contexts_items_availabilities.shape[0]
 
         # Items features
         for i, feat_tuple in enumerate(self._items_features_names):
@@ -876,16 +887,19 @@ class ConditionalMNL(ChoiceModel):
                     weight = self.weights[k]
                     if self.params[feat] == "constant":
                         s_i_u = tf.concat(
-                            [tf.multiply(items_batch[i][:, j], weight)] * num_choices, axis=0
+                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
+                            axis=0,
                         )
                     elif self.params[feat] == "item":
                         weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
                         s_i_u = tf.concat(
-                            [tf.multiply(items_batch[i][:, j], weight)] * num_choices, axis=0
+                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
+                            axis=0,
                         )
                     elif self.params[feat] == "item-full":
                         s_i_u = tf.concat(
-                            [tf.multiply(items_batch[i][:, j], weight)] * num_choices, axis=0
+                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
+                            axis=0,
                         )
                     else:
                         raise NotImplementedError(f"Param {self.params[feat]} not implemented")
@@ -903,13 +917,13 @@ class ConditionalMNL(ChoiceModel):
                     weight = self.weights[k]
                     if self.params[feat] == "constant":
                         s_i_u = tf.concat(
-                            [tf.multiply(contexts_batch[i][j], weight)] * num_items, axis=-1
+                            [tf.multiply(contexts_features[i][j], weight)] * num_items, axis=-1
                         )
                     elif self.params[feat] == "item":
                         weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                        s_i_u = tf.tensordot(contexts_batch[i][:, j : j + 1], weight, axes=1)
+                        s_i_u = tf.tensordot(contexts_features[i][:, j : j + 1], weight, axes=1)
                     elif self.params[feat] == "item-full":
-                        s_i_u = tf.tensordot(contexts_batch[i][:, j : j + 1], weight, axes=1)
+                        s_i_u = tf.tensordot(contexts_features[i][:, j : j + 1], weight, axes=1)
                     else:
                         raise NotImplementedError(f"Param {self.params[feat]} not implemented")
                     contexts_items_utilities.append(s_i_u)
@@ -925,12 +939,12 @@ class ConditionalMNL(ChoiceModel):
                 if feat in self.params.keys():
                     weight = self.weights[k]
                     if self.params[feat] == "constant":
-                        s_i_u = tf.multiply(contexts_items_batch[i][:, :, j], weight)
+                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
                     elif self.params[feat] == "item":
                         weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                        s_i_u = tf.multiply(contexts_items_batch[i][:, :, j], weight)
+                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
                     elif self.params[feat] == "item-full":
-                        s_i_u = tf.multiply(contexts_items_batch[i][:, :, j], weight)
+                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
                     else:
                         raise NotImplementedError(f"Param {self.params[feat]} not implemented")
                     contexts_items_utilities.append(s_i_u)
@@ -987,7 +1001,7 @@ class ConditionalMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(self, choice_dataset, n_epochs, tolerance=1e-8, get_report=False):
+    def _fit_with_lbfgs(self, choice_dataset, epochs=None, tolerance=1e-8, get_report=False):
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
@@ -1018,7 +1032,9 @@ class ConditionalMNL(ChoiceModel):
                     contexts_items_features_names=choice_dataset.contexts_items_features_names,
                 )
             self.instantiated = True
-        fit = super()._fit_with_lbfgs(choice_dataset, n_epochs, tolerance)
+        if epochs is None:
+            epochs = self.epochs
+        fit = super()._fit_with_lbfgs(choice_dataset, epochs, tolerance)
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit
@@ -1093,7 +1109,7 @@ class ConditionalMNL(ChoiceModel):
                     index += _w.shape[1]
                 model.weights = mw
                 for batch in dataset.iter_batch(batch_size=-1):
-                    utilities = model.compute_utility(*batch)
+                    utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
                     loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                         y_pred=probabilities,
@@ -1103,7 +1119,9 @@ class ConditionalMNL(ChoiceModel):
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.batch_jacobian(jacobian, w)
-        return tf.sqrt([tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(w))])
+        return tf.sqrt(
+            [tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(tf.squeeze(hessian)))]
+        )
 
     def clone(self):
         """Returns a clone of the model."""

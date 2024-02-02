@@ -415,7 +415,7 @@ class ChoiceModel(object):
             Probabilities for each product to be chosen for each context
         """
         # Compute utilities from features
-        utilities = self.compute_utility(
+        utilities = self.compute_batch_utility(
             fixed_items_features,
             contexts_features,
             contexts_items_features,
@@ -659,7 +659,7 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, n_epochs, tolerance=1e-8):
+    def _fit_with_lbfgs(self, dataset, epochs=None, tolerance=1e-8):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -682,6 +682,8 @@ class ChoiceModel(object):
         # dependency
         import tensorflow_probability as tfp
 
+        if epochs is None:
+            epochs = self.epochs
         func = self._lbfgs_train_step(dataset)
 
         # convert initial model parameters to a 1D tf.Tensor
@@ -691,7 +693,7 @@ class ChoiceModel(object):
         results = tfp.optimizer.lbfgs_minimize(
             value_and_gradients_function=func,
             initial_position=init_params,
-            max_iterations=n_epochs,
+            max_iterations=epochs,
             tolerance=tolerance,
             f_absolute_tolerance=-1,
             f_relative_tolerance=-1,
