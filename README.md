@@ -93,7 +93,7 @@ Choice-Learn requires the following:
 - pandas (>=1.5)
 For modelling you need:
 - TensorFlow (>=2.13)
-Finally, an optional requirement used for specific functions is:
+Finally, an optional requirement used for report and LBFG-s use is:
 - tensorflow_probability (>=0.20.1)
 
 ## Usage
