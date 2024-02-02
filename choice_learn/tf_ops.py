@@ -3,8 +3,8 @@
 import tensorflow as tf
 
 
-def custom_softmax(
-    sessions_items_logits, sessions_items_availabilities, axis=-1, normalize_exit=False, eps=1e-5
+def softmax_with_availabilities(
+    contexts_items_logits, contexts_items_availabilities, axis=-1, normalize_exit=False, eps=1e-5
 ):
     """Function to compute softmax probabilities from utilities.
 
@@ -14,9 +14,9 @@ def custom_softmax(
 
     Parameters
     ----------
-    sessions_items_logits : np.ndarray (n_sessions, n_products)
+    contexts_items_logits : np.ndarray (n_sessions, n_products)
         Utilities / Logits on which to compute the softmax
-    sessions_items_availabilities : np.ndarray (n_sessions, n_products)
+    contexts_items_availabilities : np.ndarray (n_sessions, n_products)
         Matrix indicating the availabitily (1) or not (0) of the products
     axis : int, optional
         Axis of sessions_logits on which to apply the softmax, by default -1
@@ -34,10 +34,10 @@ def custom_softmax(
     """
     # Substract max utility to avoid overflow
     numerator = tf.exp(
-        sessions_items_logits - tf.reduce_max(sessions_items_logits, axis=axis, keepdims=True)
+        contexts_items_logits - tf.reduce_max(contexts_items_logits, axis=axis, keepdims=True)
     )
     # Set unavailable products utility to 0
-    numerator = tf.multiply(numerator, sessions_items_availabilities)
+    numerator = tf.multiply(numerator, contexts_items_availabilities)
     # Sum of total available utilities
     denominator = tf.reduce_sum(numerator, axis=axis, keepdims=True)
     # Add 1 to the denominator to take into account the exit choice
