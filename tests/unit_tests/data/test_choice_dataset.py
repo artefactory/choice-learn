@@ -267,7 +267,7 @@ def test_from_df():
             "choice": [0, 0, 0, 2, 2, 2, 1, 1],
         }
     )
-    cd_test = ChoiceDataset.from_single_df(
+    cd_test = ChoiceDataset.from_single_long_df(
         features_df,
         fixed_items_features_columns=["items_feat_1", "items_feat_2"],
         contexts_features_columns=["session_feat_1", "session_feat_2"],
@@ -307,7 +307,7 @@ def test_from_df():
             "choice": [1, 0, 0, 0, 0, 1, 1, 0],
         }
     )
-    cd_test = ChoiceDataset.from_single_df(
+    cd_test = ChoiceDataset.from_single_long_df(
         features_df,
         fixed_items_features_columns=["items_feat_1", "items_feat_2"],
         contexts_features_columns=["session_feat_1", "session_feat_2"],
