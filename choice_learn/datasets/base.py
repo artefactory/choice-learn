@@ -357,7 +357,7 @@ def load_modecanada(
     if len(items_features) == 0:
         items_features = None
 
-    return ChoiceDataset.from_single_df(
+    return ChoiceDataset.from_single_long_df(
         df=canada_df,
         fixed_items_features_columns=items_features,
         contexts_features_columns=session_features,
