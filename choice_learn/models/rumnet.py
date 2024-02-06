@@ -1133,9 +1133,17 @@ class GPURUMnet(PaperRUMnet):
         probabilities = tf.divide(
             probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
         )
-        batch_loss = self.loss(
-            y_pred=probabilities,
-            y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-            sample_weight=sample_weight,
-        )
+
+        batch_loss = {
+            "optimized_loss": self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+        }
         return batch_loss, probabilities

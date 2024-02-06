@@ -346,7 +346,7 @@ class ChoiceModel(object):
                             contexts_items_batch,
                             availabilities_batch,
                             choices_batch,
-                        )[0]
+                        )[0]["optimized_loss"]
                     )
                     val_logs["val_loss"].append(test_losses[-1])
                     temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
@@ -432,11 +432,18 @@ class ChoiceModel(object):
 
         # Compute loss from probabilities & actual choices
         # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)
-        batch_loss = self.loss(
-            y_pred=probabilities,
-            y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-            sample_weight=sample_weight,
-        )
+        batch_loss = {
+            "optimized_loss": self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+        }
         return batch_loss, probabilities
 
     def save_model(self, path):
@@ -556,7 +563,7 @@ class ChoiceModel(object):
                 choices=choices,
                 sample_weight=sample_weight,
             )
-            batch_losses.append(loss)
+            batch_losses.append(loss["NegativeLogLikelihood"])
         if batch_size != -1:
             last_batch_size = contexts_items_availabilities.shape[0]
             coefficients = tf.concat(
