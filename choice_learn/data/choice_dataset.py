@@ -724,7 +724,7 @@ class ChoiceDataset(object):
         choices_column="choice",
         choice_mode="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe.
+        """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
         Parameters
         ----------
@@ -820,7 +820,7 @@ class ChoiceDataset(object):
         )
 
     @classmethod
-    def from_single_df(
+    def from_single_long_df(
         cls,
         df,
         fixed_items_features_columns=None,
@@ -831,7 +831,7 @@ class ChoiceDataset(object):
         choices_column="choice",
         choice_mode="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe.
+        """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
 
         Parameters
         ----------
