@@ -2,7 +2,9 @@
 import gurobipy as gp
 import numpy as np
 
-"""TODO: clarify outside good integration"""
+"""TODO: clarify outside good integration
+TODO 2: ADD easy integration of additionnal constraints
+"""
 
 
 class AssortmentOptimizer(object):
@@ -13,8 +15,10 @@ class AssortmentOptimizer(object):
 
         Parameters
         ----------
-        utilities : list-like
+        utilities : Iterable
             List of utilities for each item.
+        itemwise_values: Iterable
+            List of to-be-optimized values for each item, e.g. prices.
         assortment_size : int
             maximum size of the requested assortment.
         """
@@ -83,7 +87,13 @@ class AssortmentOptimizer(object):
         raise NotImplementedError
 
     def solve(self):
-        """Function to solve the optimization problem."""
+        """Function to solve the optimization problem.
+
+        Returns:
+        --------
+        np.ndarray:
+            Array of 0s and 1s, indicating the presence of each item in the optimal assortment.
+        """
         self.solver.update()
 
         # -- Optimize --
