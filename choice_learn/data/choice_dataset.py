@@ -1396,3 +1396,48 @@ class ChoiceDataset(object):
         """
         indexes = [i for i, keep in enumerate(bool_list) if keep]
         return self[indexes]
+
+    def get_n_fixed_items_features(self):
+        """Method to access the number of fixed items features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.fixed_items_features is not None:
+            n_features = 0
+            for fixed_features in self.fixed_items_features:
+                n_features += fixed_features.shape[1]
+            return n_features
+        return 0
+
+    def get_n_contexts_features(self):
+        """Method to access the number of contexts features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.contexts_features is not None:
+            n_features = 0
+            for context_features in self.contexts_features:
+                n_features += context_features.shape[1]
+            return n_features
+        return 0
+
+    def get_n_contexts_items_features(self):
+        """Method to access the number of context items features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.contexts_items_features is not None:
+            n_features = 0
+            for contexts_items_features in self.contexts_items_features:
+                n_features += contexts_items_features.shape[1]
+            return n_features
+        return 0
