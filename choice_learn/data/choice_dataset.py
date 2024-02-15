@@ -689,7 +689,7 @@ class ChoiceDataset(object):
                 sess_df.columns = sess_df.loc[items_id_column]
                 if features is not None:
                     contexts_items_features.append(sess_df[items_index].loc[features].T.values)
-                contexts_items_availabilities.append(np.ones(len(items_index)))
+                contexts_items_availabilities.append(np.ones(len(items_index)).astype("float32"))
             else:
                 sess_feats = []
                 sess_av = []
@@ -1038,7 +1038,9 @@ class ChoiceDataset(object):
                 )
 
             if self.contexts_items_availabilities is None:
-                contexts_items_availabilities = np.ones((len(choices_indexes), self.base_num_items))
+                contexts_items_availabilities = np.ones(
+                    (len(choices_indexes), self.base_num_items)
+                ).astype("float32")
             else:
                 contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
                 # .astype(self._return_types[3])
@@ -1179,7 +1181,7 @@ class ChoiceDataset(object):
             )
 
         if self.contexts_items_availabilities is None:
-            contexts_items_availabilities = np.ones((self.base_num_items))
+            contexts_items_availabilities = np.ones((self.base_num_items)).astype("float32")
         else:
             contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
 
