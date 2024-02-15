@@ -629,16 +629,18 @@ class ConditionalMNL(ChoiceModel):
         """
         # Possibility to stack weights to be faster ????
         if items_features_names is None:
-            items_features_names = []
+            items_features_names = [()]
         if contexts_features_names is None:
-            contexts_features_names = []
+            contexts_features_names = [()]
         if contexts_items_features_names is None:
-            contexts_items_features_names = []
+            contexts_items_features_names = [()]
         weights = []
         weights_count = 0
         self._items_features_names = []
         for feat_tuple in items_features_names:
             tuple_names = []
+            if feat_tuple is None:
+                feat_tuple = ()
             for feat in feat_tuple:
                 if feat in self.params.keys():
                     if self.params[feat] == "constant":
@@ -671,6 +673,8 @@ class ConditionalMNL(ChoiceModel):
 
         self._contexts_features_names = []
         for feat_tuple in contexts_features_names:
+            if feat_tuple is None:
+                feat_tuple = ()
             tuple_names = []
             for feat in feat_tuple:
                 if feat in self.params.keys():
@@ -706,6 +710,8 @@ class ConditionalMNL(ChoiceModel):
 
         self._contexts_items_features_names = []
         for feat_tuple in contexts_items_features_names:
+            if feat_tuple is None:
+                feat_tuple = ()
             tuple_names = []
             for feat in feat_tuple:
                 if feat in self.params.keys():
