@@ -717,126 +717,9 @@ class ChoiceModel(object):
         return func.history
 
 
-class RandomChoiceModel(ChoiceModel):
-    """Dumb model that randomly attributes utilities to products."""
-
-    def __init__(self, **kwargs):
-        """Initialization of the model."""
-        super().__init__(**kwargs)
-
-    def compute_batch_utility(
-        self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
-        choices,
-    ):
-        """Computes the random utility for each product of each context.
-
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
-        choices_batch : np.ndarray
-            Choices
-            Shape must be (n_contexts, )
-
-        Returns:
-        --------
-        tf.Tensor
-            (n_contexts, n_items) matrix of random utilities
-        """
-        # In order to avoid unused arguments warnings
-        _ = fixed_items_features, contexts_features, contexts_items_availabilities, choices
-        return np.squeeze(
-            np.random.uniform(shape=(contexts_items_features.shape), minval=0, maxval=1)
-        )
-
-    def fit(**kwargs):
-        """Make sure that nothing happens during .fit."""
-        _ = kwargs
-        return {}
-
-
-class DistribMimickingModel(ChoiceModel):
-    """Dumb class model that mimicks the probabilities.
-
-    It stores the encountered in the train datasets and always returns them
-    """
-
-    def __init__(self, **kwargs):
-        """Initialization of the model."""
-        super().__init__(**kwargs)
-        self.weights = []
-
-    def fit(self, choice_dataset, **kwargs):
-        """Computes the choice frequency of each product and defines it as choice probabilities."""
-        _ = kwargs
-        choices = choice_dataset.choices
-        for i in range(choice_dataset.get_num_items()):
-            self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
-        self.weights = tf.stack(self.weights) / len(choices)
-
-    def compute_batch_utility(
-        self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
-        choices,
-    ):
-        """Returns utility that is fixed. U = log(P).
-
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
-        choices_batch : np.ndarray
-            Choices
-            Shape must be (n_contexts, )
-
-        Returns:
-        --------
-        np.ndarray (n_contexts, n_items)
-            Utilities
-
-        Raises:
-        -------
-        ValueError
-            If the model has not been fitted cannot evaluate the utility
-        """
-        # In order to avoid unused arguments warnings
-        _ = fixed_items_features, contexts_features, contexts_items_availabilities
-        _ = contexts_items_features
-        if self.weights is None:
-            raise ValueError("Model not fitted")
-        return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
-
-
 class BaseMixtureModel(object):
+    """Base Class to work with Mixtures of models."""
+
     def __init__(
         self,
         latent_classes,
@@ -845,6 +728,21 @@ class BaseMixtureModel(object):
         fit_method,
         epochs,
     ):
+        """Instantiation of the model mixture.
+
+        Parameters
+        ----------
+        latent_classes : int
+            Number of latent classes
+        model_class : BaseModel
+            class of models to get a mixture of
+        model_parameters : dict
+            hyper-parameters of the models
+        fit_method : str
+            Method to estimate the parameters: "EM", "LBFGS", "SGD".
+        epochs : int
+            Number of epochs to train the model.
+        """
         self.latent_classes = latent_classes
         self.model_parameters = model_parameters
         self.model_class = model_class
@@ -853,12 +751,17 @@ class BaseMixtureModel(object):
         self.epochs = epochs
 
     def instantiate(self):
+        """Instantiation."""
         self.latent_logit = tf.Variable(tf.ones(self.latent_classes)) / self.latent_classes
         self.models = [
             self.model_class(**self.model_parameters) for _ in range(self.latent_classes)
         ]
 
+        if self.fit_method == "EM":
+            self.fit = self._em_fit
+
     def _em_fit(self, dataset):
+        """Fit with Expectation-Maximization Algorithm."""
         for model in self.models:
             # model.instantiate()
             model.fit(dataset)
