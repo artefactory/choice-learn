@@ -1123,7 +1123,7 @@ class ConditionalMNL(ChoiceModel):
                     probabilities = tf.nn.softmax(utilities, axis=-1)
                     loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                         y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=4),
+                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
                     )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
