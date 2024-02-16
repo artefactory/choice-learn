@@ -1440,6 +1440,6 @@ class ChoiceDataset(object):
         if self.contexts_items_features is not None:
             n_features = 0
             for contexts_items_features in self.contexts_items_features:
-                n_features += contexts_items_features.shape[1]
+                n_features += contexts_items_features.shape[2]
             return n_features
         return 0
