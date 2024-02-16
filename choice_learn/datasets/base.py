@@ -2,13 +2,15 @@
 import csv
 import gzip
 from importlib import resources
+import os
 
 import numpy as np
 import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
 
-DATA_MODULE = "choice_learn.datasets.data"
+
+DATA_MODULE = os.path.join(os.path.abspath('..'), 'choice_learn', 'datasets', 'data')
 
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
@@ -30,8 +32,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     np.ndarray
         data contained in the csv file
     """
-    data_path = resources.files(data_module)
-    with (data_path / data_file_name).open("r", encoding=encoding) as csv_file:
+    with open(os.path.join(data_module, data_file_name), "r", encoding=encoding) as csv_file:
         data_file = csv.reader(csv_file)
         names = next(data_file)
         data = []
@@ -60,8 +61,7 @@ def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     np.ndarray
         data contained in the csv file
     """
-    data_path = resources.files(data_module)
-    with (data_path / data_file_name).open("rb") as compressed_file:
+    with open(os.path.join(data_module, data_file_name), "rb") as compressed_file:
         compressed_file = gzip.open(compressed_file, mode="rt", encoding=encoding)
         names = next(compressed_file)
         names = names.replace("\n", "")
