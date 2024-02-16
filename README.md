@@ -14,7 +14,7 @@
 <img src="docs/choice_learn_official_logo.png" width="256">
 
 Choice-Learn is a Python package designed to help you build discrete choice models.
-The package provides ready to use datasets and different models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
+The package provides ready-to-use datasets and different models from the literature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular, you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
@@ -34,7 +34,7 @@ This repository contains a private version of the package.
 
 ## Introduction - Discrete Choice Modelling
 
-Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores.
+Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well-known use-cases include analyzing people choice of mean of transport or products purchases in stores.
 
 If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 
