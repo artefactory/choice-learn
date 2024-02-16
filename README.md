@@ -14,7 +14,7 @@
 <img src="docs/choice_learn_official_logo.png" width="256">
 
 Choice-Learn is a Python package designed to help you build discrete choice models.
-The package provides ready to use datasets and different models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find smart datasets handling to limit RAM usage and different structure commons to any choice model.
+The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find efficient data handling to limit RAM usage and structure commons to any choice model.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
@@ -47,10 +47,10 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - ModeCanada from Koppelman et al. (1993)
 
 ### Models
-- Ready to use models:
+- Ready-to-use models:
   - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987)
   - RUMnet, Aouad A.; Désir A. (2022) [1]
-- Ready to use models to be implemented:
+- (WIP) Ready-to-use models to be implemented:
   - Nested MultiNomialLogit
   - MultiNomialLogit with latent variables (MixedLogit)
   - TasteNet
@@ -108,7 +108,13 @@ A detailed documentation of this project is available [here](https://artefactory
 
 ## Citation
 
-### Contributors
+If you consider this package and any of its feature useful for your research, please cite our paper:
+
+(WIP - Paper to come)
+
+### License
+
+The use of this software is under the MIT (tbc) license, with no limitation of usage, including for commercial applications. 
 
 ## References
 
