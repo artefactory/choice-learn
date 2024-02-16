@@ -47,15 +47,22 @@ class SimpleMNL(ChoiceModel):
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
-        weights = [
-            tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_feat)),
-                name="Weights",
-            )
-            for n_feat in [n_fixed_items_features, n_contexts_features, n_contexts_items_features]
-        ]
+        weights = []
+        indexes = {}
+        for n_feat, feat_name in zip(
+            [n_fixed_items_features, n_contexts_features, n_contexts_items_features],
+            ["items", "contexts", "contexts_items"],
+        ):
+            if n_feat > 0:
+                weights = [
+                    tf.Variable(
+                        tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
+                        name=f"Weights_{feat_name}",
+                    )
+                ]
+                indexes[feat_name] = len(weights) - 1
         self.instantiated = True
-        return weights
+        return indexes, weights
 
     def compute_batch_utility(
         self,
@@ -92,22 +99,31 @@ class SimpleMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         _, _ = contexts_items_availabilities, choices
-        if len(self.weights[0]) > 0:
-            fixed_items_features = tf.concat(*fixed_items_features, axis=1)
-            fixed_items_utilities = tf.tensordot(fixed_items_features, self.weights[0], axes=1)
+        if "items" in self.indexes.keys():
+            if isinstance(fixed_items_features, tuple):
+                fixed_items_features = tf.concat(*fixed_items_features, axis=1)
+            fixed_items_utilities = tf.tensordot(
+                fixed_items_features, self.weights[self.indexes["items"]], axes=1
+            )
         else:
             fixed_items_utilities = 0
 
-        if len(self.weights[1]) > 0:
-            contexts_features = tf.concat(*contexts_features, axis=1)
-            contexts_utilities = tf.tensordot(contexts_features, self.weights[1], axes=1)
+        if "contexts" in self.indexes.keys():
+            if isinstance(contexts_features, tuple):
+                contexts_features = tf.concat(*contexts_features, axis=1)
+            contexts_utilities = tf.tensordot(
+                contexts_features, self.weights[self.indexes["contexts"]], axes=1
+            )
             contexts_utilities = tf.expand_dims(contexts_utilities, axis=0)
         else:
             contexts_utilities = 0
 
-        if len(self.weights[2]) > 0:
-            contexts_items_features = tf.concat([*contexts_items_features], axis=2)
-            contexts_items_utilities = tf.tensordot(contexts_items_features, self.weights[2])
+        if "contexts_items" in self.indexes.keys():
+            if isinstance(contexts_items_features, tuple):
+                contexts_items_features = tf.concat([*contexts_items_features], axis=2)
+            contexts_items_utilities = tf.tensordot(
+                contexts_items_features, self.weights[self.indexes["contexts_items"]], axes=1
+            )
         else:
             contexts_utilities = tf.zeros(
                 (contexts_utilities.shape[0], fixed_items_utilities.shape[1], 1)
@@ -132,13 +148,53 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.weights = self.instantiate(
-                n_items_features=choice_dataset.get_n_fixed_items_features(),
-                n_context_features=choice_dataset.get_n_contexts_features(),
+            print("Instantiation")
+            self.indexes, self.weights = self.instantiate(
+                n_fixed_items_features=choice_dataset.get_n_fixed_items_features(),
+                n_contexts_features=choice_dataset.get_n_contexts_features(),
                 n_contexts_items_features=choice_dataset.get_n_contexts_items_features(),
             )
             self.instantiated = True
         fit = super().fit(choice_dataset=choice_dataset, **kwargs)
+        if get_report:
+            self.report = self.compute_report(choice_dataset)
+        return fit
+
+    def _fit_with_lbfgs(
+        self, choice_dataset, epochs=None, sample_weight=None, tolerance=1e-8, get_report=False
+    ):
+        """Specific fit function to estimate the paramters with LBFGS.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Choice dataset to use for the estimation.
+        n_epochs : int
+            Number of epochs to run.
+        tolerance : float, optional
+            Tolerance in the research of minimum, by default 1e-8
+        get_report: bool, optional
+            Whether or not to compute a report of the estimation, by default False
+
+        Returns:
+        --------
+        conditionalMNL
+            self with estimated weights.
+        """
+        if not self.instantiated:
+            # Lazy Instantiation
+            print("Instantiation")
+            self.indexes, self.weights = self.instantiate(
+                n_fixed_items_features=choice_dataset.get_n_fixed_items_features(),
+                n_contexts_features=choice_dataset.get_n_contexts_features(),
+                n_contexts_items_features=choice_dataset.get_n_contexts_items_features(),
+            )
+            self.instantiated = True
+        if epochs is None:
+            epochs = self.epochs
+        fit = super()._fit_with_lbfgs(
+            dataset=choice_dataset, epochs=epochs, tolerance=tolerance, sample_weight=sample_weight
+        )
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit
@@ -168,10 +224,10 @@ class SimpleMNL(ChoiceModel):
         p_z = []
         i = 0
         for weight in self.weights:
-            for j in range(weight.shape[1]):
+            for j in range(weight.shape[0]):
                 names.append(f"{weight.name}_{j}")
-                estimations.append(weight.numpy()[0][j])
-                z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
+                estimations.append(weight.numpy()[j])
+                z_values.append(weight.numpy()[j] / weights_std[i].numpy())
                 p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
                 i += 1
 
@@ -209,23 +265,22 @@ class SimpleMNL(ChoiceModel):
                 mw = []
                 index = 0
                 for _w in self.weights:
-                    mw.append(w[:, index : index + _w.shape[1]])
-                    index += _w.shape[1]
+                    mw.append(w[index : index + _w.shape[0]])
+                    index += _w.shape[0]
                 model.weights = mw
                 for batch in dataset.iter_batch(batch_size=-1):
                     utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
                     loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                         y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=4),
+                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[-1]),
                     )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
-        hessian = tape_1.batch_jacobian(jacobian, w)
-        return tf.sqrt(
-            [tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(tf.squeeze(hessian)))]
-        )
+        hessian = tape_1.jacobian(jacobian, w)
+        hessian = tf.linalg.inv(tf.squeeze(hessian))
+        return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
     def clone(self):
         """Returns a clone of the model."""
@@ -245,6 +300,8 @@ class SimpleMNL(ChoiceModel):
             clone.report = self.report
         if hasattr(self, "weights"):
             clone.weights = self.weights
+        if hasattr(self, "indexes"):
+            clone.indexes = self.indexes
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_items_features_names"):
