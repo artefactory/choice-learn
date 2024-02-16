@@ -367,3 +367,49 @@ def load_modecanada(
         choices_column=choice_column,
         choice_mode="one_zero",
     )
+
+
+def load_heating(
+    as_frame=False,
+    return_desc=False,
+    to_wide=False,
+):
+    """Load and return the ModeCanada dataset from Koppleman et al. (1993).
+
+    Parameters
+    ----------
+    one_hot_cat_data : bool, optional
+        Whether to transform categorical data as OneHot, by default False.
+    add_is_public : bool, optional
+        Whether to add the is_public feature, by default False.
+    add_items_one_hot : bool, optional
+        Whether to add a OneHot encoding of items as items_features, by default False
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+    choice_mode : str, optional, among ["one_zero", "items_id"]
+        mode indicating how the choice is encoded, by default "one_zero".
+    split_features : bool, optional
+        Whether to split features by type in different dataframes, by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded ModeCanada dataset
+    """
+    _ = to_wide
+    data_file_name = "heating_data.csv.gz"
+    names, data = load_gzip(data_file_name)
+
+    if return_desc:
+        # TODO
+        pass
+
+    if as_frame:
+        return pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
+    return None
