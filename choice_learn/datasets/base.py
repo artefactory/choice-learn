@@ -378,21 +378,11 @@ def load_heating(
 
     Parameters
     ----------
-    one_hot_cat_data : bool, optional
-        Whether to transform categorical data as OneHot, by default False.
-    add_is_public : bool, optional
-        Whether to add the is_public feature, by default False.
-    add_items_one_hot : bool, optional
-        Whether to add a OneHot encoding of items as items_features, by default False
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
     return_desc : bool, optional
         Whether to return the description, by default False.
-    choice_mode : str, optional, among ["one_zero", "items_id"]
-        mode indicating how the choice is encoded, by default "one_zero".
-    split_features : bool, optional
-        Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
         by default False (an thus retuned in long format).
@@ -406,10 +396,29 @@ def load_heating(
     data_file_name = "heating_data.csv.gz"
     names, data = load_gzip(data_file_name)
 
+    heating_df = pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
+
     if return_desc:
         # TODO
         pass
 
     if as_frame:
-        return pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
-    return None
+        return heating_df
+
+    contexts_features = ["income", "agehed", "rooms", "region"]
+    choice = ["depvar"]
+    contexts_items_features = ["ic.", "oc."]
+    items = ["gc", "gr", "ec", "er", "hp"]
+
+    choices = np.array([items.index(val) for val in heating_df[choice].to_numpy().ravel()])
+    contexts = heating_df[contexts_features].to_numpy()
+    contexts_items = np.stack(
+        [
+            heating_df[[feat + item for feat in contexts_items_features]].to_numpy()
+            for item in items
+        ],
+        axis=1,
+    )
+    return ChoiceDataset(
+        contexts_features=contexts, contexts_items_features=contexts_items, choices=choices
+    )
