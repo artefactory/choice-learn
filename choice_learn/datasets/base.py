@@ -1,7 +1,6 @@
 """Datasets loader."""
 import csv
 import gzip
-from importlib import resources
 import os
 
 import numpy as np
