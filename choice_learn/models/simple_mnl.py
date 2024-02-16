@@ -15,6 +15,7 @@ class SimpleMNL(ChoiceModel):
     def __init__(
         self,
         add_exit_choice=False,
+        intercept=None,
         optimizer="Adam",
         lr=0.001,
         **kwargs,
@@ -33,8 +34,11 @@ class SimpleMNL(ChoiceModel):
         """
         super().__init__(normalize_non_buy=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.instantiated = False
+        self.intercept = intercept
 
-    def instantiate(self, n_fixed_items_features, n_contexts_features, n_contexts_items_features):
+    def instantiate(
+        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+    ):
         """Instantiate the model from ModelSpecification object.
 
         Paramters
@@ -61,6 +65,34 @@ class SimpleMNL(ChoiceModel):
                     )
                 ]
                 indexes[feat_name] = len(weights) - 1
+        if self.intercept is None:
+            print("No intercept in the model")
+        elif self.intercept == "item":
+            weights.append(
+                tf.Variable(
+                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
+                    name="Intercept",
+                )
+            )
+            indexes["intercept"] = len(weights) - 1
+        elif self.intercept == "item-full":
+            print("Are you sure you do not want to normalize an intercept to 0?")
+            weights.append(
+                tf.Variable(
+                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
+                    name="Intercept",
+                )
+            )
+            indexes["intercept"] = len(weights) - 1
+        else:
+            weights.append(
+                tf.Variable(
+                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
+                    name="Intercept",
+                )
+            )
+            indexes["intercept"] = len(weights) - 1
+
         self.instantiated = True
         return indexes, weights
 
@@ -129,7 +161,16 @@ class SimpleMNL(ChoiceModel):
                 (contexts_utilities.shape[0], fixed_items_utilities.shape[1], 1)
             )
 
-        return fixed_items_utilities + contexts_utilities + contexts_items_utilities
+        if "intercept" in self.indexes.keys():
+            intercept = self.weights[self.indexes["intercept"]]
+            if self.intercept == "item":
+                intercept = tf.concat([tf.constant([0.0]), intercept], axis=0)
+            if self.intercept in ["item", "item-full"]:
+                intercept = tf.expand_dims(intercept, axis=0)
+        else:
+            intercept = 0
+
+        return fixed_items_utilities + contexts_utilities + contexts_items_utilities + intercept
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
@@ -150,6 +191,7 @@ class SimpleMNL(ChoiceModel):
             # Lazy Instantiation
             print("Instantiation")
             self.indexes, self.weights = self.instantiate(
+                n_items=choice_dataset.get_n_items(),
                 n_fixed_items_features=choice_dataset.get_n_fixed_items_features(),
                 n_contexts_features=choice_dataset.get_n_contexts_features(),
                 n_contexts_items_features=choice_dataset.get_n_contexts_items_features(),
@@ -185,6 +227,7 @@ class SimpleMNL(ChoiceModel):
             # Lazy Instantiation
             print("Instantiation")
             self.indexes, self.weights = self.instantiate(
+                n_items=choice_dataset.get_num_items(),
                 n_fixed_items_features=choice_dataset.get_n_fixed_items_features(),
                 n_contexts_features=choice_dataset.get_n_contexts_features(),
                 n_contexts_items_features=choice_dataset.get_n_contexts_items_features(),
@@ -259,7 +302,7 @@ class SimpleMNL(ChoiceModel):
         with tf.GradientTape() as tape_1:
             with tf.GradientTape(persistent=True) as tape_2:
                 model = self.clone()
-                w = tf.concat(self.weights, axis=1)
+                w = tf.concat(self.weights, axis=0)
                 tape_2.watch(w)
                 tape_1.watch(w)
                 mw = []
@@ -302,6 +345,8 @@ class SimpleMNL(ChoiceModel):
             clone.weights = self.weights
         if hasattr(self, "indexes"):
             clone.indexes = self.indexes
+        if hasattr(self, "intercept"):
+            clone.intercept = self.intercept
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_items_features_names"):
