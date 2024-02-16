@@ -96,6 +96,10 @@ For modelling you need:
 Finally, an optional requirement used for report and LBFG-s use is:
 - tensorflow_probability (>=0.20.1)
 
+Once you have created your conda/pip python==3.9 environment, you can install requirements by:
+```bash
+pip install choice-learn
+```
 ## Usage
 ```python
 from choice_learn.data import ChoiceDataset
