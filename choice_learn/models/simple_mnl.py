@@ -213,10 +213,12 @@ class SimpleMNL(ChoiceModel):
             Choice dataset to use for the estimation.
         n_epochs : int
             Number of epochs to run.
+        sample_weight: Iterable, optional
+            list of each sample weight, by default None meaning that all samples have weight 1.
         tolerance : float, optional
-            Tolerance in the research of minimum, by default 1e-8
+            Tolerance in the research of minimum, by default 1e-8.
         get_report: bool, optional
-            Whether or not to compute a report of the estimation, by default False
+            Whether or not to compute a report of the estimation, by default False.
 
         Returns:
         --------

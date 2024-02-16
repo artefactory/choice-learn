@@ -722,7 +722,7 @@ class BaseMixtureModel(object):
 
     def __init__(
         self,
-        latent_classes,
+        n_latent_classes,
         model_class,
         model_parameters,
         fit_method,
@@ -732,7 +732,7 @@ class BaseMixtureModel(object):
 
         Parameters
         ----------
-        latent_classes : int
+        n_latent_classes : int
             Number of latent classes
         model_class : BaseModel
             class of models to get a mixture of
@@ -743,7 +743,7 @@ class BaseMixtureModel(object):
         epochs : int
             Number of epochs to train the model.
         """
-        self.latent_classes = latent_classes
+        self.n_latent_classes = n_latent_classes
         self.model_parameters = model_parameters
         self.model_class = model_class
         self.fit_method = fit_method
@@ -752,9 +752,11 @@ class BaseMixtureModel(object):
 
     def instantiate(self):
         """Instantiation."""
-        self.latent_logit = tf.Variable(tf.ones(self.latent_classes)) / self.latent_classes
+        init_logit = tf.random.uniform((self.n_latent_classes,))
+        init_logit = init_logit / tf.reduce_sum(init_logit)
+        self.latent_logits = tf.Variable(init_logit)
         self.models = [
-            self.model_class(**self.model_parameters) for _ in range(self.latent_classes)
+            self.model_class(**self.model_parameters) for _ in range(self.n_latent_classes)
         ]
 
         if self.fit_method == "EM":
@@ -773,12 +775,19 @@ class BaseMixtureModel(object):
                     params=proba,
                     indices=tf.stack([tf.range(0, len(dataset), 1), dataset.choices], axis=1),
                 )
-                for latent, proba in zip(self.latent_logit, predicted_probas)
+                for latent, proba in zip(self.latent_logits, predicted_probas)
             ]
+            weights = tf.stack(predicted_probas, axis=0) / tf.reduce_sum(
+                predicted_probas, axis=0, keepdims=True
+            )
 
-            weights = predicted_probas / tf.reduce_sum(predicted_probas, axis=0, keepdims=True)
-            for q in range(self.latent_classes):
-                print(weights[q].shape)
-                self.models[q].fit(dataset, sample_weight=weights[q])
-
-            self.latent_probas = tf.reduce_mean(weights, axis=0)
+            models = []
+            for q in range(self.n_latent_classes):
+                model = self.model_class(**self.model_parameters)
+                sample_weight = weights[q, :]
+                sample_weight = tf.gather(weights, q, axis=0)
+                model.fit(dataset, sample_weight=sample_weight)
+                models.append(model)
+            self.models = models
+            print(weights[:, :4])
+            self.latent_logits = tf.reduce_mean(weights, axis=1)
