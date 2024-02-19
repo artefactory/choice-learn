@@ -118,7 +118,7 @@ If you consider this package and any of its feature useful for your research, pl
 
 ### License
 
-The use of this software is under the MIT (tbc) license, with no limitation of usage, including for commercial applications. 
+The use of this software is under the MIT (tbc) license, with no limitation of usage, including for commercial applications.
 
 ## References
 
