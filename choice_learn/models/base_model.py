@@ -531,7 +531,7 @@ class ChoiceModel(object):
 
         return tf.concat(stacked_probabilities, axis=0)
 
-    def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1):
+    def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
         """Evaluates the model for each context and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
@@ -563,7 +563,10 @@ class ChoiceModel(object):
                 choices=choices,
                 sample_weight=sample_weight,
             )
-            batch_losses.append(loss["NegativeLogLikelihood"])
+            if mode == "eval":
+                batch_losses.append(loss["NegativeLogLikelihood"])
+            elif mode == "optim":
+                batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
             last_batch_size = contexts_items_availabilities.shape[0]
             coefficients = tf.concat(
@@ -644,7 +647,9 @@ class ChoiceModel(object):
                 # update the parameters in the model
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
-                loss_value = self.evaluate(dataset, sample_weight=sample_weight, batch_size=-1)
+                loss_value = self.evaluate(
+                    dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
+                )
 
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.weights)
@@ -744,7 +749,16 @@ class BaseMixtureModel(object):
             Number of epochs to train the model.
         """
         self.n_latent_classes = n_latent_classes
-        self.model_parameters = model_parameters
+        if isinstance(model_parameters, list):
+            if not len(model_parameters) == n_latent_classes:
+                raise ValueError(
+                    """If you specify a list of hyper-parameters, it means that you want to use\
+                    different hyper-parameters for each latent class. In this case, the length\
+                        of the list must be equal to the number of latent classes."""
+                )
+            self.model_parameters = model_parameters
+        else:
+            self.model_parameters = [model_parameters] * n_latent_classes
         self.model_class = model_class
         self.fit_method = fit_method
 
@@ -754,40 +768,103 @@ class BaseMixtureModel(object):
         """Instantiation."""
         init_logit = tf.random.uniform((self.n_latent_classes,))
         init_logit = init_logit / tf.reduce_sum(init_logit)
-        self.latent_logits = tf.Variable(init_logit)
-        self.models = [
-            self.model_class(**self.model_parameters) for _ in range(self.n_latent_classes)
-        ]
+        self.latent_logits = init_logit
+        self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
         if self.fit_method == "EM":
             self.fit = self._em_fit
+            self.minf = np.log(1e-3)
+
+    def _nothing(self, inputs):
+        """_summary_.
+
+        Parameters
+        ----------
+        inputs : _type_
+            _description_
+
+        Returns:
+        --------
+        _type_
+            _description_
+        """
+        latent_probas = tf.clip_by_value(
+            self.latent_logits - tf.reduce_max(self.latent_logits), self.minf, 0
+        )
+        latent_probas = tf.math.exp(latent_probas)
+        # latent_probas = tf.math.abs(self.logit_latent_probas)  # alternative implementation
+        latent_probas = latent_probas / tf.reduce_sum(latent_probas)
+        proba_list = []
+        avail = inputs[4]
+        for q in range(self.n_latent_classes):
+            combined = self.models[q].compute_batch_utility(*inputs)
+            combined = tf.clip_by_value(
+                combined - tf.reduce_max(combined, axis=1, keepdims=True), self.minf, 0
+            )
+            combined = tf.keras.layers.Activation(activation=tf.nn.softmax)(combined)
+            # combined = tf.keras.layers.Softmax()(combined)
+            combined = combined * avail
+            combined = latent_probas[q] * tf.math.divide(
+                combined, tf.reduce_sum(combined, axis=1, keepdims=True)
+            )
+            combined = tf.expand_dims(combined, -1)
+            proba_list.append(combined)
+            # print(combined.get_shape()) # it is useful to print the shape of tensors for debugging
+
+        proba_final = tf.keras.layers.Concatenate(axis=2)(proba_list)
+        return tf.math.reduce_sum(proba_final, axis=2, keepdims=False)
+
+    def _expectation(self, dataset):
+        predicted_probas = [model.predict_probas(dataset) for model in self.models]
+        if np.sum(np.isnan(predicted_probas)) > 0:
+            print("Nan in probas")
+        predicted_probas = [
+            latent
+            * tf.gather_nd(
+                params=proba,
+                indices=tf.stack([tf.range(0, len(dataset), 1), dataset.choices], axis=1),
+            )
+            for latent, proba in zip(self.latent_logits, predicted_probas)
+        ]
+
+        # E-step
+        ###### FILL THE CODE BELOW TO ESTIMATE DETERMINE THE WEIGHTS (weights = xxx)
+        predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
+
+        return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True)
+
+    def _maximization(self, dataset):
+        """_summary_.
+
+        Parameters
+        ----------
+        dataset : _type_
+            _description_
+
+        Returns:
+        --------
+        _type_
+            _description_
+        """
+        self.models = [self.model_class(**mp) for mp in self.model_parameters]
+        # M-step: MNL estimation
+        for q in range(self.n_latent_classes):
+            self.models[q].fit(dataset, sample_weight=self.weights[:, q], tolerance=1e-6)
+
+        # M-step: latent probability estimation
+        latent_probas = np.sum(self.weights, axis=0)
+
+        return latent_probas / np.sum(latent_probas)
 
     def _em_fit(self, dataset):
         """Fit with Expectation-Maximization Algorithm."""
+        hist_logits = []
+        # Initialization
         for model in self.models:
             # model.instantiate()
-            model.fit(dataset)
+            model.fit(dataset, sample_weight=np.random.rand(len(dataset)))
         for i in tqdm.trange(self.epochs):
-            predicted_probas = [model.predict_probas(dataset) for model in self.models]
-            predicted_probas = [
-                latent
-                * tf.gather_nd(
-                    params=proba,
-                    indices=tf.stack([tf.range(0, len(dataset), 1), dataset.choices], axis=1),
-                )
-                for latent, proba in zip(self.latent_logits, predicted_probas)
-            ]
-            weights = tf.stack(predicted_probas, axis=0) / tf.reduce_sum(
-                predicted_probas, axis=0, keepdims=True
-            )
-
-            models = []
-            for q in range(self.n_latent_classes):
-                model = self.model_class(**self.model_parameters)
-                sample_weight = weights[q, :]
-                sample_weight = tf.gather(weights, q, axis=0)
-                model.fit(dataset, sample_weight=sample_weight)
-                models.append(model)
-            self.models = models
-            print(weights[:, :4])
-            self.latent_logits = tf.reduce_mean(weights, axis=1)
+            self.weights = self._expectation(dataset)
+            self.latent_logits = self._maximization(dataset)
+            hist_logits.append(self.latent_logits)
+        return hist_logits

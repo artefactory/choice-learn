@@ -229,7 +229,7 @@ class SimpleMNL(ChoiceModel):
             # Lazy Instantiation
             print("Instantiation")
             self.indexes, self.weights = self.instantiate(
-                n_items=choice_dataset.get_num_items(),
+                n_items=choice_dataset.get_n_items(),
                 n_fixed_items_features=choice_dataset.get_n_fixed_items_features(),
                 n_contexts_features=choice_dataset.get_n_contexts_features(),
                 n_contexts_items_features=choice_dataset.get_n_contexts_items_features(),
