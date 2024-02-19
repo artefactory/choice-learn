@@ -100,6 +100,40 @@ Finally, an optional requirement used for report and LBFG-s use is:
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalMNL, RUMnet
+
+# Instantiation of a ChoiceDataset from a pandas.DataFrame
+# Onl need to specify how the file is encoded:
+dataset = ChoiceDataset.from_single_long_df(df=transport_df,
+                                            items_id_column="alt",
+                                            contexts_id_column="case",
+                                            choices_column="choice",
+                                            contexts_features_columns=["income"],
+                                            contexts_items_features_columns=["cost", "freq", "ovt", "ivt"],
+                                            choice_format="item_id")
+
+# Initialization of the model
+model = ConditionalMNL(optimizer="lbfgs")
+
+# Creation of the different weights:
+
+
+# add_coefficients adds one coefficient for each specified item_index
+# intercept, and income are added for each item except the first one that needs to be zeroed
+model.add_coefficients(coefficient_name="beta_inter", feature_name="intercept", items_indexes=[1, 2, 3])
+model.add_coefficients(coefficient_name="beta_income", feature_name="income", items_indexes=[1, 2, 3])
+
+# ivt is added for each item:
+model.add_coefficients(coefficient_name="beta_ivt", feature_name="ivt", items_indexes=[0, 1, 2, 3])
+
+# shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
+# Here, cost, freq and ovt coefficients are shared between all items
+model.add_shared_coefficient(coefficient_name="beta_cost", feature_name="cost", items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_freq", feature_name="freq", items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_ovt", feature_name="ovt", items_indexes=[0, 1, 2, 3])
+
+history = model.fit(dataset, epochs=1000, get_report=True)
+print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
+print(model.report)
 ```
 
 ## Documentation
@@ -115,10 +149,12 @@ A detailed documentation of this project is available [here](https://artefactory
 ### Papers
 [1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad, A.; Désir, A. (2022)\
 [2][The Acceptance of Model Innovation: The Case of Swissmetro](https://www.researchgate.net/publication/37456549_The_acceptance_of_modal_innovation_The_case_of_Swissmetro), Bierlaire, M.; Axhausen, K., W.; Abay, G. (2001)\
-[3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)
-[4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)
+[3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)\
+[4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
 
 ### Code and Repositories
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice/)
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)
+- [PyLogit](https://github.com/timothyb0912/pylogit)
+- [Torch Choice](https://gsbdbi.github.io/torch-choice)
+- [BioGeme](https://github.com/michelbierlaire/biogeme)
+- [mlogit](https://github.com/cran/mlogit)
