@@ -43,18 +43,18 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Data
 - Generic dataset handling with the ChoiceDataset class
 - Ready-To-Use datasets:
-  - SwissMetro from Bierlaire et al. (2001)
-  - ModeCanada from Koppelman et al. (1993)
+  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) from Bierlaire et al. (2001) [[2]](#citation)
+  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) from Koppelman et al. (1993) [[3]](#citation)
 
 ### Models
-- Ready to use models:
-  - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987)
-  - RUMnet, Aouad A.; Désir A. (2022) [1]
-- Ready to use models to be implemented:
+- Ready-to-use models:
+  - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987) [[4]](#citation)
+  - RUMnet, Aouad A.; Désir A. (2022) [[1]](#citation)
+- Ready-to-use models to be implemented:
   - Nested MultiNomialLogit
   - MultiNomialLogit with latent variables (MixedLogit)
-  - TasteNet
-  - SHOPPER
+  - [TasteNet](https://arxiv.org/abs/2002.00922)
+  - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class
 
@@ -113,7 +113,10 @@ A detailed documentation of this project is available [here](https://artefactory
 ## References
 
 ### Papers
-[1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad A.; Désir A. (2022)
+[1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad, A.; Désir, A. (2022)\
+[2][The Acceptance of Model Innovation: The Case of Swissmetro](https://www.researchgate.net/publication/37456549_The_acceptance_of_modal_innovation_The_case_of_Swissmetro), Bierlaire, M.; Axhausen, K., W.; Abay, G. (2001)\
+[3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)
+[4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)
 
 ### Code and Repositories
 - [PyLogit](https://github.com/timothyb0912/pylogit)
