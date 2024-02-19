@@ -868,9 +868,7 @@ class BaseMixtureModel(object):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
-            self.models[q].fit(
-                dataset, sample_weight=self.weights[:, q], tolerance=1e-4, verbose=verbose
-            )
+            self.models[q].fit(dataset, sample_weight=self.weights[:, q], verbose=verbose)
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
@@ -905,4 +903,7 @@ class BaseMixtureModel(object):
             self.latent_logits = self._maximization(dataset, verbose=verbose)
             hist_logits.append(self.latent_logits)
             hist_loss.append(loss)
+            if np.sum(np.isnan(self.latent_logits)) > 0:
+                print("Nan in logits")
+                break
         return hist_logits, hist_loss
