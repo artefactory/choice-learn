@@ -614,7 +614,7 @@ class ChoiceDataset(object):
         """
         return len(self.choices)
 
-    def get_num_items(self):
+    def get_n_items(self):
         """Method to access the total number of different items.
 
         Returns:
@@ -624,7 +624,7 @@ class ChoiceDataset(object):
         """
         return self.base_num_items
 
-    def get_num_choices(self):
+    def get_n_choices(self):
         """Method to access the total number of different choices.
 
         Redundant with __len__ method.
@@ -940,7 +940,7 @@ class ChoiceDataset(object):
         print("%=====================================================================%")
         print("%%% Summary of the dataset:")
         print("%=====================================================================%")
-        print("Number of items:", self.get_num_items())
+        print("Number of items:", self.get_n_items())
         print(
             "Number of choices:",
             len(self),
@@ -1301,41 +1301,67 @@ class ChoiceDataset(object):
         elif isinstance(choices_indexes, slice):
             return self.__getitem__(list(range(*choices_indexes.indices(len(self.choices)))))
 
-        if self.fixed_items_features[0] is None:
-            fixed_items_features = None
-        else:
+        try:
+            if self.fixed_items_features[0] is None:
+                fixed_items_features = None
+            else:
+                fixed_items_features = self.fixed_items_features
+        except TypeError:
             fixed_items_features = self.fixed_items_features
-        if self.contexts_features[0] is None:
+
+        try:
+            if self.contexts_features[0] is None:
+                contexts_features = None
+            else:
+                contexts_features = tuple(
+                    self.contexts_features[i][choices_indexes]
+                    for i in range(len(self.contexts_features))
+                )
+        except TypeError:
             contexts_features = None
-        else:
-            contexts_features = tuple(
-                self.contexts_features[i][choices_indexes]
-                for i in range(len(self.contexts_features))
-            )
-        if self.contexts_items_features[0] is None:
+
+        try:
+            if self.contexts_items_features[0] is None:
+                contexts_items_features = None
+            else:
+                contexts_items_features = tuple(
+                    self.contexts_items_features[i][choices_indexes]
+                    for i in range(len(self.contexts_items_features))
+                )
+        except TypeError:
             contexts_items_features = None
-        else:
-            contexts_items_features = tuple(
-                self.contexts_items_features[i][choices_indexes]
-                for i in range(len(self.contexts_items_features))
-            )
-        if self.fixed_items_features_names[0] is None:
+
+        try:
+            if self.fixed_items_features_names[0] is None:
+                fixed_items_features_names = None
+            else:
+                fixed_items_features_names = self.fixed_items_features_names
+        except TypeError:
             fixed_items_features_names = None
-        else:
-            fixed_items_features_names = self.fixed_items_features_names
-        if self.contexts_features_names[0] is None:
+        try:
+            if self.contexts_features_names[0] is None:
+                contexts_features_names = None
+            else:
+                contexts_features_names = self.contexts_features_names
+        except TypeError:
             contexts_features_names = None
-        else:
-            contexts_features_names = self.contexts_features_names
-        if self.contexts_items_features_names[0] is None:
+        try:
+            if self.contexts_items_features_names[0] is None:
+                contexts_items_features_names = None
+            else:
+                contexts_items_features_names = self.contexts_items_features_names
+        except TypeError:
             contexts_items_features_names = None
-        else:
-            contexts_items_features_names = self.contexts_items_features_names
+
+        try:
+            contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
+        except TypeError:
+            contexts_items_availabilities = None
         return ChoiceDataset(
             fixed_items_features=fixed_items_features,
             contexts_features=contexts_features,
             contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=self.contexts_items_availabilities[choices_indexes],
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=[self.choices[i] for i in choices_indexes],
             fixed_items_features_names=fixed_items_features_names,
             contexts_features_names=contexts_features_names,
@@ -1393,7 +1419,7 @@ class ChoiceDataset(object):
         Parameters
         ----------
         bool_list : list of boolean
-            list of booleans of length self.get_num_sessions() to filter sessions.
+            list of booleans of length self.get_n_contexts() to filter contexts.
             True to keep, False to discard.
         """
         indexes = [i for i, keep in enumerate(bool_list) if keep]
