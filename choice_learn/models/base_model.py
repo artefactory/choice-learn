@@ -20,6 +20,7 @@ class ChoiceModel(object):
         label_smoothing=0.0,
         normalize_non_buy=False,
         optimizer="Adam",
+        tolerance=1e-8,
         callbacks=None,
         lr=0.001,
         epochs=1,
@@ -38,6 +39,15 @@ class ChoiceModel(object):
             normalization,by default True
         callbacks : list of tf.kera callbacks, optional
             List of callbacks to add to model.fit, by default None and only add History
+        optimizer : str, optional
+            Name of the tf.keras.optimizers to be used, by default "Adam"
+        tolerance : float, optional
+            Tolerance for the L-BFGS optimizer if applied, by default 1e-8
+        lr: float, optional
+            Learning rate for the optimizer if applied, by default 0.001
+        epochs: int, optional
+            (Max) Number of epochs to train the model, by default 1
+        batch_size: int, optional
         """
         self.is_fitted = False
         self.normalize_non_buy = normalize_non_buy
@@ -69,6 +79,7 @@ class ChoiceModel(object):
 
         self.epochs = epochs
         self.batch_size = batch_size
+        self.tolerance = tolerance
 
     @abstractmethod
     def compute_batch_utility(
@@ -585,6 +596,8 @@ class ChoiceModel(object):
         ----------
         dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
+        sample_weight: np.ndarray, optional
+            Sample weights to apply, by default None
 
         Returns:
         --------
@@ -672,7 +685,7 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, tolerance=1e-8):
+    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -681,10 +694,10 @@ class ChoiceModel(object):
         ----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
-        n_epochs : int
+        epochs : int
             Maximum number of epochs allowed to reach minimum
-        tolerance : float, optional
-            Maximum tolerance accepted, by default 1e-8
+        sample_weight : np.ndarray, optional
+            Sample weights to apply, by default None
 
         Returns:
         --------
@@ -707,7 +720,7 @@ class ChoiceModel(object):
             value_and_gradients_function=func,
             initial_position=init_params,
             max_iterations=epochs,
-            tolerance=tolerance,
+            tolerance=self.tolerance,
             f_absolute_tolerance=-1,
             f_relative_tolerance=-1,
         )
@@ -830,8 +843,9 @@ class BaseMixtureModel(object):
         # E-step
         ###### FILL THE CODE BELOW TO ESTIMATE DETERMINE THE WEIGHTS (weights = xxx)
         predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
+        loss = np.sum(np.log(np.sum(predicted_probas, axis=1)))
 
-        return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True)
+        return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), loss
 
     def _maximization(self, dataset):
         """_summary_.
@@ -849,7 +863,7 @@ class BaseMixtureModel(object):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
-            self.models[q].fit(dataset, sample_weight=self.weights[:, q], tolerance=1e-6)
+            self.models[q].fit(dataset, sample_weight=self.weights[:, q], tolerance=1e-4)
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
@@ -859,12 +873,14 @@ class BaseMixtureModel(object):
     def _em_fit(self, dataset):
         """Fit with Expectation-Maximization Algorithm."""
         hist_logits = []
+        hist_loss = []
         # Initialization
         for model in self.models:
             # model.instantiate()
             model.fit(dataset, sample_weight=np.random.rand(len(dataset)))
         for i in tqdm.trange(self.epochs):
-            self.weights = self._expectation(dataset)
+            self.weights, loss = self._expectation(dataset)
             self.latent_logits = self._maximization(dataset)
             hist_logits.append(self.latent_logits)
-        return hist_logits
+            hist_loss.append(loss)
+        return hist_logits, hist_loss
