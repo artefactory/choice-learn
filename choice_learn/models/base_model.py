@@ -685,7 +685,7 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None):
+    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -698,6 +698,8 @@ class ChoiceModel(object):
             Maximum number of epochs allowed to reach minimum
         sample_weight : np.ndarray, optional
             Sample weights to apply, by default None
+        verbose : int, optional
+            print level, for debugging, by default 0
 
         Returns:
         --------
@@ -728,10 +730,11 @@ class ChoiceModel(object):
         # after training, the final optimized parameters are still in results.position
         # so we have to manually put them back to the model
         func.assign_new_model_parameters(results.position)
-        print("L-BFGS Opimization finished:")
-        print("---------------------------------------------------------------")
-        print("Number of iterations:", results[2].numpy())
-        print("Algorithm converged before reaching max iterations:", results[0].numpy())
+        if verbose > 0:
+            print("L-BFGS Opimization finished:")
+            print("---------------------------------------------------------------")
+            print("Number of iterations:", results[2].numpy())
+            print("Algorithm converged before reaching max iterations:", results[0].numpy())
         return func.history
 
 
@@ -847,13 +850,15 @@ class BaseMixtureModel(object):
 
         return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), loss
 
-    def _maximization(self, dataset):
+    def _maximization(self, dataset, verbose=0):
         """_summary_.
 
         Parameters
         ----------
         dataset : _type_
             _description_
+        verbose : int, optional
+            print level, for debugging, by default 0
 
         Returns:
         --------
@@ -863,24 +868,41 @@ class BaseMixtureModel(object):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
-            self.models[q].fit(dataset, sample_weight=self.weights[:, q], tolerance=1e-4)
+            self.models[q].fit(
+                dataset, sample_weight=self.weights[:, q], tolerance=1e-4, verbose=verbose
+            )
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
 
         return latent_probas / np.sum(latent_probas)
 
-    def _em_fit(self, dataset):
-        """Fit with Expectation-Maximization Algorithm."""
+    def _em_fit(self, dataset, verbose=0):
+        """Fit with Expectation-Maximization Algorithm.
+
+        Parameters
+        ----------
+        dataset: ChoiceDataset
+            Dataset to be used for coefficients estimations
+        verbose : int, optional
+            print level, for debugging, by default 0
+
+        Returns:
+        --------
+        list
+            List of logits for each latent class
+        list
+            List of losses at each epoch
+        """
         hist_logits = []
         hist_loss = []
         # Initialization
         for model in self.models:
             # model.instantiate()
-            model.fit(dataset, sample_weight=np.random.rand(len(dataset)))
+            model.fit(dataset, sample_weight=np.random.rand(len(dataset)), verbose=verbose)
         for i in tqdm.trange(self.epochs):
             self.weights, loss = self._expectation(dataset)
-            self.latent_logits = self._maximization(dataset)
+            self.latent_logits = self._maximization(dataset, verbose=verbose)
             hist_logits.append(self.latent_logits)
             hist_loss.append(loss)
         return hist_logits, hist_loss
