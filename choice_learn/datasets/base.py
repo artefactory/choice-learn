@@ -8,8 +8,7 @@ import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
 
-
-DATA_MODULE = os.path.join(os.path.abspath('..'), 'choice_learn', 'datasets', 'data')
+DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
 
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
@@ -195,7 +194,7 @@ def load_modecanada(
     add_is_public=False,
     as_frame=False,
     return_desc=False,
-    choice_mode="one_zero",
+    choice_format="one_zero",
     split_features=False,
     to_wide=False,
 ):
@@ -214,8 +213,8 @@ def load_modecanada(
         by default False.
     return_desc : bool, optional
         Whether to return the description, by default False.
-    choice_mode : str, optional, among ["one_zero", "items_id"]
-        mode indicating how the choice is encoded, by default "one_zero".
+    choice_format : str, optional, among ["one_zero", "items_id"]
+        format indicating how the choice is encoded, by default "one_zero".
     split_features : bool, optional
         Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
@@ -270,7 +269,7 @@ def load_modecanada(
     for col in canada_df.columns:
         canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
 
-    if choice_mode == "items_id":
+    if choice_format == "items_id":
         # We need to transform how the choice is encoded to add the chosen item id
         named_choice = [0] * len(canada_df)
         for n_row, row in canada_df.iterrows():
@@ -364,5 +363,5 @@ def load_modecanada(
         items_id_column="alt",
         contexts_id_column="case",
         choices_column=choice_column,
-        choice_mode="one_zero",
+        choice_format="one_zero",
     )

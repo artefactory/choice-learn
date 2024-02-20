@@ -614,8 +614,18 @@ class ChoiceDataset(object):
         return len(self.choices)
 
     def __str__(self):
-        template = '''First choice is:\nItems features: {}\nContexts features: {}\nContexts Items features: {}\nContexts Items Availabilities: {}\nContexts Choice: {}'''
-        return template.format(self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3], self.batch[0][4])
+        """Retursn short representation of ChoiceDataset.
+
+        Returns:
+        --------
+        str
+            short representation of ChoiceDataset
+        """
+        template = """First choice is:\nItems features: {}\nContexts features: {}\n\
+        Contexts Items features: {}\nContexts Items Availabilities: {}\nContexts Choice: {}"""
+        return template.format(
+            self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3], self.batch[0][4]
+        )
 
     def get_num_items(self):
         """Method to access the total number of different items.
@@ -725,7 +735,7 @@ class ChoiceDataset(object):
         contexts_items_features_suffixes=None,
         contexts_items_availabilities_suffix=None,
         choices_column="choice",
-        choice_mode="items_id",
+        choice_format="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
@@ -745,7 +755,7 @@ class ChoiceDataset(object):
             Suffixes of the columns of the dataframe that are context-item availabilities,
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
-        choice_mode: str, optional
+        choice_format: str, optional
             How choice is indicated in df, either "items_name" or "items_index",
             default is "items_id"
 
@@ -810,7 +820,7 @@ class ChoiceDataset(object):
             contexts_items_availabilities = None
 
         choices = df[choices_column]
-        if choice_mode == "items_id":
+        if choice_format == "items_id":
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
 
         return ChoiceDataset(
