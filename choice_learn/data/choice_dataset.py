@@ -621,8 +621,9 @@ class ChoiceDataset(object):
         str
             short representation of ChoiceDataset
         """
-        template = """First choice is:\nItems features: {}\nContexts features: {}\n\
-        Contexts Items features: {}\nContexts Items Availabilities: {}\nContexts Choice: {}"""
+        template = """First choice is:\nItems features: {}\nContexts features: {}\n
+                      Contexts Items features: {}\nContexts Items Availabilities: {}\n
+                      Contexts Choice: {}"""
         return template.format(
             self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3], self.batch[0][4]
         )
