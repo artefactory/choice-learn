@@ -751,6 +751,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         optimizer=None,
         add_exit_choice=False,
         tolerance=1e-6,
+        lr=0.001,
     ):
         """Instantiation of the model mixture.
 
@@ -772,6 +773,8 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             Whether or not to add an exit choice, by default False
         tolerance: float, optional
             Tolerance for the L-BFGS optimizer if applied, by default 1e-6
+        lr: float, optional
+            Learning rate for the optimizer if applied, by default 0.001
         """
         self.n_latent_classes = n_latent_classes
         if isinstance(model_parameters, list):
@@ -791,6 +794,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         self.add_exit_choice = add_exit_choice
         self.tolerance = tolerance
         self.optimizer = optimizer
+        self.lr = lr
 
         self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
 
@@ -869,7 +873,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             class_probabilities = tf_ops.softmax_with_availabilities(
                 contexts_items_logits=class_utilities,
                 contexts_items_availabilities=contexts_items_availabilities,
-                normalize_exit=self.normalize_non_buy,
+                normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
             probabilities.append(class_probabilities * latent_probabilities[i])

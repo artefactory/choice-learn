@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 from .base_model import BaseLatentClassModel
-from .conditrional_logit import ConditionalMNL, ModelSpecification
+from .conditional_mnl import ConditionalMNL, ModelSpecification
 from .simple_mnl import SimpleMNL
 
 
@@ -45,24 +45,28 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             Learning rate to use for optimizer if relevant, by default 0.001
         """
         self.n_latent_classes = n_latent_classes
-        self.fit_method = fit_method
-        self.epochs = epochs
-        self.add_exit_choice = add_exit_choice
-        self.tolerance = tolerance
         self.intercept = intercept
-        self.optimizer = optimizer
-        self.lr = lr
-
         model_params = {
-            "add_exit_choice": self.add_exit_choice,
-            "intercept": self.intercept,
-            "optimizer": self.optimizer,
-            "tolerance": self.tolerance,
-            "lr": self.lr,
-            "epochs": self.epochs,
+            "add_exit_choice": add_exit_choice,
+            "intercept": intercept,
+            "optimizer": optimizer,
+            "tolerance": tolerance,
+            "lr": lr,
+            "epochs": epochs,
         }
 
-        super().__init__(model_class=SimpleMNL, model_params=model_params, **kwargs)
+        super().__init__(
+            model_class=SimpleMNL,
+            model_parameters=model_params,
+            n_latent_classes=n_latent_classes,
+            fit_method=fit_method,
+            epochs=epochs,
+            add_exit_choice=add_exit_choice,
+            tolerance=tolerance,
+            optimizer=optimizer,
+            lr=lr,
+            **kwargs,
+        )
 
     def instantiate_latent_models(
         self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
