@@ -738,7 +738,7 @@ class ChoiceModel(object):
         return func.history
 
 
-class BaseMixtureModel(object):
+class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
     """Base Class to work with Mixtures of models."""
 
     def __init__(
@@ -779,17 +779,354 @@ class BaseMixtureModel(object):
         self.fit_method = fit_method
 
         self.epochs = epochs
+        self.normalize_non_buy = False
+
+        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
 
     def instantiate(self):
         """Instantiation."""
-        init_logit = tf.random.uniform((self.n_latent_classes,))
-        init_logit = init_logit / tf.reduce_sum(init_logit)
+        init_logit = tf.Variable(
+            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
+            name="Latent-Logits",
+        )
         self.latent_logits = init_logit
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
         if self.fit_method == "EM":
             self.fit = self._em_fit
             self.minf = np.log(1e-3)
+
+    @tf.function
+    def batch_predict(
+        self,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
+        sample_weight=None,
+    ):
+        """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
+
+        Parameters
+        ----------
+        fixed_items_features : tuple of np.ndarray
+            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
+            constant/fixed features.
+            Shape must be (n_items, n_items_features)
+        contexts_features : tuple of np.ndarray (contexts_features)
+            a batch of contexts features
+            Shape must be (n_contexts, n_contexts_features)
+        contexts_items_features : tuple of np.ndarray (contexts_items_features)
+            a batch of contexts items features
+            Shape must be (n_contexts, n_contexts_items_features)
+        contexts_items_availabilities : np.ndarray
+            A batch of contexts items availabilities
+            Shape must be (n_contexts, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_contexts, )
+        sample_weight : np.ndarray, optional
+            List samples weights to apply during the gradient descent to the batch elements,
+            by default None
+
+        Returns:
+        --------
+        tf.Tensor (1, )
+            Value of NegativeLogLikelihood loss for the batch
+        tf.Tensor (batch_size, n_items)
+            Probabilities for each product to be chosen for each context
+        """
+        # Compute utilities from features
+        utilities = self.compute_batch_utility(
+            fixed_items_features,
+            contexts_features,
+            contexts_items_features,
+            contexts_items_availabilities,
+            choices,
+        )
+        latent_probabilities = tf.concat(
+            [[tf.constant(1.0)], tf.math.exp(self.latent_logits)], axis=0
+        )
+        latent_probabilities = latent_probabilities / tf.reduce_sum(latent_probabilities)
+        # Compute probabilities from utilities & availabilties
+        probabilities = []
+        for i, class_utilities in enumerate(utilities):
+            class_probabilities = tf_ops.softmax_with_availabilities(
+                contexts_items_logits=class_utilities,
+                contexts_items_availabilities=contexts_items_availabilities,
+                normalize_exit=self.normalize_non_buy,
+                axis=-1,
+            )
+            probabilities.append(class_probabilities * latent_probabilities[i])
+        probabilities = tf.reduce_sum(probabilities, axis=0)
+        tf.print("Probas", probabilities[:4])
+
+        # Compute loss from probabilities & actual choices
+        # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)
+        batch_loss = {
+            "optimized_loss": self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+        }
+        tf.print(batch_loss)
+        return batch_loss, probabilities
+
+    def compute_batch_utility(
+        self,
+        fixed_items_features,
+        contexts_features,
+        contexts_items_features,
+        contexts_items_availabilities,
+        choices,
+    ):
+        """_summary_.
+
+        Parameters
+        ----------
+        args : _type_
+            _description_
+
+        Returns:
+        --------
+        _type_
+            _description_
+        """
+        utilities = []
+        for model in self.models:
+            utilities.append(
+                model.compute_batch_utility(
+                    fixed_items_features,
+                    contexts_features,
+                    contexts_items_features,
+                    contexts_items_availabilities,
+                    choices,
+                )
+            )
+        return utilities
+
+    def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
+        """Evaluates the model for each context and each product of a ChoiceDataset.
+
+        Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
+        loss from the actual choices.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset on which to apply to prediction
+
+        Returns:
+        --------
+        np.ndarray (n_contexts, n_items)
+            Choice probabilties for each context and each product
+        """
+        batch_losses = []
+        for (
+            fixed_items_features,
+            contexts_features,
+            contexts_items_features,
+            contexts_items_availabilities,
+            choices,
+        ) in choice_dataset.iter_batch(batch_size=batch_size):
+            loss, _ = self.batch_predict(
+                fixed_items_features=fixed_items_features,
+                contexts_features=contexts_features,
+                contexts_items_features=contexts_items_features,
+                contexts_items_availabilities=contexts_items_availabilities,
+                choices=choices,
+                sample_weight=sample_weight,
+            )
+            if mode == "eval":
+                batch_losses.append(loss["NegativeLogLikelihood"])
+            elif mode == "optim":
+                batch_losses.append(loss["optimized_loss"])
+        if batch_size != -1:
+            last_batch_size = contexts_items_availabilities.shape[0]
+            coefficients = tf.concat(
+                [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+            )
+            batch_losses = tf.multiply(batch_losses, coefficients)
+            batch_loss = tf.reduce_sum(batch_losses) / len(choice_dataset)
+        else:
+            batch_loss = tf.reduce_mean(batch_losses)
+        return batch_loss
+
+    def _lbfgs_train_step(self, dataset, sample_weight=None):
+        """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
+
+        Parameters
+        ----------
+        dataset: ChoiceDataset
+            Dataset on which to estimate the paramters.
+        sample_weight: np.ndarray, optional
+            Sample weights to apply, by default None
+
+        Returns:
+        --------
+        function
+            with the signature:
+                loss_value, gradients = f(model_parameters).
+        """
+        # obtain the shapes of all trainable parameters in the model
+        weights = []
+        w_to_model = []
+        w_to_model_indexes = []
+        for i, model in enumerate(self.models):
+            for j, w in enumerate(model.weights):
+                weights.append(w)
+                w_to_model.append(i)
+                w_to_model_indexes.append(j)
+        weights.append(self.latent_logits)
+        w_to_model.append(-1)
+        w_to_model_indexes.append(-1)
+        shapes = tf.shape_n(weights)
+        n_tensors = len(shapes)
+
+        # we'll use tf.dynamic_stitch and tf.dynamic_partition later, so we need to
+        # prepare required information first
+        count = 0
+        idx = []  # stitch indices
+        part = []  # partition indices
+
+        for i, shape in enumerate(shapes):
+            n = np.product(shape)
+            idx.append(tf.reshape(tf.range(count, count + n, dtype=tf.int32), shape))
+            part.extend([i] * n)
+            count += n
+
+        part = tf.constant(part)
+
+        @tf.function
+        def assign_new_model_parameters(params_1d):
+            """A function updating the model's parameters with a 1D tf.Tensor.
+
+            Pararmeters
+            -----------
+            params_1d: tf.Tensor
+                a 1D tf.Tensor representing the model's trainable parameters.
+            """
+            params = tf.dynamic_partition(params_1d, part, n_tensors)
+            for i, (shape, param) in enumerate(zip(shapes, params)):
+                if w_to_model[i] != -1:
+                    self.models[w_to_model[i]].weights[w_to_model_indexes[j]].assign(
+                        tf.reshape(param, shape)
+                    )
+                else:
+                    self.latent_logits.assign(tf.reshape(param, shape))
+
+        # now create a function that will be returned by this factory
+        @tf.function
+        def f(params_1d):
+            """A function that can be used by tfp.optimizer.lbfgs_minimize.
+
+            This function is created by function_factory.
+
+            Parameters
+            ----------
+            params_1d: tf.Tensor
+                a 1D tf.Tensor.
+
+            Returns:
+            --------
+            tf.Tensor
+                A scalar loss and the gradients w.r.t. the `params_1d`.
+            tf.Tensor
+                A 1D tf.Tensor representing the gradients w.r.t. the `params_1d`.
+            """
+            # use GradientTape so that we can calculate the gradient of loss w.r.t. parameters
+            with tf.GradientTape() as tape:
+                # update the parameters in the model
+                assign_new_model_parameters(params_1d)
+                # calculate the loss
+                loss_value = self.evaluate(
+                    dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
+                )
+
+            # calculate gradients and convert to 1D tf.Tensor
+            grads = tape.gradient(loss_value, weights)
+            grads = tf.dynamic_stitch(idx, grads)
+
+            # print out iteration & loss
+            f.iter.assign_add(1)
+
+            # store loss value so we can retrieve later
+            tf.py_function(f.history.append, inp=[loss_value], Tout=[])
+
+            return loss_value, grads
+
+        # store these information as members so we can use them outside the scope
+        f.iter = tf.Variable(0)
+        f.idx = idx
+        f.part = part
+        f.shapes = shapes
+        f.assign_new_model_parameters = assign_new_model_parameters
+        f.history = []
+        return f
+
+    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, verbose=0):
+        """Fit function for L-BFGS optimizer.
+
+        Replaces the .fit method when the optimizer is set to L-BFGS.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            Dataset to be used for coefficients estimations
+        epochs : int
+            Maximum number of epochs allowed to reach minimum
+        sample_weight : np.ndarray, optional
+            Sample weights to apply, by default None
+        verbose : int, optional
+            print level, for debugging, by default 0
+
+        Returns:
+        --------
+        dict
+            Fit history
+        """
+        # Only import tensorflow_probability if LBFGS optimizer is used, avoid unnecessary
+        # dependency
+        import tensorflow_probability as tfp
+
+        if epochs is None:
+            epochs = self.epochs
+        func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
+
+        # convert initial model parameters to a 1D tf.Tensor
+        init = []
+        for model in self.models:
+            for w in model.weights:
+                init.append(w)
+        init.append(self.latent_logits)
+        init_params = tf.dynamic_stitch(func.idx, init)
+
+        # train the model with L-BFGS solver
+        results = tfp.optimizer.lbfgs_minimize(
+            value_and_gradients_function=func,
+            initial_position=init_params,
+            max_iterations=epochs,
+            tolerance=self.tolerance,
+            f_absolute_tolerance=-1,
+            f_relative_tolerance=-1,
+        )
+
+        # after training, the final optimized parameters are still in results.position
+        # so we have to manually put them back to the model
+        func.assign_new_model_parameters(results.position)
+        if verbose > 0:
+            print("L-BFGS Opimization finished:")
+            print("---------------------------------------------------------------")
+            print("Number of iterations:", results[2].numpy())
+            print("Algorithm converged before reaching max iterations:", results[0].numpy())
+        return func.history
 
     def _nothing(self, inputs):
         """_summary_.
