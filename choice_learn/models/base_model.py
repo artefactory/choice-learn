@@ -738,7 +738,7 @@ class ChoiceModel(object):
         return func.history
 
 
-class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
+class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
     """Base Class to work with Mixtures of models."""
 
     def __init__(
@@ -748,6 +748,9 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
         model_parameters,
         fit_method,
         epochs,
+        optimizer=None,
+        add_exit_choice=False,
+        tolerance=1e-6,
     ):
         """Instantiation of the model mixture.
 
@@ -760,9 +763,15 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
         model_parameters : dict
             hyper-parameters of the models
         fit_method : str
-            Method to estimate the parameters: "EM", "LBFGS", "SGD".
+            Method to estimate the parameters: "EM", "MLE".
         epochs : int
             Number of epochs to train the model.
+        optimizer: str, optional
+            Name of the tf.keras.optimizers to be used if one is used, by default None
+        add_exit_choice : bool, optional
+            Whether or not to add an exit choice, by default False
+        tolerance: float, optional
+            Tolerance for the L-BFGS optimizer if applied, by default 1e-6
         """
         self.n_latent_classes = n_latent_classes
         if isinstance(model_parameters, list):
@@ -779,7 +788,9 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
         self.fit_method = fit_method
 
         self.epochs = epochs
-        self.normalize_non_buy = False
+        self.add_exit_choice = add_exit_choice
+        self.tolerance = tolerance
+        self.optimizer = optimizer
 
         self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
 
@@ -792,9 +803,12 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
         self.latent_logits = init_logit
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
-        if self.fit_method == "EM":
+        if self.fit_method.lower() == "em":
             self.fit = self._em_fit
             self.minf = np.log(1e-3)
+        elif self.fit_method.lower() == "mle":
+            if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
+                self.fit = self._fit_with_lbfgs
 
     @tf.function
     def batch_predict(
@@ -859,8 +873,8 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
                 axis=-1,
             )
             probabilities.append(class_probabilities * latent_probabilities[i])
+        # Summing over the latent classes
         probabilities = tf.reduce_sum(probabilities, axis=0)
-        tf.print("Probas", probabilities[:4])
 
         # Compute loss from probabilities & actual choices
         # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)
@@ -876,7 +890,6 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
                 sample_weight=sample_weight,
             ),
         }
-        tf.print(batch_loss)
         return batch_loss, probabilities
 
     def compute_batch_utility(
@@ -887,19 +900,39 @@ class BaseMixtureModel(object):  # TODO: should inherit ChoiceModel ?
         contexts_items_availabilities,
         choices,
     ):
-        """_summary_.
+        """Latent class computation of utility.
+
+        It computes the utility for each of the latent models and stores them in a list.
 
         Parameters
         ----------
-        args : _type_
-            _description_
+        fixed_items_features : tuple of np.ndarray
+            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
+            constant/fixed features.
+            Shape must be (n_items, n_items_features)
+        contexts_features : tuple of np.ndarray (contexts_features)
+            a batch of contexts features
+            Shape must be (n_contexts, n_contexts_features)
+        contexts_items_features : tuple of np.ndarray (contexts_items_features)
+            a batch of contexts items features
+            Shape must be (n_contexts, n_contexts_items_features)
+        contexts_items_availabilities : np.ndarray
+            A batch of contexts items availabilities
+            Shape must be (n_contexts, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_contexts, )
 
         Returns:
         --------
-        _type_
-            _description_
+        list of np.ndarray
+            List of:
+                Utility of each product for each context.
+                Shape must be (n_contexts, n_items)
+            for each of the latent models.
         """
         utilities = []
+        # Iterates over latent models
         for model in self.models:
             utilities.append(
                 model.compute_batch_utility(
