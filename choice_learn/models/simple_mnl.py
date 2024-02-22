@@ -41,10 +41,18 @@ class SimpleMNL(ChoiceModel):
     ):
         """Instantiate the model from ModelSpecification object.
 
-        Paramters
+        Parameters
         --------
-        n_weights: int
-            Number of weights to be estimated. Corresponds to the number of features.
+        Parameters
+        ----------
+        n_items : int
+            Number of items/aternatives to consider.
+        n_fixed_items_features : int
+            Number of fixed items features.
+        n_contexts_features : int
+            Number of contexts features
+        n_contexts_items_features : int
+            Number of contexts items features
 
         Returns:
         --------
