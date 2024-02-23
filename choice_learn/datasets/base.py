@@ -374,7 +374,7 @@ def load_heating(
     return_desc=False,
     to_wide=False,
 ):
-    """Load and return the ModeCanada dataset from Koppleman et al. (1993).
+    """Load and return the Heating dataset from Koppleman et al. (1993).
 
     Parameters
     ----------
@@ -421,4 +421,53 @@ def load_heating(
     )
     return ChoiceDataset(
         contexts_features=contexts, contexts_items_features=contexts_items, choices=choices
+    )
+
+
+def load_electricity(
+    as_frame=False,
+    return_desc=False,
+    to_wide=False,
+):
+    """Load and return the Electricity dataset from Koppleman et al. (1993).
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded ModeCanada dataset
+    """
+    _ = to_wide
+    data_file_name = "electricity.csv.gz"
+    names, data = load_gzip(data_file_name)
+
+    elec_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    elec_df.choice = elec_df.choice.astype(int)
+    elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
+        ["pf", "cl", "loc", "wk", "tod", "seas"]
+    ].astype(float)
+
+    if return_desc:
+        # TODO
+        pass
+
+    if as_frame:
+        return elec_df
+
+    return ChoiceDataset.from_single_long_df(
+        df=elec_df,
+        contexts_items_features_columns=["pf", "cl", "loc", "wk", "tod", "seas"],
+        items_id_column="alt",
+        contexts_id_column="chid",
+        choice_mode="one_zero",
     )
