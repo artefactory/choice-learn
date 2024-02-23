@@ -108,6 +108,23 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_contexts_items_features=n_contexts_items_features,
         )
 
+    def fit(self, dataset, **kwargs):
+        """Fit the model to the dataset.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            Dataset to fit the model to.
+        """
+        if not self.instantiated:
+            self.instantiate(
+                n_items=dataset.get_n_items(),
+                n_fixed_items_features=dataset.get_n_fixed_items_features(),
+                n_contexts_features=dataset.get_n_contexts_features(),
+                n_contexts_items_features=dataset.get_n_contexts_items_features(),
+            )
+        super().fit(dataset, **kwargs)
+
 
 class LatentClassConditionalMNL(BaseLatentClassModel):
     """Latent Class for ConditionalMNL."""

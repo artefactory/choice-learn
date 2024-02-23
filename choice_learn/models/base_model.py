@@ -797,6 +797,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         self.lr = lr
 
         self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
+        self.instantiated = False
 
     def instantiate(self):
         """Instantiation."""
@@ -806,13 +807,6 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         )
         self.latent_logits = init_logit
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
-
-        if self.fit_method.lower() == "em":
-            self.fit = self._em_fit
-            self.minf = np.log(1e-3)
-        elif self.fit_method.lower() == "mle":
-            if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
-                self.fit = self._fit_with_lbfgs
 
     @tf.function
     def batch_predict(
@@ -948,6 +942,37 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
                 )
             )
         return utilities
+
+    def fit(self, dataset, sample_weight=None, verbose=0):
+        """Fit the model on a ChoiceDataset.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            Dataset to be used for coefficients estimations
+        sample_weight : np.ndarray, optional
+            sample weights to apply, by default None
+        verbose : int, optional
+            print level, for debugging, by default 0
+
+        Returns:
+        --------
+        dict
+            Fit history
+        """
+        if self.fit_method.lower() == "em":
+            self.minf = np.log(1e-3)
+            return self._em_fit(dataset=dataset, sample_weight=sample_weight, verbose=verbose)
+
+        if self.fit_method.lower() == "mle":
+            if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
+                return self._fit_with_lbfgs(
+                    dataset=dataset, sample_weight=sample_weight, verbose=verbose
+                )
+
+            return self._fit_normal(dataset=dataset, sample_weight=sample_weight, verbose=verbose)
+
+        raise ValueError(f"Fit method not implemented: {self.fit_method}")
 
     def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
         """Evaluates the model for each context and each product of a ChoiceDataset.
