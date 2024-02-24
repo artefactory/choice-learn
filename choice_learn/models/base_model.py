@@ -1190,6 +1190,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             print("Algorithm converged before reaching max iterations:", results[0].numpy())
         return func.history
 
+    def _gd_train_step(self, dataset, sample_weight=None):
+        pass
+
     def _nothing(self, inputs):
         """_summary_.
 
