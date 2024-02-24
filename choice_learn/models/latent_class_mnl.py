@@ -187,7 +187,11 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         super().__init__(model_class=ConditionalMNL, model_params=model_params, **kwargs)
 
     def instantiate_latent_models(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+            self,
+        n_items,
+        items_features_names,
+        contexts_features_names,
+        contexts_items_features_names,
     ):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
@@ -195,21 +199,33 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         ----------
         n_items : int
             Number of items/aternatives to consider.
-        n_fixed_items_features : int
-            Number of fixed items features.
-        n_contexts_features : int
-            Number of contexts features
-        n_contexts_items_features : int
-            Number of contexts items features
+        items_features_names: str,
+            Names of fixed_items_features
+        contexts_features_names: str,
+            Names of contexts features
+        contexts_items_features_names: str,
+            Names of contexts items features
         """
-        for model in self.models:
-            model.indexes, model.weights = model.instantiate(
-                n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
-            )
-            model.instantiated = True
+        if isinstance(self.params, ModelSpecification):
+            for model in self.models:
+                model.params = self.params
+                model.instantiate_from_specifications()
+        else:
+            for model in self.models:
+                model.params = self.params
+                model.indexes, model.weights = model.instantiate(
+                    num_items=n_items, items_features_names=items_features_names,
+                    contexts_features_names=contexts_features_names,
+                    contexts_items_features_names=contexts_items_features_names
+                )
+        model.instantiated = True
 
     def instantiate(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+            self,
+        n_items,
+        items_features_names,
+        contexts_features_names,
+        contexts_items_features_names,
     ):
         """Instantiation of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
@@ -221,9 +237,9 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
 
         self.instantiate_latent_models(
             n_items=n_items,
-            n_fixed_items_features=n_fixed_items_features,
-            n_contexts_features=n_contexts_features,
-            n_contexts_items_features=n_contexts_items_features,
+            items_features_names=items_features_names,
+            contexts_features_names=contexts_features_names,
+            contexts_items_features_names=contexts_items_features_names,
         )
 
     def add_coefficients(
@@ -297,3 +313,20 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             items_indexes=items_indexes,
             items_names=items_names,
         )
+
+    def fit(self, dataset, **kwargs):
+        """Fit the model to the dataset.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            Dataset to fit the model to.
+        """
+        if not self.instantiated:
+            self.instantiate(
+                n_items=dataset.get_n_items(),
+                n_fixed_items_features=dataset.get_n_fixed_items_features(),
+                n_contexts_features=dataset.get_n_contexts_features(),
+                n_contexts_items_features=dataset.get_n_contexts_items_features(),
+            )
+        super().fit(dataset, **kwargs)
