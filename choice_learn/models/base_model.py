@@ -962,6 +962,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         """
         if self.fit_method.lower() == "em":
             self.minf = np.log(1e-3)
+            print("Expectation-Maximization estimation algorithm not well implemented yet.")
             return self._em_fit(dataset=dataset, sample_weight=sample_weight, verbose=verbose)
 
         if self.fit_method.lower() == "mle":
