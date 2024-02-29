@@ -176,7 +176,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         self.lr = lr
 
         model_params = {
-            "params": self.params,
+            "parameters": self.params,
             "add_exit_choice": self.add_exit_choice,
             "optimizer": self.optimizer,
             "tolerance": self.tolerance,
@@ -220,7 +220,11 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         if isinstance(self.params, ModelSpecification):
             for model in self.models:
                 model.params = self.params
-                model.instantiate_from_specifications()
+                model.weights = model.instantiate_from_specifications()
+
+                model._items_features_names = items_features_names
+                model._contexts_features_names = contexts_features_names
+                model._contexts_items_features_names = contexts_items_features_names
         else:
             for model in self.models:
                 model.params = self.params
@@ -337,8 +341,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         if not self.instantiated:
             self.instantiate(
                 n_items=dataset.get_n_items(),
-                n_fixed_items_features=dataset.get_n_fixed_items_features(),
-                n_contexts_features=dataset.get_n_contexts_features(),
-                n_contexts_items_features=dataset.get_n_contexts_items_features(),
+                items_features_names=dataset.fixed_items_features_names,
+                contexts_features_names=dataset.contexts_features_names,
+                contexts_items_features_names=dataset.contexts_items_features_names,
             )
         return super().fit(dataset, **kwargs)
