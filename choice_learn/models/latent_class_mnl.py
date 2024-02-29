@@ -123,7 +123,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
                 n_contexts_features=dataset.get_n_contexts_features(),
                 n_contexts_items_features=dataset.get_n_contexts_items_features(),
             )
-        super().fit(dataset, **kwargs)
+        return super().fit(dataset, **kwargs)
 
 
 class LatentClassConditionalMNL(BaseLatentClassModel):
@@ -168,7 +168,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         """
         self.n_latent_classes = n_latent_classes
         self.fit_method = fit_method
-        self.parameters = parameters
+        self.params = parameters
         self.epochs = epochs
         self.add_exit_choice = add_exit_choice
         self.tolerance = tolerance
@@ -176,7 +176,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         self.lr = lr
 
         model_params = {
-            "params": self.parameters,
+            "params": self.params,
             "add_exit_choice": self.add_exit_choice,
             "optimizer": self.optimizer,
             "tolerance": self.tolerance,
@@ -184,7 +184,18 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             "epochs": self.epochs,
         }
 
-        super().__init__(model_class=ConditionalMNL, model_params=model_params, **kwargs)
+        super().__init__(
+            model_class=ConditionalMNL,
+            model_parameters=model_params,
+            n_latent_classes=n_latent_classes,
+            fit_method=fit_method,
+            epochs=epochs,
+            add_exit_choice=add_exit_choice,
+            tolerance=tolerance,
+            optimizer=optimizer,
+            lr=lr,
+            **kwargs,
+        )
 
     def instantiate_latent_models(
         self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
@@ -297,3 +308,20 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             items_indexes=items_indexes,
             items_names=items_names,
         )
+
+    def fit(self, dataset, **kwargs):
+        """Fit the model to the dataset.
+
+        Parameters
+        ----------
+        dataset : ChoiceDataset
+            Dataset to fit the model to.
+        """
+        if not self.instantiated:
+            self.instantiate(
+                n_items=dataset.get_n_items(),
+                n_fixed_items_features=dataset.get_n_fixed_items_features(),
+                n_contexts_features=dataset.get_n_contexts_features(),
+                n_contexts_items_features=dataset.get_n_contexts_items_features(),
+            )
+        return super().fit(dataset, **kwargs)
