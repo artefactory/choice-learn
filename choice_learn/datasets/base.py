@@ -390,7 +390,7 @@ def load_heating(
     Returns:
     --------
     ChoiceDataset
-        Loaded ModeCanada dataset
+        Loaded Heating dataset
     """
     _ = to_wide
     data_file_name = "heating_data.csv.gz"
@@ -445,7 +445,7 @@ def load_electricity(
     Returns:
     --------
     ChoiceDataset
-        Loaded ModeCanada dataset
+        Loaded Electricity dataset
     """
     _ = to_wide
     data_file_name = "electricity.csv.gz"

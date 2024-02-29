@@ -198,7 +198,11 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         )
 
     def instantiate_latent_models(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+        self,
+        n_items,
+        items_features_names,
+        contexts_features_names,
+        contexts_items_features_names,
     ):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
@@ -206,21 +210,34 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         ----------
         n_items : int
             Number of items/aternatives to consider.
-        n_fixed_items_features : int
-            Number of fixed items features.
-        n_contexts_features : int
-            Number of contexts features
-        n_contexts_items_features : int
-            Number of contexts items features
+        items_features_names: str,
+            Names of fixed_items_features
+        contexts_features_names: str,
+            Names of contexts features
+        contexts_items_features_names: str,
+            Names of contexts items features
         """
-        for model in self.models:
-            model.indexes, model.weights = model.instantiate(
-                n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
-            )
-            model.instantiated = True
+        if isinstance(self.params, ModelSpecification):
+            for model in self.models:
+                model.params = self.params
+                model.instantiate_from_specifications()
+        else:
+            for model in self.models:
+                model.params = self.params
+                model.indexes, model.weights = model.instantiate(
+                    num_items=n_items,
+                    items_features_names=items_features_names,
+                    contexts_features_names=contexts_features_names,
+                    contexts_items_features_names=contexts_items_features_names,
+                )
+        model.instantiated = True
 
     def instantiate(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+        self,
+        n_items,
+        items_features_names,
+        contexts_features_names,
+        contexts_items_features_names,
     ):
         """Instantiation of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
@@ -232,9 +249,9 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
 
         self.instantiate_latent_models(
             n_items=n_items,
-            n_fixed_items_features=n_fixed_items_features,
-            n_contexts_features=n_contexts_features,
-            n_contexts_items_features=n_contexts_items_features,
+            items_features_names=items_features_names,
+            contexts_features_names=contexts_features_names,
+            contexts_items_features_names=contexts_items_features_names,
         )
 
     def add_coefficients(
