@@ -808,7 +808,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         self.latent_logits = init_logit
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
-    @tf.function
+    # @tf.function
     def batch_predict(
         self,
         fixed_items_features,
@@ -857,6 +857,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             contexts_items_availabilities,
             choices,
         )
+
         latent_probabilities = tf.concat(
             [[tf.constant(1.0)], tf.math.exp(self.latent_logits)], axis=0
         )
@@ -932,15 +933,14 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         utilities = []
         # Iterates over latent models
         for model in self.models:
-            utilities.append(
-                model.compute_batch_utility(
-                    fixed_items_features,
-                    contexts_features,
-                    contexts_items_features,
-                    contexts_items_availabilities,
-                    choices,
-                )
+            model_utilities = model.compute_batch_utility(
+                fixed_items_features=fixed_items_features,
+                contexts_features=contexts_features,
+                contexts_items_features=contexts_items_features,
+                contexts_items_availabilities=contexts_items_availabilities,
+                choices=choices,
             )
+            utilities.append(model_utilities)
         return utilities
 
     def fit(self, dataset, sample_weight=None, verbose=0):
@@ -1079,7 +1079,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             params = tf.dynamic_partition(params_1d, part, n_tensors)
             for i, (shape, param) in enumerate(zip(shapes, params)):
                 if w_to_model[i] != -1:
-                    self.models[w_to_model[i]].weights[w_to_model_indexes[j]].assign(
+                    self.models[w_to_model[i]].weights[w_to_model_indexes[i]].assign(
                         tf.reshape(param, shape)
                     )
                 else:
@@ -1112,7 +1112,6 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
                 loss_value = self.evaluate(
                     dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
                 )
-
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, weights)
             grads = tf.dynamic_stitch(idx, grads)
@@ -1176,9 +1175,10 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             value_and_gradients_function=func,
             initial_position=init_params,
             max_iterations=epochs,
-            tolerance=self.tolerance,
-            f_absolute_tolerance=-1,
+            tolerance=-1,
+            f_absolute_tolerance=self.tolerance,
             f_relative_tolerance=-1,
+            x_tolerance=-1,
         )
 
         # after training, the final optimized parameters are still in results.position
@@ -1310,3 +1310,37 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
                 print("Nan in logits")
                 break
         return hist_logits, hist_loss
+
+    def predict_probas(self, choice_dataset, batch_size=-1):
+        """Predicts the choice probabilities for each context and each product of a ChoiceDataset.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset on which to apply to prediction
+        batch_size : int, optional
+            Batch size to use for the prediction, by default -1
+
+        Returns:
+        --------
+        np.ndarray (n_contexts, n_items)
+            Choice probabilties for each context and each product
+        """
+        stacked_probabilities = []
+        for (
+            fixed_items_features,
+            contexts_features,
+            contexts_items_features,
+            contexts_items_availabilities,
+            choices,
+        ) in choice_dataset.iter_batch(batch_size=batch_size):
+            _, probabilities = self.batch_predict(
+                fixed_items_features=fixed_items_features,
+                contexts_features=contexts_features,
+                contexts_items_features=contexts_items_features,
+                contexts_items_availabilities=contexts_items_availabilities,
+                choices=choices,
+            )
+            stacked_probabilities.append(probabilities)
+
+        return tf.concat(stacked_probabilities, axis=0)
