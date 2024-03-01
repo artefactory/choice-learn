@@ -1,4 +1,5 @@
 """Latent Class MNL models."""
+import copy
 
 import tensorflow as tf
 
@@ -219,7 +220,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         """
         if isinstance(self.params, ModelSpecification):
             for model in self.models:
-                model.params = self.params
+                model.params = copy.deepcopy(self.params)
                 model.weights = model.instantiate_from_specifications()
 
                 model._items_features_names = items_features_names

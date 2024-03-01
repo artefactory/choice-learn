@@ -826,6 +826,7 @@ class ConditionalMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         if isinstance(self.params, ModelSpecification):
+            print("Using specification")
             return self.compute_batch_utility_from_specification(
                 fixed_items_features=fixed_items_features,
                 contexts_features=contexts_features,
@@ -1012,7 +1013,6 @@ class ConditionalMNL(ChoiceModel):
         choice_dataset,
         epochs=None,
         sample_weight=None,
-        tolerance=1e-8,
         get_report=False,
         **kwargs,
     ):
@@ -1051,7 +1051,6 @@ class ConditionalMNL(ChoiceModel):
         fit = super()._fit_with_lbfgs(
             dataset=choice_dataset,
             epochs=epochs,
-            tolerance=tolerance,
             sample_weight=sample_weight,
             **kwargs,
         )
