@@ -27,8 +27,8 @@ class AssortmentOptimizer(object):
                 f"You should provide as many utilities as itemwise values.\
                              Found {len(utilities)} and {len(itemwise_values)} instead."
             )
-        self.utilities = utilities
-        self.itemwise_values = itemwise_values
+        self.utilities = np.concatenate([[1], utilities], axis=0)
+        self.itemwise_values = np.concatenate([[0], itemwise_values], axis=0)
         self.assortment_size = assortment_size
 
         self.n_items = len(utilities)
@@ -46,7 +46,7 @@ class AssortmentOptimizer(object):
         # Create a new model
         solver = gp.Model("Assortment_IP")
         solver.ModelSense = -1
-        solver.setParam("OutputFlag", False)
+        solver.setParam("OutputFlag", True)
 
         # Create variables
         y = {}
@@ -65,8 +65,8 @@ class AssortmentOptimizer(object):
 
         charnes_cooper = gp.quicksum(y[j] for j in range(self.n_items + 1))
         solver.addConstr(charnes_cooper == 1)
-        assort_size = gp.quicksum(y[j] for j in range(1, self.n_items + 1))
-        solver.addConstr(assort_size == self.assortment_size * y[0])
+        # assort_size = gp.quicksum(y[j] for j in range(1, self.n_items + 1))
+        # solver.addConstr(assort_size == self.assortment_size * y[0])
 
         # Integrate constraints
         solver.update()
