@@ -102,6 +102,8 @@ class SimpleMNL(ChoiceModel):
             indexes["intercept"] = len(weights) - 1
 
         self.instantiated = True
+        self.indexes = indexes
+        self.weights = weights
         return indexes, weights
 
     def compute_batch_utility(

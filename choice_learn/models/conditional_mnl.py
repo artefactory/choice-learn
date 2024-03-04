@@ -324,6 +324,7 @@ class ConditionalMNL(ChoiceModel):
 
             ## Fill items_indexes here
             # Better organize feat_to_weight and specifications
+        self.weights = weights
         return weights
 
     def _store_dataset_features_names(self, dataset):
@@ -789,6 +790,7 @@ class ConditionalMNL(ChoiceModel):
             self.instantiated = True
         else:
             raise ValueError("No weights instantiated")
+        self.weights = weights
         return weights
 
     def compute_batch_utility(

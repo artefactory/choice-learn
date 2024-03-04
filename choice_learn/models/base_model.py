@@ -799,7 +799,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
         self.instantiated = False
 
-    def instantiate(self):
+    def instantiate(self, **kwargs):
         """Instantiation."""
         init_logit = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
@@ -807,6 +807,8 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         )
         self.latent_logits = init_logit
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
+        for model in self.models:
+            model.instantiate(**kwargs)
 
     # @tf.function
     def batch_predict(
