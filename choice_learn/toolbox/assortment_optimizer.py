@@ -10,7 +10,7 @@ TODO 2: ADD easy integration of additionnal constraints
 class AssortmentOptimizer(object):
     """Base class for assortment optimization."""
 
-    def __init__(self, utilities, itemwise_values, assortment_size):
+    def __init__(self, utilities, itemwise_values, assortment_size, outside_option_given=False):
         """Initializes the AssortmentOptimizer object.
 
         Parameters
@@ -21,17 +21,20 @@ class AssortmentOptimizer(object):
             List of to-be-optimized values for each item, e.g. prices.
         assortment_size : int
             maximum size of the requested assortment.
+        outside_option_given : bool
+            Whether the outside option is given or not (and thus is automatically added).
         """
         if len(utilities) != len(itemwise_values):
             raise ValueError(
                 f"You should provide as many utilities as itemwise values.\
                              Found {len(utilities)} and {len(itemwise_values)} instead."
             )
-        self.utilities = np.concatenate([[np.exp(0.0)], utilities], axis=0)
-        self.itemwise_values = np.concatenate([[0.0], itemwise_values], axis=0)
+        self.outside_option_given = outside_option_given
+        if not self.outside_option_given:
+            self.utilities = np.concatenate([[np.exp(0.0)], utilities], axis=0)
+            self.itemwise_values = np.concatenate([[0.0], itemwise_values], axis=0)
+        self.n_items = len(self.utilities) - 1
         self.assortment_size = assortment_size
-
-        self.n_items = len(utilities)
 
         self.solver = self.base_instantiate()
         self.set_base_constraints()
@@ -118,9 +121,15 @@ class AssortmentOptimizer(object):
         self.solver.optimize()
         self.status = self.solver.Status
 
-        assortment = np.zeros(self.n_items)
-        for i in range(1, self.n_items + 1):
-            if self.y[i].x > 0:
-                assortment[i] = 1
+        if self.outside_option_given:
+            assortment = np.zeros(self.n_items + 1)
+            for i in range(0, self.n_items + 1):
+                if self.y[i].x > 0:
+                    assortment[i - 1] = 1
+        else:
+            assortment = np.zeros(self.n_items)
+            for i in range(1, self.n_items + 1):
+                if self.y[i].x > 0:
+                    assortment[i] = 1
 
         return assortment, self.solver.objVal
