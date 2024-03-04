@@ -47,7 +47,7 @@ class AssortmentOptimizer(object):
         # Create a new model
         solver = gp.Model("Assortment_IP")
         solver.ModelSense = -1
-        solver.setParam("OutputFlag", True)
+        solver.setParam("OutputFlag", False)
 
         # Create variables
         y = {}
@@ -118,9 +118,9 @@ class AssortmentOptimizer(object):
         self.solver.optimize()
         self.status = self.solver.Status
 
-        assortment = np.zeros(self.n_items + 1)
+        assortment = np.zeros(self.n_items)
         for i in range(1, self.n_items + 1):
             if self.y[i].x > 0:
                 assortment[i] = 1
 
-        return assortment
+        return assortment, self.solver.objVal
