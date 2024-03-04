@@ -837,6 +837,8 @@ class DistribMimickingModel(ChoiceModel):
 
 
 class BaseMixtureModel(object):
+    """Base Mixture Class."""
+
     def __init__(
         self,
         latent_classes,
@@ -845,6 +847,7 @@ class BaseMixtureModel(object):
         fit_method,
         epochs,
     ):
+        """Base Mixture Class."""
         self.latent_classes = latent_classes
         self.model_parameters = model_parameters
         self.model_class = model_class
@@ -853,12 +856,14 @@ class BaseMixtureModel(object):
         self.epochs = epochs
 
     def instantiate(self):
+        """Instantiate."""
         self.latent_logit = tf.Variable(tf.ones(self.latent_classes)) / self.latent_classes
         self.models = [
             self.model_class(**self.model_parameters) for _ in range(self.latent_classes)
         ]
 
     def _em_fit(self, dataset):
+        """EMFIT."""
         for model in self.models:
             # model.instantiate()
             model.fit(dataset)
