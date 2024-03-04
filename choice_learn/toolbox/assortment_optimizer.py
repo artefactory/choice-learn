@@ -27,13 +27,14 @@ class AssortmentOptimizer(object):
                 f"You should provide as many utilities as itemwise values.\
                              Found {len(utilities)} and {len(itemwise_values)} instead."
             )
-        self.utilities = np.concatenate([[1], utilities], axis=0)
-        self.itemwise_values = np.concatenate([[0], itemwise_values], axis=0)
+        self.utilities = np.concatenate([[np.exp(0.0)], utilities], axis=0)
+        self.itemwise_values = np.concatenate([[0.0], itemwise_values], axis=0)
         self.assortment_size = assortment_size
 
         self.n_items = len(utilities)
 
         self.solver = self.base_instantiate()
+        self.set_base_constraints()
 
     def base_instantiate(self):
         """Base instantiation of the solver.
@@ -59,18 +60,35 @@ class AssortmentOptimizer(object):
         # Integrate new variables
         solver.update()
 
-        # Add constraints
-        for j in range(1, self.n_items + 1):
-            solver.addConstr(y[j] * self.utilities[0] <= y[0] * self.utilities[j])
+        return solver
 
-        charnes_cooper = gp.quicksum(y[j] for j in range(self.n_items + 1))
-        solver.addConstr(charnes_cooper == 1)
-        # assort_size = gp.quicksum(y[j] for j in range(1, self.n_items + 1))
-        # solver.addConstr(assort_size == self.assortment_size * y[0])
+    def set_base_constraints(self):
+        """Functions to set LP base constraints.
+
+        In particular, ensures Charnes-Cooper transformation constraints
+        and assortment size constraint.
+        """
+        # Base Charnes-Cooper Constraints for Integers
+        for j in range(1, self.n_items + 1):
+            self.solver.addConstr(self.y[j] <= self.y[0])
+
+        # Base Charnes-Cooper Constraint for Normalization
+        charnes_cooper = gp.quicksum(self.y[j] for j in range(self.n_items + 1))
+        self.solver.addConstr(charnes_cooper == 1)
+
+        # Assortment size constraint
+        if self.assortment_size is not None:
+            self.solver.addConstr(
+                gp.quicksum([self.y[j] for j in range(1, self.n_items)])
+                <= self.assortment_size * self.y[0]
+            )
+            self.solver.addConstr(
+                gp.quicksum([-self.y[j] for j in range(1, self.n_items)])
+                <= -self.assortment_size * self.y[0]
+            )
 
         # Integrate constraints
-        solver.update()
-        return solver
+        self.solver.update()
 
     def set_objective_function(self, itemwise_values):
         """Function to define the objective function to maximize with the assortment.
@@ -101,7 +119,7 @@ class AssortmentOptimizer(object):
         self.status = self.solver.Status
 
         assortment = np.zeros(self.n_items + 1)
-        for i in range(self.n_items + 1):
+        for i in range(1, self.n_items + 1):
             if self.y[i].x > 0:
                 assortment[i] = 1
 
