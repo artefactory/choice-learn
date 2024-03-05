@@ -614,7 +614,7 @@ class ChoiceDataset(object):
         """
         return len(self.choices)
 
-    def get_num_items(self):
+    def get_n_items(self):
         """Method to access the total number of different items.
 
         Returns:
@@ -624,7 +624,7 @@ class ChoiceDataset(object):
         """
         return self.base_num_items
 
-    def get_num_choices(self):
+    def get_n_choices(self):
         """Method to access the total number of different choices.
 
         Redundant with __len__ method.
@@ -689,7 +689,7 @@ class ChoiceDataset(object):
                 sess_df.columns = sess_df.loc[items_id_column]
                 if features is not None:
                     contexts_items_features.append(sess_df[items_index].loc[features].T.values)
-                contexts_items_availabilities.append(np.ones(len(items_index)))
+                contexts_items_availabilities.append(np.ones(len(items_index)).astype("float32"))
             else:
                 sess_feats = []
                 sess_av = []
@@ -806,9 +806,15 @@ class ChoiceDataset(object):
         else:
             contexts_items_availabilities = None
 
-        choices = df[choices_column]
+        choices = df[choices_column].to_numpy()
+        print("choice", choices)
         if choice_mode == "items_id":
+            if items_id is None:
+                raise ValueError("items_id must be given to use choice_mode 'items_id'")
+            items_id = np.array(items_id)
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
+            if choices.shape[0] == 0:
+                raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
             fixed_items_features=fixed_items_features,
@@ -940,7 +946,7 @@ class ChoiceDataset(object):
         print("%=====================================================================%")
         print("%%% Summary of the dataset:")
         print("%=====================================================================%")
-        print("Number of items:", self.get_num_items())
+        print("Number of items:", self.get_n_items())
         print(
             "Number of choices:",
             len(self),
@@ -1038,7 +1044,9 @@ class ChoiceDataset(object):
                 )
 
             if self.contexts_items_availabilities is None:
-                contexts_items_availabilities = np.ones((len(choices_indexes), self.base_num_items))
+                contexts_items_availabilities = np.ones(
+                    (len(choices_indexes), self.base_num_items)
+                ).astype("float32")
             else:
                 contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
                 # .astype(self._return_types[3])
@@ -1179,7 +1187,7 @@ class ChoiceDataset(object):
             )
 
         if self.contexts_items_availabilities is None:
-            contexts_items_availabilities = np.ones((self.base_num_items))
+            contexts_items_availabilities = np.ones((self.base_num_items)).astype("float32")
         else:
             contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
 
@@ -1299,41 +1307,67 @@ class ChoiceDataset(object):
         elif isinstance(choices_indexes, slice):
             return self.__getitem__(list(range(*choices_indexes.indices(len(self.choices)))))
 
-        if self.fixed_items_features[0] is None:
-            fixed_items_features = None
-        else:
+        try:
+            if self.fixed_items_features[0] is None:
+                fixed_items_features = None
+            else:
+                fixed_items_features = self.fixed_items_features
+        except TypeError:
             fixed_items_features = self.fixed_items_features
-        if self.contexts_features[0] is None:
+
+        try:
+            if self.contexts_features[0] is None:
+                contexts_features = None
+            else:
+                contexts_features = tuple(
+                    self.contexts_features[i][choices_indexes]
+                    for i in range(len(self.contexts_features))
+                )
+        except TypeError:
             contexts_features = None
-        else:
-            contexts_features = tuple(
-                self.contexts_features[i][choices_indexes]
-                for i in range(len(self.contexts_features))
-            )
-        if self.contexts_items_features[0] is None:
+
+        try:
+            if self.contexts_items_features[0] is None:
+                contexts_items_features = None
+            else:
+                contexts_items_features = tuple(
+                    self.contexts_items_features[i][choices_indexes]
+                    for i in range(len(self.contexts_items_features))
+                )
+        except TypeError:
             contexts_items_features = None
-        else:
-            contexts_items_features = tuple(
-                self.contexts_items_features[i][choices_indexes]
-                for i in range(len(self.contexts_items_features))
-            )
-        if self.fixed_items_features_names[0] is None:
+
+        try:
+            if self.fixed_items_features_names[0] is None:
+                fixed_items_features_names = None
+            else:
+                fixed_items_features_names = self.fixed_items_features_names
+        except TypeError:
             fixed_items_features_names = None
-        else:
-            fixed_items_features_names = self.fixed_items_features_names
-        if self.contexts_features_names[0] is None:
+        try:
+            if self.contexts_features_names[0] is None:
+                contexts_features_names = None
+            else:
+                contexts_features_names = self.contexts_features_names
+        except TypeError:
             contexts_features_names = None
-        else:
-            contexts_features_names = self.contexts_features_names
-        if self.contexts_items_features_names[0] is None:
+        try:
+            if self.contexts_items_features_names[0] is None:
+                contexts_items_features_names = None
+            else:
+                contexts_items_features_names = self.contexts_items_features_names
+        except TypeError:
             contexts_items_features_names = None
-        else:
-            contexts_items_features_names = self.contexts_items_features_names
+
+        try:
+            contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
+        except TypeError:
+            contexts_items_availabilities = None
         return ChoiceDataset(
             fixed_items_features=fixed_items_features,
             contexts_features=contexts_features,
             contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=self.contexts_items_availabilities[choices_indexes],
+            contexts_items_availabilities=contexts_items_availabilities,
             choices=[self.choices[i] for i in choices_indexes],
             fixed_items_features_names=fixed_items_features_names,
             contexts_features_names=contexts_features_names,
@@ -1391,8 +1425,53 @@ class ChoiceDataset(object):
         Parameters
         ----------
         bool_list : list of boolean
-            list of booleans of length self.get_num_sessions() to filter sessions.
+            list of booleans of length self.get_n_contexts() to filter contexts.
             True to keep, False to discard.
         """
         indexes = [i for i, keep in enumerate(bool_list) if keep]
         return self[indexes]
+
+    def get_n_fixed_items_features(self):
+        """Method to access the number of fixed items features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.fixed_items_features is not None:
+            n_features = 0
+            for fixed_features in self.fixed_items_features:
+                n_features += fixed_features.shape[1]
+            return n_features
+        return 0
+
+    def get_n_contexts_features(self):
+        """Method to access the number of contexts features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.contexts_features is not None:
+            n_features = 0
+            for context_features in self.contexts_features:
+                n_features += context_features.shape[1]
+            return n_features
+        return 0
+
+    def get_n_contexts_items_features(self):
+        """Method to access the number of context items features.
+
+        Returns:
+        -------
+        int
+            number of fixed items features
+        """
+        if self.contexts_items_features is not None:
+            n_features = 0
+            for contexts_items_features in self.contexts_items_features:
+                n_features += contexts_items_features.shape[2]
+            return n_features
+        return 0
