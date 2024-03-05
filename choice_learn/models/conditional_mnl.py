@@ -828,7 +828,7 @@ class ConditionalMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         if isinstance(self.params, ModelSpecification):
-            print("Using specification")
+            print("Model in instantiated using manual specification")
             return self.compute_batch_utility_from_specification(
                 fixed_items_features=fixed_items_features,
                 contexts_features=contexts_features,

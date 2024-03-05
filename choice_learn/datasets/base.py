@@ -371,7 +371,6 @@ def load_modecanada(
 
 def load_heating(
     as_frame=False,
-    return_desc=False,
     to_wide=False,
 ):
     """Load and return the Heating dataset from Koppleman et al. (1993).
@@ -398,10 +397,6 @@ def load_heating(
 
     heating_df = pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
 
-    if return_desc:
-        # TODO
-        pass
-
     if as_frame:
         return heating_df
 
@@ -426,7 +421,6 @@ def load_heating(
 
 def load_electricity(
     as_frame=False,
-    return_desc=False,
     to_wide=False,
 ):
     """Load and return the Electricity dataset from Koppleman et al. (1993).
@@ -436,8 +430,6 @@ def load_electricity(
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
-    return_desc : bool, optional
-        Whether to return the description, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
         by default False (an thus retuned in long format).
@@ -456,10 +448,6 @@ def load_electricity(
     elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
         ["pf", "cl", "loc", "wk", "tod", "seas"]
     ].astype(float)
-
-    if return_desc:
-        # TODO
-        pass
 
     if as_frame:
         return elec_df
