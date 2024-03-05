@@ -48,7 +48,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - The Train dataset from Ben Akiva et al. (1993) [5](#citation)
   - The Heating & Electricity datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
   - The TaFeng dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
-  - 
+  -
 
 ### Models
 - Ready-to-use models:
