@@ -45,6 +45,9 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Ready-To-Use datasets:
   - SwissMetro from Bierlaire et al. (2001)
   - ModeCanada from Koppelman et al. (1993)
+  - The Train dataset from Ben Akiva et al. (1993) [5]
+  - The Heating & Electricity datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - The TaFeng dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
 
 ### Models
 - Ready to use models:
@@ -116,6 +119,8 @@ A detailed documentation of this project is available [here](https://artefactory
 
 ### Papers
 [1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad A.; Désir A. (2022)
+
+[5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva M; Bolduc D; Bradley M(1993)
 
 ### Code and Repositories
 - [PyLogit](https://github.com/timothyb0912/pylogit)
