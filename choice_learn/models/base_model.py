@@ -1299,6 +1299,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         """
         hist_logits = []
         hist_loss = []
+
         # Initialization
         for model in self.models:
             # model.instantiate()
