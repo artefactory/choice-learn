@@ -45,6 +45,10 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Ready-To-Use datasets:
   - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) from Bierlaire et al. (2001) [[2]](#citation)
   - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) from Koppelman et al. (1993) [[3]](#citation)
+  - The Train dataset from Ben Akiva et al. (1993) [5](#citation)
+  - The Heating & Electricity datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - The TaFeng dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
+  -
 
 ### Models
 - Ready-to-use models:
@@ -91,10 +95,12 @@ Choice-Learn requires the following:
 - Python (>=3.8)
 - NumPy (>=1.24)
 - pandas (>=1.5)
+
 For modelling you need:
 - TensorFlow (>=2.13)
-Finally, an optional requirement used for report and LBFG-s use is:
-- tensorflow_probability (>=0.20.1)
+
+Finally, an optional requirement used for report and LBFG-S optimization is:
+- TensorFlow Probability (>=0.20.1)
 
 ## Usage
 ```python
@@ -151,6 +157,7 @@ A detailed documentation of this project is available [here](https://artefactory
 [2][The Acceptance of Model Innovation: The Case of Swissmetro](https://www.researchgate.net/publication/37456549_The_acceptance_of_modal_innovation_The_case_of_Swissmetro), Bierlaire, M.; Axhausen, K., W.; Abay, G. (2001)\
 [3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)\
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
+[5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva M; Bolduc D; Bradley M(1993)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)

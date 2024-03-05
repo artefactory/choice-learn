@@ -324,6 +324,7 @@ class ConditionalMNL(ChoiceModel):
 
             ## Fill items_indexes here
             # Better organize feat_to_weight and specifications
+        self.weights = weights
         return weights
 
     def _store_dataset_features_names(self, dataset):
@@ -629,16 +630,18 @@ class ConditionalMNL(ChoiceModel):
         """
         # Possibility to stack weights to be faster ????
         if items_features_names is None:
-            items_features_names = []
+            items_features_names = [()]
         if contexts_features_names is None:
-            contexts_features_names = []
+            contexts_features_names = [()]
         if contexts_items_features_names is None:
-            contexts_items_features_names = []
+            contexts_items_features_names = [()]
         weights = []
         weights_count = 0
         self._items_features_names = []
         for feat_tuple in items_features_names:
             tuple_names = []
+            if feat_tuple is None:
+                feat_tuple = ()
             for feat in feat_tuple:
                 if feat in self.params.keys():
                     if self.params[feat] == "constant":
@@ -671,6 +674,8 @@ class ConditionalMNL(ChoiceModel):
 
         self._contexts_features_names = []
         for feat_tuple in contexts_features_names:
+            if feat_tuple is None:
+                feat_tuple = ()
             tuple_names = []
             for feat in feat_tuple:
                 if feat in self.params.keys():
@@ -706,6 +711,8 @@ class ConditionalMNL(ChoiceModel):
 
         self._contexts_items_features_names = []
         for feat_tuple in contexts_items_features_names:
+            if feat_tuple is None:
+                feat_tuple = ()
             tuple_names = []
             for feat in feat_tuple:
                 if feat in self.params.keys():
@@ -783,6 +790,7 @@ class ConditionalMNL(ChoiceModel):
             self.instantiated = True
         else:
             raise ValueError("No weights instantiated")
+        self.weights = weights
         return weights
 
     def compute_batch_utility(
@@ -820,6 +828,7 @@ class ConditionalMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         if isinstance(self.params, ModelSpecification):
+            print("Model in instantiated using manual specification")
             return self.compute_batch_utility_from_specification(
                 fixed_items_features=fixed_items_features,
                 contexts_features=contexts_features,
@@ -1001,7 +1010,14 @@ class ConditionalMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(self, choice_dataset, epochs=None, tolerance=1e-8, get_report=False):
+    def _fit_with_lbfgs(
+        self,
+        choice_dataset,
+        epochs=None,
+        sample_weight=None,
+        get_report=False,
+        **kwargs,
+    ):
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
@@ -1034,7 +1050,12 @@ class ConditionalMNL(ChoiceModel):
             self.instantiated = True
         if epochs is None:
             epochs = self.epochs
-        fit = super()._fit_with_lbfgs(choice_dataset, epochs, tolerance)
+        fit = super()._fit_with_lbfgs(
+            dataset=choice_dataset,
+            epochs=epochs,
+            sample_weight=sample_weight,
+            **kwargs,
+        )
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit
@@ -1113,7 +1134,7 @@ class ConditionalMNL(ChoiceModel):
                     probabilities = tf.nn.softmax(utilities, axis=-1)
                     loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                         y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=4),
+                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
                     )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
