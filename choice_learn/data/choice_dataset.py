@@ -806,9 +806,15 @@ class ChoiceDataset(object):
         else:
             contexts_items_availabilities = None
 
-        choices = df[choices_column]
+        choices = df[choices_column].to_numpy()
+        print("choice", choices)
         if choice_mode == "items_id":
+            if items_id is None:
+                raise ValueError("items_id must be given to use choice_mode 'items_id'")
+            items_id = np.array(items_id)
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
+            if choices.shape[0] == 0:
+                raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
             fixed_items_features=fixed_items_features,
