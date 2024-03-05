@@ -493,17 +493,30 @@ def load_train(
     names, data = load_gzip(data_file_name)
 
     train_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
-    train_df.choice = train_df.choice.astype(int)
-    train_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = train_df[
-        ["pf", "cl", "loc", "wk", "tod", "seas"]
-    ].astype(float)
 
     if return_desc:
         return desc
 
     if as_frame:
         return train_df
-    train_df["choice"] = train_df["choice"].apply(lambda row: row[-1], axis=1)
+    train_df["choice"] = train_df.apply(lambda row: row.choice[-1], axis=1)
+    train_df = train_df.rename(
+        columns={
+            "price1": "1_price",
+            "time1": "1_time",
+            "change1": "1_change",
+            "comfort1": "1_comfort",
+        }
+    )
+    train_df = train_df.rename(
+        columns={
+            "price2": "2_price",
+            "time2": "2_time",
+            "change2": "2_change",
+            "comfort2": "2_comfort",
+        }
+    )
+    print(train_df.head())
     return ChoiceDataset.from_single_wide_df(
         df=train_df,
         items_id=["1", "2"],
