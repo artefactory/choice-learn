@@ -999,7 +999,7 @@ class ConditionalMNL(ChoiceModel):
                 self._store_dataset_features_names(choice_dataset)
             else:
                 self.weights = self.instantiate(
-                    num_items=choice_dataset.get_num_items(),
+                    num_items=choice_dataset.get_n_items(),
                     items_features_names=choice_dataset.fixed_items_features_names,
                     contexts_features_names=choice_dataset.contexts_features_names,
                     contexts_items_features_names=choice_dataset.contexts_items_features_names,
@@ -1042,7 +1042,7 @@ class ConditionalMNL(ChoiceModel):
                 self._store_dataset_features_names(choice_dataset)
             else:
                 self.weights = self.instantiate(
-                    num_items=choice_dataset.get_num_items(),
+                    num_items=choice_dataset.get_n_items(),
                     items_features_names=choice_dataset.fixed_items_features_names,
                     contexts_features_names=choice_dataset.contexts_features_names,
                     contexts_items_features_names=choice_dataset.contexts_items_features_names,
