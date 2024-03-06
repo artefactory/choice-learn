@@ -45,10 +45,9 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Ready-To-Use datasets:
   - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) from Bierlaire et al. (2001) [[2]](#citation)
   - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) from Koppelman et al. (1993) [[3]](#citation)
-  - The Train dataset from Ben Akiva et al. (1993) [5](#citation)
-  - The Heating & Electricity datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
-  - The TaFeng dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
-  -
+  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset from Ben Akiva et al. (1993) [5](#citation)
+  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
 
 ### Models
 - Ready-to-use models:
@@ -62,10 +61,10 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class
 
-### Different tools (to come)
-- Standardization of evaluation protocols
+### Different tools
 - Assortment optimization from model
-- Interfaces
+- (WIP) Standardization of evaluation protocols
+- (WIP) Interfaces
 
 ## Getting Started - Fast Track
 
