@@ -121,15 +121,16 @@ class AssortmentOptimizer(object):
         self.solver.optimize()
         self.status = self.solver.Status
 
-        if self.outside_option_given:
-            assortment = np.zeros(self.n_items + 1)
-            for i in range(0, self.n_items + 1):
-                if self.y[i].x > 0:
-                    assortment[i - 1] = 1
-        else:
-            assortment = np.zeros(self.n_items)
-            for i in range(1, self.n_items + 1):
-                if self.y[i].x > 0:
-                    assortment[i] = 1
+        assortment = np.zeros(self.n_items + 1)
+        for i in range(0, self.n_items + 1):
+            if self.y[i].x > 0:
+                assortment[i] = 1
 
-        return assortment, self.solver.objVal
+        chosen_utilities = assortment * self.utilities
+        norm = np.sum(chosen_utilities)
+
+        recomputed_obj = np.sum(chosen_utilities * self.itemwise_values / norm)
+
+        if not self.outside_option_given:
+            assortment = assortment[1:]
+        return assortment, recomputed_obj
