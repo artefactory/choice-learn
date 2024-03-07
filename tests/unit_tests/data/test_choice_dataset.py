@@ -248,8 +248,8 @@ def test_shape():
         choices=choices,
     )
 
-    assert dataset.get_num_items() == 3
-    assert dataset.get_num_choices() == 3
+    assert dataset.get_n_items() == 3
+    assert dataset.get_n_choices() == 3
 
 
 def test_from_df():
