@@ -469,6 +469,7 @@ def load_modecanada(
 def load_heating(
     as_frame=False,
     to_wide=False,
+    return_desc=False,
 ):
     """Load and return the Heating dataset from Kenneth Train.
 
@@ -488,11 +489,19 @@ def load_heating(
     ChoiceDataset
         Loaded Heating dataset
     """
+    desc = """Kenneth Train's dataset containing data on choice of heating system in California
+    houses.
+    Description can be found at: https://rdrr.io/cran/mlogitBMA/man/heating.html
+
+    Train, K.E. (2003) Discrete Choice Methods with Simulation. Cambridge University Press."""
     _ = to_wide
     data_file_name = "heating_data.csv.gz"
     names, data = load_gzip(data_file_name)
 
     heating_df = pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
+
+    if return_desc:
+        return desc
 
     if as_frame:
         return heating_df
@@ -519,6 +528,7 @@ def load_heating(
 def load_electricity(
     as_frame=False,
     to_wide=False,
+    return_desc=False,
 ):
     """Load and return the Electricity dataset from Kenneth Train.
 
@@ -530,6 +540,8 @@ def load_electricity(
     to_wide : bool, optional
         Whether to return the dataset in wide format,
         by default False (an thus retuned in long format).
+    return_desc : bool, optional
+        Whether to return the description, by default False.
 
     Returns:
     --------
@@ -540,6 +552,29 @@ def load_electricity(
     data_file_name = "electricity.csv.gz"
     names, data = load_gzip(data_file_name)
 
+    description = """A sample of 2308 households in the United States.
+    - choice: the choice of the individual, one of 1, 2, 3, 4,
+    - id: the individual index,
+    - pfi: fixed price at a stated cents per kWh, with the price varying over suppliers and
+        experiments, for scenario i=(1, 2, 3, 4),
+    - cli: the length of contract that the supplier offered, in years (such as 1 year or 5 years.)
+        During this contract period, the supplier guaranteed the prices and the buyer would have to
+        pay a penalty if he/she switched to another supplier. The supplier could offer no
+        contractin which case either side could stop the agreement at any time. This is recorded
+        as a contract length of 0,
+    - loci: is the supplier a local company,
+    - wki: is the supplier a well-known company,
+    - todi: a time-of-day rate under which the price is 11 cents per kWh from 8am to 8pm and 5 cents
+        per kWh from 8pm to 8am. These TOD prices did not vary over suppliers or experiments:
+        whenever the supplier was said to offer TOD, the prices were stated as above.
+    - seasi: a seasonal rate under which the price is 10 cents per kWh in the summer, 8 cents per
+        kWh in the winter, and 6 cents per kWh in the spring and fall. Like TOD rates, these prices
+        did not vary. Note that the price is for the electricity only, not transmission and
+        distribution, which is supplied by the local regulated utility.
+
+    Train, K.E. (2003) Discrete Choice Methods with Simulation. Cambridge University Press.
+    """
+
     elec_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
     elec_df.choice = elec_df.choice.astype(int)
     elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
@@ -548,6 +583,8 @@ def load_electricity(
 
     if as_frame:
         return elec_df
+    if return_desc:
+        return description
 
     return ChoiceDataset.from_single_long_df(
         df=elec_df,
@@ -579,7 +616,7 @@ def load_train(
     Returns:
     --------
     ChoiceDataset
-        Loaded Electricity dataset
+        Loaded Train dataset
     """
     desc = "A sample of 235  Dutchindividuals facing 2929 choice situations."
     desc += """Ben-Akiva M, Bolduc D, Bradley M(1993).
