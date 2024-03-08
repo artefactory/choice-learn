@@ -92,15 +92,11 @@ def slice_from_names(array, slice_names, all_names):
     return array[:, [all_names.index(name) for name in slice_names]]
 
 
-def load_swissmetro(
-    one_hot_cat_data=False, add_items_one_hot=False, as_frame=False, return_desc=False
-):
+def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, preprocessing=None):
     """Load and return the SwissMetro dataset from Bierlaire et al. (2001).
 
     Parameters
     ----------
-    one_hot_cat_data : bool, optional
-        Whether to transform categorical data as OneHot, by default False
     add_items_one_hot : bool, optional
         Whether to add a OneHot encoding of items as items_features, by default False
     as_frame : bool, optional
@@ -108,12 +104,24 @@ def load_swissmetro(
         by default False
     return_desc : bool, optional
         Whether to return the description, by default False
+    preprocessing : str, optional
+        Preprocessing to apply to the dataset, by default None
 
     Returns:
     --------
     ChoiceDataset
         Loaded SwissMetro dataset
     """
+    description = """This dataset consists of survey data collected on the trains between St.Gallen
+     and Geneva, Switzerland, during March 1998. The respondents provided information in order to
+     analyze the impact of the modal innovation intransportation, represented by the Swissmetro,
+     a revolutionary mag-lev under ground system, against the usual transport modes represented by
+     car and train.
+
+    Bierlaire, M., Axhausen, K. and Abay, G. (2001), The acceptance of modal innovation:
+    The case of Swissmetro, in ‘Proceedings of the Swiss Transport Research Conference’,
+    Ascona, Switzerland."""
+
     data_file_name = "swissmetro.csv.gz"
     names, data = load_gzip(data_file_name)
     data = data.astype(int)
@@ -171,13 +179,75 @@ def load_swissmetro(
     choices = choices - 1
 
     if return_desc:
-        # TODO
-        pass
-    if one_hot_cat_data:
-        # TODO
-        pass
+        return description
+
     if as_frame:
         return pd.DataFrame(data, columns=names)
+
+    if preprocessing == "tutorial":
+        swiss_df = pd.DataFrame(data, columns=names)
+        # Removing unknown choices
+        swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
+        # Keep only commute an dbusiness trips
+        swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
+
+        # Normalizing values
+        swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] = swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] / 60.0
+        swiss_df[["TRAIN_HE", "SM_HE"]] = swiss_df[["TRAIN_HE", "SM_HE"]] / 60.0
+
+        swiss_df["train_free_ticket"] = swiss_df.apply(
+            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+        )
+        swiss_df["sm_free_ticket"] = swiss_df.apply(
+            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+        )
+        swiss_df["car_free_ticket"] = 0
+
+        swiss_df["train_travel_cost"] = swiss_df.apply(
+            lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["sm_travel_cost"] = swiss_df.apply(
+            lambda row: (row["SM_CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR_CO"] / 100, axis=1)
+
+        swiss_df["single_luggage_piece"] = swiss_df.apply(
+            lambda row: (row["LUGGAGE"] == 1).astype(int), axis=1
+        )
+        swiss_df["multiple_luggage_piece"] = swiss_df.apply(
+            lambda row: (row["LUGGAGE"] == 3).astype(int), axis=1
+        )
+        swiss_df["regular_class"] = swiss_df.apply(lambda row: 1 - row["FIRST"], axis=1)
+        swiss_df["train_survey"] = swiss_df.apply(lambda row: 1 - row["SURVEY"], axis=1)
+
+        contexts_features = swiss_df[
+            ["train_survey", "regular_class", "single_luggage_piece", "multiple_luggage_piece"]
+        ].to_numpy()
+        train_features = swiss_df[["train_travel_cost", "TRAIN_TT", "TRAIN_HE"]].to_numpy()
+        sm_features = swiss_df[["sm_travel_cost", "SM_TT", "SM_HE", "SM_SEATS"]].to_numpy()
+        car_features = swiss_df[["car_travel_cost", "CAR_TT"]].to_numpy()
+
+        # We need to have the same number of features for each item, we create dummy ones:
+        car_features = np.concatenate([car_features, np.zeros((len(car_features), 2))], axis=1)
+        train_features = np.concatenate(
+            [train_features, np.zeros((len(train_features), 1))], axis=1
+        )
+        contexts_items_features = np.stack([train_features, sm_features, car_features], axis=1)
+
+        contexts_items_availabilities = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        # Re-Indexing choices from 1 to 3 to 0 to 2
+        choices = swiss_df.CHOICE.to_numpy() - 1
+
+        return ChoiceDataset(
+            contexts_features=(contexts_features,),
+            contexts_items_features=(contexts_items_features,),
+            contexts_items_availabilities=contexts_items_availabilities,
+            contexts_features_names=(
+                ["train_survey", "regular_class", "single_luggage_piece", "multiple_luggage_piece"],
+            ),
+            contexts_items_features_names=(["cost", "travel_time", "headway", "seats"],),
+            choices=choices,
+        )
 
     return ChoiceDataset(
         fixed_items_features=items_features,
@@ -516,7 +586,7 @@ def load_train(
             "comfort2": "2_comfort",
         }
     )
-    print(train_df.head())
+
     return ChoiceDataset.from_single_wide_df(
         df=train_df,
         items_id=["1", "2"],
