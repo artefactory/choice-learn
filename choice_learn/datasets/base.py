@@ -269,6 +269,7 @@ def load_modecanada(
     choice_mode="one_zero",
     split_features=False,
     to_wide=False,
+    preprocessing=None,
 ):
     """Load and return the ModeCanada dataset from Koppleman et al. (1993).
 
@@ -292,12 +293,23 @@ def load_modecanada(
     to_wide : bool, optional
         Whether to return the dataset in wide format,
         by default False (an thus retuned in long format).
+    preprocessing : str, optional
+        Preprocessing to apply to the dataset, by default None
 
     Returns:
     --------
     ChoiceDataset
         Loaded ModeCanada dataset
     """
+    desc = """The dataset was assembled in 1989 by VIA Rail (the Canadian national rail carrier) to
+     estimate the demand for high-speed rail in the Toronto-Montreal corridor. The main information
+     source was a Passenger Review administered to business travelers augmented by information about
+     each trip. The observations consist of a choice between four modes of transportation (train,
+     air, bus, car) with information about the travel mode and about the passenger. The posted
+     dataset has been balanced to only include cases where all four travel modes are recorded.
+
+     Christophier V. Forinash and Frank S. Koppelman (1993) “Application and interpretation of
+     nested logit models of intercity mode choice,” Transportation Research Record 1413, 98-106. """
     _ = to_wide
     data_file_name = "ModeCanada.csv.gz"
     names, data = load_gzip(data_file_name)
@@ -335,8 +347,7 @@ def load_modecanada(
         items_features.append("is_public")
 
     if return_desc:
-        # TODO
-        pass
+        return desc
 
     for col in canada_df.columns:
         canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
@@ -426,6 +437,22 @@ def load_modecanada(
 
     if len(items_features) == 0:
         items_features = None
+
+    if preprocessing == "tutorial":
+        # Following torch-choice guide:
+        canada_df = canada_df.loc[canada_df.noalt == 4]
+
+        items = ["air", "bus", "car", "train"]
+        canada_df = canada_df.astype({"income": "float32"})
+        return ChoiceDataset.from_single_long_df(
+            df=canada_df,
+            contexts_features_columns=["income"],
+            contexts_items_features_columns=["cost", "freq", "ovt", "ivt"],
+            items_id_column="alt",
+            contexts_id_column="case",
+            choices_column="choice",
+            choice_mode="one_zero",
+        )
 
     return ChoiceDataset.from_single_long_df(
         df=canada_df,
