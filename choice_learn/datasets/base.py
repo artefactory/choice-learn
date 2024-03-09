@@ -248,6 +248,83 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             contexts_items_features_names=(["cost", "travel_time", "headway", "seats"],),
             choices=choices,
         )
+    if preprocessing == "rumnet":
+        swiss_df = pd.DataFrame(data, columns=names)
+        swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
+        choices = swiss_df.CHOICE.to_numpy() - 1
+        contexts_items_availabilities = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        contexts_items_features = np.stack(
+            [
+                swiss_df[["TRAIN_TT", "TRAIN_CO", "TRAIN_HE"]].to_numpy(),
+                swiss_df[["SM_TT", "SM_CO", "SM_HE"]].to_numpy(),
+                swiss_df[["CAR_TT", "CAR_CO", "CAR_HE"]].to_numpy(),
+            ],
+            axis=1,
+        )
+        # contexts_features = df[["GROUP", "PURPOSE", "FIRST", "TICKET", "WHO", "LUGGAGE",
+        # "AGE", "MALE", "INCOME", "GA", "ORIGIN", "DEST"]].to_numpy()
+        fixed_items_features = np.eye(3)
+
+        contexts_items_features[:, :, 0] = contexts_items_features[:, :, 0] / 1000
+        contexts_items_features[:, :, 1] = contexts_items_features[:, :, 1] / 5000
+        contexts_items_features[:, :, 2] = contexts_items_features[:, :, 2] / 100
+
+        long_data = pd.get_dummies(
+            swiss_df,
+            columns=[
+                "GROUP",
+                "PURPOSE",
+                "FIRST",
+                "TICKET",
+                "WHO",
+                "LUGGAGE",
+                "AGE",
+                "MALE",
+                "INCOME",
+                "GA",
+                "ORIGIN",
+                "DEST",
+            ],
+            drop_first=False,
+        )
+
+        # Transorming the category data into OneHot
+        contexts_features = []
+        for col in long_data.columns:
+            if col.startswith("GROUP"):
+                contexts_features.append(col)
+            if col.startswith("PURPOSE"):
+                contexts_features.append(col)
+            if col.startswith("FIRST"):
+                contexts_features.append(col)
+            if col.startswith("TICKET"):
+                contexts_features.append(col)
+            if col.startswith("WHO"):
+                contexts_features.append(col)
+            if col.startswith("LUGGAGE"):
+                contexts_features.append(col)
+            if col.startswith("AGE"):
+                contexts_features.append(col)
+            if col.startswith("MALE"):
+                contexts_features.append(col)
+            if col.startswith("INCOME"):
+                contexts_features.append(col)
+            if col.startswith("GA"):
+                contexts_features.append(col)
+            if col.startswith("ORIGIN"):
+                contexts_features.append(col)
+            if col.startswith("DEST"):
+                contexts_features.append(col)
+
+        contexts_features = long_data[contexts_features].to_numpy()
+
+        return ChoiceDataset(
+            fixed_items_features=(fixed_items_features.astype("float32"),),
+            contexts_features=(contexts_features.astype("float32"),),
+            contexts_items_features=(contexts_items_features.astype("float32"),),
+            contexts_items_availabilities=contexts_items_availabilities,
+            choices=choices,
+        )
 
     return ChoiceDataset(
         fixed_items_features=items_features,
