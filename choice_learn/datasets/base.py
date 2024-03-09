@@ -441,11 +441,16 @@ def load_modecanada(
     if preprocessing == "tutorial":
         # Following torch-choice guide:
         canada_df = canada_df.loc[canada_df.noalt == 4]
+        if add_items_one_hot:
+            fixed_items_features = ["oh_air", "oh_car", "oh_bus", "oh_train"]
+        else:
+            fixed_items_features = None
 
         items = ["air", "bus", "car", "train"]
         canada_df = canada_df.astype({"income": "float32"})
         return ChoiceDataset.from_single_long_df(
             df=canada_df,
+            fixed_items_features_columns=fixed_items_features,
             contexts_features_columns=["income"],
             contexts_items_features_columns=["cost", "freq", "ovt", "ivt"],
             items_id_column="alt",
