@@ -35,6 +35,19 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         expedia_df.loc[:, "day_of_week"] = expedia_df.loc[:, "date_time"].dt.dayofweek
         expedia_df.loc[:, "month"] = expedia_df.loc[:, "date_time"].dt.month
         expedia_df.loc[:, "hour"] = expedia_df.loc[:, "date_time"].dt.hour
+
+        for id_col in [
+            "site_id",
+            "visitor_location_country_id",
+            "prop_country_id",
+            "srch_destination_id",
+        ]:
+            value_counts = expedia_df[["srch_id", id_col]].drop_duplicates()[id_col].value_counts()
+            kept_ids = value_counts.index[value_counts.gt(1000)]
+            for id_ in expedia_df[id_col].unique():
+                if id_ not in kept_ids:
+                    expedia_df.loc[expedia_df[id_col] == id_, id_col] = -1
+
         expedia_df = expedia_df[expedia_df.price_usd <= 1000]
         expedia_df = expedia_df[expedia_df.price_usd >= 10]
         expedia_df["log_price"] = expedia_df.price_usd.apply(np.log)
