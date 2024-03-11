@@ -136,3 +136,6 @@ secrets/*
 
 # Mac OS
 .DS_Store
+
+# Specific data
+choice_learn/datasets/data/expedia.csv

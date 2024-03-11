@@ -129,12 +129,12 @@ class OneHotStorageIndexer(Indexer):
         np.ndarray
             OneHot reconstructed vectors corresponding to sequence_keys
         """
-        if isinstance(sequence_keys, list):
+        if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
             # Construction of the OneHot vector from the index of the 1 value
-            one_hot = np.zeros((len(sequence_keys), self.shape[1]))
-            for i, j in enumerate(sequence_keys):
-                one_hot[i, self.storage.storage[j]] = 1
-            return one_hot.astype(self.dtype)
+            one_hot = []
+            for j in sequence_keys:
+                one_hot.append(self[j])
+            return np.stack(one_hot).astype(self.dtype)
         if isinstance(sequence_keys, slice):
             return self[list(range(*sequence_keys.indices(len(self.shape[0]))))]
         # else:
@@ -375,7 +375,7 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[contexts_items_features[tuple_index][:, :, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
-                    unstacked_feat.append(contexts_features[tuple_index][:, :, feat_ind_min:])
+                    unstacked_feat.append(contexts_items_features[tuple_index][:, :, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
                 contexts_items_features = mapped_features
@@ -559,4 +559,4 @@ class ChoiceDatasetIndexer(Indexer):
                 choice,
             )
         print(f"Type{type(choices_indexes)} not handled")
-        raise NotImplementedError
+        raise NotImplementedError(f"Type{type(choices_indexes)} not handled")

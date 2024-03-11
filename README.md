@@ -43,17 +43,17 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Data
 - Generic dataset handling with the ChoiceDataset class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_data.ipynb)
 - Ready-To-Use datasets:
-  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) from Bierlaire et al. (2001) [[2]](#citation)
-  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) from Koppelman et al. (1993) [[3]](#citation)
-  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset from Ben Akiva et al. (1993) [[5]](#citation)
+  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#citation)
+  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#citation)
+  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) [[5]](#citation)
   - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
 
 ### Models
 - Ready-to-use models:
-  - Conditional MultiNomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987) [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
+  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/latent_class_model.ipynb)
-  - RUMnet, Aouad A.; Désir A. (2022) [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
+  - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
 - Ready-to-use models to be implemented:
   - Nested MultiNomialLogit
   - [TasteNet](https://arxiv.org/abs/2002.00922)
