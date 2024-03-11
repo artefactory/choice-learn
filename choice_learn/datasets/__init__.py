@@ -2,6 +2,7 @@
 
 from .base import load_electricity, load_heating, load_modecanada, load_swissmetro, load_train
 from .examples import load_tafeng
+from .expedia import load_expedia
 
 __all__ = [
     "load_modecanada",
@@ -10,4 +11,5 @@ __all__ = [
     "load_heating",
     "load_train",
     "load_tafeng",
+    "load_expedia",
 ]
