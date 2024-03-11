@@ -559,4 +559,4 @@ class ChoiceDatasetIndexer(Indexer):
                 choice,
             )
         print(f"Type{type(choices_indexes)} not handled")
-        raise NotImplementedError
+        raise NotImplementedError(f"Type{type(choices_indexes)} not handled")
