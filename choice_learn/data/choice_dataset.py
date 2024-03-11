@@ -374,6 +374,14 @@ class ChoiceDataset(object):
             raise ValueError(
                 "No features_names given, match with fiven features_by_ids impossible."
             )
+        if (
+            self.fixed_items_features_names == (None,)
+            and self.contexts_features_names == (None,)
+            and self.contexts_items_features_names == (None,)
+        ):
+            raise ValueError(
+                "No features_names given, match with fiven features_by_ids impossible."
+            )
 
         fixed_items_features_map = {}
         contexts_features_map = {}
@@ -388,6 +396,7 @@ class ChoiceDataset(object):
                                 index_dict = fixed_items_features_map.get(i, {})
                                 index_dict[j] = feature_by_id
                                 fixed_items_features_map[i] = index_dict
+                                print("Feature by ID found:", feature_by_id.name)
 
         if self.contexts_features_names is not None:
             for i, feature in enumerate(self.contexts_features_names):
@@ -398,6 +407,7 @@ class ChoiceDataset(object):
                                 index_dict = contexts_features_map.get(i, {})
                                 index_dict[j] = feature_by_id
                                 contexts_features_map[i] = index_dict
+                                print("Feature by ID found:", feature_by_id.name)
 
         if self.contexts_items_features_names is not None:
             for i, feature in enumerate(self.contexts_items_features_names):
@@ -409,10 +419,12 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 contexts_items_features_map[i] = index_dict
                                 # contexts_items_features_map.append(((i, k), feature_by_id))
+                                print("Feature by ID found:", feature_by_id.name)
 
-        if len(fixed_items_features_map) + len(contexts_features_map) + sum(
-            [len(c.keys()) for c in contexts_items_features_map.values()]
-        ) != len(self.features_by_ids):
+        num_fif_maps = sum([len(val) for val in fixed_items_features_map.values()])
+        num_cf_maps = sum([len(val) for val in contexts_features_map.values()])
+        num_cif_maps = sum([len(val) for val in contexts_items_features_map.values()])
+        if num_fif_maps + num_cf_maps + num_cif_maps != len(self.features_by_ids):
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return fixed_items_features_map, contexts_features_map, contexts_items_features_map
