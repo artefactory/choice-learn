@@ -125,17 +125,29 @@ model = ConditionalMNL(optimizer="lbfgs")
 
 # add_coefficients adds one coefficient for each specified item_index
 # intercept, and income are added for each item except the first one that needs to be zeroed
-model.add_coefficients(coefficient_name="beta_inter", feature_name="intercept", items_indexes=[1, 2, 3])
-model.add_coefficients(coefficient_name="beta_income", feature_name="income", items_indexes=[1, 2, 3])
+model.add_coefficients(coefficient_name="beta_inter",
+                       feature_name="intercept",
+                       items_indexes=[1, 2, 3])
+model.add_coefficients(coefficient_name="beta_income",
+                       feature_name="income",
+                       items_indexes=[1, 2, 3])
 
 # ivt is added for each item:
-model.add_coefficients(coefficient_name="beta_ivt", feature_name="ivt", items_indexes=[0, 1, 2, 3])
+model.add_coefficients(coefficient_name="beta_ivt",
+                       feature_name="ivt",
+                       items_indexes=[0, 1, 2, 3])
 
 # shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
-model.add_shared_coefficient(coefficient_name="beta_cost", feature_name="cost", items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_freq", feature_name="freq", items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_ovt", feature_name="ovt", items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_cost",
+                             feature_name="cost",
+                             items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_freq",
+                             feature_name="freq",
+                             items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_ovt",
+                             feature_name="ovt",
+                             items_indexes=[0, 1, 2, 3])
 
 history = model.fit(dataset, epochs=1000, get_report=True)
 print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
