@@ -805,10 +805,9 @@ class ChoiceDataset(object):
                         raise ValueError(
                             f"More than one value for feature {feature} for item {item}"
                         )
-                    fixed_items_features[feature] = (
-                        fixed_items_features.get(feature, []),
-                        +[feature_value],
-                    )
+                    fixed_items_features[feature] = fixed_items_features.get(feature, []) + [
+                        feature_value[0]
+                    ]
             fixed_items_features = pd.DataFrame(fixed_items_features)
         elif fixed_items_prefixes is not None:
             fixed_items_features = {"item_id": []}
@@ -820,10 +819,9 @@ class ChoiceDataset(object):
                         raise ValueError(
                             f"More than one value for feature {feature} for item {item}"
                         )
-                    fixed_items_features[feature] = (
-                        fixed_items_features.get(feature, []),
-                        +[feature_value],
-                    )
+                    fixed_items_features[feature] = fixed_items_features.get(feature, []) + [
+                        feature_value[0]
+                    ]
             fixed_items_features = pd.DataFrame(fixed_items_features)
         else:
             fixed_items_features = None
