@@ -48,6 +48,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 if id_ not in kept_ids:
                     expedia_df.loc[expedia_df[id_col] == id_, id_col] = -1
 
+        # Filtering
         expedia_df = expedia_df[expedia_df.price_usd <= 1000]
         expedia_df = expedia_df[expedia_df.price_usd >= 10]
         expedia_df["log_price"] = expedia_df.price_usd.apply(np.log)
