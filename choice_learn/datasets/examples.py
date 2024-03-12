@@ -125,4 +125,4 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
             contexts_items_availabilities=np.ones((len(choices), 25)).astype("float32"),
         )
 
-    return tafeng_df
+    return load_tafeng(as_frame=False, preprocessing="assort_example")

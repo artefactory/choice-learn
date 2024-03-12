@@ -2,7 +2,15 @@
 import pandas as pd
 
 from choice_learn.data import ChoiceDataset
-from choice_learn.datasets import load_swissmetro
+from choice_learn.datasets import (
+    load_electricity,
+    load_expedia,
+    load_heating,
+    load_modecanada,
+    load_swissmetro,
+    load_tafeng,
+    load_train,
+)
 
 
 def test_swissmetro_loader():
@@ -15,3 +23,54 @@ def test_swissmetro_loader():
     assert isinstance(swissmetro, ChoiceDataset)
     swissmetro = load_swissmetro(add_items_one_hot=True)
     assert isinstance(swissmetro, ChoiceDataset)
+
+
+def test_modecanada_loader():
+    """Test loading the Canada dataset."""
+    canada = load_modecanada(as_frame=True)
+    assert isinstance(canada, pd.DataFrame)
+
+    canada = load_modecanada()
+    assert isinstance(canada, ChoiceDataset)
+
+
+def test_electricity_loader():
+    """Test loading the Electricity dataset."""
+    electricity = load_electricity(as_frame=True)
+    assert isinstance(electricity, pd.DataFrame)
+
+    electricity = load_electricity()
+    assert isinstance(electricity, ChoiceDataset)
+
+
+def test_train_loader():
+    """Test loading the Train dataset."""
+    train = load_train(as_frame=True)
+    assert isinstance(train, pd.DataFrame)
+
+    train = load_train()
+    assert isinstance(train, ChoiceDataset)
+
+
+def test_tafeng_loader():
+    """Test loading the TaFeng dataset."""
+    tafeng = load_tafeng(as_frame=True)
+    assert isinstance(tafeng, pd.DataFrame)
+
+    tafeng = load_tafeng()
+    assert isinstance(tafeng, ChoiceDataset)
+
+
+def test_heating_loader():
+    """Test loading the heating dataset."""
+    heating = load_heating(as_frame=True)
+    assert isinstance(heating, pd.DataFrame)
+
+    heating = load_heating()
+    assert isinstance(heating, ChoiceDataset)
+
+
+def test_expedia_loader():
+    """Test loading the Expedia dataset."""
+    expedia = load_expedia(as_frame=True)
+    assert isinstance(expedia, pd.DataFrame)
