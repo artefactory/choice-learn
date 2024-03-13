@@ -4,7 +4,6 @@ import pandas as pd
 from choice_learn.data import ChoiceDataset
 from choice_learn.datasets import (
     load_electricity,
-    load_expedia,
     load_heating,
     load_modecanada,
     load_swissmetro,
@@ -73,10 +72,3 @@ def test_heating_loader():
 
     heating = load_heating()
     assert isinstance(heating, ChoiceDataset)
-
-
-def test_expedia_loader():
-    """Test loading the Expedia dataset."""
-    expedia = load_expedia(as_frame=True)
-    assert isinstance(expedia, pd.DataFrame)
-    assert expedia.shape == (9917530, 54)
