@@ -375,9 +375,9 @@ class ChoiceDataset(object):
                 "No features_names given, match with fiven features_by_ids impossible."
             )
         if (
-            self.fixed_items_features_names == (None,)
-            and self.contexts_features_names == (None,)
-            and self.contexts_items_features_names == (None,)
+            isinstance(self.fixed_items_features_names, tuple) and  self.fixed_items_features_names[0] is None
+            and isinstance(self.contexts_features_names, tuple) and  self.contexts_features_names[0] is None
+            and isinstance(self.contexts_features_names, tuple) and  self.contexts_features_names[0] is None
         ):
             raise ValueError(
                 "No features_names given, match with fiven features_by_ids impossible."
