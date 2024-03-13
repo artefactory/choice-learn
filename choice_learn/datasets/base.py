@@ -151,6 +151,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     data_file_name = "swissmetro.csv.gz"
     full_path = get_path(data_file_name, module=DATA_MODULE)
     swiss_df = pd.read_csv(full_path)
+    swiss_df["CAR_HE"] = 0.
     # names, data = load_gzip(data_file_name)
     # data = data.astype(int)
 
