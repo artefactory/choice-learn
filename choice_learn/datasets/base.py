@@ -10,6 +10,32 @@ from choice_learn.data.choice_dataset import ChoiceDataset
 
 DATA_MODULE = "choice_learn.datasets.data"
 
+def get_path(data_file_name, module=DATA_MODULE):
+    """Function to get path toward data file.
+    
+    Specifically used to handled Python 3.8 and 3.9+ differences in importlib.resources handling.
+    Parameters:
+    -----------
+    module : str, optional
+        path to directory containing the data file, by default DATA_MODULE
+    data_file_name : str
+        name of the csv file to load
+
+    Returns:
+    --------
+    Path
+        path to the data file
+    """
+    import sys
+
+    if sys.version >= "3.9":
+        return resources.files(module) / data_file_name
+    else:
+        with resources.path(module, data_file_name) as p:
+            path = p
+        return path
+
+
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
@@ -123,7 +149,8 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     Ascona, Switzerland."""
 
     data_file_name = "swissmetro.csv.gz"
-    swiss_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    swiss_df = pd.read_csv(full_path)
     # names, data = load_gzip(data_file_name)
     # data = data.astype(int)
 
@@ -395,7 +422,8 @@ def load_modecanada(
     # names = [name.replace('"', "") for name in names]
     # canada_df = pd.DataFrame(data[:, 1:], index=data[:, 0].astype(int), columns=names[1:])
 
-    canada_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    canada_df = pd.read_csv(full_path)
     canada_df["alt"] = canada_df.apply(lambda row: row.alt.replace('"', ""), axis=1)
     # Just some typing
     canada_df.income = canada_df.income.astype("float32")
@@ -583,7 +611,8 @@ def load_heating(
     _ = to_wide
     data_file_name = "heating_data.csv.gz"
 
-    heating_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    heating_df = pd.read_csv(full_path)
 
     if return_desc:
         return desc
@@ -635,7 +664,7 @@ def load_electricity(
     """
     _ = to_wide
     data_file_name = "electricity.csv.gz"
-    names, data = load_gzip(data_file_name)
+    # names, data = load_gzip(data_file_name)
 
     description = """A sample of 2308 households in the United States.
     - choice: the choice of the individual, one of 1, 2, 3, 4,
@@ -660,7 +689,8 @@ def load_electricity(
     Train, K.E. (2003) Discrete Choice Methods with Simulation. Cambridge University Press.
     """
 
-    elec_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    elec_df = pd.read_csv(full_path)
     elec_df.choice = elec_df.choice.astype(int)
     elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
         ["pf", "cl", "loc", "wk", "tod", "seas"]
@@ -709,9 +739,10 @@ def load_train(
     ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
     _ = to_wide
     data_file_name = "train_data.csv.gz"
-    names, data = load_gzip(data_file_name)
+    # names, data = load_gzip(data_file_name)
 
-    train_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    train_df = pd.read_csv(full_path)
 
     if return_desc:
         return desc

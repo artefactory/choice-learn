@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from choice_learn.datasets.base import get_path
 from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.data.storage import OneHotStorage
 
@@ -15,7 +16,7 @@ DATA_MODULE = "choice_learn.datasets.data"
 def load_expedia(as_frame=False, preprocessing="rumnet"):
     """Load the Expedia dataset."""
     filename = "expedia.csv"
-    data_path = resources.files(DATA_MODULE)
+    data_path = get_path(filename, module=DATA_MODULE)
     if not Path.exists((data_path / filename)):
         print("In order to use the Expedia dataset, please download it from:")
         print("https://www.kaggle.com/c/expedia-personalized-sort")
