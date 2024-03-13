@@ -1,5 +1,4 @@
 """ICDM 2013 Expedia dataset."""
-import os
 from pathlib import Path
 
 import numpy as np
@@ -16,17 +15,15 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
     """Load the Expedia dataset."""
     filename = "expedia.csv"
     data_path = get_path(filename, module=DATA_MODULE)
-    if not Path.exists((data_path / filename)):
+    if not Path.exists(data_path):
         print("In order to use the Expedia dataset, please download it from:")
         print("https://www.kaggle.com/c/expedia-personalized-sort")
         print("and save it in the following location:")
-        print(os.path.join(DATA_MODULE, filename))
+        print(data_path)
         print("The downloaded train.csv file should be named 'expedia.csv'")
-        raise FileNotFoundError(
-            f"File {filename} not found in {os.path.join(DATA_MODULE, filename)}"
-        )
+        raise FileNotFoundError(f"File {filename} not found in {data_path}")
 
-    expedia_df = pd.read_csv((data_path / filename))
+    expedia_df = pd.read_csv(data_path)
     if as_frame:
         return expedia_df
 
