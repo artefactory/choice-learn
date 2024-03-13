@@ -1,11 +1,10 @@
 """Some datasets used for personal examples."""
-from importlib import resources
 
 import numpy as np
 import pandas as pd
 
-from choice_learn.datasets.base import get_path
 from choice_learn.data.choice_dataset import ChoiceDataset
+from choice_learn.datasets.base import get_path
 
 DATA_MODULE = "choice_learn.datasets.data"
 

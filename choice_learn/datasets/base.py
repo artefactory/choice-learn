@@ -10,9 +10,10 @@ from choice_learn.data.choice_dataset import ChoiceDataset
 
 DATA_MODULE = "choice_learn.datasets.data"
 
+
 def get_path(data_file_name, module=DATA_MODULE):
     """Function to get path toward data file.
-    
+
     Specifically used to handled Python 3.8 and 3.9+ differences in importlib.resources handling.
     Parameters:
     -----------
@@ -30,11 +31,9 @@ def get_path(data_file_name, module=DATA_MODULE):
 
     if sys.version >= "3.9":
         return resources.files(module) / data_file_name
-    else:
-        with resources.path(module, data_file_name) as p:
-            path = p
-        return path
 
+    with resources.path(module, data_file_name) as path:
+        return path
 
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
@@ -151,7 +150,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     data_file_name = "swissmetro.csv.gz"
     full_path = get_path(data_file_name, module=DATA_MODULE)
     swiss_df = pd.read_csv(full_path)
-    swiss_df["CAR_HE"] = 0.
+    swiss_df["CAR_HE"] = 0.0
     # names, data = load_gzip(data_file_name)
     # data = data.astype(int)
 
