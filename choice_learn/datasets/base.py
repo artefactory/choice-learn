@@ -11,6 +11,31 @@ from choice_learn.data.choice_dataset import ChoiceDataset
 DATA_MODULE = "choice_learn.datasets.data"
 
 
+def get_path(data_file_name, module=DATA_MODULE):
+    """Function to get path toward data file.
+
+    Specifically used to handled Python 3.8 and 3.9+ differences in importlib.resources handling.
+    Parameters:
+    -----------
+    module : str, optional
+        path to directory containing the data file, by default DATA_MODULE
+    data_file_name : str
+        name of the csv file to load
+
+    Returns:
+    --------
+    Path
+        path to the data file
+    """
+    import sys
+
+    if sys.version >= "3.9":
+        return resources.files(module) / data_file_name
+
+    with resources.path(module, data_file_name) as path:
+        return path
+
+
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
 
@@ -123,12 +148,14 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     Ascona, Switzerland."""
 
     data_file_name = "swissmetro.csv.gz"
-    names, data = load_gzip(data_file_name)
-    data = data.astype(int)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    swiss_df = pd.read_csv(full_path)
+    swiss_df["CAR_HE"] = 0.0
+    # names, data = load_gzip(data_file_name)
+    # data = data.astype(int)
 
     items = ["TRAIN", "SM", "CAR"]
-    items_features_names = []
-    session_features_names = [
+    contexts_features_names = [
         "GROUP",
         "PURPOSE",
         "FIRST",
@@ -142,20 +169,21 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         "ORIGIN",
         "DEST",
     ]
-    sessions_items_features_names = ["TT", "CO", "HE"]
-    sessions_items_features_names = [
-        [f"{item}_{feature}" for feature in sessions_items_features_names] for item in items
-    ]
-    sessions_items_availabilities = ["TRAIN_AV", "SM_AV", "CAR_AV"]
+    contexts_items_features_names = ["CO", "TT", "HE", "SEATS"]
     choice_column = "CHOICE"
+    availabilities_column = "AV"
 
     if add_items_one_hot:
-        items_features = np.eye(len(items), dtype=np.float64)
         items_features_names = [f"oh_{item}" for item in items]
+        for item in items:
+            for item2 in items:
+                if item == item2:
+                    swiss_df[f"{item}_oh_{item}"] = 1
+                else:
+                    swiss_df[f"{item2}_oh_{item}"] = 0
     else:
-        items_features = None
         items_features_names = None
-
+    """
     # Adding dummy CAR_HE feature as 0 for consistency
     names.append("CAR_HE")
     data = np.hstack([data, np.zeros((data.shape[0], 1))])
@@ -177,15 +205,16 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
 
     # choices renormalization
     choices = choices - 1
+    """
 
     if return_desc:
         return description
 
     if as_frame:
-        return pd.DataFrame(data, columns=names)
+        return swiss_df
 
     if preprocessing == "tutorial":
-        swiss_df = pd.DataFrame(data, columns=names)
+        # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
         swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         # Keep only commute an dbusiness trips
@@ -249,7 +278,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             choices=choices,
         )
     if preprocessing == "rumnet":
-        swiss_df = pd.DataFrame(data, columns=names)
+        # swiss_df = pd.DataFrame(data, columns=names)
         swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         choices = swiss_df.CHOICE.to_numpy() - 1
         contexts_items_availabilities = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
@@ -326,15 +355,15 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             choices=choices,
         )
 
-    return ChoiceDataset(
-        fixed_items_features=items_features,
-        contexts_features=session_features,
-        contexts_items_features=sessions_items_features,
-        contexts_items_availabilities=sessions_items_availabilities,
-        choices=choices,
-        fixed_items_features_names=items_features_names,
-        contexts_features_names=session_features_names,
-        contexts_items_features_names=sessions_items_features_names,
+    return ChoiceDataset.from_single_wide_df(
+        df=swiss_df,
+        items_id=items,
+        fixed_items_suffixes=items_features_names,
+        contexts_features_columns=contexts_features_names,
+        contexts_items_features_suffixes=contexts_items_features_names,
+        contexts_items_availabilities_suffix=availabilities_column,
+        choices_column=choice_column,
+        choice_mode="item_index",
     )
 
 
@@ -389,9 +418,12 @@ def load_modecanada(
      nested logit models of intercity mode choice,” Transportation Research Record 1413, 98-106. """
     _ = to_wide
     data_file_name = "ModeCanada.csv.gz"
-    names, data = load_gzip(data_file_name)
-    names = [name.replace('"', "") for name in names]
-    canada_df = pd.DataFrame(data[:, 1:], index=data[:, 0].astype(int), columns=names[1:])
+    # names, data = load_gzip(data_file_name)
+    # names = [name.replace('"', "") for name in names]
+    # canada_df = pd.DataFrame(data[:, 1:], index=data[:, 0].astype(int), columns=names[1:])
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    canada_df = pd.read_csv(full_path)
     canada_df["alt"] = canada_df.apply(lambda row: row.alt.replace('"', ""), axis=1)
     # Just some typing
     canada_df.income = canada_df.income.astype("float32")
@@ -578,9 +610,9 @@ def load_heating(
     Train, K.E. (2003) Discrete Choice Methods with Simulation. Cambridge University Press."""
     _ = to_wide
     data_file_name = "heating_data.csv.gz"
-    names, data = load_gzip(data_file_name)
 
-    heating_df = pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    heating_df = pd.read_csv(full_path)
 
     if return_desc:
         return desc
@@ -632,7 +664,7 @@ def load_electricity(
     """
     _ = to_wide
     data_file_name = "electricity.csv.gz"
-    names, data = load_gzip(data_file_name)
+    # names, data = load_gzip(data_file_name)
 
     description = """A sample of 2308 households in the United States.
     - choice: the choice of the individual, one of 1, 2, 3, 4,
@@ -657,7 +689,8 @@ def load_electricity(
     Train, K.E. (2003) Discrete Choice Methods with Simulation. Cambridge University Press.
     """
 
-    elec_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    elec_df = pd.read_csv(full_path)
     elec_df.choice = elec_df.choice.astype(int)
     elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
         ["pf", "cl", "loc", "wk", "tod", "seas"]
@@ -706,9 +739,10 @@ def load_train(
     ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
     _ = to_wide
     data_file_name = "train_data.csv.gz"
-    names, data = load_gzip(data_file_name)
+    # names, data = load_gzip(data_file_name)
 
-    train_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    train_df = pd.read_csv(full_path)
 
     if return_desc:
         return desc

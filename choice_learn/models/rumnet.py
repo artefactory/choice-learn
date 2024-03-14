@@ -443,6 +443,17 @@ class PaperRUMnet(ChoiceModel):
     Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir
     https://arxiv.org/abs/2207.12877
 
+    --- Attention: ---
+    Note that the model uses two type of features that are treated differently:
+        - customer features
+        - product features
+    >>> In this implementation, please make sure that the features are correctly formatted:
+        - customer features: (n_contexts, n_features) are given as 'contexts_features' in the
+        ChoiceDataset used to fit the model
+        - product features: (n_contexts, n_items, n_features) are given as 'contexts_items_features'
+        in the ChoiceDataset used to fit the model
+    ---
+
     Inherits from base_model.ChoiceModel
     TODO: Verify that all parameters are implemented.
     """
@@ -782,12 +793,19 @@ class PaperRUMnet(ChoiceModel):
             probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
         )
 
-        batch_nll = self.loss(
-            y_pred=probabilities,
-            y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-            sample_weight=sample_weight,
-        )
-        return batch_nll, probabilities
+        batch_loss = {
+            "optimized_loss": self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+        }
+        return batch_loss, probabilities
 
 
 class CPURUMnet(PaperRUMnet):
@@ -831,9 +849,30 @@ class CPURUMnet(PaperRUMnet):
         """
         (_, _) = contexts_items_availabilities, choices
         ### Restacking of the item features
-        stacked_fixed_items_features = tf.concat([*fixed_items_features], axis=-1)
-        stacked_contexts_features = tf.concat([*contexts_features], axis=-1)
-        stacked_contexts_items_features = tf.concat([*contexts_items_features], axis=-1)
+        if fixed_items_features is not None and fixed_items_features[0] is not None:
+            stacked_fixed_items_features = tf.cast(
+                tf.concat([*fixed_items_features], axis=-1), tf.float32
+            )
+        else:
+            if contexts_items_features is None or contexts_items_features[0] is None:
+                raise ValueError("No item features provided")
+            stacked_fixed_items_features = tf.zeros((contexts_items_features[0].shape[1], 0))
+        if contexts_features is not None and contexts_features[0] is not None:
+            stacked_contexts_features = tf.cast(
+                tf.concat([*contexts_features], axis=-1), tf.float32
+            )
+        else:
+            raise ValueError("No Customer features provided")
+        if contexts_items_features is not None and contexts_items_features[0] is not None:
+            stacked_contexts_items_features = tf.cast(
+                tf.concat([*contexts_items_features], axis=-1), tf.float32
+            )
+        else:
+            if fixed_items_features is None or fixed_items_features[0] is None:
+                raise ValueError("No item features provided")
+            stacked_fixed_items_features = tf.zeros(
+                (contexts_items_features.shape[0], fixed_items_features[0].shape[0], 0)
+            )
 
         full_item_features = tf.stack(
             [stacked_fixed_items_features] * stacked_contexts_items_features.shape[0], axis=0
@@ -950,9 +989,24 @@ class GPURUMnet(PaperRUMnet):
         (_, _) = contexts_items_availabilities, choices
 
         ### Restacking of the item features
-        stacked_fixed_items_features = tf.concat([*fixed_items_features], axis=-1)
-        stacked_contexts_features = tf.concat([*contexts_features], axis=-1)
-        stacked_contexts_items_features = tf.concat([*contexts_items_features], axis=-1)
+        if fixed_items_features is not None and fixed_items_features[0] is not None:
+            stacked_fixed_items_features = tf.concat([*fixed_items_features], axis=-1)
+        else:
+            if contexts_items_features is None or contexts_items_features[0] is None:
+                raise ValueError("No item features provided")
+            stacked_fixed_items_features = tf.zeros((contexts_items_features.shape[1], 0))
+        if contexts_features is not None and contexts_features[0] is not None:
+            stacked_contexts_features = tf.concat([*contexts_features], axis=-1)
+        else:
+            raise ValueError("No Customer features provided")
+        if contexts_items_features is not None and contexts_items_features[0] is not None:
+            stacked_contexts_items_features = tf.concat([*contexts_items_features], axis=-1)
+        else:
+            if fixed_items_features is None or fixed_items_features[0] is None:
+                raise ValueError("No item features provided")
+            stacked_fixed_items_features = tf.zeros(
+                (contexts_items_features.shape[0], fixed_items_features.shape[0], 0)
+            )
 
         # Reshaping
         # Beware if contexts_items_features is None...!

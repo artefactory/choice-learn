@@ -48,6 +48,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - The [Train](./choice_learn/datasets/data/train_data.csv.gz) [[5]](#citation)
   - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
+  - The IDCM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
 
 ### Models
 - Ready-to-use models:
@@ -124,17 +125,29 @@ model = ConditionalMNL(optimizer="lbfgs")
 
 # add_coefficients adds one coefficient for each specified item_index
 # intercept, and income are added for each item except the first one that needs to be zeroed
-model.add_coefficients(coefficient_name="beta_inter", feature_name="intercept", items_indexes=[1, 2, 3])
-model.add_coefficients(coefficient_name="beta_income", feature_name="income", items_indexes=[1, 2, 3])
+model.add_coefficients(coefficient_name="beta_inter",
+                       feature_name="intercept",
+                       items_indexes=[1, 2, 3])
+model.add_coefficients(coefficient_name="beta_income",
+                       feature_name="income",
+                       items_indexes=[1, 2, 3])
 
 # ivt is added for each item:
-model.add_coefficients(coefficient_name="beta_ivt", feature_name="ivt", items_indexes=[0, 1, 2, 3])
+model.add_coefficients(coefficient_name="beta_ivt",
+                       feature_name="ivt",
+                       items_indexes=[0, 1, 2, 3])
 
 # shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
-model.add_shared_coefficient(coefficient_name="beta_cost", feature_name="cost", items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_freq", feature_name="freq", items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_ovt", feature_name="ovt", items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_cost",
+                             feature_name="cost",
+                             items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_freq",
+                             feature_name="freq",
+                             items_indexes=[0, 1, 2, 3])
+model.add_shared_coefficient(coefficient_name="beta_ovt",
+                             feature_name="ovt",
+                             items_indexes=[0, 1, 2, 3])
 
 history = model.fit(dataset, epochs=1000, get_report=True)
 print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
@@ -157,7 +170,8 @@ A detailed documentation of this project is available [here](https://artefactory
 [2][The Acceptance of Model Innovation: The Case of Swissmetro](https://www.researchgate.net/publication/37456549_The_acceptance_of_modal_innovation_The_case_of_Swissmetro), Bierlaire, M.; Axhausen, K., W.; Abay, G. (2001)\
 [3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)\
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
-[5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva M; Bolduc D; Bradley M(1993)
+[5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva M; Bolduc D; Bradley M(1993)\
+[6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)

@@ -1,10 +1,10 @@
 """Some datasets used for personal examples."""
-from importlib import resources
 
 import numpy as np
 import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
+from choice_learn.datasets.base import get_path
 
 DATA_MODULE = "choice_learn.datasets.data"
 
@@ -30,7 +30,8 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
         TaFeng Grocery Dataset.
     """
     filename = "ta_feng.csv.zip"
-    filepath = resources.files(DATA_MODULE) / filename
+
+    filepath = get_path(filename, module=DATA_MODULE)
     # url = "https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/download?datasetVersionNumber=1"
     # if not os.path.exists(filepath):
     #     with urllib.request.urlopen(url) as f:
@@ -125,4 +126,4 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
             contexts_items_availabilities=np.ones((len(choices), 25)).astype("float32"),
         )
 
-    return tafeng_df
+    return load_tafeng(as_frame=False, preprocessing="assort_example")
