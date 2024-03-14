@@ -1,1 +1,1 @@
-"""Directory to store datasets as .csv.gz files."""
+"""Directory to store datasets as zipped .csv files."""

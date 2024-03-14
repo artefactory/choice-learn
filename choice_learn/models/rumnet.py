@@ -443,6 +443,17 @@ class PaperRUMnet(ChoiceModel):
     Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir
     https://arxiv.org/abs/2207.12877
 
+    --- Attention: ---
+    Note that the model uses two type of features that are treated differently:
+        - customer features
+        - product features
+    >>> In this implementation, please make sure that the features are correctly formatted:
+        - customer features: (n_contexts, n_features) are given as 'contexts_features' in the
+        ChoiceDataset used to fit the model
+        - product features: (n_contexts, n_items, n_features) are given as 'contexts_items_features'
+        in the ChoiceDataset used to fit the model
+    ---
+
     Inherits from base_model.ChoiceModel
     TODO: Verify that all parameters are implemented.
     """
