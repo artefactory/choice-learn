@@ -272,7 +272,7 @@ def test_from_df():
         fixed_items_features_columns=["items_feat_1", "items_feat_2"],
         contexts_features_columns=["session_feat_1", "session_feat_2"],
         contexts_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
-        choice_mode="items_id",
+        choice_format="items_id",
     )
     ground_truth_cd = ChoiceDataset(
         fixed_items_features=fixed_items_features,
@@ -312,7 +312,7 @@ def test_from_df():
         fixed_items_features_columns=["items_feat_1", "items_feat_2"],
         contexts_features_columns=["session_feat_1", "session_feat_2"],
         contexts_items_features_columns=["session_item_feat_1", "session_item_feat_2"],
-        choice_mode="one_zero",
+        choice_format="one_zero",
     )
     ground_truth_cd = ChoiceDataset(
         fixed_items_features=fixed_items_features,

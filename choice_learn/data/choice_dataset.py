@@ -363,7 +363,6 @@ class ChoiceDataset(object):
             indexes and features_by_id of contexts_items_features
         """
         if len(self.features_by_ids) == 0:
-            print("No features_by_ids given.")
             return {}, {}, {}
 
         if (
@@ -629,6 +628,21 @@ class ChoiceDataset(object):
         """
         return len(self.choices)
 
+    def __str__(self):
+        """Returns short representation of ChoiceDataset.
+
+        Returns:
+        --------
+        str
+            short representation of ChoiceDataset
+        """
+        template = """First choice is:\nItems features: {}\nContexts features: {}\n
+                      Contexts Items features: {}\nContexts Items Availabilities: {}\n
+                      Contexts Choice: {}"""
+        return template.format(
+            self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3], self.batch[0][4]
+        )
+
     def get_n_items(self):
         """Method to access the total number of different items.
 
@@ -741,7 +755,7 @@ class ChoiceDataset(object):
         contexts_items_availabilities_prefix=None,
         delimiter="_",
         choices_column="choice",
-        choice_mode="items_id",
+        choice_format="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
@@ -770,7 +784,7 @@ class ChoiceDataset(object):
             default is "_"
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
-        choice_mode: str, optional
+        choice_format: str, optional
             How choice is indicated in df, either "items_name" or "items_index",
             default is "items_id"
 
@@ -853,7 +867,7 @@ class ChoiceDataset(object):
             contexts_items_features = []
             for item in items_id:
                 columns = [
-                    f"{feature}{delimiter}{item}" for feature in contexts_items_features_suffixes
+                    f"{feature}{delimiter}{item}" for feature in contexts_items_features_prefixes
                 ]
                 for col in columns:
                     if col not in df.columns:
@@ -901,10 +915,11 @@ class ChoiceDataset(object):
             contexts_items_availabilities = None
 
         choices = df[choices_column].to_numpy()
-        if choice_mode == "items_id":
+        if choice_format == "items_id":
             if items_id is None:
-                raise ValueError("items_id must be given to use choice_mode 'items_id'")
+                raise ValueError("items_id must be given to use choice_format='items_id'")
             items_id = np.array(items_id)
+
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
             if choices.shape[0] == 0:
                 raise ValueError("No choice found in the items_id list")
@@ -922,13 +937,13 @@ class ChoiceDataset(object):
     def from_single_long_df(
         cls,
         df,
+        choices_column="choice",
+        items_id_column="item_id",
+        contexts_id_column="context_id",
         fixed_items_features_columns=None,
         contexts_features_columns=None,
         contexts_items_features_columns=None,
-        items_id_column="item_id",
-        contexts_id_column="context_id",
-        choices_column="choice",
-        choice_mode="items_id",
+        choice_format="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
 
@@ -936,19 +951,19 @@ class ChoiceDataset(object):
         ----------
         df : pandas.DataFrame
             dataframe in Long format
+        choices_column: str, optional
+            Name of the column containing the choices, default is "choice"
+        items_id_column: str, optional
+            Name of the column containing the item ids, default is "items_id"
+        contexts_id_column: str, optional
+            Name of the column containing the sessions ids, default is "contexts_id"
         fixed_items_features_columns : list
             Columns of the dataframe that are item features, default is None
         contexts_features_columns : list
             Columns of the dataframe that are contexts features, default is None
         contexts_items_features_columns : list
             Columns of the dataframe that are context-item features, default is None
-        items_id_column: str, optional
-            Name of the column containing the item ids, default is "items_id"
-        contexts_id_column: str, optional
-            Name of the column containing the sessions ids, default is "contexts_id"
-        choices_column: str, optional
-            Name of the column containing the choices, default is "choice"
-        choice_mode: str, optional
+        choice_format: str, optional
             How choice is indicated in df, either "items_name" or "one_zero",
             default is "items_id"
 
@@ -1000,13 +1015,13 @@ class ChoiceDataset(object):
             else None
         )
 
-        if choice_mode == "items_id":
+        if choice_format == "items_id":
             choices = df[[choices_column, contexts_id_column]].drop_duplicates(contexts_id_column)
             choices = choices.set_index(contexts_id_column)
             choices = choices.loc[sessions].to_numpy()
             # items is the value (str) of the item
             choices = np.squeeze([np.where(items == c)[0] for c in choices])
-        elif choice_mode == "one_zero":
+        elif choice_format == "one_zero":
             choices = df[[items_id_column, choices_column, contexts_id_column]]
             choices = choices.loc[choices[choices_column] == 1]
             choices = choices.set_index(contexts_id_column)
@@ -1017,7 +1032,7 @@ class ChoiceDataset(object):
             )
         else:
             raise ValueError(
-                f"choice_mode {choice_mode} not recognized. Must be in ['items_id', 'one_zero']"
+                f"choice_format {choice_format} not recognized. Must be in ['items_id', 'one_zero']"
             )
         return ChoiceDataset(
             fixed_items_features=items_features,

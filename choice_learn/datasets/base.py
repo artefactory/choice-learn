@@ -1,6 +1,7 @@
 """Datasets loader."""
 import csv
 import gzip
+import os
 from importlib import resources
 
 import numpy as np
@@ -8,6 +9,7 @@ import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
 
+OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
 DATA_MODULE = "choice_learn.datasets.data"
 
 
@@ -36,7 +38,7 @@ def get_path(data_file_name, module=DATA_MODULE):
         return path
 
 
-def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
+def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
 
     Parameters
@@ -55,8 +57,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     np.ndarray
         data contained in the csv file
     """
-    data_path = resources.files(data_module)
-    with (data_path / data_file_name).open("r", encoding=encoding) as csv_file:
+    with open(os.path.join(data_module, data_file_name), "r", encoding=encoding) as csv_file:
         data_file = csv.reader(csv_file)
         names = next(data_file)
         data = []
@@ -66,7 +67,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     return names, np.stack(data)
 
 
-def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
+def load_gzip(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load zipped .csv.gz files.
 
     Parameters
@@ -85,8 +86,7 @@ def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     np.ndarray
         data contained in the csv file
     """
-    data_path = resources.files(data_module)
-    with (data_path / data_file_name).open("rb") as compressed_file:
+    with open(os.path.join(data_module, data_file_name), "rb") as compressed_file:
         compressed_file = gzip.open(compressed_file, mode="rt", encoding=encoding)
         names = next(compressed_file)
         names = names.replace("\n", "")
@@ -363,7 +363,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         contexts_items_features_suffixes=contexts_items_features_names,
         contexts_items_availabilities_suffix=availabilities_column,
         choices_column=choice_column,
-        choice_mode="item_index",
+        choice_format="item_index",
     )
 
 
@@ -372,7 +372,7 @@ def load_modecanada(
     add_is_public=False,
     as_frame=False,
     return_desc=False,
-    choice_mode="one_zero",
+    choice_format="one_zero",
     split_features=False,
     to_wide=False,
     preprocessing=None,
@@ -392,8 +392,8 @@ def load_modecanada(
         by default False.
     return_desc : bool, optional
         Whether to return the description, by default False.
-    choice_mode : str, optional, among ["one_zero", "items_id"]
-        mode indicating how the choice is encoded, by default "one_zero".
+    choice_format : str, optional, among ["one_zero", "items_id"]
+        format indicating how the choice is encoded, by default "one_zero".
     split_features : bool, optional
         Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
@@ -461,7 +461,7 @@ def load_modecanada(
     for col in canada_df.columns:
         canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
 
-    if choice_mode == "items_id":
+    if choice_format == "items_id":
         # We need to transform how the choice is encoded to add the chosen item id
         named_choice = [0] * len(canada_df)
         for n_row, row in canada_df.iterrows():
@@ -565,7 +565,7 @@ def load_modecanada(
             items_id_column="alt",
             contexts_id_column="case",
             choices_column="choice",
-            choice_mode="one_zero",
+            choice_format="one_zero",
         )
 
     return ChoiceDataset.from_single_long_df(
@@ -576,7 +576,7 @@ def load_modecanada(
         items_id_column="alt",
         contexts_id_column="case",
         choices_column=choice_column,
-        choice_mode="one_zero",
+        choice_format="one_zero",
     )
 
 
@@ -706,7 +706,7 @@ def load_electricity(
         contexts_items_features_columns=["pf", "cl", "loc", "wk", "tod", "seas"],
         items_id_column="alt",
         contexts_id_column="chid",
-        choice_mode="one_zero",
+        choice_format="one_zero",
     )
 
 
@@ -750,6 +750,7 @@ def load_train(
     if as_frame:
         return train_df
     train_df["choice"] = train_df.apply(lambda row: row.choice[-1], axis=1)
+    """
     train_df = train_df.rename(
         columns={
             "price1": "1_price",
@@ -766,14 +767,15 @@ def load_train(
             "comfort2": "2_comfort",
         }
     )
-
+    """
     return ChoiceDataset.from_single_wide_df(
         df=train_df,
         items_id=["1", "2"],
         fixed_items_suffixes=None,
         contexts_features_columns=["id"],
-        contexts_items_features_suffixes=["price", "time", "change", "comfort"],
+        contexts_items_features_prefixes=["price", "time", "change", "comfort"],
+        delimiter="",
         contexts_items_availabilities_suffix=None,
         choices_column="choice",
-        choice_mode="items_id",
+        choice_format="items_id",
     )
