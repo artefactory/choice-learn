@@ -38,7 +38,7 @@ def get_path(data_file_name, module=DATA_MODULE):
         return path
 
 
-def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
+def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
 
     Parameters
@@ -67,7 +67,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     return names, np.stack(data)
 
 
-def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
+def load_gzip(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load zipped .csv.gz files.
 
     Parameters
@@ -750,6 +750,7 @@ def load_train(
     if as_frame:
         return train_df
     train_df["choice"] = train_df.apply(lambda row: row.choice[-1], axis=1)
+    """
     train_df = train_df.rename(
         columns={
             "price1": "1_price",
@@ -766,13 +767,14 @@ def load_train(
             "comfort2": "2_comfort",
         }
     )
-
+    """
     return ChoiceDataset.from_single_wide_df(
         df=train_df,
         items_id=["1", "2"],
         fixed_items_suffixes=None,
         contexts_features_columns=["id"],
-        contexts_items_features_suffixes=["price", "time", "change", "comfort"],
+        contexts_items_features_prefixes=["price", "time", "change", "comfort"],
+        delimiter="",
         contexts_items_availabilities_suffix=None,
         choices_column="choice",
         choice_format="items_id",
