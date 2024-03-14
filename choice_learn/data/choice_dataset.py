@@ -867,7 +867,7 @@ class ChoiceDataset(object):
             contexts_items_features = []
             for item in items_id:
                 columns = [
-                    f"{feature}{delimiter}{item}" for feature in contexts_items_features_suffixes
+                    f"{feature}{delimiter}{item}" for feature in contexts_items_features_prefixes
                 ]
                 for col in columns:
                     if col not in df.columns:
