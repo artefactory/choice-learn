@@ -295,7 +295,7 @@ class ChoiceDatasetIndexer(Indexer):
             if self.choice_dataset.contexts_items_availabilities is None:
                 contexts_items_availabilities = np.ones(
                     (len(choices_indexes), self.choice_dataset.base_num_items)
-                )
+                ).astype("float32")
             else:
                 if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
                     contexts_items_availabilities = (
@@ -440,7 +440,9 @@ class ChoiceDatasetIndexer(Indexer):
             choice = self.choice_dataset.choices[choices_indexes]
 
             if self.choice_dataset.contexts_items_availabilities is None:
-                contexts_items_availabilities = np.ones((self.choice_dataset.base_num_items))
+                contexts_items_availabilities = np.ones(
+                    (self.choice_dataset.base_num_items)
+                ).astype("float32")
             else:
                 contexts_items_availabilities = self.choice_dataset.contexts_items_availabilities[
                     choices_indexes

@@ -365,3 +365,163 @@ def load_modecanada(
         choices_column=choice_column,
         choice_format="one_zero",
     )
+
+
+def load_heating(
+    as_frame=False,
+    to_wide=False,
+):
+    """Load and return the Heating dataset from Kenneth Train.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded Heating dataset
+    """
+    _ = to_wide
+    data_file_name = "heating_data.csv.gz"
+    names, data = load_gzip(data_file_name)
+
+    heating_df = pd.read_csv(resources.files(DATA_MODULE) / "heating_data.csv.gz")
+
+    if as_frame:
+        return heating_df
+
+    contexts_features = ["income", "agehed", "rooms", "region"]
+    choice = ["depvar"]
+    contexts_items_features = ["ic.", "oc."]
+    items = ["gc", "gr", "ec", "er", "hp"]
+
+    choices = np.array([items.index(val) for val in heating_df[choice].to_numpy().ravel()])
+    contexts = heating_df[contexts_features].to_numpy()
+    contexts_items = np.stack(
+        [
+            heating_df[[feat + item for feat in contexts_items_features]].to_numpy()
+            for item in items
+        ],
+        axis=1,
+    )
+    return ChoiceDataset(
+        contexts_features=contexts, contexts_items_features=contexts_items, choices=choices
+    )
+
+
+def load_electricity(
+    as_frame=False,
+    to_wide=False,
+):
+    """Load and return the Electricity dataset from Kenneth Train.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded Electricity dataset
+    """
+    _ = to_wide
+    data_file_name = "electricity.csv.gz"
+    names, data = load_gzip(data_file_name)
+
+    elec_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+    elec_df.choice = elec_df.choice.astype(int)
+    elec_df[["pf", "cl", "loc", "wk", "tod", "seas"]] = elec_df[
+        ["pf", "cl", "loc", "wk", "tod", "seas"]
+    ].astype(float)
+
+    if as_frame:
+        return elec_df
+
+    return ChoiceDataset.from_single_long_df(
+        df=elec_df,
+        contexts_items_features_columns=["pf", "cl", "loc", "wk", "tod", "seas"],
+        items_id_column="alt",
+        contexts_id_column="chid",
+        choice_mode="one_zero",
+    )
+
+
+def load_train(
+    as_frame=False,
+    to_wide=False,
+    return_desc=False,
+):
+    """Load and return the Train dataset from Koppleman et al. (1993).
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns:
+    --------
+    ChoiceDataset
+        Loaded Electricity dataset
+    """
+    desc = "A sample of 235  Dutchindividuals facing 2929 choice situations."
+    desc += """Ben-Akiva M, Bolduc D, Bradley M(1993).
+    “Estimation of Travel Choice Models with Randomly Distributed Values of Time.
+    ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
+    _ = to_wide
+    data_file_name = "train_data.csv.gz"
+    names, data = load_gzip(data_file_name)
+
+    train_df = pd.read_csv(resources.files(DATA_MODULE) / data_file_name)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return train_df
+    train_df["choice"] = train_df.apply(lambda row: row.choice[-1], axis=1)
+    train_df = train_df.rename(
+        columns={
+            "price1": "1_price",
+            "time1": "1_time",
+            "change1": "1_change",
+            "comfort1": "1_comfort",
+        }
+    )
+    train_df = train_df.rename(
+        columns={
+            "price2": "2_price",
+            "time2": "2_time",
+            "change2": "2_change",
+            "comfort2": "2_comfort",
+        }
+    )
+    print(train_df.head())
+    return ChoiceDataset.from_single_wide_df(
+        df=train_df,
+        items_id=["1", "2"],
+        fixed_items_suffixes=None,
+        contexts_features_columns=["id"],
+        contexts_items_features_suffixes=["price", "time", "change", "comfort"],
+        contexts_items_availabilities_suffix=None,
+        choices_column="choice",
+        choice_mode="items_id",
+    )
