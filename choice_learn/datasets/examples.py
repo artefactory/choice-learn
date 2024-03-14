@@ -1,15 +1,15 @@
 """Some datasets used for personal examples."""
-import os
 
 import numpy as np
 import pandas as pd
 
 from choice_learn.data.choice_dataset import ChoiceDataset
+from choice_learn.datasets.base import get_path
 
-DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
+DATA_MODULE = "choice_learn.datasets.data"
 
 
-def load_tafeng(as_frame=False, preprocessing=None):
+def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
     """Function to load the TaFeng dataset.
 
     Orginal file and informations can be found here:
@@ -21,21 +21,33 @@ def load_tafeng(as_frame=False, preprocessing=None):
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional
         predefined pre-processing to apply, by default None
+    return_desc : bool, optional
+        Whether to return the description of the dataset, by default False
 
     Returns:
     --------
     pd.DF or ChoiceDataset
         TaFeng Grocery Dataset.
     """
-    filepath = os.path.join(DATA_MODULE, "ta_feng.csv.zip")
+    filename = "ta_feng.csv.zip"
+
+    filepath = get_path(filename, module=DATA_MODULE)
     # url = "https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/download?datasetVersionNumber=1"
     # if not os.path.exists(filepath):
     #     with urllib.request.urlopen(url) as f:
     #         file = f.read().decode("utf-8")
 
+    description = """The dataset contains a Chinese grocery store transaction data from November
+    2000 to February 2001.
+    Details and files can be found at:
+    https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/download?datasetVersionNumber=1
+    """
+
     tafeng_df = pd.read_csv(filepath)
     if as_frame:
         return tafeng_df
+    if return_desc:
+        return description
 
     if preprocessing == "assort_example":
         subdf = tafeng_df.loc[tafeng_df.PRODUCT_SUBCLASS == 100505]
@@ -114,4 +126,4 @@ def load_tafeng(as_frame=False, preprocessing=None):
             contexts_items_availabilities=np.ones((len(choices), 25)).astype("float32"),
         )
 
-    return tafeng_df
+    return load_tafeng(as_frame=False, preprocessing="assort_example")
