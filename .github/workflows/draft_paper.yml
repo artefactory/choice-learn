@@ -1,4 +1,4 @@
-name: draft_paper
+name: Paper draft to PDF
 
 on:
   workflow_dispatch:
@@ -7,7 +7,6 @@ on:
 
 jobs:
   paper:
-    name: Paper draft to PDF
     runs-on: ubuntu-latest
 
     steps:
