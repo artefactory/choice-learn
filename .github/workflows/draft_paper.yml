@@ -1,7 +1,7 @@
 name: Paper draft to PDF
 
 on:
-  workflow_dispatch:
+  push:
     branches: 
       - paper
 
