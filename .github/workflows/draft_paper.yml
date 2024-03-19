@@ -1,6 +1,9 @@
 name: draft_paper
 
-on: paper
+on:
+  workflow_dispatch:
+    branches: 
+      - paper
 
 jobs:
   paper:
