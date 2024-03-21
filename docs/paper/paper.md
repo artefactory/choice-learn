@@ -52,18 +52,19 @@ Discrete choice models aim at explaining or predicting a choice from a set of al
 
 With the fast-paced improvement of companies data architectures, larger reliable datasets emerge. Choice modelling is a natural tool for a retailer to understand its customer base and to improve or optimize its commercial offer. While several efficient Python packages have been made available to estimate choice models [@Bierlaire:2023; @Brathwaite:2018] they are usually not built to work with large-scale datasets.
 
+[Organisation of the ChoiceDataset. \label{fig:dataset}](../illustrations/choice_learn_dataset.png)
+[Organisation of the FeaturesbyID. \label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
+
 Choice-Learn's ChoiceDataset is built specifically to handle choice data. It mainly relies on NumPy [@Harris:2020] with the objective to limit the memory footprint of the dataset. The key idea is to limit features repetition and to rebuild the full data structure only for batches of the dataset.
 - Features splitting: We define 'items_features' that describe each alternative among which to choose and 'fixed_features' that are shared by all alternatives for one given choice. The fixed_features usually change from one choice to another and can represent customer features for example. Its functioning is illustrated on Figure \autoref{fig:dataset}.
 - Features by ID: We allow to store features in specific object and to reference it only by its ID in the dataset. These features are stacked with the others only by batches. It is particularly efficient for features that are repeated in the datasets. A usual example can be the one-hot representations of the place where the choice happens. It is illustrated on Figure \autoref{fig:fbi}.
-![Organisation of the ChoiceDataset.\label{fig:dataset}](../illustrations/choice_learn_dataset.png)
-![Organisation of the FeaturesbyID.\label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
 
 ## Parametric and non-parametric models
 
 The large datasets now available open the door for the use of more complex machine learning models that can otherwise be difficult to estimate with little data. Recent publications outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024].
 The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are usually not built to integrate such non-linear approaches.
 
-Choice-Learn's proposes a model structure that integrates parametric models such as the Conditional-MNL [@Train:1987] as well as non-paramtric ones like RUMnet [@Aouad:2023]. It is based on Tensorflow [@Abadi:2015] using already existing efficient implementation of optimization algorithms such as LBFGS[] or different version of the gradient descent[]. It also enables optimization using GPUs that can prove to be particularly time saving.
+Choice-Learn's proposes a model structure that integrates parametric models such as the Conditional-MNL [@Train:1987] as well as non-paramtric ones like RUMnet [@Aouad:2023]. It is based on Tensorflow [@Abadi:2015] using already existing efficient implementation of optimization algorithms such as LBFGS[@Nocedal:2006] or different version of the gradient descent[Tieleman:2012; Kingma:2017]. It also enables optimization using GPUs that can prove to be particularly time saving.
 Moreover, Choice-Learn also aims at helping for building new and custom choice models with a common inheritance scheme that minimizes the user's work. Compared to usual implementations non linear formulations of utility are possible, as long as it is possible to define it with derivable Tensorflow operations.
 
 ## Tools for choice modelling
