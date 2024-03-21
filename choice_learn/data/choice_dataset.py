@@ -1,4 +1,5 @@
 """Main classes to handle assortment data."""
+import logging
 
 import numpy as np
 import pandas as pd
@@ -25,14 +26,12 @@ class ChoiceDataset(object):
     def __init__(
         self,
         choices,  # Should not have None as default value ?
-        fixed_items_features=None,
-        contexts_features=None,  # as many context as choices.  values or ids (look at key)
-        contexts_items_features=None,
-        contexts_items_availabilities=None,
+        fixed_features_by_choice=None,  # as many context as choices.  values or ids (look at key)
+        items_features_by_choice=None,
+        available_items_by_choice=None,
         features_by_ids=[],  # list of (name, FeaturesStorage)
-        fixed_items_features_names=None,
-        contexts_features_names=None,
-        contexts_items_features_names=None,
+        fixed_features_by_choice_names=None,
+        items_features_by_choice_names=None,
     ):
         """Builds the ChoiceDataset.
 
@@ -40,29 +39,24 @@ class ChoiceDataset(object):
         ----------
         choices: list or np.ndarray
             list of chosen items indexes
-        fixed_items_features : tuple of (array_like, )
-            matrix of shape (num_items, num_items_features) containing the features of the items
-            that never change, e.g. item color, default is None
-        contexts_features : tuple of (array_like, )
+        fixed_features_by_choice : tuple of (array_like, )
             matrix of shape (num_choices, num_contexts_features) containing the features of the
             different contexts that are common to all items (e.g. store features,
             customer features, etc...)
-        contexts_items_features : tuple of (array_like, ), default is None
+        items_features_by_choice : tuple of (array_like, ), default is None
             matrix of shape (num_choices, num_items, num_contexts_items_features)
             containing the features
             of the items that change over time (e.g. price, promotion, etc...), default is None
-        contexts_items_availabilities : array_like
+        available_items_by_choice : array_like
             matrix of shape (num_choices, num_items) containing the availabilities of the items
             over the different choices, default is None
         features_by_ids : list of (name, FeaturesStorage)
             List of Storage objects. Their name must correspond to a feature name
             among fixed_items, contexts,
             contexts_items and their ids must match to those features values. Default is []
-        fixed_items_features_names : tuple of (array_like, )
-            list of names of the fixed_items_features, default is None
-        contexts_features_names : tuple of (array_like, )
+        fixed_features_by_choice_names : tuple of (array_like, )
             list of names of the contexts_features, default is None
-        contexts_items_features_names : tuple of (array_like, )
+        items_features_by_choice_names : tuple of (array_like, )
             list of names of the contexts_items_features, default is None
         """
         if choices is None:
@@ -70,100 +64,74 @@ class ChoiceDataset(object):
             raise ValueError("Choices must be specified, got None")
 
         # --------- [ Handling features type given as tuples or not ] --------- #
-        # If items_features is not given as tuple, transform it internally as a tuple
+
+        # If fixed_features_by_choice is not given as tuple, transform it internally as a tuple
         # A bit longer because can be None and need to also handle names
-
-        if fixed_items_features is not None:
-            if not isinstance(fixed_items_features, tuple):
-                if fixed_items_features_names is not None:
-                    if len(fixed_items_features) == len(fixed_items_features_names):
-                        raise ValueError(
-                            """Number of features given does not match number
-                                         of features names given."""
-                        )
-                self._return_items_features_tuple = False
-
-                fixed_items_features = (fixed_items_features,)
-                fixed_items_features_names = (fixed_items_features_names,)
-            else:
-                self._return_items_features_tuple = True
-
-                # items_features is already a tuple, names are given, checking consistency
-                if fixed_items_features_names is not None:
-                    for f, name in zip(fixed_items_features, fixed_items_features_names):
-                        if len(f[0]) != len(name):
-                            raise ValueError(
-                                "items_features shape and items_features_names shape do not match"
-                            )
-                # In this case names are missing, still transform it as a tuple
-                else:
-                    fixed_items_features_names = (None,) * len(fixed_items_features)
-        else:
-            self._return_items_features_tuple = True
-
-        # If choices_features is not given as tuple, transform it internally as a tuple
-        # A bit longer because can be None and need to also handle names
-        if contexts_features is not None:
-            if not isinstance(contexts_features, tuple):
-                self._return_contexts_features_tuple = False
-                if contexts_features_names is not None:
-                    if len(contexts_features[0]) != len(contexts_features_names):
+        if fixed_features_by_choice is not None:
+            if not isinstance(fixed_features_by_choice, tuple):
+                self._return_fixed_features_by_choice_tuple = False
+                if fixed_features_by_choice_names is not None:
+                    if len(fixed_features_by_choice[0]) != len(fixed_features_by_choice_names):
                         raise ValueError(
                             f"""Number of features given does not match
                                          number of features names given:
-                                           {len(contexts_features[0])} and
-                                            {len(contexts_features_names)}"""
+                                           {len(fixed_features_by_choice[0])} and
+                                            {len(fixed_features_by_choice_names)}"""
                         )
 
-                contexts_features_names = (contexts_features_names,)
-                contexts_features = (contexts_features,)
+                fixed_features_by_choice_names = (fixed_features_by_choice_names,)
+                fixed_features_by_choice = (fixed_features_by_choice,)
 
             # choices_features is already a tuple, names are given, checking consistency
             else:
-                self._return_contexts_features_tuple = True
-                if contexts_features_names is not None:
-                    for f, name in zip(contexts_features, contexts_features_names):
-                        if len(f[0]) != len(name):
+                self._return_fixed_features_by_choice_tuple = True
+                if fixed_features_by_choice_names is not None:
+                    for sub_k, (sub_features, sub_names) in enumerate(zip(fixed_features_by_choice, fixed_features_by_choice_names)):
+                        if len(sub_features[0]) != len(sub_names):
                             raise ValueError(
-                                """contexts_features shape and contexts_features_names
-                                shape do not match"""
+                                f"""{sub_k}-th given fixed_features_by_choice and fixed_features_by_choice_names
+                                shapes do not match"""
                             )
 
                 # In this case names are missing, still transform it as a tuple
                 else:
-                    contexts_features_names = (None,) * len(contexts_features)
+                    fixed_features_by_choice_names = (None,) * len(fixed_features_by_choice)
         else:
-            self._return_contexts_features_tuple = True
+            self._return_fixed_features_by_choice_tuple = False
 
-        if not isinstance(contexts_items_features, tuple) and contexts_items_features is not None:
-            self._return_contexts_items_features_tuple = False
-            if contexts_items_features_names is not None:
-                if len(contexts_items_features[0][0]) != len(contexts_items_features_names):
+        # If items_features_by_choice is not given as tuple, transform it internally as a tuple
+        # A bit longer because can be None and need to also handle names
+            
+        if not isinstance(items_features_by_choice, tuple) and items_features_by_choice is not None:
+            self._return_items_features_by_choice_tuple = False
+            if items_features_by_choice_names is not None:
+                if len(items_features_by_choice[0][0]) != len(items_features_by_choice_names):
                     raise ValueError(
-                        f"""Number of features given does not match
-                                     number of features names given for contexts_items:
-                                     {len(contexts_items_features[0][0])} and
-                                     {len(contexts_items_features_names)}"""
+                        f"""Number of items_features_by_choice given does not match
+                                     number of items_features_by_choice_names given:
+                                     {len(items_features_by_choice[0][0])} and
+                                     {len(items_features_by_choice_names)}"""
                     )
-            contexts_items_features = (contexts_items_features,)
-            contexts_items_features_names = (contexts_items_features_names,)
+            items_features_by_choice = (items_features_by_choice,)
+            items_features_by_choice_names = (items_features_by_choice_names,)
 
-        # sessions_items_features is already a tuple, names are given, checking consistency
-        elif contexts_items_features is not None and contexts_items_features_names is not None:
-            for f, name in zip(contexts_items_features, contexts_items_features_names):
-                if len(f[0][0]) != len(name):
+        # items_features_by_choice is already a tuple, names are given, checking consistency
+        elif items_features_by_choice is not None and items_features_by_choice_names is not None:
+            for sub_k, (sub_features, sub_names) in enumerate(zip(items_features_by_choice, items_features_by_choice_names)):
+                if len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
-                        """contexts_items_features shape and
-                        contexts_items_features_names shape do not match"""
+                        f"""{sub_k}-th given items_features_by_choice and
+                        items_features_by_choice_names shapes do not match"""
                     )
-            self._return_contexts_items_features_tuple = True
+            self._return_items_features_by_choice_tuple = True
+
         # In this case names are missing, still transform it as a tuple
-        elif contexts_items_features is not None:
-            self._return_contexts_items_features_tuple = True
-            contexts_items_features_names = (None,) * len(contexts_items_features)
+        elif items_features_by_choice is not None:
+            self._return_items_features_by_choice_tuple = True
+            items_features_by_choice_names = (None,) * len(items_features_by_choice)
 
         else:
-            self._return_contexts_items_features_tuple = True
+            self._return_items_features_by_choice_tuple = False
 
         # --------- [Normalizing features types (DataFrame, List, etc...) -> np.ndarray] --------- #
         #
@@ -171,141 +139,137 @@ class ChoiceDataset(object):
         # Basically it transforms them to be internally stocked as np.ndarray and keep columns
         # names as features names
 
-        # Handling items_features
-        if fixed_items_features is not None:
-            for i, feature in enumerate(fixed_items_features):
-                if isinstance(feature, pd.DataFrame):
-                    # Ordering items by id ?
-                    if "item_id" in feature.columns:
-                        feature = feature.set_index("item_id")
-                    fixed_items_features = (
-                        fixed_items_features[:i]
-                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                        + fixed_items_features[i + 1 :]
-                    )
-                    fixed_items_features_names = (
-                        fixed_items_features_names[:i]
-                        + (feature.columns.tolist(),)
-                        + fixed_items_features_names[i + 1 :]
-                    )
-                elif isinstance(feature, list):
-                    fixed_items_features = (
-                        fixed_items_features[:i]
-                        + (np.array(feature),)
-                        + fixed_items_features[i + 1 :]
-                    )
-
         # Handling context features
-        if contexts_features is not None:
-            for i, feature in enumerate(contexts_features):
+        if fixed_features_by_choice is not None:
+            for i, feature in enumerate(fixed_features_by_choice):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering choices by id ?
                     if "context_id" in feature.columns:
                         feature = feature.set_index("context_id")
-                    contexts_features = (
-                        contexts_features[:i]
-                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                        + contexts_features[i + 1 :]
+                    fixed_features_by_choice = (
+                        fixed_features_by_choice[:i]
+                        + (fixed_features_by_choice.loc[np.sort(feature.index)].to_numpy(),)
+                        + fixed_features_by_choice[i + 1 :]
                     )
-                    contexts_features_names = (
-                        contexts_features_names[:i]
+                    if fixed_features_by_choice_names[i] is not None:
+                        logging.warning(f"""fixed_features_by_choice_names {fixed_features_by_choice_names[i]} were given.
+                                        They will be overwritten with DF columns names: {feature.columns}""")
+                    fixed_features_by_choice_names = (
+                        fixed_features_by_choice_names[:i]
                         + (feature.columns,)
-                        + contexts_features_names[i + 1 :]
+                        + fixed_features_by_choice_names[i + 1 :]
                     )
                 elif isinstance(feature, list):
-                    contexts_features = (
-                        contexts_features[:i] + (np.array(feature),) + contexts_features[i + 1 :]
+                    fixed_features_by_choice = (
+                        fixed_features_by_choice[:i] + (np.array(feature),) + fixed_features_by_choice[i + 1 :]
                     )
-        # Handling contexts_items_features
-        if contexts_items_features is not None:
-            for i, feature in enumerate(contexts_items_features):
+        # Handling items_features_by_choice
+        if items_features_by_choice is not None:
+            for i, feature in enumerate(items_features_by_choice):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering choices by id ?
-                    if "context_id" in feature.columns:
+                    # TODO: here choice_id was context_id > make sure this change does not affect
+                    # some code somewhere
+                    if "choice_id" in feature.columns:
                         if "item_id" in feature.columns:
                             all_items = np.sort(feature.item_id.unique())
                             feature_array = []
                             temp_availabilities = []
-                            for sess in np.sort(feature.context_id.unique()):
-                                sess_df = feature.loc[feature.context_id == sess]
+                            for sess in np.sort(feature.choice_id.unique()):
+                                sess_df = feature.loc[feature.choice_id == sess]
                                 sess_df = sess_df[
-                                    sess_df.columns.difference(["context_id"])
+                                    sess_df.columns.difference(["choice_id"])
                                 ].set_index("item_id")
                                 sess_feature = []
-                                sessions_availabilities = []
+                                choice_availabilities = []
                                 for item in all_items:
                                     if item in sess_df.index:
                                         sess_feature.append(sess_df.loc[item].to_numpy())
-                                        sessions_availabilities.append(1)
+                                        choice_availabilities.append(1)
                                     else:
                                         sess_feature.append(np.zeros(len(sess_df.columns)))
-                                        sessions_availabilities.append(0)
+                                        choice_availabilities.append(0)
                                 feature_array.append(sess_feature)
-                                temp_availabilities.append(sessions_availabilities)
-                            contexts_items_features = (
-                                contexts_items_features[:i]
+                                temp_availabilities.append(choice_availabilities)
+
+                            items_features_by_choice = (
+                                items_features_by_choice[:i]
                                 + (np.stack(feature_array, axis=0),)
-                                + contexts_items_features[i + 1 :]
+                                + items_features_by_choice[i + 1 :]
                             )
-                            contexts_items_features_names = (
-                                contexts_items_features_names[:i]
+
+                            if items_features_by_choice_names[i] is not None:
+                                logging.warning(f"""items_features_by_choice_names {items_features_by_choice_names[i]} were given.
+                                                They will be overwritten with DF columns names: {feature.columns}""")
+                            items_features_by_choice_names = (
+                                items_features_by_choice_names[:i]
                                 + (sess_df.columns,)
-                                + contexts_items_features_names[i + 1 :]
+                                + items_features_by_choice_names[i + 1 :]
                             )
                             if (
-                                contexts_items_availabilities is None
+                                available_items_by_choice is None
                                 and len(np.unique(temp_availabilities)) > 1
                             ):
-                                contexts_items_availabilities = np.array(temp_availabilities)
+                                logging.info("""available_items_by_choice were not given and computed from {i}-th items_features_by_choice.""")
+                                available_items_by_choice = np.array(temp_availabilities)
                         else:
                             feature = feature.set_index("context_id")
-                            contexts_items_features = (
-                                contexts_items_features[:i]
+                            items_features_by_choice = (
+                                items_features_by_choice[:i]
                                 + (feature.loc[np.sort(feature.index)].to_numpy(),)
-                                + contexts_items_features[i + 1 :]
+                                + items_features_by_choice[i + 1 :]
                             )
-                            contexts_items_features_names = (
-                                contexts_items_features_names[:i]
+                            if items_features_by_choice_names[i] is not None:
+                                logging.warning(f"""items_features_by_choice_names {items_features_by_choice_names[i]} were given.
+                                                They will be overwritten with DF columns names: {feature.columns}""")
+                            items_features_by_choice_names = (
+                                items_features_by_choice_names[:i]
                                 + (feature.columns,)
-                                + contexts_items_features_names[i + 1 :]
+                                + items_features_by_choice_names[i + 1 :]
                             )
                     else:
-                        raise ValueError("context_id column not found in contexts_items_features")
+                        raise ValueError(f"""A 'choice_id' column must be integrated in {i}-th items_features_by_choice DF, in order to identify each choice.""")
                 elif isinstance(feature, list):
-                    contexts_items_features = (
-                        contexts_items_features[:i]
+                    items_features_by_choice = (
+                        items_features_by_choice[:i]
                         + (np.array(feature),)
-                        + contexts_items_features[i + 1 :]
+                        + items_features_by_choice[i + 1 :]
                     )
-        if contexts_items_availabilities is not None:
-            if isinstance(contexts_items_availabilities, list):
-                contexts_items_availabilities = np.array(
-                    contexts_items_availabilities, dtype=object
+        # Handling available_items_by_choice
+        if available_items_by_choice is not None:
+            if isinstance(available_items_by_choice, list):
+                available_items_by_choice = np.array(
+                    available_items_by_choice, dtype=object # Are you sure ?
                 )
-            elif isinstance(contexts_items_availabilities, pd.DataFrame):
-                if "context_id" in contexts_items_availabilities.columns:
-                    if "item_id" in contexts_items_availabilities.columns:
+            elif isinstance(available_items_by_choice, pd.DataFrame):
+                if "choice_id" in available_items_by_choice.columns:
+                    if "item_id" in available_items_by_choice.columns:
                         av_array = []
-                        for sess in np.sort(contexts_items_availabilities.context_id):
-                            sess_df = contexts_items_availabilities.loc[
-                                contexts_items_availabilities.context_id == sess
+                        for sess in np.sort(available_items_by_choice.context_id):
+                            sess_df = available_items_by_choice.loc[
+                                available_items_by_choice.context_id == sess
                             ]
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
-                        contexts_items_availabilities = np.array(av_array)
+                        available_items_by_choice = np.array(av_array)
                     else:
-                        feature = feature.set_index("context_id")
-                        contexts_items_availabilities = contexts_items_availabilities.loc[
+                        feature = feature.set_index("choice_id")
+                        available_items_by_choice = available_items_by_choice.loc[
                             np.sort(feature.index)
                         ].to_numpy()
+                else:
+                    raise ValueError(
+                        "A 'choice_id' column must be integrated in available_items_by_choice DF"
+                    )
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
         # Items are sorted by name and attributed an index
+        # TODO: Keep items_id as an attribute ?
         if isinstance(choices, pd.DataFrame):
             # Ordering choices by id
-            if "context_id" in choices.columns:
-                choices = choices.set_index("context_id")
+            if "choice_id" in choices.columns:
+                choices = choices.set_index("choice_id")
             choices = choices.loc[np.sort(choices.index)]
             items = np.sort(np.unique(choices.choice))
             # items is the value (str) of the item
