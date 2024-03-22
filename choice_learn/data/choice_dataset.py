@@ -966,13 +966,7 @@ class ChoiceDataset(object):
         return ""
 
     def get_choices_batch(self, choices_indexes, features=None):
-        """Method to access data within the ListChoiceDataset from its index.
-
-        One index corresponds to a choice within a session.
-
-        Return order:
-            - df_chosen_item, df of length batch_size
-            - dfs_available_items, list of lentch batch_size of dfs of length n_available_items
+        """Method to access a chunk of data within the ChoiceDataset from choice indexes.
 
         Parameters
         ----------
@@ -984,156 +978,111 @@ class ChoiceDataset(object):
         Returns:
         --------
         tuple of (array_like, )
-            tuple of arrays containing the features of the different items
+            tuple of arrays containing a batch of fixed_features_by_choice
         tuple of (array_like, )
-            tuple of arrays containing the features of the different contexts
-        tuple of (array_like, )
-            tuple of arrays containing the features of the different contexts_items
+            tuple of arrays containing a batch of items_features_by_choice
         array_like
-            array containing the availabilities of the different items
+            array containing a batch of availables_items_by_choice
         array_like
-            array containing the choices (indexes of chosen items)
+            array containing a batch of choices
         """
         _ = features
         if isinstance(choices_indexes, list):
-            if self.fixed_items_features is None:
-                fixed_items_features = None
-            else:
-                fixed_items_features = list(
-                    items_feature
-                    # .astype(self._return_types[0][i])
-                    for i, items_feature in enumerate(self.fixed_items_features)
-                )
 
-            if self.contexts_features is None:
-                contexts_features = None
+            if self.fixed_features_by_choice is None:
+                fixed_features_by_choice = None
             else:
-                contexts_features = list(
-                    contexts_features[choices_indexes]
+                fixed_features_by_choice = list(
+                    fixed_features_by_choice[choices_indexes]
                     # .astype(self._return_types[1][i])
-                    for i, contexts_features in enumerate(self.contexts_features)
+                    for i, fixed_features_by_choice in enumerate(self.fixed_features_by_choice)
                 )
-                # sessions_features were not given as a tuple, so we return do not return it
-                # as a tuple
 
-            if self.contexts_items_features is None:
-                contexts_items_features = None
+            if self.items_features_by_choice is None:
+                items_features_by_choice = None
             else:
-                contexts_items_features = list(
-                    contexts_items_feature[choices_indexes]
+                items_features_by_choice = list(
+                    items_features_by_choice[choices_indexes]
                     # .astype(self._return_types[2][i])
-                    for i, contexts_items_feature in enumerate(self.contexts_items_features)
+                    for i, items_features_by_choice in enumerate(self.items_features_by_choice)
                 )
 
-            if self.contexts_items_availabilities is None:
-                contexts_items_availabilities = np.ones(
+            if self.available_items_by_choice is None:
+                available_items_by_choice = np.ones(
                     (len(choices_indexes), self.base_num_items)
                 ).astype("float32")
             else:
-                contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
+                available_items_by_choice = self.available_items_by_choice[choices_indexes]
                 # .astype(self._return_types[3])
 
             choices = self.choices[choices_indexes].astype(self._return_types[4])
 
-            if len(self.fixed_items_features_map) > 0:
+            if len(self.fixed_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.fixed_items_features_map.keys())):
+                for tuple_index in np.sort(list(self.fixed_features_by_choice_map.keys())):
                     feat_ind_min = 0
                     unstacked_feat = []
                     for feature_index in np.sort(
-                        list(self.fixed_items_features_map[tuple_index].keys())
+                        list(self.fixed_features_by_choice_map[tuple_index].keys())
                     ):
                         unstacked_feat.append(
-                            fixed_items_features[tuple_index][:, feat_ind_min:feature_index]
+                            fixed_features_by_choice[tuple_index][:, feat_ind_min:feature_index]
                         )
                         unstacked_feat.append(
-                            self.fixed_items_features_map[tuple_index][feature_index].batch[
-                                fixed_items_features[tuple_index][:, feature_index]
+                            self.fixed_features_by_choice_map[tuple_index][feature_index].batch[
+                                fixed_features_by_choice[tuple_index][:, feature_index]
                             ]
                         )
                         feat_ind_min = feature_index + 1
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
 
-                fixed_items_features = mapped_features
+                fixed_features_by_choice = mapped_features
 
-            if len(self.contexts_features_map) > 0:
+            if len(self.items_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.contexts_features_map.keys())):
+                for tuple_index in np.sort(list(self.items_features_by_choice_map.keys())):
                     feat_ind_min = 0
                     unstacked_feat = []
                     for feature_index in np.sort(
-                        list(self.contexts_features_map[tuple_index].keys())
+                        list(self.items_features_by_choice_map[tuple_index].keys())
                     ):
                         unstacked_feat.append(
-                            contexts_features[tuple_index][:, feat_ind_min:feature_index]
+                            items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
                         )
                         unstacked_feat.append(
-                            self.contexts_features_map[tuple_index][feature_index].batch[
-                                contexts_features[tuple_index][:, feature_index]
-                            ]
-                        )
-                        feat_ind_min = feature_index + 1
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
-
-                contexts_features = mapped_features
-
-            if len(self.contexts_items_features_map) > 0:
-                mapped_features = []
-                for tuple_index in np.sort(list(self.contexts_items_features_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.contexts_items_features_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            contexts_items_features[tuple_index][:, :, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.contexts_items_features_map[tuple_index][feature_index].batch[
-                                contexts_items_features[tuple_index][:, :, feature_index]
+                            self.items_features_by_choice_map[tuple_index][feature_index].batch[
+                                items_features_by_choice[tuple_index][:, :, feature_index]
                             ]
                         )
                         feat_ind_min = feature_index + 1
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
-                contexts_items_features = mapped_features
+                items_features_by_choice = mapped_features
 
-            if fixed_items_features is not None:
-                for i in range(len(fixed_items_features)):
-                    fixed_items_features[i] = fixed_items_features[i].astype(
-                        self._return_types[0][i]
-                    )
-                # items_features were not given as a tuple, so we return do not return it as a tuple
-                if not self._return_items_features_tuple:
-                    fixed_items_features = fixed_items_features[0]
+            if fixed_features_by_choice is not None:
+                for i in range(len(fixed_features_by_choice)):
+                    fixed_features_by_choice[i] = fixed_features_by_choice[i].astype(self._return_types[0][i])
+                if not self._return_fixed_features_by_choice_tuple:
+                    fixed_features_by_choice = fixed_features_by_choice[0]
                 else:
-                    fixed_items_features = tuple(fixed_items_features)
+                    fixed_features_by_choice = tuple(fixed_features_by_choice)
 
-            if contexts_features is not None:
-                for i in range(len(contexts_features)):
-                    contexts_features[i] = contexts_features[i].astype(self._return_types[1][i])
-                if not self._return_contexts_features_tuple:
-                    contexts_features = contexts_features[0]
-                else:
-                    contexts_features = tuple(contexts_features)
-
-            if contexts_items_features is not None:
-                for i in range(len(contexts_items_features)):
-                    contexts_items_features[i] = contexts_items_features[i].astype(
-                        self._return_types[2][i]
+            if items_features_by_choice is not None:
+                for i in range(len(items_features_by_choice)):
+                    items_features_by_choice[i] = items_features_by_choice[i].astype(
+                        self._return_types[1][i]
                     )
-                # sessions_items_features were not given as a tuple, so we return do not return
+                # items_features_by_choice were not given as a tuple, so we return do not return
                 # it as a tuple
-                if not self._return_contexts_items_features_tuple:
-                    contexts_items_features = contexts_items_features[0]
+                if not self._return_items_features_by_choice_tuple:
+                    items_features_by_choice = items_features_by_choice[0]
                 else:
-                    contexts_items_features = tuple(contexts_items_features)
+                    items_features_by_choice = tuple(items_features_by_choice)
 
             return (
-                fixed_items_features,
-                contexts_features,
-                contexts_items_features,
-                contexts_items_availabilities,
+                fixed_features_by_choice,
+                items_features_by_choice,
+                available_items_by_choice,
                 choices,
             )
 
@@ -1141,17 +1090,21 @@ class ChoiceDataset(object):
             return self.get_choice_batch(
                 list(range(*choices_indexes.indices(self.choices.shape[0])))
             )
-
+        
+        ### Attemps at simplifying the code
+        choices_indexes = np.array([choices_indexes])
+        fixed_items_features_by_choices, items_features_by_choice, available_items_by_choice, choice = self._get_choices_batch(
+            choices_indexes
+        )
+        return (
+            fixed_items_features_by_choices[0],
+            items_features_by_choice[0],
+            available_items_by_choice[0],
+            choice[0],
+        )
+        """
         ### New
         choice = self.choices[choices_indexes]
-
-        # fif = self.fif ?
-        if self.fixed_items_features is None:
-            fixed_items_features = None
-        else:
-            fixed_items_features = list(
-                items_feature for items_feature in self.fixed_items_features
-            )
 
         if self.contexts_features is None:
             contexts_features = None
@@ -1262,7 +1215,6 @@ class ChoiceDataset(object):
                 contexts_items_features = contexts_items_features[0]
             else:
                 contexts_items_features = tuple(contexts_items_features)
-
         return (
             fixed_items_features,
             contexts_features,
@@ -1270,6 +1222,7 @@ class ChoiceDataset(object):
             contexts_items_availabilities,
             choice,
         )
+        """
 
     def __getitem__(self, choices_indexes):
         """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
