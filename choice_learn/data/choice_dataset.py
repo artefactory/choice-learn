@@ -1266,9 +1266,9 @@ class ChoiceDataset(object):
 
         try:
             if self.shared_features_by_choice_names[0] is None:
-                shared_items_features_names = None
+                shared_features_by_choice_names = None
             else:
-                shared_items_features_names = self.shared_features_by_choice_names
+                shared_features_by_choice_names = self.shared_features_by_choice_names
         except TypeError:
             shared_features_by_choice_names = None
         try:
