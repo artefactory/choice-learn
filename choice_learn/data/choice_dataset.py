@@ -585,12 +585,12 @@ class ChoiceDataset(object):
         return len(self)
 
     @classmethod
-    def _contexts_items_features_df_to_np(
+    def _long_df_to_items_features_array(
         cls,
         df,
         features,
         items_id_column="item_id",
-        contexts_id_column="contexts_id",
+        choices_id_column="choice_id",
         items_index=None,
         choices_index=None,
     ):
@@ -601,15 +601,15 @@ class ChoiceDataset(object):
         df : pandas.DataFrame
             Dataframe containing all the features for each item and sessions
         items_index : list
-            List of items
-        contexts_index : list
-            List of sessions
+            List of items identifiers
+        choices_index : list
+            List of unique identifiers of choices
         features : list
             List of columns of df that represents the items_features (for sessions_items_features)
         items_id_column: str, optional
             Name of the column containing the item ids, default is "items_id"
-        contexts_id_column: str, optional
-            Name of the column containing the sessions ids, default is "contexts_id"
+        choices_id_column: str, optional
+            Name of the column containing the choices ids, default is "choice_id"
 
         Returns:
         -------
@@ -628,14 +628,14 @@ class ChoiceDataset(object):
             pass
 
         if choices_index is None:
-            choices_index = np.sort(df[contexts_id_column].unique().to_numpy())
+            choices_index = np.sort(df[choices_id_column].unique().to_numpy())
         if items_index is None:
             items_index = np.sort(df[items_id_column].unique().to_numpy())
 
         items_features_by_choice = []
         available_items_by_choice = []
         for sess in choices_index:
-            sess_df = df.loc[df[contexts_id_column] == sess]
+            sess_df = df.loc[df[choices_id_column] == sess]
             
             # All items were available for the choice
             if len(sess_df) == len(items_index):
@@ -832,10 +832,9 @@ class ChoiceDataset(object):
         df,
         choices_column="choice",
         items_id_column="item_id",
-        contexts_id_column="context_id",
-        fixed_items_features_columns=None,
-        contexts_features_columns=None,
-        contexts_items_features_columns=None,
+        choices_id_column="choice_id",
+        fixed_features_columns=None,
+        items_features_columns=None,
         choice_format="items_id",
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
@@ -848,14 +847,13 @@ class ChoiceDataset(object):
             Name of the column containing the choices, default is "choice"
         items_id_column: str, optional
             Name of the column containing the item ids, default is "items_id"
-        contexts_id_column: str, optional
-            Name of the column containing the sessions ids, default is "contexts_id"
-        fixed_items_features_columns : list
-            Columns of the dataframe that are item features, default is None
-        contexts_features_columns : list
-            Columns of the dataframe that are contexts features, default is None
-        contexts_items_features_columns : list
-            Columns of the dataframe that are context-item features, default is None
+        choices_id_column: str, optional
+            Name of the column containing the choice ids. It is used to identify all rows
+            about a single choice, default is "choice_id"
+        fixed_features_columns : list
+            Columns of the dataframe that are fixed_features_by_choice, default is None
+        items_features_columns : list
+            Columns of the dataframe that are items_features_by_choice, default is None
         choice_format: str, optional
             How choice is indicated in df, either "items_name" or "one_zero",
             default is "items_id"
@@ -865,61 +863,52 @@ class ChoiceDataset(object):
         ChoiceDataset
             corresponding ChoiceDataset
         """
-        # Ordering items and sessions by id
+        # Ordering items and choices by id
         items = np.sort(df[items_id_column].unique())
-        sessions = np.sort(df[contexts_id_column].unique())
+        choices_ids = np.sort(df[choices_id_column].unique())
 
-        if fixed_items_features_columns is not None:
-            items_features = df[fixed_items_features_columns + [items_id_column]].drop_duplicates()
-            items_features = items_features.set_index(items_id_column)
-            items_features = (items_features.loc[items].to_numpy(),)
-
-            items_features_columns = (fixed_items_features_columns,)
-        else:
-            items_features = None
-            items_features_columns = None
-
-        if contexts_features_columns is not None:
-            contexts_features = df[
-                contexts_features_columns + [contexts_id_column]
+        if fixed_features_columns is not None:
+            fixed_features_by_choice = df[
+                fixed_features_columns + [choices_id_column]
             ].drop_duplicates()
-            contexts_features = contexts_features.set_index(contexts_id_column)
-            contexts_features = (contexts_features.loc[sessions].to_numpy(),)
+            fixed_features_by_choice = fixed_features_by_choice.set_index(choices_id_column)
+            fixed_features_by_choice = (fixed_features_by_choice.loc[choices_ids].to_numpy(),)
 
-            contexts_features_columns = (contexts_features_columns,)
+            fixed_features_by_choice_names= (fixed_features_columns,)
         else:
-            contexts_features = None
-            contexts_features_columns = None
+            fixed_features_by_choice = None
+            fixed_features_by_choice_names = None
 
         (
-            contexts_items_features,
-            contexts_items_availabilities,
-        ) = cls._contexts_items_features_df_to_np(
+            items_features_by_choice,
+            avaialble_items_by_choice,
+        ) = cls._long_df_to_items_features_array(
             df,
-            items_index=items,
-            contexts_index=sessions,
-            features=contexts_items_features_columns,
+            features=items_features_columns,
             items_id_column=items_id_column,
-            contexts_id_column=contexts_id_column,
+            choices_id_column=choices_id_column,
+            items_index=items,
+            contexts_index=choices_ids,
         )
-        contexts_items_features_columns = (
-            (contexts_items_features_columns,)
-            if contexts_items_features_columns is not None
+
+        items_features_by_choice_names = (
+            (items_features_columns,)
+            if items_features_columns is not None
             else None
         )
 
         if choice_format == "items_id":
-            choices = df[[choices_column, contexts_id_column]].drop_duplicates(contexts_id_column)
-            choices = choices.set_index(contexts_id_column)
-            choices = choices.loc[sessions].to_numpy()
+            choices = df[[choices_column, choices_id_column]].drop_duplicates(choices_id_column)
+            choices = choices.set_index(choices_id_column)
+            choices = choices.loc[choices_ids].to_numpy()
             # items is the value (str) of the item
             choices = np.squeeze([np.where(items == c)[0] for c in choices])
         elif choice_format == "one_zero":
-            choices = df[[items_id_column, choices_column, contexts_id_column]]
+            choices = df[[items_id_column, choices_column, choices_id_column]]
             choices = choices.loc[choices[choices_column] == 1]
-            choices = choices.set_index(contexts_id_column)
+            choices = choices.set_index(choices_id_column)
             choices = (
-                choices.loc[sessions][items_id_column]
+                choices.loc[choices_ids][items_id_column]
                 .map({k: v for v, k in enumerate(items)})
                 .to_numpy()
             )
@@ -928,14 +917,12 @@ class ChoiceDataset(object):
                 f"choice_format {choice_format} not recognized. Must be in ['items_id', 'one_zero']"
             )
         return ChoiceDataset(
-            fixed_items_features=items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=contexts_items_availabilities,
+            fixed_features_by_choice=fixed_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=avaialble_items_by_choice,
             choices=choices,
-            fixed_items_features_names=items_features_columns,
-            contexts_features_names=contexts_features_columns,
-            contexts_items_features_names=contexts_items_features_columns,
+            fixed_features_by_choice_names=fixed_features_by_choice_names,
+            items_features_by_choice_names=items_features_by_choice_names,
         )
 
     def save(self):
@@ -953,34 +940,28 @@ class ChoiceDataset(object):
             len(self),
         )
         print("%=====================================================================%")
-        if self.fixed_items_features is not None:
-            print(" Fixed Items Features:")
-            print(f" {sum([f.shape[1] for f in self.fixed_items_features])} items features")
-            if self.fixed_items_features_names is not None:
-                print(f" with names: {self.fixed_items_features_names}")
+
+        if self.fixed_features_by_choice is not None:
+            print(" Fixed Features by Choice:")
+            print(f" {sum([f.shape[1] for f in self.fixed_features_by_choice])} fixed features")
+            if self.fixed_features_by_choice_names is not None:
+                if self.fixed_features_by_choice_names[0] is not None:
+                    print(f" with names: {self.fixed_features_by_choice_names}")
         else:
-            print(" No items features registered")
+            print(" No Fixed Features by Choice registered")
         print("\n")
 
-        if self.contexts_features is not None:
-            print(" Contexts features:")
-            print(f" {sum([f.shape[1] for f in self.contexts_features])} context features")
-            if self.contexts_features_names is not None:
-                print(f" with names: {self.contexts_features_names}")
-        else:
-            print(" No sessions features registered")
-        print("\n")
-
-        if self.contexts_items_features is not None:
-            print(" Contexts Items features:")
+        if self.items_features_by_choice is not None:
+            print(" Items Features by Choice:")
             print(
-                f""" {sum([f.shape[2] for f in self.contexts_items_features])} context
-                 items features"""
+                f""" {sum([f.shape[2] for f in self.items_features_by_choice])}
+                 items features """
             )
-            if self.contexts_items_features_names is not None:
-                print(f" with names: {self.contexts_items_features_names}")
+            if self.items_features_by_choice_names is not None:
+                if self.items_features_by_choice_names[0] is not None:
+                    print(f" with names: {self.items_features_by_choice_names}")
         else:
-            print(" No sessions items features registered")
+            print(" No Items Features by Choice registered")
         print("%=====================================================================%")
         return ""
 
