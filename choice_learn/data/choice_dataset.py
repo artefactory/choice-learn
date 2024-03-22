@@ -152,7 +152,7 @@ class ChoiceDataset(object):
                         feature = feature.set_index("context_id")
                     shared_features_by_choice = (
                         shared_features_by_choice[:i]
-                        + (shared_features_by_choice.loc[np.sort(feature.index)].to_numpy(),)
+                        + (shared_features_by_choice[i].loc[np.sort(feature.index)].to_numpy(),)
                         + shared_features_by_choice[i + 1 :]
                     )
                     if shared_features_by_choice_names[i] is not None:
@@ -344,7 +344,7 @@ class ChoiceDataset(object):
             indexes and features_by_id of contexts_items_features
         """
         if len(self.features_by_ids) == 0:
-            return {}, {}, {}
+            return {}, {}
 
         if (
             self.shared_features_by_choice_names is None
@@ -495,7 +495,7 @@ class ChoiceDataset(object):
             - There is no choice index higher than detected number of items
             - All items are present at least once in the choices
         """
-        if np.max(self.choices) > self.base_num_items:
+        if np.max(self.choices) > self.base_num_items - 1:
             msg = f"Choices values not coherent with number of items given in features.  \
             In particular, max value of choices is {np.max(self.choices)} while number of  \
             items is {self.base_num_items}"
@@ -764,7 +764,7 @@ class ChoiceDataset(object):
                 "You cannot give both contexts_items_availabilities_prefix and\
                     contexts_items_availabilities_suffix."
             )
-        if choice_format not in ["items_id", "items_name"]:
+        if choice_format not in ["items_index", "items_name"]:
             logging.warning("choice_format not undersood, defaulting to 'items_index'")
 
         if shared_features_columns is not None:
@@ -793,7 +793,7 @@ class ChoiceDataset(object):
                 columns = [f"{feature}{delimiter}{item}" for feature in items_features_prefixes]
                 for col in columns:
                     if col not in df.columns:
-                        print(
+                        logging.warning(
                             f"Column {col} was not in DataFrame,\
                             dummy creation of the feature with zeros."
                         )
@@ -913,7 +913,7 @@ class ChoiceDataset(object):
             items_id_column=items_id_column,
             choices_id_column=choices_id_column,
             items_index=items,
-            contexts_index=choices_ids,
+            choices_index=choices_ids,
         )
 
         items_features_by_choice_names = (
