@@ -1,6 +1,6 @@
 """Indexer classes for data classes."""
-from abc import abstractmethod
 import logging
+from abc import abstractmethod
 
 import numpy as np
 
@@ -218,11 +218,11 @@ class ChoiceDatasetIndexer(Indexer):
             shared_features_by_choice = []
             for i, shared_feature in enumerate(self.choice_dataset.shared_features_by_choice):
                 if hasattr(shared_feature, "batch"):
-                    shared_features_by_choice.append(
-                        shared_feature.batch[choices_indexes]
-                    )
+                    shared_features_by_choice.append(shared_feature.batch[choices_indexes])
                 else:
-                    shared_features_by_choice.append(np.stack(shared_features_by_choice[choices_indexes], axis=0))
+                    shared_features_by_choice.append(
+                        np.stack(shared_feature[choices_indexes], axis=0)
+                    )
         return shared_features_by_choice
 
     def _get_items_features_by_choice(self, choices_indexes):
@@ -245,9 +245,7 @@ class ChoiceDatasetIndexer(Indexer):
             if hasattr(items_feature, "batch"):
                 items_features_by_choice.append(items_feature.batch[choices_indexes])
             else:
-                items_features_by_choice.append(
-                    np.stack(items_feature[choices_indexes], axis=0)
-                )
+                items_features_by_choice.append(np.stack(items_feature[choices_indexes], axis=0))
         return items_features_by_choice
 
     def __getitem__(self, choices_indexes):
@@ -279,25 +277,23 @@ class ChoiceDatasetIndexer(Indexer):
                 ).astype("float32")
             else:
                 if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
-                    available_items_by_choice = (
-                        self.choice_dataset.available_items_by_choice.batch[
-                            choices_indexes
-                        ].astype(self.choice_dataset._return_types[2])
-                    )
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
+                        choices_indexes
+                    ].astype(self.choice_dataset._return_types[2])
                 else:
-                    available_items_by_choice = (
-                        self.choice_dataset.available_items_by_choice[choices_indexes].astype(
-                            self.choice_dataset._return_types[2]
-                        )
-                    )
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice[
+                        choices_indexes
+                    ].astype(self.choice_dataset._return_types[2])
 
-            if len(self.choice_dataset.shared_features_map) > 0:
+            if len(self.choice_dataset.shared_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.choice_dataset.shared_features_map.keys())):
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.shared_features_by_choice_map.keys())
+                ):
                     feat_ind_min = 0
                     unstacked_feat = []
                     for feature_index in np.sort(
-                        list(self.choice_dataset.shared_features_map[tuple_index].keys())
+                        list(self.choice_dataset.shared_features_by_choice_map[tuple_index].keys())
                     ):
                         # Adding ''normal'' features
                         unstacked_feat.append(
@@ -305,7 +301,7 @@ class ChoiceDatasetIndexer(Indexer):
                         )
                         # Mapping and adding mapped features
                         unstacked_feat.append(
-                            self.choice_dataset.shared_features_map[tuple_index][
+                            self.choice_dataset.shared_features_by_choice_map[tuple_index][
                                 feature_index
                             ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
                         )
@@ -316,26 +312,28 @@ class ChoiceDatasetIndexer(Indexer):
 
                 shared_features_by_choice = mapped_features
 
-            if len(self.choice_dataset.items_features_map) > 0:
+            if len(self.choice_dataset.items_features_by_choice_map) > 0:
                 mapped_features = []
                 for tuple_index in np.sort(
-                    list(self.choice_dataset.items_features_map.keys())
+                    list(self.choice_dataset.items_features_by_choice_map.keys())
                 ):
                     feat_ind_min = 0
                     unstacked_feat = []
                     for feature_index in np.sort(
-                        list(self.choice_dataset.items_features_map[tuple_index].keys())
+                        list(self.choice_dataset.items_features_by_choice_map[tuple_index].keys())
                     ):
                         unstacked_feat.append(
                             items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
                         )
                         unstacked_feat.append(
-                            self.choice_dataset.items_features_map[tuple_index][
+                            self.choice_dataset.items_features_by_choice_map[tuple_index][
                                 feature_index
                             ].batch[items_features_by_choice[tuple_index][:, :, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
-                    unstacked_feat.append(items_features_by_choice[tuple_index][:, :, feat_ind_min:])
+                    unstacked_feat.append(
+                        items_features_by_choice[tuple_index][:, :, feat_ind_min:]
+                    )
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
                 items_features_by_choice = mapped_features
@@ -379,16 +377,23 @@ class ChoiceDatasetIndexer(Indexer):
             return self.__getitem__(
                 list(range(*choices_indexes.indices(self.choice_dataset.choices.shape[0])))
             )
-        
+
         if isinstance(choices_indexes, int):
             ### Attemps at simplifying the code
-            choices_indexes = np.array([choices_indexes])
-            fixed_items_features_by_choices, items_features_by_choice, available_items_by_choice, choice = self.__getitem__(
-                choices_indexes
-            )
+            choices_indexes = [choices_indexes]
+            (
+                fixed_items_features_by_choices,
+                items_features_by_choice,
+                available_items_by_choice,
+                choice,
+            ) = self.__getitem__(choices_indexes)
+            if fixed_items_features_by_choices is not None:
+                fixed_items_features_by_choices = fixed_items_features_by_choices[0]
+            if items_features_by_choice is not None:
+                items_features_by_choice = items_features_by_choice[0]
             return (
-                fixed_items_features_by_choices[0],
-                items_features_by_choice[0],
+                fixed_items_features_by_choices,
+                items_features_by_choice,
                 available_items_by_choice[0],
                 choice[0],
             )

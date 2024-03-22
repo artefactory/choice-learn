@@ -280,9 +280,10 @@ class ChoiceDataset(object):
                             np.sort(feature.index)
                         ].to_numpy()
                 else:
-                    raise ValueError(
-                        "A 'choice_id' column must be integrated in available_items_by_choice DF"
+                    logging.info(
+                        "No 'choice_id' column found in available_items_by_choice DF, using index"
                     )
+                    available_items_by_choice = available_items_by_choice.to_numpy()
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
@@ -297,6 +298,8 @@ class ChoiceDataset(object):
             # items is the value (str) of the item
             choices = [np.where(items == c)[0] for c in choices.choice]
             choices = np.squeeze(choices)
+        elif isinstance(choices, pd.Series):
+            choices = choices.to_numpy()
         elif isinstance(choices, list):
             choices = np.array(choices)
 
@@ -370,8 +373,8 @@ class ChoiceDataset(object):
         shared_features_map = {}
         items_features_map = {}
 
-        if self.shared_features_by_id_names is not None:
-            for i, feature in enumerate(self.shared_features_by_id_names):
+        if self.shared_features_by_choice_names is not None:
+            for i, feature in enumerate(self.shared_features_by_choice_names):
                 if feature is not None:
                     for j, column_name in enumerate(feature):
                         for feature_by_id in self.features_by_ids:
@@ -384,8 +387,8 @@ class ChoiceDataset(object):
                                     feature_by_id.name,
                                 )
 
-        if self.items_features_by_id_names is not None:
-            for i, feature in enumerate(self.items_features_by_id_names):
+        if self.items_features_by_choice_names is not None:
+            for i, feature in enumerate(self.items_features_by_choice_names):
                 if feature is not None:
                     for k, column_name in enumerate(feature):
                         for feature_by_id in self.features_by_ids:
@@ -1116,7 +1119,7 @@ class ChoiceDataset(object):
             )
 
         ### Attemps at simplifying the code
-        choices_indexes = np.array([choices_indexes])
+        choices_indexes = [choices_indexes]
         (
             shared_items_features_by_choices,
             items_features_by_choice,
@@ -1317,7 +1320,7 @@ class ChoiceDataset(object):
             available_items_by_choice=available_items_by_choice,
             choices=[self.choices[i] for i in choices_indexes],
             shared_features_by_choice_names=shared_features_by_choice_names,
-            items_features_by_choice_name=items_features_by_choice_names,
+            items_features_by_choice_names=items_features_by_choice_names,
             features_by_ids=self.features_by_ids,
         )
 
