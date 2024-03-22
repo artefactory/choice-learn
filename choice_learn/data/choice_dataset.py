@@ -555,11 +555,11 @@ class ChoiceDataset(object):
         str
             short representation of ChoiceDataset
         """
-        template = """First choice is:\nItems features: {}\nContexts features: {}\n
-                      Contexts Items features: {}\nContexts Items Availabilities: {}\n
-                      Contexts Choice: {}"""
+        template = """First choice is:\Fixed Features by choice: {}\n
+                      Items Features by choice: {}\nAvailable items by choice: {}\n
+                      Choices: {}"""
         return template.format(
-            self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3], self.batch[0][4]
+            self.batch[0][0], self.batch[0][1], self.batch[0][2], self.batch[0][3]
         )
 
     def get_n_items(self):
@@ -588,11 +588,11 @@ class ChoiceDataset(object):
     def _contexts_items_features_df_to_np(
         cls,
         df,
-        items_index,
-        contexts_index,
         features,
         items_id_column="item_id",
         contexts_id_column="contexts_id",
+        items_index=None,
+        choices_index=None,
     ):
         """Builds contexts_items_features and contexts_items_availabilities from dataframe.
 
@@ -627,17 +627,25 @@ class ChoiceDataset(object):
         except ValueError:
             pass
 
-        contexts_items_features = []
-        contexts_items_availabilities = []
-        for sess in contexts_index:
-            sess_df = df.loc[df[contexts_id_column] == sess]
+        if choices_index is None:
+            choices_index = np.sort(df[contexts_id_column].unique().to_numpy())
+        if items_index is None:
+            items_index = np.sort(df[items_id_column].unique().to_numpy())
 
+        items_features_by_choice = []
+        available_items_by_choice = []
+        for sess in choices_index:
+            sess_df = df.loc[df[contexts_id_column] == sess]
+            
+            # All items were available for the choice
             if len(sess_df) == len(items_index):
                 sess_df = sess_df.T
                 sess_df.columns = sess_df.loc[items_id_column]
                 if features is not None:
-                    contexts_items_features.append(sess_df[items_index].loc[features].T.values)
-                contexts_items_availabilities.append(np.ones(len(items_index)).astype("float32"))
+                    items_features_by_choice.append(sess_df[items_index].loc[features].T.values)
+                available_items_by_choice.append(np.ones(len(items_index)).astype("float32"))
+            
+            # Some items were not available for the choice
             else:
                 sess_feats = []
                 sess_av = []
@@ -646,32 +654,31 @@ class ChoiceDataset(object):
                     if len(item_df) > 0:
                         if features is not None:
                             sess_feats.append(item_df[features].to_numpy()[0])
-                        sess_av.append(1)
+                        sess_av.append(1.)
                     else:
                         if features is not None:
+                            # Unavailable items features are filled with zeros
                             sess_feats.append(np.zeros(len(features)))
-                        sess_av.append(0)
-                contexts_items_features.append(sess_feats)
-                contexts_items_availabilities.append(sess_av)
+                        sess_av.append(0.)
+                items_features_by_choice.append(sess_feats)
+                available_items_by_choice.append(sess_av)
 
         if features is not None:
-            sessions_items_features = (np.array(contexts_items_features),)
+            items_features_by_choice = (np.array(items_features_by_choice),)
         else:
-            sessions_items_features = None
-        return sessions_items_features, np.array(contexts_items_availabilities)
+            items_features_by_choice = None
+        return items_features_by_choice, np.array(available_items_by_choice).astype("float32")
 
     @classmethod
     def from_single_wide_df(
         cls,
         df,
         items_id,
-        fixed_items_suffixes=None,
-        fixed_items_prefixes=None,
-        contexts_features_columns=None,
-        contexts_items_features_suffixes=None,
-        contexts_items_features_prefixes=None,
-        contexts_items_availabilities_suffix=None,
-        contexts_items_availabilities_prefix=None,
+        fixed_features_columns=None,
+        items_features_suffixes=None,
+        items_features_prefixes=None,
+        available_items_suffix=None,
+        available_items_prefix=None,
         delimiter="_",
         choices_column="choice",
         choice_format="items_id",
@@ -684,20 +691,16 @@ class ChoiceDataset(object):
             dataframe in Wide format
         items_id : list
             List of items ids
-        fixed_items_suffixes : list
-            Suffixes of the columns of the dataframe that are item features, default is None
-        fixed_items_prefixes : list
-            Prefixes of the columns of the dataframe that are item features, default is None
-        contexts_features_suffixes : list
-            Suffixes of the columns of the dataframe that are contexts features, default is None
-        contexts_features_prefixes : list
-            Prefixes of the columns of the dataframe that are contexts features, default is None
-        contexts_items_suffixes : list
-            Suffixes of the columns of the dataframe that are context-item features, default is None
-        contexts_items_availabilities_prefix: list
-            Prefix of the columns of the dataframe that are context-item availabilities,
-        contexts_items_availabilities_suffix: list
-            Suffix of the columns of the dataframe that are context-item availabilities,
+        fixed_features_columns : list, optional
+            List of columns of the dataframe that are fixed_features_by_choice, default is None
+        items_features_prefixes : list, optional
+            Prefixes of the columns of the dataframe that are items_features_by_choice, default is None
+        items_features_suffixes : list, optional
+            Suffixes of the columns of the dataframe that are items_features_by_choice, default is None
+        available_items_prefix: str, optional
+            Prefix of the columns of the dataframe that precise available_items_by_choice, default is None
+        available_items_suffix: str, optional
+            Suffix of the columns of the dataframe that precise available_items_by_choice, default is None
         delimiter: str, optional
             Delimiter used to separate the given prefix or suffixes and the features names,
             default is "_"
@@ -712,66 +715,52 @@ class ChoiceDataset(object):
         ChoiceDataset
             corresponding ChoiceDataset
         """
-        if fixed_items_prefixes is not None and fixed_items_suffixes is not None:
-            raise ValueError("You cannot give both fixed_items_prefixes and fixed_items_suffixes")
         if (
-            contexts_items_features_prefixes is not None
-            and contexts_items_features_suffixes is not None
+            items_features_prefixes is not None
+            and items_features_suffixes is not None
         ):
             raise ValueError(
-                "You cannot give both contexts_items_features_prefixes and\
-                    contexts_items_features_suffixes"
+                "You cannot give both items_features_prefixes and\
+                    items_features_suffixes."
             )
         if (
-            contexts_items_availabilities_prefix is not None
-            and contexts_items_availabilities_suffix is not None
+            available_items_prefix is not None
+            and available_items_suffix is not None
         ):
             raise ValueError(
                 "You cannot give both contexts_items_availabilities_prefix and\
-                    contexts_items_availabilities_suffix"
+                    contexts_items_availabilities_suffix."
             )
+        if choice_format not in ["items_id", "items_name"]:
+            logging.warning("choice_format not undersood, defaulting to 'items_index'")
 
-        if fixed_items_suffixes is not None:
-            fixed_items_features = {"item_id": []}
-            for item in items_id:
-                fixed_items_features["item_id"].append(item)
-                for feature in fixed_items_suffixes:
-                    feature_value = df[f"{item}{delimiter}{feature}"].unique()
-                    if len(feature_value) > 1:
-                        raise ValueError(
-                            f"More than one value for feature {feature} for item {item}"
-                        )
-                    fixed_items_features[feature] = fixed_items_features.get(feature, []) + [
-                        feature_value[0]
-                    ]
-            fixed_items_features = pd.DataFrame(fixed_items_features)
-        elif fixed_items_prefixes is not None:
-            fixed_items_features = {"item_id": []}
-            for item in items_id:
-                fixed_items_features["item_id"].append(item)
-                for feature in fixed_items_suffixes:
-                    feature_value = df[f"{feature}{delimiter}{item}"].unique()
-                    if len(feature_value) > 1:
-                        raise ValueError(
-                            f"More than one value for feature {feature} for item {item}"
-                        )
-                    fixed_items_features[feature] = fixed_items_features.get(feature, []) + [
-                        feature_value[0]
-                    ]
-            fixed_items_features = pd.DataFrame(fixed_items_features)
+        if fixed_features_columns is not None:
+            fixed_features_by_choice = df[fixed_features_columns]
         else:
-            fixed_items_features = None
+            fixed_features_by_choice = None
 
-        if contexts_features_columns is not None:
-            contexts_features = df[contexts_features_columns]
-        else:
-            contexts_features = None
-
-        if contexts_items_features_suffixes is not None:
-            contexts_items_features = []
+        if items_features_suffixes is not None:
+            items_features_names = items_features_suffixes
+            items_features_by_choice = []
             for item in items_id:
                 columns = [
-                    f"{item}{delimiter}{feature}" for feature in contexts_items_features_suffixes
+                    f"{item}{delimiter}{feature}" for feature in items_features_suffixes
+                ]
+                for col in columns:
+                    if col not in df.columns:
+                        logging.warning(
+                            f"Column {col} was not in DataFrame,\
+                            dummy creation of the feature with zeros."
+                        )
+                        df[col] = 0
+                items_features_by_choice.append(df[columns].to_numpy())
+            items_features_by_choice = np.stack(items_features_by_choice, axis=1)
+        elif items_features_prefixes is not None:
+            items_features_names = items_features_prefixes
+            items_features_by_choice = []
+            for item in items_id:
+                columns = [
+                    f"{feature}{delimiter}{item}" for feature in items_features_prefixes
                 ]
                 for col in columns:
                     if col not in df.columns:
@@ -780,58 +769,44 @@ class ChoiceDataset(object):
                             dummy creation of the feature with zeros."
                         )
                         df[col] = 0
-                contexts_items_features.append(df[columns].to_numpy())
-            contexts_items_features = np.stack(contexts_items_features, axis=1)
-        elif contexts_items_features_prefixes is not None:
-            contexts_items_features = []
-            for item in items_id:
-                columns = [
-                    f"{feature}{delimiter}{item}" for feature in contexts_items_features_prefixes
-                ]
-                for col in columns:
-                    if col not in df.columns:
-                        print(
-                            f"Column {col} was not in DataFrame,\
-                            dummy creation of the feature with zeros."
-                        )
-                        df[col] = 0
-                contexts_items_features.append(df[columns].to_numpy())
-            contexts_items_features = np.stack(contexts_items_features, axis=1)
+                items_features_by_choice.append(df[columns].to_numpy())
+            items_features_by_choice = np.stack(items_features_by_choice, axis=1)
         else:
-            contexts_items_features = None
+            items_features_by_choice = None
+            items_features_names = None
 
-        if contexts_items_availabilities_suffix is not None:
-            if isinstance(contexts_items_availabilities_suffix, list):
-                if not len(contexts_items_availabilities_suffix) == len(items_id):
+        if available_items_suffix is not None:
+            if isinstance(available_items_suffix, list):
+                if not len(available_items_suffix) == len(items_id):
                     raise ValueError(
                         "You have given a list of columns for availabilities."
                         "We consider that it is one for each item however lenghts do not match"
                     )
-                print("You have given a list of columns for availabilities.")
-                print("Each column will be matched to an item, given their order")
-                contexts_items_availabilities = df[contexts_items_availabilities_suffix].to_numpy()
+                logging.info("You have given a list of columns for availabilities.")
+                logging.infog("Each column will be matched to an item, given their order")
+                available_items_by_choice = df[available_items_suffix].to_numpy()
             else:
                 columns = [
-                    f"{item}{delimiter}{contexts_items_availabilities_suffix}" for item in items_id
+                    f"{item}{delimiter}{available_items_suffix}" for item in items_id
                 ]
-                contexts_items_availabilities = df[columns].to_numpy()
-        elif contexts_items_availabilities_prefix is not None:
-            if isinstance(contexts_items_availabilities_prefix, list):
-                if not len(contexts_items_availabilities_prefix) == len(items_id):
+                available_items_by_choice = df[columns].to_numpy()
+        elif available_items_prefix is not None:
+            if isinstance(available_items_prefix, list):
+                if not len(available_items_prefix) == len(items_id):
                     raise ValueError(
                         "You have given a list of columns for availabilities."
                         "We consider that it is one for each item however lenghts do not match"
                     )
-                print("You have given a list of columns for availabilities.")
-                print("Each column will be matched to an item, given their order")
-                contexts_items_availabilities = df[contexts_items_availabilities_prefix].to_numpy()
+                logging.info("You have given a list of columns for availabilities.")
+                logging.info("Each column will be matched to an item, given their order")
+                available_items_by_choice = df[available_items_prefix].to_numpy()
             else:
                 columns = [
-                    f"{contexts_items_availabilities_prefix}{delimiter}{item}" for item in items_id
+                    f"{available_items_prefix}{delimiter}{item}" for item in items_id
                 ]
-                contexts_items_availabilities = df[columns].to_numpy()
+                available_items_by_choice = df[columns].to_numpy()
         else:
-            contexts_items_availabilities = None
+            available_items_by_choice = None
 
         choices = df[choices_column].to_numpy()
         if choice_format == "items_id":
@@ -844,11 +819,10 @@ class ChoiceDataset(object):
                 raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
-            fixed_items_features=fixed_items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
-            contexts_items_features_names=contexts_items_features_suffixes,
-            contexts_items_availabilities=contexts_items_availabilities,
+            fixed_features_by_choice=fixed_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            items_features_by_choice_names=items_features_names,
+            available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
 
