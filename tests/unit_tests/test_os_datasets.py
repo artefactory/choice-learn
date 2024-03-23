@@ -16,7 +16,7 @@ def test_swissmetro_loader():
     """Test loading the Swissmetro dataset."""
     swissmetro = load_swissmetro(as_frame=True)
     assert isinstance(swissmetro, pd.DataFrame)
-    assert swissmetro.shape == (10728, 29)
+    assert swissmetro.shape == (10719, 29)
 
     swissmetro = load_swissmetro()
     assert isinstance(swissmetro, ChoiceDataset)

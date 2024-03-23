@@ -208,15 +208,15 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     if return_desc:
         return description
 
+    swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
+    swiss_df.CHOICE = swiss_df.CHOICE - 1
     if as_frame:
-        swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
-        swiss_df.CHOICE = swiss_df.CHOICE - 1
         return swiss_df
 
     if preprocessing == "tutorial":
         # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
-        swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
+        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         # Keep only commute an dbusiness trips
         swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
 
@@ -265,7 +265,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
 
         available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
         # Re-Indexing choices from 1 to 3 to 0 to 2
-        choices = swiss_df.CHOICE.to_numpy() - 1
+        choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
             shared_features_by_choice=(shared_features_by_choice,),
@@ -279,10 +279,10 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         )
     if preprocessing == "rumnet":
         # swiss_df = pd.DataFrame(data, columns=names)
-        swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
+        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         swiss_df["One"] = 1.0
         swiss_df["Zero"] = 0.0
-        choices = swiss_df.CHOICE.to_numpy() - 1
+        # choices = swiss_df.CHOICE.to_numpy() - 1
         available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
         items_features_by_choice = np.stack(
             [
@@ -358,9 +358,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     return ChoiceDataset.from_single_wide_df(
         df=swiss_df,
         items_id=items,
-        shared_features_by_choice_columns=shared_features_by_choice_names,
-        items_features_by_choice_suffixes=items_features_by_choice_names,
-        available_items_by_choice_suffix=availabilities_column,
+        shared_features_columns=shared_features_by_choice_names,
+        items_features_suffixes=items_features_by_choice_names,
+        available_items_suffix=availabilities_column,
         choices_column=choice_column,
         choice_format="item_index",
     )
@@ -561,9 +561,8 @@ def load_modecanada(
 
     return ChoiceDataset.from_single_long_df(
         df=canada_df,
-        fixed_items_features_columns=items_features,
-        shared_features_by_choice_columns=shared_features_by_choice,
-        items_features_by_choice_columns=items_features_by_choice,
+        shared_features_columns=shared_features,
+        items_features_columns=items_features,
         items_id_column="alt",
         choices_id_column="case",
         choices_column=choice_column,
@@ -626,7 +625,11 @@ def load_heating(
         axis=1,
     )
     return ChoiceDataset(
-        shared_features_by_choice=contexts, items_features_by_choice=contexts_items, choices=choices
+        shared_features_by_choice=contexts,
+        items_features_by_choice=contexts_items,
+        choices=choices,
+        shared_features_by_choice_names=shared_features_by_choice,
+        items_features_by_choice_names=items_features_by_choice,
     )
 
 
@@ -694,9 +697,9 @@ def load_electricity(
 
     return ChoiceDataset.from_single_long_df(
         df=elec_df,
-        items_features_by_choice_columns=["pf", "cl", "loc", "wk", "tod", "seas"],
+        items_features_columns=["pf", "cl", "loc", "wk", "tod", "seas"],
         items_id_column="alt",
-        contexts_id_column="chid",
+        choices_id_column="chid",
         choice_format="one_zero",
     )
 
@@ -762,11 +765,10 @@ def load_train(
     return ChoiceDataset.from_single_wide_df(
         df=train_df,
         items_id=["1", "2"],
-        fixed_items_suffixes=None,
-        shared_features_by_choice_columns=["id"],
-        items_features_by_choice_prefixes=["price", "time", "change", "comfort"],
+        shared_features_columns=["id"],
+        items_features_prefixes=["price", "time", "change", "comfort"],
         delimiter="",
-        available_items_by_choice_suffix=None,
+        available_items_suffix=None,
         choices_column="choice",
         choice_format="items_id",
     )
