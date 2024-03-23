@@ -96,10 +96,10 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
@@ -112,7 +112,7 @@ class ChoiceModel(object):
         Returns:
         --------
         np.ndarray
-            Utility of each product for each context.
+            Utility of each product for each choice.
             Shape must be (n_choices, n_items)
         """
         # To be implemented in children classes
@@ -132,10 +132,10 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
@@ -381,10 +381,10 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
@@ -402,7 +402,7 @@ class ChoiceModel(object):
         tf.Tensor (1, )
             Value of NegativeLogLikelihood loss for the batch
         tf.Tensor (batch_size, n_items)
-            Probabilities for each product to be chosen for each context
+            Probabilities for each product to be chosen for each choice
         """
         # Compute utilities from features
         utilities = self.compute_batch_utility(
@@ -487,7 +487,7 @@ class ChoiceModel(object):
         return cls
 
     def predict_probas(self, choice_dataset, batch_size=-1):
-        """Predicts the choice probabilities for each context and each product of a ChoiceDataset.
+        """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
         Parameters
         ----------
@@ -498,8 +498,8 @@ class ChoiceModel(object):
 
         Returns:
         --------
-        np.ndarray (n_contexts, n_items)
-            Choice probabilties for each context and each product
+        np.ndarray (n_choices, n_items)
+            Choice probabilties for each choice and each product
         """
         stacked_probabilities = []
         for (
@@ -519,7 +519,7 @@ class ChoiceModel(object):
         return tf.concat(stacked_probabilities, axis=0)
 
     def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
-        """Evaluates the model for each context and each product of a ChoiceDataset.
+        """Evaluates the model for each choice and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
@@ -531,8 +531,8 @@ class ChoiceModel(object):
 
         Returns:
         --------
-        np.ndarray (n_contexts, n_items)
-            Choice probabilties for each context and each product
+        np.ndarray (n_choices, n_items)
+            Choice probabilties for each choice and each product
         """
         batch_losses = []
         for (
@@ -797,10 +797,10 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
@@ -818,7 +818,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         tf.Tensor (1, )
             Value of NegativeLogLikelihood loss for the batch
         tf.Tensor (batch_size, n_items)
-            Probabilities for each product to be chosen for each context
+            Probabilities for each product to be chosen for each choice
         """
         # Compute utilities from features
         utilities = self.compute_batch_utility(
@@ -836,9 +836,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         probabilities = []
         for i, class_utilities in enumerate(utilities):
             class_probabilities = tf_ops.softmax_with_availabilities(
-                contexts_items_logits=class_utilities,
-                contexts_items_availabilities=available_items_by_choice,
-                normalize_exit=self.add_exit_choice,
+                items_logit_by_choice=utilities,
+                available_items_by_choice=available_items_by_choice,
+                normalize_exit=self.normalize_non_buy,
                 axis=-1,
             )
             probabilities.append(class_probabilities * latent_probabilities[i])
@@ -874,10 +874,10 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
@@ -891,8 +891,8 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         --------
         list of np.ndarray
             List of:
-                Utility of each product for each context.
-                Shape must be (n_contexts, n_items)
+                Utility of each product for each choice.
+                Shape must be (n_choices, n_items)
             for each of the latent models.
         """
         utilities = []
@@ -940,7 +940,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         raise ValueError(f"Fit method not implemented: {self.fit_method}")
 
     def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
-        """Evaluates the model for each context and each product of a ChoiceDataset.
+        """Evaluates the model for each choice and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
@@ -952,22 +952,20 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Returns:
         --------
-        np.ndarray (n_contexts, n_items)
-            Choice probabilties for each context and each product
+        np.ndarray (n_choices, n_items)
+            Choice probabilties for each choice and each product
         """
         batch_losses = []
         for (
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features,
+            items_features,
+            available_items,
             choices,
         ) in choice_dataset.iter_batch(batch_size=batch_size):
             loss, _ = self.batch_predict(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice==shared_features,
+                items_features_by_choice=items_features,
+                available_items_by_choice==available_items,
                 choices=choices,
                 sample_weight=sample_weight,
             )
@@ -976,7 +974,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             elif mode == "optim":
                 batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
-            last_batch_size = contexts_items_availabilities.shape[0]
+            last_batch_size = available_items.shape[0]
             coefficients = tf.concat(
                 [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
             )
@@ -1211,7 +1209,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         ]
 
         # E-step
-        ###### FILL THE CODE BELOW TO ESTIMATE DETERMINE THE WEIGHTS (weights = xxx)
+        ###### FILL THE CODE BELOW TO ESTIMATE THE WEIGHTS (weights = xxx)
         predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
         loss = np.sum(np.log(np.sum(predicted_probas, axis=1)))
 
@@ -1277,7 +1275,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         return hist_logits, hist_loss
 
     def predict_probas(self, choice_dataset, batch_size=-1):
-        """Predicts the choice probabilities for each context and each product of a ChoiceDataset.
+        """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
         Parameters
         ----------
@@ -1288,22 +1286,20 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Returns:
         --------
-        np.ndarray (n_contexts, n_items)
-            Choice probabilties for each context and each product
+        np.ndarray (n_choices, n_items)
+            Choice probabilties for each choice and each product
         """
         stacked_probabilities = []
         for (
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features,
+            items_features,
+            available_items,
             choices,
         ) in choice_dataset.iter_batch(batch_size=batch_size):
             _, probabilities = self.batch_predict(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features,
+                items_features_by_choice=items_features,
+                available_items_by_choice=available_items,
                 choices=choices,
             )
             stacked_probabilities.append(probabilities)
