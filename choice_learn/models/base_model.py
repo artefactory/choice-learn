@@ -84,53 +84,47 @@ class ChoiceModel(object):
     @abstractmethod
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Method that defines how the model computes the utility of a product.
 
-        MUST be implemented in children classe
+        MUST be implemented in children classe !
         For simpler use-cases this is the only method to be user-defined.
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
 
         Returns:
         --------
         np.ndarray
             Utility of each product for each context.
-            Shape must be (n_contexts, n_items)
+            Shape must be (n_choices, n_items)
         """
         # To be implemented in children classes
-        # Can be numpy or tensorflow based
+        # Can be NumPy or TensorFlow based
         return
 
     @tf.function
     def train_step(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
@@ -138,22 +132,18 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -165,16 +155,15 @@ class ChoiceModel(object):
         """
         with tf.GradientTape() as tape:
             utilities = self.compute_batch_utility(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
 
             probabilities = tf_ops.softmax_with_availabilities(
-                contexts_items_logits=utilities,
-                contexts_items_availabilities=contexts_items_availabilities,
+                items_logit_by_choice=utilities,
+                available_items_by_choice=available_items_by_choice,
                 normalize_exit=self.normalize_non_buy,
                 axis=-1,
             )
@@ -258,10 +247,9 @@ class ChoiceModel(object):
 
                 for batch_nb, (
                     (
-                        items_batch,
-                        contexts_batch,
-                        contexts_items_batch,
-                        availabilities_batch,
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
                         choices_batch,
                     ),
                     weight_batch,
@@ -269,10 +257,9 @@ class ChoiceModel(object):
                     self.callbacks.on_train_batch_begin(batch_nb)
 
                     neg_loglikelihood = self.train_step(
-                        items_batch,
-                        contexts_batch,
-                        contexts_items_batch,
-                        availabilities_batch,
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
                         choices_batch,
                         sample_weight=weight_batch,
                     )
@@ -296,18 +283,16 @@ class ChoiceModel(object):
                 else:
                     inner_range = choice_dataset.iter_batch(shuffle=True, batch_size=batch_size)
                 for batch_nb, (
-                    items_batch,
-                    contexts_batch,
-                    contexts_items_batch,
-                    availabilities_batch,
+                    shared_features_batch,
+                    items_features_batch,
+                    available_items_batch,
                     choices_batch,
                 ) in enumerate(inner_range):
                     self.callbacks.on_train_batch_begin(batch_nb)
                     neg_loglikelihood = self.train_step(
-                        items_batch,
-                        contexts_batch,
-                        contexts_items_batch,
-                        availabilities_batch,
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
                         choices_batch,
                     )
                     train_logs["train_loss"].append(neg_loglikelihood)
@@ -320,7 +305,7 @@ class ChoiceModel(object):
             # Take into account last batch that may have a differnt length into account for
             # the computation of the epoch loss.
             if batch_size != -1:
-                last_batch_size = availabilities_batch.shape[0]
+                last_batch_size = available_items_batch.shape[0]
                 coefficients = tf.concat(
                     [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
                 )
@@ -342,26 +327,25 @@ class ChoiceModel(object):
             if val_dataset is not None:
                 test_losses = []
                 for batch_nb, (
-                    items_batch,
-                    contexts_batch,
-                    contexts_items_batch,
-                    availabilities_batch,
+                    shared_features_batch,
+                    items_features_batch,
+                    available_items_batch,
                     choices_batch,
                 ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
                     test_losses.append(
                         self.batch_predict(
-                            items_batch,
-                            contexts_batch,
-                            contexts_items_batch,
-                            availabilities_batch,
+                            shared_features_batch,
+                            items_features_batch,
+                            available_items_batch,
                             choices_batch,
                         )[0]["optimized_loss"]
                     )
                     val_logs["val_loss"].append(test_losses[-1])
                     temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
+
                 test_loss = tf.reduce_mean(test_losses)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", test_loss.numpy())
@@ -387,10 +371,9 @@ class ChoiceModel(object):
     @tf.function
     def batch_predict(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
@@ -398,22 +381,18 @@ class ChoiceModel(object):
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -427,16 +406,15 @@ class ChoiceModel(object):
         """
         # Compute utilities from features
         utilities = self.compute_batch_utility(
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features_by_choice,
+            items_features_by_choice,
+            available_items_by_choice,
             choices,
         )
         # Compute probabilities from utilities & availabilties
         probabilities = tf_ops.softmax_with_availabilities(
-            contexts_items_logits=utilities,
-            contexts_items_availabilities=contexts_items_availabilities,
+            items_logit_by_choice=utilities,
+            available_items_by_choice=available_items_by_choice,
             normalize_exit=self.normalize_non_buy,
             axis=-1,
         )
@@ -525,17 +503,15 @@ class ChoiceModel(object):
         """
         stacked_probabilities = []
         for (
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features_by_choice,
+            items_features_by_choice,
+            available_items_by_choice,
             choices,
         ) in choice_dataset.iter_batch(batch_size=batch_size):
             _, probabilities = self.batch_predict(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
             stacked_probabilities.append(probabilities)
@@ -560,17 +536,15 @@ class ChoiceModel(object):
         """
         batch_losses = []
         for (
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features_by_choice,
+            items_features_by_choice,
+            available_items_by_choice,
             choices,
         ) in choice_dataset.iter_batch(batch_size=batch_size):
             loss, _ = self.batch_predict(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
                 sample_weight=sample_weight,
             )
@@ -579,7 +553,7 @@ class ChoiceModel(object):
             elif mode == "optim":
                 batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
-            last_batch_size = contexts_items_availabilities.shape[0]
+            last_batch_size = available_items_by_choice.shape[0]
             coefficients = tf.concat(
                 [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
             )
@@ -813,10 +787,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
     # @tf.function
     def batch_predict(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
@@ -824,22 +797,18 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
-        choices_batch : np.ndarray
+        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices: np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -853,10 +822,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         """
         # Compute utilities from features
         utilities = self.compute_batch_utility(
-            fixed_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
+            shared_features_by_choice,
+            items_features_by_choice,
+            available_items_by_choice,
             choices,
         )
 
@@ -869,7 +837,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         for i, class_utilities in enumerate(utilities):
             class_probabilities = tf_ops.softmax_with_availabilities(
                 contexts_items_logits=class_utilities,
-                contexts_items_availabilities=contexts_items_availabilities,
+                contexts_items_availabilities=available_items_by_choice,
                 normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
@@ -895,10 +863,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Latent class computation of utility.
@@ -907,22 +874,18 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
-        choices_batch : np.ndarray
+        shared_features_by_choice : tuple of np.ndarray (contexts_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (contexts_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
 
         Returns:
         --------
@@ -936,10 +899,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         # Iterates over latent models
         for model in self.models:
             model_utilities = model.compute_batch_utility(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
             utilities.append(model_utilities)
