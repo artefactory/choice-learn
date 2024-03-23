@@ -14,42 +14,37 @@ class RandomChoiceModel(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
-        """Computes the random utility for each product of each context.
+        """Computes the random utility for each product of each choice.
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
 
         Returns:
         --------
         tf.Tensor
-            (n_contexts, n_items) matrix of random utilities
+            (n_choices, n_items) matrix of random utilities
         """
         # In order to avoid unused arguments warnings
-        _ = fixed_items_features, contexts_features, contexts_items_availabilities, choices
+        _ = shared_features_by_choice, items_features_by_choice, choices
         return np.squeeze(
-            np.random.uniform(shape=(contexts_items_features.shape), minval=0, maxval=1)
+            np.random.uniform(shape=(available_items_by_choice.shape), minval=0, maxval=1)
         )
 
     def fit(**kwargs):
@@ -79,36 +74,31 @@ class DistribMimickingModel(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Returns utility that is fixed. U = log(P).
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
 
         Returns:
         --------
-        np.ndarray (n_contexts, n_items)
+        np.ndarray (n_choices, n_items)
             Utilities
 
         Raises:
@@ -117,8 +107,7 @@ class DistribMimickingModel(ChoiceModel):
             If the model has not been fitted cannot evaluate the utility
         """
         # In order to avoid unused arguments warnings
-        _ = fixed_items_features, contexts_features, contexts_items_availabilities
-        _ = contexts_items_features
+        _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
         if self.weights is None:
             raise ValueError("Model not fitted")
         return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
