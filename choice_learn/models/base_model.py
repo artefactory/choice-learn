@@ -963,9 +963,9 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             choices,
         ) in choice_dataset.iter_batch(batch_size=batch_size):
             loss, _ = self.batch_predict(
-                shared_features_by_choice==shared_features,
+                shared_features_by_choice=shared_features,
                 items_features_by_choice=items_features,
-                available_items_by_choice==available_items,
+                available_items_by_choice=available_items,
                 choices=choices,
                 sample_weight=sample_weight,
             )
