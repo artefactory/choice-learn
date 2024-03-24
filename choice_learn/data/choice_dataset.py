@@ -435,9 +435,10 @@ class ChoiceDataset(object):
         elif self.available_items_by_choice is not None:
             base_num_items = self.available_items_by_choice.shape[1]
         else:
-            raise ValueError(
-                "No items features or items availabilities are defined. It is currently needed."
+            logging.warning(
+                "No items features or items availabilities are defined. Using max value of choices"
             )
+            base_num_items = len(np.unique(self.choices))
         logging.info(f"Number of detected items is {base_num_items}")
         self.base_num_items = base_num_items
 

@@ -142,7 +142,7 @@ class SimpleMNL(ChoiceModel):
             shared_features_utilities = tf.tensordot(
                 shared_features_by_choice, self.weights[self.indexes["shared_features"]], axes=1
             )
-            shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=0)
+            shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
         else:
             shared_features_utilities = 0
 
@@ -154,7 +154,7 @@ class SimpleMNL(ChoiceModel):
             )
         else:
             items_features_utilities = tf.zeros(
-                (shared_features_utilities.shape[0], available_items_by_choice.shape[1], 1)
+                (available_items_by_choice.shape[0], available_items_by_choice.shape[1])
             )
 
         if "intercept" in self.indexes.keys():
