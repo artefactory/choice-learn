@@ -551,8 +551,8 @@ def load_modecanada(
         canada_df = canada_df.astype({"income": "float32"})
         return ChoiceDataset.from_single_long_df(
             df=canada_df,
-            shared_features_by_choice_columns=["income"],
-            items_features_by_choice_columns=preprocessing_items_features,
+            shared_features_columns=["income"],
+            items_features_columns=preprocessing_items_features,
             items_id_column="alt",
             choices_id_column="case",
             choices_column="choice",

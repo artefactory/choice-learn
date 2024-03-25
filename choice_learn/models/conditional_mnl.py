@@ -337,8 +337,8 @@ class ConditionalMNL(ChoiceModel):
         dataset : ChoiceDataset
             ChoiceDataset used to fit the model.
         """
-        self._shared_features_by_choice_names = dataset._shared_features_by_choice_names
-        self._items_features_by_choice_names = dataset._items_features_by_choice_names
+        self._shared_features_by_choice_names = dataset.shared_features_by_choice_names
+        self._items_features_by_choice_names = dataset.items_features_by_choice_names
 
     def compute_batch_utility_from_specification(
         self,
@@ -395,22 +395,6 @@ class ConditionalMNL(ChoiceModel):
                             for q, idx in enumerate(item_index):
                                 if isinstance(idx, list):
                                     for k in idx:
-                                        """
-                                        partial_items_utility_by_choice = tf.concat(
-                                            [
-                                                partial_items_utility_by_choice[:, :k],
-                                                tf.expand_dims(
-                                                    tf.multiply(
-                                                        contexts_batch[i][:, j],
-                                                        self.weights[weight_index][:, q],
-                                                    ),
-                                                    axis=-1,
-                                                ),
-                                                partial_items_utility_by_choice[:, k + 1 :],
-                                            ],
-                                            axis=1,
-                                        )
-                                        """
                                         shared_features_by_choice[i][:, j]
                                         compute = tf.multiply(
                                             shared_features_by_choice[i][:, j],
@@ -418,22 +402,6 @@ class ConditionalMNL(ChoiceModel):
                                         )
                                         partial_items_utility_by_choice[k] += compute
                                 else:
-                                    """
-                                    partial_items_utility_by_choice = tf.concat(
-                                        [
-                                            partial_items_utility_by_choice[:, :idx],
-                                            tf.expand_dims(
-                                                tf.multiply(
-                                                    contexts_batch[i][:, j],
-                                                    self.weights[weight_index][:, q],
-                                                ),
-                                                axis=-1,
-                                            ),
-                                            partial_items_utility_by_choice[:, idx + 1 :],
-                                        ],
-                                        axis=1,
-                                    )
-                                    """
                                     compute = tf.multiply(
                                         shared_features_by_choice[i][:, j],
                                         self.weights[weight_index][:, q],
@@ -452,7 +420,7 @@ class ConditionalMNL(ChoiceModel):
                                     in utility computations"
                             )
 
-        # context Items features
+        # Items features
         if self._items_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._items_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
@@ -701,7 +669,7 @@ class ConditionalMNL(ChoiceModel):
                     name="intercept",
                 )
             else:
-                # Is supposed to be in contexts_features_names
+                # Is supposed to be ?
                 raise NotImplementedError(f"Param {self.params['intercept']} not implemented")
             weights.append(weight)
         else:
@@ -823,7 +791,7 @@ class ConditionalMNL(ChoiceModel):
                         computations"
                     )
 
-        # context Items features
+        # Items features
         for i, feat_tuple in enumerate(self._items_features_by_choice_names):
             for j, (feat, k) in enumerate(feat_tuple):
                 if feat in self.params.keys():
@@ -1052,10 +1020,8 @@ class ConditionalMNL(ChoiceModel):
             clone.weights = self.weights
         if hasattr(self, "lr"):
             clone.lr = self.lr
-        if hasattr(self, "_items_features_names"):
-            clone._items_features_names = self._items_features_names
-        if hasattr(self, "_contexts_features_names"):
-            clone._contexts_features_names = self._contexts_features_names
-        if hasattr(self, "_contexts_items_features_names"):
-            clone._contexts_items_features_names = self._contexts_items_features_names
+        if hasattr(self, "_shared_features_by_choice_names"):
+            clone._shared_features_by_choice_names = self._shared_features_by_choice_names
+        if hasattr(self, "_items_features_by_choice_names"):
+            clone._items_features_by_choice_names = self._items_features_by_choice_names
         return clone
