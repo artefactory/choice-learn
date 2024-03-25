@@ -100,7 +100,7 @@ class SimpleMNL(ChoiceModel):
 
         self.instantiated = True
         self.indexes = indexes
-        self.weights = weights
+        self.trainable_weights = weights
         return indexes, weights
 
     def compute_batch_utility(
@@ -138,7 +138,9 @@ class SimpleMNL(ChoiceModel):
             if isinstance(shared_features_by_choice, tuple):
                 shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
             shared_features_utilities = tf.tensordot(
-                shared_features_by_choice, self.weights[self.indexes["shared_features"]], axes=1
+                shared_features_by_choice,
+                self.trainable_weights[self.indexes["shared_features"]],
+                axes=1,
             )
             shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
         else:
@@ -148,7 +150,9 @@ class SimpleMNL(ChoiceModel):
             if isinstance(items_features_by_choice, tuple):
                 items_features_by_choice = tf.concat([*items_features_by_choice], axis=2)
             items_features_utilities = tf.tensordot(
-                items_features_by_choice, self.weights[self.indexes["items_features"]], axes=1
+                items_features_by_choice,
+                self.trainable_weights[self.indexes["items_features"]],
+                axes=1,
             )
         else:
             items_features_utilities = tf.zeros(
@@ -156,7 +160,7 @@ class SimpleMNL(ChoiceModel):
             )
 
         if "intercept" in self.indexes.keys():
-            intercept = self.weights[self.indexes["intercept"]]
+            intercept = self.trainable_weights[self.indexes["intercept"]]
             if self.intercept == "item":
                 intercept = tf.concat([tf.constant([0.0]), intercept], axis=0)
             if self.intercept in ["item", "item-full"]:
@@ -183,7 +187,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.weights = self.instantiate(
+            self.indexes, self.trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
@@ -194,9 +198,7 @@ class SimpleMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(
-        self, choice_dataset, epochs=None, sample_weight=None, get_report=False, **kwargs
-    ):
+    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
@@ -217,17 +219,13 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.weights = self.instantiate(
+            self.indexes, self.trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
             )
             self.instantiated = True
-        if epochs is None:
-            epochs = self.epochs
-        fit = super()._fit_with_lbfgs(
-            dataset=choice_dataset, epochs=epochs, sample_weight=sample_weight, **kwargs
-        )
+        fit = super()._fit_with_lbfgs(dataset=choice_dataset, sample_weight=sample_weight, **kwargs)
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit
@@ -256,7 +254,7 @@ class SimpleMNL(ChoiceModel):
         estimations = []
         p_z = []
         i = 0
-        for weight in self.weights:
+        for weight in self.trainable_weights:
             for j in range(weight.shape[0]):
                 names.append(f"{weight.name}_{j}")
                 estimations.append(weight.numpy()[j])
@@ -292,15 +290,15 @@ class SimpleMNL(ChoiceModel):
         with tf.GradientTape() as tape_1:
             with tf.GradientTape(persistent=True) as tape_2:
                 model = self.clone()
-                w = tf.concat(self.weights, axis=0)
+                w = tf.concat(self.trainable_weights, axis=0)
                 tape_2.watch(w)
                 tape_1.watch(w)
                 mw = []
                 index = 0
-                for _w in self.weights:
+                for _w in self.trainable_weights:
                     mw.append(w[index : index + _w.shape[0]])
                     index += _w.shape[0]
-                model.weights = mw
+                model.trainable_weights = mw
                 for batch in dataset.iter_batch(batch_size=-1):
                     utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
@@ -331,8 +329,8 @@ class SimpleMNL(ChoiceModel):
         clone.label_smoothing = self.label_smoothing
         if hasattr(self, "report"):
             clone.report = self.report
-        if hasattr(self, "weights"):
-            clone.weights = self.weights
+        if hasattr(self, "trainable_weights"):
+            clone.trainable_weights = self.trainable_weights
         if hasattr(self, "indexes"):
             clone.indexes = self.indexes
         if hasattr(self, "intercept"):

@@ -19,7 +19,7 @@ class ChoiceModel(object):
         self,
         label_smoothing=0.0,
         normalize_non_buy=False,
-        optimizer="Adam",
+        optimizer="Adam",  # TODO chnage
         tolerance=1e-8,
         callbacks=None,
         lr=0.001,
@@ -48,6 +48,8 @@ class ChoiceModel(object):
         epochs: int, optional
             (Max) Number of epochs to train the model, by default 1
         batch_size: int, optional
+            Batch size in the case of stochastic gradient descent optimizer.
+            Not used in the case of L-BFGS optimizer, by default 32
         """
         self.is_fitted = False
         self.normalize_non_buy = normalize_non_buy
@@ -174,8 +176,8 @@ class ChoiceModel(object):
                 sample_weight=sample_weight,
             )
 
-        grads = tape.gradient(neg_loglikelihood, self.weights)
-        self.optimizer.apply_gradients(zip(grads, self.weights))
+        grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return neg_loglikelihood
 
     def fit(
@@ -184,8 +186,6 @@ class ChoiceModel(object):
         sample_weight=None,
         val_dataset=None,
         verbose=0,
-        epochs=None,
-        batch_size=None,
     ):
         """Method to train the model with a ChoiceDataset.
 
@@ -194,7 +194,7 @@ class ChoiceModel(object):
         choice_dataset : ChoiceDataset
             Input data in the form of a ChoiceDataset
         sample_weight : np.ndarray, optional
-            Sample weights to apply, by default None
+            Sample weight to apply, by default None
         val_dataset : ChoiceDataset, optional
             Test ChoiceDataset to evaluate performances on test at each epoch, by default None
         verbose : int, optional
@@ -212,10 +212,8 @@ class ChoiceModel(object):
         if hasattr(self, "instantiated"):
             if not self.instantiated:
                 raise ValueError("Model not instantiated. Please call .instantiate() first.")
-        if epochs is None:
-            epochs = self.epochs
-        if batch_size is None:
-            batch_size = self.batch_size
+        epochs = self.epochs
+        batch_size = self.batch_size
 
         losses_history = {"train_loss": []}
         t_range = tqdm.trange(epochs, position=0)
@@ -446,7 +444,7 @@ class ChoiceModel(object):
         if not os.exists(path):
             Path(path).mkdir(parents=True)
 
-        for i, weight in enumerate(self.weights):
+        for i, weight in enumerate(self.trainable_weights):
             tf.keras.savedmodel.save(Path(path) / f"weight_{i}")
 
         # To improve for non-string attributes
@@ -470,11 +468,11 @@ class ChoiceModel(object):
             Loaded ChoiceModel
         """
         obj = cls()
-        obj.weights = []
+        obj.trainable_weights = []
         i = 0
         weight_path = f"weight_{i}"
         while weight_path in os.listdir(path):
-            obj.weights.append(tf.keras.load_model.load(Path(path) / weight_path))
+            obj.trainable_weights.append(tf.keras.load_model.load(Path(path) / weight_path))
             i += 1
             weight_path = f"weight_{i}"
 
@@ -580,7 +578,7 @@ class ChoiceModel(object):
                 loss_value, gradients = f(model_parameters).
         """
         # obtain the shapes of all trainable parameters in the model
-        shapes = tf.shape_n(self.weights)
+        shapes = tf.shape_n(self.trainable_weights)
         n_tensors = len(shapes)
 
         # we'll use tf.dynamic_stitch and tf.dynamic_partition later, so we need to
@@ -608,7 +606,7 @@ class ChoiceModel(object):
             """
             params = tf.dynamic_partition(params_1d, part, n_tensors)
             for i, (shape, param) in enumerate(zip(shapes, params)):
-                self.weights[i].assign(tf.reshape(param, shape))
+                self.trainable_weights[i].assign(tf.reshape(param, shape))
 
         # now create a function that will be returned by this factory
         @tf.function
@@ -639,7 +637,7 @@ class ChoiceModel(object):
                 )
 
             # calculate gradients and convert to 1D tf.Tensor
-            grads = tape.gradient(loss_value, self.weights)
+            grads = tape.gradient(loss_value, self.trainable_weights)
             grads = tf.dynamic_stitch(idx, grads)
 
             # print out iteration & loss
@@ -659,7 +657,7 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, verbose=0):
+    def _fit_with_lbfgs(self, dataset, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -684,12 +682,11 @@ class ChoiceModel(object):
         # dependency
         import tensorflow_probability as tfp
 
-        if epochs is None:
-            epochs = self.epochs
+        epochs = self.epochs
         func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
-        init_params = tf.dynamic_stitch(func.idx, self.weights)
+        init_params = tf.dynamic_stitch(func.idx, self.trainable_weights)
 
         # train the model with L-BFGS solver
         results = tfp.optimizer.lbfgs_minimize(
@@ -1001,18 +998,18 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
                 loss_value, gradients = f(model_parameters).
         """
         # obtain the shapes of all trainable parameters in the model
-        weights = []
+        trainable_weights = []
         w_to_model = []
         w_to_model_indexes = []
         for i, model in enumerate(self.models):
-            for j, w in enumerate(model.weights):
-                weights.append(w)
+            for j, w in enumerate(model.trainable_weights):
+                trainable_weights.append(w)
                 w_to_model.append(i)
                 w_to_model_indexes.append(j)
-        weights.append(self.latent_logits)
+        trainable_weights.append(self.latent_logits)
         w_to_model.append(-1)
         w_to_model_indexes.append(-1)
-        shapes = tf.shape_n(weights)
+        shapes = tf.shape_n(trainable_weights)
         n_tensors = len(shapes)
 
         # we'll use tf.dynamic_stitch and tf.dynamic_partition later, so we need to
@@ -1041,7 +1038,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
             params = tf.dynamic_partition(params_1d, part, n_tensors)
             for i, (shape, param) in enumerate(zip(shapes, params)):
                 if w_to_model[i] != -1:
-                    self.models[w_to_model[i]].weights[w_to_model_indexes[i]].assign(
+                    self.models[w_to_model[i]].trainable_weights[w_to_model_indexes[i]].assign(
                         tf.reshape(param, shape)
                     )
                 else:
@@ -1075,7 +1072,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
                     dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
                 )
             # calculate gradients and convert to 1D tf.Tensor
-            grads = tape.gradient(loss_value, weights)
+            grads = tape.gradient(loss_value, trainable_weights)
             grads = tf.dynamic_stitch(idx, grads)
 
             # print out iteration & loss
@@ -1095,7 +1092,7 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, epochs=None, sample_weight=None, verbose=0):
+    def _fit_with_lbfgs(self, dataset, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
@@ -1120,14 +1117,13 @@ class BaseLatentClassModel(object):  # TODO: should inherit ChoiceModel ?
         # dependency
         import tensorflow_probability as tfp
 
-        if epochs is None:
-            epochs = self.epochs
+        epochs = self.epochs
         func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
         init = []
         for model in self.models:
-            for w in model.weights:
+            for w in model.trainable_weights:
                 init.append(w)
         init.append(self.latent_logits)
         init_params = tf.dynamic_stitch(func.idx, init)

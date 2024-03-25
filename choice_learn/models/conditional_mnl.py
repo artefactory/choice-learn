@@ -326,7 +326,7 @@ class ConditionalMNL(ChoiceModel):
 
             ## Fill items_indexes here
             # Better organize feat_to_weight and specifications
-        self.weights = weights
+        self.trainable_weights = weights
         return weights
 
     def _store_dataset_features_names(self, dataset):
@@ -398,13 +398,13 @@ class ConditionalMNL(ChoiceModel):
                                         shared_features_by_choice[i][:, j]
                                         compute = tf.multiply(
                                             shared_features_by_choice[i][:, j],
-                                            self.weights[weight_index][:, q],
+                                            self.trainable_weights[weight_index][:, q],
                                         )
                                         partial_items_utility_by_choice[k] += compute
                                 else:
                                     compute = tf.multiply(
                                         shared_features_by_choice[i][:, j],
-                                        self.weights[weight_index][:, q],
+                                        self.trainable_weights[weight_index][:, q],
                                     )
                                     partial_items_utility_by_choice[idx] += compute
 
@@ -440,7 +440,7 @@ class ConditionalMNL(ChoiceModel):
                                                 tf.expand_dims(
                                                     tf.multiply(
                                                         items_features_by_choice[i][:, k, j],
-                                                        self.weights[weight_index][:, q],
+                                                        self.trainable_weights[weight_index][:, q],
                                                     ),
                                                     axis=-1,
                                                 ),
@@ -455,7 +455,7 @@ class ConditionalMNL(ChoiceModel):
                                             tf.expand_dims(
                                                 tf.multiply(
                                                     items_features_by_choice[i][:, idx, j],
-                                                    self.weights[weight_index][:, q],
+                                                    self.trainable_weights[weight_index][:, q],
                                                 ),
                                                 axis=-1,
                                             ),
@@ -483,7 +483,7 @@ class ConditionalMNL(ChoiceModel):
                     partial_items_utility_by_choice = tf.concat(
                         [
                             partial_items_utility_by_choice[:idx],
-                            self.weights[weight_index][:, q],
+                            self.trainable_weights[weight_index][:, q],
                             partial_items_utility_by_choice[idx + 1 :],
                         ],
                         axis=0,
@@ -679,7 +679,7 @@ class ConditionalMNL(ChoiceModel):
             self.instantiated = True
         else:
             raise ValueError("No weights instantiated")
-        self.weights = weights
+        self.trainable_weights = weights
         return weights
 
     def compute_batch_utility(
@@ -767,7 +767,7 @@ class ConditionalMNL(ChoiceModel):
         for i, feat_tuple in enumerate(self._shared_features_names_by_choice):
             for j, (feat, k) in enumerate(feat_tuple):
                 if feat in self.params.keys():
-                    weight = self.weights[k]
+                    weight = self.trainable_weights[k]
                     if self.params[feat] == "constant":
                         partial_items_utility_by_choice = tf.concat(
                             [tf.multiply(shared_features_by_choice[i][j], weight)] * n_items,
@@ -795,7 +795,7 @@ class ConditionalMNL(ChoiceModel):
         for i, feat_tuple in enumerate(self._items_features_by_choice_names):
             for j, (feat, k) in enumerate(feat_tuple):
                 if feat in self.params.keys():
-                    weight = self.weights[k]
+                    weight = self.trainable_weights[k]
                     if self.params[feat] == "constant":
                         partial_items_utility_by_choice = tf.multiply(
                             items_features_by_choice[i][:, :, j], weight
@@ -819,7 +819,7 @@ class ConditionalMNL(ChoiceModel):
                     )
 
         if "intercept" in self.params.keys():
-            weight = self.weights[-1]
+            weight = self.trainable_weights[-1]
             if self.params["intercept"] == "constant":
                 partial_items_utility_by_choice = tf.concat(
                     [tf.concat([weight] * n_items, axis=0)] * n_choices, axis=0
@@ -852,10 +852,10 @@ class ConditionalMNL(ChoiceModel):
         """
         if not self.instantiated:
             if isinstance(self.params, ModelSpecification):
-                self.weights = self.instantiate_from_specifications()
+                self.trainable_weights = self.instantiate_from_specifications()
                 self._store_dataset_features_names(choice_dataset)
             else:
-                self.weights = self.instantiate(
+                self.trainable_weights = self.instantiate(
                     n_items=choice_dataset.get_n_items(),
                     shared_features_names=choice_dataset.shared_features_by_choice_names,
                     items_features_names=choice_dataset.items_features_by_choice_names,
@@ -869,7 +869,6 @@ class ConditionalMNL(ChoiceModel):
     def _fit_with_lbfgs(
         self,
         choice_dataset,
-        epochs=None,
         sample_weight=None,
         get_report=False,
         **kwargs,
@@ -894,20 +893,18 @@ class ConditionalMNL(ChoiceModel):
         """
         if not self.instantiated:
             if isinstance(self.params, ModelSpecification):
-                self.weights = self.instantiate_from_specifications()
+                self.trainable_weights = self.instantiate_from_specifications()
                 self._store_dataset_features_names(choice_dataset)
             else:
-                self.weights = self.instantiate(
+                self.trainable_weights = self.instantiate(
                     n_items=choice_dataset.get_n_items(),
                     shared_features_names=choice_dataset.shared_features_by_choice_names,
                     items_features_names=choice_dataset.items_features_by_choice_names,
                 )
             self.instantiated = True
-        if epochs is None:
-            epochs = self.epochs
+
         fit = super()._fit_with_lbfgs(
             dataset=choice_dataset,
-            epochs=epochs,
             sample_weight=sample_weight,
             **kwargs,
         )
@@ -939,7 +936,7 @@ class ConditionalMNL(ChoiceModel):
         estimations = []
         p_z = []
         i = 0
-        for weight in self.weights:
+        for weight in self.trainable_weights:
             for j in range(weight.shape[1]):
                 names.append(f"{weight.name}_{j}")
                 estimations.append(weight.numpy()[0][j])
@@ -975,15 +972,15 @@ class ConditionalMNL(ChoiceModel):
         with tf.GradientTape() as tape_1:
             with tf.GradientTape(persistent=True) as tape_2:
                 model = self.clone()
-                w = tf.concat(self.weights, axis=1)
+                w = tf.concat(self.trainable_weights, axis=1)
                 tape_2.watch(w)
                 tape_1.watch(w)
                 mw = []
                 index = 0
-                for _w in self.weights:
+                for _w in self.trainable_weights:
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
-                model.weights = mw
+                model.trainable_weights = mw
                 for batch in dataset.iter_batch(batch_size=-1):
                     utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
@@ -1016,8 +1013,8 @@ class ConditionalMNL(ChoiceModel):
         clone.label_smoothing = self.label_smoothing
         if hasattr(self, "report"):
             clone.report = self.report
-        if hasattr(self, "weights"):
-            clone.weights = self.weights
+        if hasattr(self, "trainable_weights"):
+            clone.trainable_weights = self.trainable_weights
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_shared_features_by_choice_names"):
