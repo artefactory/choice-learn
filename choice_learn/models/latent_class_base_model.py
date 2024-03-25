@@ -130,9 +130,9 @@ class BaseLatentClassModel(object):
         probabilities = []
         for i, class_utilities in enumerate(utilities):
             class_probabilities = tf_ops.softmax_with_availabilities(
-                items_logit_by_choice=utilities,
+                items_logit_by_choice=class_utilities,
                 available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.normalize_non_buy,
+                normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
             probabilities.append(class_probabilities * latent_probabilities[i])
