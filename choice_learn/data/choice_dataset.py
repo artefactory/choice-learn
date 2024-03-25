@@ -969,7 +969,7 @@ class ChoiceDataset(object):
         print("%=====================================================================%")
 
         if self.shared_features_by_choice is not None:
-            print(" shared Features by Choice:")
+            print(" Shared Features by Choice:")
             print(f" {sum([f.shape[1] for f in self.shared_features_by_choice])} shared features")
             if self.shared_features_by_choice_names is not None:
                 if self.shared_features_by_choice_names[0] is not None:
@@ -981,8 +981,8 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             print(" Items Features by Choice:")
             print(
-                f""" {sum([f.shape[2] for f in self.items_features_by_choice])}
-                 items features """
+                f""" {sum([f.shape[2] for f in self.items_features_by_choice])
+                     } items features """
             )
             if self.items_features_by_choice_names is not None:
                 if self.items_features_by_choice_names[0] is not None:
