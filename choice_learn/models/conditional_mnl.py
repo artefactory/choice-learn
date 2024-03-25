@@ -1,5 +1,7 @@
 """Conditional MNL model."""
 
+import logging
+
 import pandas as pd
 import tensorflow as tf
 
@@ -83,13 +85,13 @@ class ModelSpecification(object):
             raise ValueError("Either items_indexes or items_names must be specified")
 
         if isinstance(items_indexes, int):
-            print(
+            logging.warning(
                 "You have added a single index to a shared coefficient. This is not recommended.",
                 "Returning to standard add_coefficients method.",
             )
             self.add_coefficients(coefficient_name, feature_name, items_indexes, items_names)
         if isinstance(items_names, str):
-            print(
+            logging.warning(
                 "You have added a single name to a shared coefficient. This is not recommended.",
                 "Returning to standard add_coefficients method.",
             )
@@ -304,13 +306,13 @@ class ConditionalMNL(ChoiceModel):
         """
         weights = []
         for weight_nb, weight_name in enumerate(self.params.coefficients_list):
-            num_weights = (
+            n_weights = (
                 len(self.params.get_coefficient(weight_name)["items_indexes"])
                 if self.params.get_coefficient(weight_name)["items_indexes"] is not None
                 else len(self.params.get_coefficient(weight_name)["items_names"])
             )
             weight = tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_weights)),
+                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_weights)),
                 name=weight_name,
             )
             weights.append(weight)
@@ -335,16 +337,14 @@ class ConditionalMNL(ChoiceModel):
         dataset : ChoiceDataset
             ChoiceDataset used to fit the model.
         """
-        self._items_features_names = dataset.fixed_items_features_names
-        self._contexts_features_names = dataset.contexts_features_names
-        self._contexts_items_features_names = dataset.contexts_items_features_names
+        self._shared_features_by_choice_names = dataset._shared_features_by_choice_names
+        self._items_features_by_choice_names = dataset._items_features_by_choice_names
 
     def compute_batch_utility_from_specification(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         verbose=0,
     ):
@@ -352,22 +352,18 @@ class ConditionalMNL(ChoiceModel):
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
-        choices_batch : np.ndarray
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices: np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
         verbose : int, optional
             Parametrization of the logging outputs, by default 0
 
@@ -378,75 +374,29 @@ class ConditionalMNL(ChoiceModel):
         """
         _ = choices
 
-        num_items = contexts_items_availabilities.shape[1]
-        num_choices = contexts_items_availabilities.shape[0]
-        contexts_items_utilities = []
-        # Items features
-        if self._items_features_names is not None:
-            for i, feat_tuple in enumerate(self._items_features_names):
-                for j, feat in enumerate(feat_tuple):
-                    if feat in self.params.list_features_with_weights():
-                        item_index_list, weight_index_list = self.params.get_weight_item_indexes(
-                            feat
-                        )
-                        for item_index, weight_index in zip(item_index_list, weight_index_list):
-                            s_i_u = tf.zeros((num_items,))
-                            for q, idx in enumerate(item_index):
-                                if isinstance(idx, list):
-                                    for k in idx:
-                                        s_i_u = tf.concat(
-                                            [
-                                                s_i_u[:k],
-                                                tf.multiply(
-                                                    fixed_items_features[i][k, j],
-                                                    self.weights[weight_index][:, q],
-                                                ),
-                                                s_i_u[k + 1 :],
-                                            ],
-                                            axis=0,
-                                        )
-                                else:
-                                    s_i_u = tf.concat(
-                                        [
-                                            s_i_u[:idx],
-                                            tf.multiply(
-                                                fixed_items_features[i][idx, j],
-                                                self.weights[weight_index][:, q],
-                                            ),
-                                            s_i_u[idx + 1 :],
-                                        ],
-                                        axis=0,
-                                    )
-                            s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
+        n_items = available_items_by_choice.shape[1]
+        n_choices = available_items_by_choice.shape[0]
+        items_utilities_by_choice = []
 
-                            ### Need reshaping here
-                            contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
-                    else:
-                        if verbose > 1:
-                            print(
-                                f"Feature {feat} is in dataset but has no weight assigned\
-                                        in utility computations"
-                            )
-        # Context features
-        if self._contexts_features_names is not None:
-            for i, feat_tuple in enumerate(self._contexts_features_names):
+        # Shared features
+        if self._shared_features_by_choice_names is not None:
+            for i, feat_tuple in enumerate(self._shared_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
                     if feat in self.params.list_features_with_weights():
-                        print("found feat", feat)
                         item_index_list, weight_index_list = self.params.get_weight_item_indexes(
                             feat
                         )
                         for item_index, weight_index in zip(item_index_list, weight_index_list):
-                            s_i_u = tf.zeros((num_choices, num_items))
-                            s_i_u = [tf.zeros(num_choices) for _ in range(num_items)]
+                            partial_items_utility_by_choice = tf.zeros((n_choices, n_items))
+                            partial_items_utility_by_choice = [tf.zeros(n_choices) for _ in range(n_items)]
 
                             for q, idx in enumerate(item_index):
                                 if isinstance(idx, list):
                                     for k in idx:
                                         """
-                                        s_i_u = tf.concat(
+                                        partial_items_utility_by_choice = tf.concat(
                                             [
-                                                s_i_u[:, :k],
+                                                partial_items_utility_by_choice[:, :k],
                                                 tf.expand_dims(
                                                     tf.multiply(
                                                         contexts_batch[i][:, j],
@@ -454,22 +404,22 @@ class ConditionalMNL(ChoiceModel):
                                                     ),
                                                     axis=-1,
                                                 ),
-                                                s_i_u[:, k + 1 :],
+                                                partial_items_utility_by_choice[:, k + 1 :],
                                             ],
                                             axis=1,
                                         )
                                         """
-                                        contexts_features[i][:, j]
+                                        shared_features_by_choice[i][:, j]
                                         compute = tf.multiply(
-                                            contexts_features[i][:, j],
+                                            shared_features_by_choice[i][:, j],
                                             self.weights[weight_index][:, q],
                                         )
-                                        s_i_u[k] += compute
+                                        partial_items_utility_by_choice[k] += compute
                                 else:
                                     """
-                                    s_i_u = tf.concat(
+                                    partial_items_utility_by_choice = tf.concat(
                                         [
-                                            s_i_u[:, :idx],
+                                            partial_items_utility_by_choice[:, :idx],
                                             tf.expand_dims(
                                                 tf.multiply(
                                                     contexts_batch[i][:, j],
@@ -477,108 +427,108 @@ class ConditionalMNL(ChoiceModel):
                                                 ),
                                                 axis=-1,
                                             ),
-                                            s_i_u[:, idx + 1 :],
+                                            partial_items_utility_by_choice[:, idx + 1 :],
                                         ],
                                         axis=1,
                                     )
                                     """
                                     compute = tf.multiply(
-                                        contexts_features[i][:, j], self.weights[weight_index][:, q]
+                                        shared_features_by_choice[i][:, j], self.weights[weight_index][:, q]
                                     )
-                                    s_i_u[idx] += compute
+                                    partial_items_utility_by_choice[idx] += compute
 
-                            contexts_items_utilities.append(
-                                tf.cast(tf.stack(s_i_u, axis=1), tf.float32)
+                            items_utilities_by_choice.append(
+                                tf.cast(tf.stack(partial_items_utility_by_choice, axis=1), tf.float32)
                             )
                     else:
-                        print(
-                            f"Feature {feat} is in dataset but has no weight assigned\
-                                in utility computations"
-                        )
+                        if verbose > 0:
+                            logging.warning(
+                                f"Feature {feat} is in dataset but has no weight assigned\
+                                    in utility computations"
+                            )
 
         # context Items features
-        if self._contexts_items_features_names is not None:
-            for i, feat_tuple in enumerate(self._contexts_items_features_names):
+        if self._items_features_by_choice_names is not None:
+            for i, feat_tuple in enumerate(self._items_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
                     if feat in self.params.list_features_with_weights():
-                        print("found feat", feat)
 
                         item_index_list, weight_index_list = self.params.get_weight_item_indexes(
                             feat
                         )
                         for item_index, weight_index in zip(item_index_list, weight_index_list):
-                            s_i_u = tf.zeros((num_choices, num_items))
+                            partial_items_utility_by_choice = tf.zeros((n_choices, n_items))
 
                             for q, idx in enumerate(item_index):
                                 if isinstance(idx, list):
                                     for k in idx:
-                                        s_i_u = tf.concat(
+                                        partial_items_utility_by_choice = tf.concat(
                                             [
-                                                s_i_u[:, :k],
+                                                partial_items_utility_by_choice[:, :k],
                                                 tf.expand_dims(
                                                     tf.multiply(
-                                                        contexts_items_features[i][:, k, j],
+                                                        items_features_by_choice[i][:, k, j],
                                                         self.weights[weight_index][:, q],
                                                     ),
                                                     axis=-1,
                                                 ),
-                                                s_i_u[:, k + 1 :],
+                                                partial_items_utility_by_choice[:, k + 1 :],
                                             ],
                                             axis=1,
                                         )
                                 else:
-                                    s_i_u = tf.concat(
+                                    partial_items_utility_by_choice = tf.concat(
                                         [
-                                            s_i_u[:, :idx],
+                                            partial_items_utility_by_choice[:, :idx],
                                             tf.expand_dims(
                                                 tf.multiply(
-                                                    contexts_items_features[i][:, idx, j],
+                                                    items_features_by_choice[i][:, idx, j],
                                                     self.weights[weight_index][:, q],
                                                 ),
                                                 axis=-1,
                                             ),
-                                            s_i_u[:, idx + 1 :],
+                                            partial_items_utility_by_choice[:, idx + 1 :],
                                         ],
                                         axis=1,
                                     )
 
-                            contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
+                            items_utilities_by_choice.append(tf.cast(partial_items_utility_by_choice, tf.float32))
                     else:
-                        print(
-                            f"Feature {feat} is in dataset but has no weight assigned\
-                                in utility computations"
-                        )
+                        if verbose > 0:
+                            logging.warning(
+                                f"Feature {feat} is in dataset but has no weight assigned\
+                                    in utility computations"
+                            )
 
         if "intercept" in self.params.list_features_with_weights():
-            print("found feat", "intercept")
             item_index_list, weight_index_list = self.params.get_weight_item_indexes("intercept")
 
             for item_index, weight_index in zip(item_index_list, weight_index_list):
-                s_i_u = tf.zeros((num_items,))
+                partial_items_utility_by_choice = tf.zeros((n_items,))
                 for q, idx in enumerate(item_index):
-                    s_i_u = tf.concat(
+                    partial_items_utility_by_choice = tf.concat(
                         [
-                            s_i_u[:idx],
+                            partial_items_utility_by_choice[:idx],
                             self.weights[weight_index][:, q],
-                            s_i_u[idx + 1 :],
+                            partial_items_utility_by_choice[idx + 1 :],
                         ],
                         axis=0,
                     )
 
-                s_i_u = tf.stack([s_i_u] * num_choices, axis=0)
+                partial_items_utility_by_choice = tf.stack([partial_items_utility_by_choice] * n_choices, axis=0)
 
                 ### Need reshaping here
 
-                contexts_items_utilities.append(tf.cast(s_i_u, tf.float32))
+                items_utilities_by_choice.append(tf.cast(partial_items_utility_by_choice, tf.float32))
 
-        return tf.reduce_sum(contexts_items_utilities, axis=0)
+        return tf.reduce_sum(items_utilities_by_choice, axis=0)
 
-    def instantiate_from_dict(self, num_items):
+    def instantiate_from_dict(self, n_items):
         """Instantiation of the model from a dictionnary specification.
 
         Parameters
         ----------
-        num_items : int
+        n_items : int
             Number of different items in the assortment. Used to create the right number of weights.
         """
         spec = ModelSpecification()
@@ -586,15 +536,15 @@ class ConditionalMNL(ChoiceModel):
         for feature, mode in self.params.items():
             if mode == "constant":
                 spec.add_shared_coefficient(
-                    feature + f"_w_{weight_counter}", feature, list(range(num_items))
+                    feature + f"_w_{weight_counter}", feature, list(range(n_items))
                 )
             elif mode == "item":
                 spec.add_coefficients(
-                    feature + f"_w_{weight_counter}", feature, list(range(1, num_items))
+                    feature + f"_w_{weight_counter}", feature, list(range(1, n_items))
                 )
             elif mode == "item-full":
                 spec.add_coefficients(
-                    feature + f"_w_{weight_counter}", feature, list(range(num_items))
+                    feature + f"_w_{weight_counter}", feature, list(range(n_items))
                 )
 
             weight_counter += 1
@@ -603,10 +553,9 @@ class ConditionalMNL(ChoiceModel):
 
     def instantiate(
         self,
-        num_items,
+        n_items,
+        shared_features_names,
         items_features_names,
-        contexts_features_names,
-        contexts_items_features_names,
     ):
         """Instantiate the model from self.params and a dataset.
 
@@ -614,14 +563,12 @@ class ConditionalMNL(ChoiceModel):
 
         Parameters
         ----------
-        num_items : int
+        n_items : int
             Number of different items in the assortment. Used to create the right number of weights.
+        shared_features_names : list of str
+            Names of the shared features in the dataset.
         items_features_names : list of str
             Names of the items features in the dataset.
-        contexts_features_names : list of str
-            Names of the contexts features in the dataset.
-        contexts_items_features_names : list of str
-            Names of the contexts items features in the dataset.
 
         Raises:
         -------
@@ -629,51 +576,52 @@ class ConditionalMNL(ChoiceModel):
             When a mode is wrongly precised.
         """
         # Possibility to stack weights to be faster ????
+        if shared_features_names is None:
+            shared_features_names = [()]
         if items_features_names is None:
             items_features_names = [()]
-        if contexts_features_names is None:
-            contexts_features_names = [()]
-        if contexts_items_features_names is None:
-            contexts_items_features_names = [()]
         weights = []
         weights_count = 0
-        self._items_features_names = []
+
+        self._shared_features_names_by_choice = []
+        for feat_tuple in shared_features_names:
+            if feat_tuple is None:
+                feat_tuple = ()
+            tuple_names = []
+            for feat in feat_tuple:
+                if feat in self.params.keys():
+                    if self.params[feat] == "constant":
+                        weight = tf.Variable(
+                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, 1)),
+                            name=feat,
+                        )
+                    elif self.params[feat] == "item":
+                        weight = tf.Variable(
+                            tf.random_normal_initializer(0.0, 0.02, seed=42)(
+                                shape=(1, n_items - 1)
+                            ),
+                            name=feat,
+                        )
+                    elif self.params[feat] == "item-full":
+                        weight = tf.Variable(
+                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_items)),
+                            name=feat,
+                        )
+                    else:
+                        raise NotImplementedError(f"Param {self.params[feat]} not implemented")
+                    weights.append(weight)
+                    tuple_names.append((feat, weights_count))
+                    weights_count += 1
+                else:
+                    logging.info(
+                        f"Feature {feat} is in dataset but has no weight assigned in utility\
+                            computations"
+                    )
+            if len(tuple_names) > 0:
+                self._shared_features_names_by_choice.append(tuple_names)
+
+        self._items_features_by_choice_names = []
         for feat_tuple in items_features_names:
-            tuple_names = []
-            if feat_tuple is None:
-                feat_tuple = ()
-            for feat in feat_tuple:
-                if feat in self.params.keys():
-                    if self.params[feat] == "constant":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, 1))
-                        )
-                    elif self.params[feat] == "item":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(
-                                shape=(1, num_items - 1)
-                            )
-                        )
-                    elif self.params[feat] == "item-full":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_items))
-                        )
-                    else:
-                        raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-                    weights.append(weight)
-                    tuple_names.append((feat, weights_count))
-                    weights_count += 1
-
-                else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility\
-                            computations"
-                    )
-            if len(tuple_names) > 0:
-                self._items_features_names.append(tuple_names)
-
-        self._contexts_features_names = []
-        for feat_tuple in contexts_features_names:
             if feat_tuple is None:
                 feat_tuple = ()
             tuple_names = []
@@ -687,54 +635,17 @@ class ConditionalMNL(ChoiceModel):
                     elif self.params[feat] == "item":
                         weight = tf.Variable(
                             tf.random_normal_initializer(0.0, 0.02, seed=42)(
-                                shape=(1, num_items - 1)
+                                shape=(1, n_items - 1)
                             ),
                             name=feat,
                         )
                     elif self.params[feat] == "item-full":
                         weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_items)),
+                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_items)),
                             name=feat,
                         )
                     else:
-                        raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-                    weights.append(weight)
-                    tuple_names.append((feat, weights_count))
-                    weights_count += 1
-                else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility\
-                            computations"
-                    )
-            if len(tuple_names) > 0:
-                self._contexts_features_names.append(tuple_names)
-
-        self._contexts_items_features_names = []
-        for feat_tuple in contexts_items_features_names:
-            if feat_tuple is None:
-                feat_tuple = ()
-            tuple_names = []
-            for feat in feat_tuple:
-                if feat in self.params.keys():
-                    if self.params[feat] == "constant":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, 1)),
-                            name=feat,
-                        )
-                    elif self.params[feat] == "item":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(
-                                shape=(1, num_items - 1)
-                            ),
-                            name=feat,
-                        )
-                    elif self.params[feat] == "item-full":
-                        weight = tf.Variable(
-                            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_items)),
-                            name=feat,
-                        )
-                    else:
-                        for i, s_tuple in enumerate(contexts_features_names):
+                        for i, s_tuple in enumerate(shared_features_names):
                             for j, s_feat in enumerate(s_tuple):
                                 if s_feat == self.params[feat]:
                                     # Get num weights with unique values of this feature
@@ -756,13 +667,13 @@ class ConditionalMNL(ChoiceModel):
                     tuple_names.append((feat, weights_count))
                     weights_count += 1
                 else:
-                    print(
+                    logging.info(
                         f"Feature {feat} is in dataset but has no weight assigned in utility\
                             computations"
                     )
 
             if len(tuple_names) > 0:
-                self._contexts_items_features_names.append(tuple_names)
+                self._items_features_by_choice_names.append(tuple_names)
 
         if "intercept" in self.params.keys():
             if self.params["intercept"] == "constant":
@@ -771,12 +682,12 @@ class ConditionalMNL(ChoiceModel):
                 )
             elif self.params["intercept"] == "item":
                 weight = tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_items - 1)),
+                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_items - 1)),
                     name="intercept",
                 )
             elif self.params["intercept"] == "item-full":
                 weight = tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, num_items)),
+                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_items)),
                     name="intercept",
                 )
             else:
@@ -784,7 +695,7 @@ class ConditionalMNL(ChoiceModel):
                 raise NotImplementedError(f"Param {self.params['intercept']} not implemented")
             weights.append(weight)
         else:
-            print("No Intercept specified... was it forgotten ?")
+            logging.info("No Intercept specified... was it forgotten ?")
 
         if len(weights) > 0:
             self.instantiated = True
@@ -795,32 +706,27 @@ class ConditionalMNL(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Main method to compute the utility of the model. Selects the right method to compute.
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
 
         Returns:
         --------
@@ -828,50 +734,43 @@ class ConditionalMNL(ChoiceModel):
             Computed utilities of shape (n_choices, n_items).
         """
         if isinstance(self.params, ModelSpecification):
-            print("Model in instantiated using manual specification")
             return self.compute_batch_utility_from_specification(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
         return self.compute_batch_utility_from_dict(
-            fixed_items_features=fixed_items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=contexts_items_availabilities,
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
 
     def compute_batch_utility_from_dict(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Computes the utility when the model is constructed from a dictionnary object.
 
         Parameters
         ----------
-        fixed_items_features : tuple of np.ndarray
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant/fixed features.
-            Shape must be (n_items, n_items_features)
-        contexts_features : tuple of np.ndarray (contexts_features)
-            a batch of contexts features
-            Shape must be (n_contexts, n_contexts_features)
-        contexts_items_features : tuple of np.ndarray (contexts_items_features)
-            a batch of contexts items features
-            Shape must be (n_contexts, n_contexts_items_features)
-        contexts_items_availabilities : np.ndarray
-            A batch of contexts items availabilities
-            Shape must be (n_contexts, n_items)
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
-            Shape must be (n_contexts, )
+            Shape must be (n_choices, )
+
         verbose : int, optional
             Parametrization of the logging outputs, by default 0
 
@@ -882,83 +781,50 @@ class ConditionalMNL(ChoiceModel):
         """
         _ = choices
 
-        contexts_items_utilities = []
-        if fixed_items_features is not None:
-            num_items = fixed_items_features[0].shape[0]
-        else:
-            num_items = contexts_items_features[0].shape[1]
-        num_choices = contexts_items_availabilities.shape[0]
+        items_utility_by_choice = []
+        n_items = available_items_by_choice.shape[1]
+        n_choices = available_items_by_choice.shape[0]
 
-        # Items features
-        for i, feat_tuple in enumerate(self._items_features_names):
+        # Shared features
+        for i, feat_tuple in enumerate(self._shared_features_names_by_choice):
             for j, (feat, k) in enumerate(feat_tuple):
                 if feat in self.params.keys():
                     weight = self.weights[k]
                     if self.params[feat] == "constant":
-                        s_i_u = tf.concat(
-                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
-                            axis=0,
+                        partial_items_utility_by_choice = tf.concat(
+                            [tf.multiply(shared_features_by_choice[i][j], weight)] * n_items, axis=-1
                         )
                     elif self.params[feat] == "item":
                         weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                        s_i_u = tf.concat(
-                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
-                            axis=0,
-                        )
+                        partial_items_utility_by_choice = tf.tensordot(shared_features_by_choice[i][:, j : j + 1], weight, axes=1)
                     elif self.params[feat] == "item-full":
-                        s_i_u = tf.concat(
-                            [tf.multiply(fixed_items_features[i][:, j], weight)] * num_choices,
-                            axis=0,
-                        )
+                        partial_items_utility_by_choice = tf.tensordot(shared_features_by_choice[i][:, j : j + 1], weight, axes=1)
                     else:
                         raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-                    contexts_items_utilities.append(s_i_u)
+                    items_utility_by_choice.append(partial_items_utility_by_choice)
                 else:
-                    print(
-                        f"Feature {feat} is in dataset but has no weight assigned in utility \
-                        computations"
-                    )
-
-        # context features
-        for i, feat_tuple in enumerate(self._contexts_features_names):
-            for j, (feat, k) in enumerate(feat_tuple):
-                if feat in self.params.keys():
-                    weight = self.weights[k]
-                    if self.params[feat] == "constant":
-                        s_i_u = tf.concat(
-                            [tf.multiply(contexts_features[i][j], weight)] * num_items, axis=-1
-                        )
-                    elif self.params[feat] == "item":
-                        weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                        s_i_u = tf.tensordot(contexts_features[i][:, j : j + 1], weight, axes=1)
-                    elif self.params[feat] == "item-full":
-                        s_i_u = tf.tensordot(contexts_features[i][:, j : j + 1], weight, axes=1)
-                    else:
-                        raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-                    contexts_items_utilities.append(s_i_u)
-                else:
-                    print(
+                    logging.info(
                         f"Feature {feat} is in dataset but has no weight assigned in utility \
                         computations"
                     )
 
         # context Items features
-        for i, feat_tuple in enumerate(self._contexts_items_features_names):
+        for i, feat_tuple in enumerate(self._items_features_by_choice_names):
             for j, (feat, k) in enumerate(feat_tuple):
                 if feat in self.params.keys():
                     weight = self.weights[k]
                     if self.params[feat] == "constant":
-                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
+                        partial_items_utility_by_choice = tf.multiply(items_features_by_choice[i][:, :, j], weight)
                     elif self.params[feat] == "item":
                         weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
+                        partial_items_utility_by_choice = tf.multiply(items_features_by_choice[i][:, :, j], weight)
                     elif self.params[feat] == "item-full":
-                        s_i_u = tf.multiply(contexts_items_features[i][:, :, j], weight)
+                        partial_items_utility_by_choice = tf.multiply(items_features_by_choice[i][:, :, j], weight)
                     else:
                         raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-                    contexts_items_utilities.append(s_i_u)
+                    items_utility_by_choice.append(partial_items_utility_by_choice)
                 else:
-                    print(
+                    logging.info(
                         f"Feature {feat} is in dataset but has no weight assigned in utility \
                         computations"
                     )
@@ -966,17 +832,17 @@ class ConditionalMNL(ChoiceModel):
         if "intercept" in self.params.keys():
             weight = self.weights[-1]
             if self.params["intercept"] == "constant":
-                s_i_u = tf.concat([tf.concat([weight] * num_items, axis=0)] * num_choices, axis=0)
+                partial_items_utility_by_choice = tf.concat([tf.concat([weight] * n_items, axis=0)] * n_choices, axis=0)
             elif self.params["intercept"] == "item":
                 weight = tf.concat([tf.constant([[0.0]]), weight], axis=-1)
-                s_i_u = tf.concat([weight] * num_choices, axis=0)
+                partial_items_utility_by_choice = tf.concat([weight] * n_choices, axis=0)
             elif self.params["intercept"] == "item-full":
-                s_i_u = tf.concat([weight] * num_choices, axis=0)
+                partial_items_utility_by_choice = tf.concat([weight] * n_choices, axis=0)
             else:
                 raise NotImplementedError(f"Param {self.params[feat]} not implemented")
-            contexts_items_utilities.append(s_i_u)
+            items_utility_by_choice.append(partial_items_utility_by_choice)
 
-        return tf.reduce_sum(contexts_items_utilities, axis=0)
+        return tf.reduce_sum(items_utility_by_choice, axis=0)
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
@@ -999,10 +865,9 @@ class ConditionalMNL(ChoiceModel):
                 self._store_dataset_features_names(choice_dataset)
             else:
                 self.weights = self.instantiate(
-                    num_items=choice_dataset.get_n_items(),
-                    items_features_names=choice_dataset.fixed_items_features_names,
-                    contexts_features_names=choice_dataset.contexts_features_names,
-                    contexts_items_features_names=choice_dataset.contexts_items_features_names,
+                    n_items=choice_dataset.get_n_items(),
+                    shared_features_names=choice_dataset.shared_features_by_choice_names,
+                    items_features_names=choice_dataset.items_features_by_choice_names,
                 )
             self.instantiated = True
         fit = super().fit(choice_dataset=choice_dataset, **kwargs)
@@ -1042,10 +907,9 @@ class ConditionalMNL(ChoiceModel):
                 self._store_dataset_features_names(choice_dataset)
             else:
                 self.weights = self.instantiate(
-                    num_items=choice_dataset.get_n_items(),
-                    items_features_names=choice_dataset.fixed_items_features_names,
-                    contexts_features_names=choice_dataset.contexts_features_names,
-                    contexts_items_features_names=choice_dataset.contexts_items_features_names,
+                    n_items=choice_dataset.get_n_items(),
+                    shared_features_names=choice_dataset.shared_features_by_choice_names,
+                    items_features_names=choice_dataset.items_features_by_choice_names,
                 )
             self.instantiated = True
         if epochs is None:
