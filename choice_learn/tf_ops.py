@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 
+
 def softmax_with_availabilities(
     items_logit_by_choice, available_items_by_choice, axis=-1, normalize_exit=False, eps=1e-5
 ):
