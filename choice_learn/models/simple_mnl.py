@@ -17,7 +17,7 @@ class SimpleMNL(ChoiceModel):
         self,
         add_exit_choice=False,
         intercept=None,
-        optimizer="Adam",
+        optimizer="lbfgs",
         lr=0.001,
         **kwargs,
     ):
