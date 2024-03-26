@@ -852,8 +852,8 @@ class ConditionalMNL(ChoiceModel):
 
         Returns:
         --------
-        ConditionalMNL
-            With estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             if isinstance(self.params, ModelSpecification):
@@ -893,8 +893,8 @@ class ConditionalMNL(ChoiceModel):
 
         Returns:
         --------
-        conditionalMNL
-            self with estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             if isinstance(self.params, ModelSpecification):
