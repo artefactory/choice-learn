@@ -202,7 +202,7 @@ class ConditionalMNL(ChoiceModel):
         self,
         parameters=None,
         add_exit_choice=False,
-        optimizer="Adam",
+        optimizer="lbfgs",
         lr=0.001,
         **kwargs,
     ):
@@ -220,7 +220,7 @@ class ConditionalMNL(ChoiceModel):
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
         """
-        super().__init__(normalize_non_buy=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.params = parameters
         self.instantiated = False
 
@@ -763,6 +763,11 @@ class ConditionalMNL(ChoiceModel):
         n_items = available_items_by_choice.shape[1]
         n_choices = available_items_by_choice.shape[0]
 
+        if not isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = (shared_features_by_choice,)
+        if not isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = (items_features_by_choice,)
+
         # Shared features
         for i, feat_tuple in enumerate(self._shared_features_names_by_choice):
             for j, (feat, k) in enumerate(feat_tuple):
@@ -1000,7 +1005,7 @@ class ConditionalMNL(ChoiceModel):
         """Returns a clone of the model."""
         clone = ConditionalMNL(
             parameters=self.params,
-            add_exit_choice=self.normalize_non_buy,
+            add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
         )
         if hasattr(self, "history"):
