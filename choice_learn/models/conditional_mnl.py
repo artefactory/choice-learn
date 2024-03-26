@@ -27,8 +27,7 @@ class MNLCoefficients(object):
             Name given to the coefficient.
         feature_name : str
             features name to which the coefficient is associated. It should work with
-            the names given.
-            in the ChoiceDataset that will be used for parameters estimation.
+            the names given in the ChoiceDataset that will be used for parameters estimation.
         items_indexes : list of int, optional
             list of items indexes (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
@@ -55,17 +54,16 @@ class MNLCoefficients(object):
             "items_names": items_names,
         }
 
-    def add_shared(self, feature_name, coefficient_name, items_indexes=None, items_names=None):
+    def add_shared(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
         ----------
-        feature_name : str
-            features name to which the coefficient is associated. It should work with
-            the names given.
-            in the ChoiceDataset that will be used for parameters estimation.
         coefficient_name : str
             Name given to the coefficient.
+        feature_name : str
+            features name to which the coefficient is associated. It should work with
+            the names given in the ChoiceDataset that will be used for parameters estimation.
         items_indexes : list of int, optional
             list of items indexes (in the ChoiceDataset) for which the coefficient will be used,
             by default None
@@ -148,7 +146,7 @@ class MNLCoefficients(object):
             ]
 
     @property
-    def list_features_with_weights(self):
+    def features_with_weights(self):
         """Get a list of the features that have a weight to be estimated.
 
         Returns:
@@ -306,7 +304,21 @@ class ConditionalMNL(ChoiceModel):
             items_names=items_names,
         )
 
-    def instantiate(self):
+    def instantiate(self, choice_dataset):
+        """Instantiate the model using the features in the choice_dataset.
+
+        Params:
+        --------
+        choice_dataset: choice dataset to match the features names with the model coefficients.
+        """
+        if not self.instantiated:
+            if not isinstance(self.coefficients, MNLCoefficients):
+                self._build_coefficients_from_dict(n_items=choice_dataset.get_n_items())
+            self.trainable_weights = self._instantiate_tf_weights()
+            self._store_dataset_features_names(choice_dataset)
+            self.instantiated = True
+
+    def _instantiate_tf_weights(self):
         """Instantiate the model from MNLCoefficients object.
 
         Returns:
@@ -337,12 +349,11 @@ class ConditionalMNL(ChoiceModel):
             ## Fill items_indexes here
             # Better organize feat_to_weight and specifications
         self.trainable_weights = weights
-        self.instantiated = True
 
         return weights
 
-    def instantiate_from_dict(self, n_items):
-        """Instantiation of the model from a dictionnary specification.
+    def _build_coefficients_from_dict(self, n_items):
+        """Build coefficients when they are given as a dictionnay.
 
         Parameters
         ----------
@@ -350,8 +361,7 @@ class ConditionalMNL(ChoiceModel):
             Number of different items in the assortment. Used to create the right number of weights.
         """
         coefficients = MNLCoefficients()
-        weight_counter = 0
-        for feature, mode in self.coefficients.items():
+        for weight_counter, (feature, mode) in enumerate(self.coefficients.items()):
             if mode == "constant":
                 coefficients.add_shared(
                     feature + f"_w_{weight_counter}", feature, list(range(n_items))
@@ -361,9 +371,7 @@ class ConditionalMNL(ChoiceModel):
             elif mode == "item-full":
                 coefficients.add(feature + f"_w_{weight_counter}", feature, list(range(n_items)))
 
-            weight_counter += 1
         self.coefficients = coefficients
-        self.instantiate()
 
     def _store_dataset_features_names(self, dataset):
         """Registers the name of the features in the dataset. For later use in utility computation.
@@ -382,7 +390,7 @@ class ConditionalMNL(ChoiceModel):
         items_features_by_choice,
         available_items_by_choice,
         choices,
-        verbose=0,
+        verbose=1,
     ):
         """Computes the utility when the model is constructed from a MNLCoefficients object.
 
@@ -418,7 +426,7 @@ class ConditionalMNL(ChoiceModel):
         if self._shared_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._shared_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
-                    if feat in self.coefficients.list_features_with_weights:
+                    if feat in self.coefficients.features_with_weights:
                         (
                             item_index_list,
                             weight_index_list,
@@ -450,18 +458,17 @@ class ConditionalMNL(ChoiceModel):
                                     tf.stack(partial_items_utility_by_choice, axis=1), tf.float32
                                 )
                             )
-                    else:
-                        if verbose > 0:
-                            logging.warning(
-                                f"Feature {feat} is in dataset but has no weight assigned\
-                                    in utility computations"
-                            )
+                    elif verbose > 0:
+                        logging.warning(
+                            f"Feature {feat} is in dataset but has no weight assigned\
+                                in utility computations"
+                        )
 
         # Items features
         if self._items_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._items_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
-                    if feat in self.coefficients.list_features_with_weights:
+                    if feat in self.coefficients.features_with_weights:
                         (
                             item_index_list,
                             weight_index_list,
@@ -505,14 +512,13 @@ class ConditionalMNL(ChoiceModel):
                             items_utilities_by_choice.append(
                                 tf.cast(partial_items_utility_by_choice, tf.float32)
                             )
-                    else:
-                        if verbose > 0:
-                            logging.warning(
-                                f"Feature {feat} is in dataset but has no weight assigned\
-                                    in utility computations"
-                            )
+                    elif verbose > 0:
+                        logging.warning(
+                            f"Feature {feat} is in dataset but has no weight assigned\
+                                in utility computations"
+                        )
 
-        if "intercept" in self.coefficients.list_features_with_weights:
+        if "intercept" in self.coefficients.features_with_weights:
             item_index_list, weight_index_list = self.coefficients.get_weight_item_indexes(
                 "intercept"
             )
@@ -556,16 +562,8 @@ class ConditionalMNL(ChoiceModel):
         ConditionalMNL
             With estimated weights.
         """
-        if not self.instantiated:
-            if isinstance(self.coefficients, MNLCoefficients):
-                self.trainable_weights = self.instantiate()
-                self._store_dataset_features_names(choice_dataset)
-            else:
-                self.trainable_weights = self._instantiate(
-                    n_items=choice_dataset.get_n_items(),
-                    shared_features_names=choice_dataset.shared_features_by_choice_names,
-                    items_features_names=choice_dataset.items_features_by_choice_names,
-                )
+        self.instantiate(choice_dataset)
+
         fit = super().fit(choice_dataset=choice_dataset, **kwargs)
         if get_report:
             self.report = self.compute_report(choice_dataset)
@@ -596,16 +594,7 @@ class ConditionalMNL(ChoiceModel):
         conditionalMNL
             self with estimated weights.
         """
-        if not self.instantiated:
-            if isinstance(self.coefficients, MNLCoefficients):
-                self.trainable_weights = self.instantiate()
-                self._store_dataset_features_names(choice_dataset)
-            else:
-                self.trainable_weights = self._instantiate(
-                    n_items=choice_dataset.get_n_items(),
-                    shared_features_names=choice_dataset.shared_features_by_choice_names,
-                    items_features_names=choice_dataset.items_features_by_choice_names,
-                )
+        self.instantiate(choice_dataset)
 
         fit = super()._fit_with_lbfgs(
             dataset=choice_dataset,
