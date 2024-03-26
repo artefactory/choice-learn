@@ -1,4 +1,5 @@
 """TasteNet model unofficial implementation."""
+import logging
 
 import tensorflow as tf
 
@@ -47,6 +48,15 @@ class TasteNet(ChoiceModel):
         self.taste_net_activation = taste_net_activation
         self.items_features_by_choice_parametrization = items_features_by_choice_parametrization
 
+        for item_params in items_features_by_choice_parametrization:
+            if len(item_params) != items_features_by_choice_parametrization[0]:
+                raise ValueError("All items must have the same number of features parametrization.")
+        self.n_items = len(items_features_by_choice_parametrization)
+        self.n_items_features = len(items_features_by_choice_parametrization[0])
+        logging.info(
+            """TasteNet model is instantiated for {self.n_items} items and
+                     {self.n_items_features} items_features."""
+        )
         self.instantiated = False
 
     def get_activation_function(self, name):
@@ -149,6 +159,12 @@ class TasteNet(ChoiceModel):
             Shape must be (n_choices, n_items)
         """
         _ = available_items_by_choice
+        ### Restacking of the item features
+        if isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+        if isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
+
         taste_weights = self.taste_params_module(shared_features_by_choice)
 
         item_utility_by_choice = []
@@ -167,3 +183,71 @@ class TasteNet(ChoiceModel):
                 utility += item_feature
             item_utility_by_choice.append(utility)
         return tf.stack(item_utility_by_choice, axis=1)
+
+    def fit(self, choice_dataset, **kwargs):
+        """Main fit function to estimate the paramters.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Choice dataset to use for the estimation.
+
+        Returns:
+        --------
+        dict
+            dict with fit history.
+        """
+        if not self.instantiated:
+            # Lazy Instantiation
+            if choice_dataset.get_n_items() != self.n_items:
+                raise ValueError(
+                    """Number of items in the dataset does not match
+                    the number of items of the model."""
+                )
+            if choice_dataset.get_n_items_features() != self.n_items_features:
+                raise ValueError(
+                    """Number of items features in the dataset does not match the
+                    number of items features in the model."""
+                )
+            self.instantiate(
+                n_shared_features=choice_dataset.get_n_shared_features(),
+            )
+            self.instantiated = True
+        return super().fit(choice_dataset=choice_dataset, **kwargs)
+
+    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, **kwargs):
+        """Specific fit function to estimate the paramters with LBFGS.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Choice dataset to use for the estimation.
+        n_epochs : int
+            Number of epochs to run.
+        sample_weight: Iterable, optional
+            list of each sample weight, by default None meaning that all samples have weight 1.
+
+        Returns:
+        --------
+        dict
+            dict with fit history.
+        """
+        if not self.instantiated:
+            if choice_dataset.get_n_items() != self.n_items:
+                raise ValueError(
+                    """Number of items in the dataset does not match
+                    the number of items of the model."""
+                )
+            if choice_dataset.get_n_items_features() != self.n_items_features:
+                raise ValueError(
+                    """Number of items features in the dataset does not match
+                    the number of items features in the model."""
+                )
+            # Lazy Instantiation
+            self.instantiate(
+                n_shared_features=choice_dataset.get_n_shared_features(),
+            )
+            self.instantiated = True
+        return super()._fit_with_lbfgs(
+            dataset=choice_dataset, sample_weight=sample_weight, **kwargs
+        )
