@@ -55,7 +55,7 @@ class MNLCoefficients(object):
             "items_names": items_names,
         }
 
-    def add_shared(self, feature_name, coefficient_name="", items_indexes=None, items_names=None):
+    def add_shared(self, feature_name, coefficient_name, items_indexes=None, items_names=None):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -64,8 +64,8 @@ class MNLCoefficients(object):
             features name to which the coefficient is associated. It should work with
             the names given.
             in the ChoiceDataset that will be used for parameters estimation.
-        coefficient_name : str, optional
-            Name given to the coefficient. If not provided, name will be "beta_feature_name".
+        coefficient_name : str
+            Name given to the coefficient.
         items_indexes : list of int, optional
             list of items indexes (in the ChoiceDataset) for which the coefficient will be used,
             by default None
@@ -228,18 +228,17 @@ class ConditionalMNL(ChoiceModel):
         self.instantiated = False
 
     def add_coefficients(
-        self, coefficient_name, feature_name, items_indexes=None, items_names=None
+        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
     ):
         """Adds a coefficient to the model throught the specification of the utility.
 
         Parameters
         ----------
-        coefficient_name : str
-            Name given to the coefficient.
         feature_name : str
             features name to which the coefficient is associated. It should work with
-            the names given.
-            in the ChoiceDataset that will be used for parameters estimation.
+            the names given in the ChoiceDataset that will be used for parameters estimation.
+        coefficient_name : str, optional
+            Name given to the coefficient. If not provided, name will be "beta_feature_name".
         items_indexes : list of int, optional
             list of items indexes (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
@@ -252,30 +251,26 @@ class ConditionalMNL(ChoiceModel):
         ValueError
             When names or indexes are both not specified.
         """
-        if self.coefficients is None:
-            self.coefficients = MNLCoefficients()
-        elif not isinstance(self.coefficients, MNLCoefficients):
-            raise ValueError("Cannot add coefficient on top of a dict instantiation.")
-        self.coefficients.add(
+        self._add_coefficient(
             coefficient_name=coefficient_name,
             feature_name=feature_name,
             items_indexes=items_indexes,
             items_names=items_names,
+            shared=False,
         )
 
     def add_shared_coefficient(
-        self, coefficient_name, feature_name, items_indexes=None, items_names=None
+        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
     ):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
         ----------
-        coefficient_name : str
-            Name given to the coefficient.
         feature_name : str
             features name to which the coefficient is associated. It should work with
-            the names given.
-            in the ChoiceDataset that will be used for parameters estimation.
+            the names given in the ChoiceDataset that will be used for parameters estimation.
+        coefficient_name : str, optional
+            Name given to the coefficient. If not provided, name will be "beta_feature_name".
         items_indexes : list of int, optional
             list of items indexes (in the ChoiceDataset) for which the coefficient will be used,
             by default None
@@ -288,11 +283,23 @@ class ConditionalMNL(ChoiceModel):
         ValueError
             When names or indexes are both not specified.
         """
+        self._add_coefficient(
+            coefficient_name=coefficient_name,
+            feature_name=feature_name,
+            items_indexes=items_indexes,
+            items_names=items_names,
+            shared=True,
+        )
+
+    def _add_coefficient(self, feature_name, coefficient_name, items_indexes, items_names, shared):
         if self.coefficients is None:
             self.coefficients = MNLCoefficients()
         elif not isinstance(self.coefficients, MNLCoefficients):
             raise ValueError("Cannot add shared coefficient on top of a dict instantiation.")
-        self.coefficients.add_shared(
+
+        coefficient_name = coefficient_name if coefficient_name else "beta_%s" % feature_name
+        add_method = self.coefficients.add_shared if shared else self.coefficients.add
+        add_method(
             coefficient_name=coefficient_name,
             feature_name=feature_name,
             items_indexes=items_indexes,
