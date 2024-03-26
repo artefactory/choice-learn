@@ -213,6 +213,29 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     if as_frame:
         return swiss_df
 
+    if preprocessing == "tastenet":
+        swiss_df["TRAIN_ASC_TRAIN"] = 1.0
+        swiss_df["SM_ASC_TRAIN"] = 0.0
+        swiss_df["CAR_ASC_TRAIN"] = 0.0
+
+        swiss_df["TRAIN_ASC_SM"] = 0.0
+        swiss_df["SM_ASC_SM"] = 1.0
+        swiss_df["CAR_ASC_SM"] = 0.0
+
+        swiss_df["TRAIN_ASC_CAR"] = 0.0
+        swiss_df["SM_ASC_CAR"] = 0.0
+        swiss_df["CAR_ASC_CAR"] = 1.0
+        return ChoiceDataset.from_single_wide_df(
+            df=swiss_df,
+            items_id=items,
+            shared_features_columns=shared_features_by_choice_names,
+            items_features_suffixes=items_features_by_choice_names
+            + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"],
+            available_items_suffix=availabilities_column,
+            choices_column=choice_column,
+            choice_format="item_index",
+        )
+
     if preprocessing == "tutorial":
         # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
@@ -347,6 +370,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
                 shared_features_by_choice.append(col)
 
         shared_features_by_choice = long_data[shared_features_by_choice].to_numpy()
+        choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
             shared_features_by_choice=(shared_features_by_choice.astype("float32"),),
