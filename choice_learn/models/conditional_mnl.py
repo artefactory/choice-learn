@@ -119,7 +119,7 @@ class MNLCoefficients(object):
         """
         return self.coefficients[coefficient_name]
 
-    def add_weight(self, weight_name, weight_index):
+    def _add_tf_weight(self, weight_name, weight_index):
         """Method used by cMNL class to create the Tensorflow weight corresponding.
 
         Parameters
@@ -181,7 +181,7 @@ class MNLCoefficients(object):
         ], weight_indexs
 
     @property
-    def coefficients_list(self):
+    def names(self):
         """Returns the list of coefficients.
 
         Returns:
@@ -315,7 +315,7 @@ class ConditionalMNL(ChoiceModel):
             List of the weights created coresponding to the specification.
         """
         weights = []
-        for weight_nb, weight_name in enumerate(self.coefficients.list):
+        for weight_nb, weight_name in enumerate(self.coefficients.names):
             n_weights = (
                 len(self.coefficients.get(weight_name)["items_indexes"])
                 if self.coefficients.get(weight_name)["items_indexes"] is not None
@@ -332,7 +332,7 @@ class ConditionalMNL(ChoiceModel):
                 self.coefficients[weight_name],
             )
             """
-            self.coefficients.add_weight(weight_name, weight_nb)
+            self.coefficients._add_tf_weight(weight_name, weight_nb)
 
             ## Fill items_indexes here
             # Better organize feat_to_weight and specifications
@@ -418,7 +418,7 @@ class ConditionalMNL(ChoiceModel):
         if self._shared_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._shared_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
-                    if feat in self.coefficients.list_features_with_weights():
+                    if feat in self.coefficients.list_features_with_weights:
                         (
                             item_index_list,
                             weight_index_list,
@@ -461,7 +461,7 @@ class ConditionalMNL(ChoiceModel):
         if self._items_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._items_features_by_choice_names):
                 for j, feat in enumerate(feat_tuple):
-                    if feat in self.coefficients.list_features_with_weights():
+                    if feat in self.coefficients.list_features_with_weights:
                         (
                             item_index_list,
                             weight_index_list,
@@ -512,7 +512,7 @@ class ConditionalMNL(ChoiceModel):
                                     in utility computations"
                             )
 
-        if "intercept" in self.coefficients.list_features_with_weights():
+        if "intercept" in self.coefficients.list_features_with_weights:
             item_index_list, weight_index_list = self.coefficients.get_weight_item_indexes(
                 "intercept"
             )
