@@ -33,7 +33,7 @@ class SimpleMNL(ChoiceModel):
         lr: float
             Learning Rate to be used with optimizer.
         """
-        super().__init__(normalize_non_buy=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.instantiated = False
         self.intercept = intercept
 
@@ -316,7 +316,7 @@ class SimpleMNL(ChoiceModel):
     def clone(self):
         """Returns a clone of the model."""
         clone = SimpleMNL(
-            add_exit_choice=self.normalize_non_buy,
+            add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
         )
         if hasattr(self, "history"):
