@@ -4,6 +4,7 @@ import tensorflow as tf
 
 from choice_learn.models.base_model import ChoiceModel
 
+
 def get_feed_forward_net(input_width, output_width, layers_width, activation):
     """Base function to get a feed-forward neural network."""
     net_input = tf.keras.layers.Input(shape=(input_width,))
@@ -14,36 +15,68 @@ def get_feed_forward_net(input_width, output_width, layers_width, activation):
     return tf.keras.Model(inputs=net_input, outputs=net_output)
 
 
-class TasteNet():
+class TasteNet(ChoiceModel):
+    """UnOfficial implementation of the TasteNet model.
 
-    def __init__(self,
-                 taste_net_layers,
-                 taste_net_activation,
-                 items_features_by_choice_parametrization,
-                 **kwargs):
-        """Initialization of the model."""
+    A neural-embedded discrete choice model: Learning taste representation with strengthened
+    interpretability, by Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020).
+    """
+
+    def __init__(
+        self,
+        taste_net_layers,
+        taste_net_activation,
+        items_features_by_choice_parametrization,
+        **kwargs,
+    ):
+        """Initialization of the model.
+
+        Parameters
+        ----------
+        taste_net_layers : list of ints
+            Width of the different layer to use in the taste network.
+        taste_net_activation : str
+            Activation function to use in the taste network.
+        items_features_by_choice_parametrization : list of lists
+            List of list of strings or floats. Each list corresponds to the features of an item.
+            Each string is the name of an activation function to apply to the feature.
+            Each float is a constant to multiply the feature by.
+        """
         super().__init__(**kwargs)
         self.taste_net_layers = taste_net_layers
         self.taste_net_activation = taste_net_activation
         self.items_features_by_choice_parametrization = items_features_by_choice_parametrization
 
+        self.instantiated = False
+
     def get_activation_function(self, name):
-        if name == 'relu':
+        """Function to get a normalization function from its str name.
+
+        Parameters
+        ----------
+        name : str
+            Name of the function to apply.
+
+        Returns:
+        --------
+        function
+            Tensorflow function to apply.
+        """
+        if name == "linear":
+            return lambda x: x
+        if name == "relu":
             return tf.nn.relu
-        elif name == "-relu":
+        if name == "-relu":
             return lambda x: -tf.nn.relu(-x)
-        elif name == "exp":
+        if name == "exp":
             return tf.exp
-        elif name == "-exp":
+        if name == "-exp":
             return lambda x: -tf.exp(-x)
-        elif name == 'tanh':
+        if name == "tanh":
             return tf.nn.tanh
-        elif name == 'sigmoid':
+        if name == "sigmoid":
             return tf.nn.sigmoid
-        else:
-            raise ValueError(f'Activation function {name} not supported.')
-        
-        self.instantiated  = False
+        raise ValueError(f"Activation function {name} not supported.")
 
     def instantiate(self, n_shared_features):
         """Instantiates the model.
@@ -61,36 +94,74 @@ class TasteNet():
                     items_features_to_weight_index[(i, j)] = len(items_features_to_weight_index)
         self.items_features_to_weight_index = items_features_to_weight_index
 
-        self.taste_params_module = get_feed_forward_net(n_shared_features,
-                                                        len(items_features_to_weight_index),
-                                                        self.taste_net_layers,
-                                                        self.taste_net_activation)
+        self.taste_params_module = get_feed_forward_net(
+            n_shared_features,
+            len(items_features_to_weight_index),
+            self.taste_net_layers,
+            self.taste_net_activation,
+        )
         self.instantiated = True
+
     @property
     def trainable_weights(self):
+        """Argument to access the future trainable_weights throught the taste net.
+
+        Returns:
+        --------
+        list
+            List of trainable weights.
+        """
         if self.instantiated:
             return self.taste_params_module.trainable_variables
-        else:
-            return []
-        
-    def compute_batch_utility(self,
-                              shared_features_by_choice,
-                              items_features_by_choice,
-                              available_items_by_choice,
-                              choices):
-        """Computes the utility of the choices for the given batch."""
+        return []
 
-        _ = choices
+    def compute_batch_utility(
+        self,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
+        choices,
+    ):
+        """Method that defines how the model computes the utility of a product.
+
+        MUST be implemented in children classe !
+        For simpler use-cases this is the only method to be user-defined.
+
+        Parameters
+        ----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_choices, )
+
+        Returns:
+        --------
+        np.ndarray
+            Utility of each product for each choice.
+            Shape must be (n_choices, n_items)
+        """
+        _ = available_items_by_choice
         taste_weights = self.taste_params_module(shared_features_by_choice)
-        item_utility_by_choice = tf.zeros_like(available_items_by_choice, dtype=tf.float32)
 
         item_utility_by_choice = []
-        for i, item_param in enumerate(self.items_features_by_choice):
+        for i, item_param in enumerate(self.items_features_by_choice_parametrization):
             utility = tf.zeros_like(choices, dtype=tf.float32)
             for j, param in enumerate(item_param):
                 if isinstance(param, str):
-                    item_feature = self.get_activation_function(param)(items_features_by_choice[:, i, j])
-                    item_feature = taste_weights[:, self.items_features_to_weight_index[(i, j)]] * item_feature
+                    item_feature = self.get_activation_function(param)(
+                        items_features_by_choice[:, i, j]
+                    )
+                    item_feature = (
+                        taste_weights[:, self.items_features_to_weight_index[(i, j)]] * item_feature
+                    )
                 elif isinstance(param, float):
                     item_feature = param * items_features_by_choice[:, i, j]
                 utility += item_feature
