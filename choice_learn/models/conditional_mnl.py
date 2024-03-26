@@ -203,7 +203,7 @@ class ConditionalMNL(ChoiceModel):
         self,
         coefficients=None,
         add_exit_choice=False,
-        optimizer="Adam",
+        optimizer="lbfgs",
         lr=0.001,
         **kwargs,
     ):
