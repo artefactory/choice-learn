@@ -221,7 +221,7 @@ class ConditionalMNL(ChoiceModel):
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
         """
-        super().__init__(normalize_non_buy=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.coefficients = coefficients
         self.instantiated = False
 
@@ -693,7 +693,7 @@ class ConditionalMNL(ChoiceModel):
         """Returns a clone of the model."""
         clone = ConditionalMNL(
             coefficients=self.coefficients,
-            add_exit_choice=self.normalize_non_buy,
+            add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
         )
         if hasattr(self, "history"):

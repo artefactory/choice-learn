@@ -18,7 +18,7 @@ class ChoiceModel(object):
     def __init__(
         self,
         label_smoothing=0.0,
-        normalize_non_buy=False,
+        add_exit_choice=False,
         optimizer="lbfgs",
         tolerance=1e-8,
         callbacks=None,
@@ -34,7 +34,7 @@ class ChoiceModel(object):
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing,
         during training, by default 0.0
             by default None. Label smoothing is applied to LogLikelihood loss.
-        normalize_non_buy : bool, optional
+        add_exit_choice : bool, optional
             Whether or not to add a normalization (then U=1) with the exit option in probabilites
             normalization,by default True
         callbacks : list of tf.kera callbacks, optional
@@ -52,7 +52,7 @@ class ChoiceModel(object):
             Not used in the case of L-BFGS optimizer, by default 32
         """
         self.is_fitted = False
-        self.normalize_non_buy = normalize_non_buy
+        self.add_exit_choice = add_exit_choice
         self.label_smoothing = label_smoothing
         self.stop_training = False
 
@@ -166,7 +166,7 @@ class ChoiceModel(object):
             probabilities = tf_ops.softmax_with_availabilities(
                 items_logit_by_choice=utilities,
                 available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.normalize_non_buy,
+                normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
             # Negative Log-Likelihood
@@ -413,7 +413,7 @@ class ChoiceModel(object):
         probabilities = tf_ops.softmax_with_availabilities(
             items_logit_by_choice=utilities,
             available_items_by_choice=available_items_by_choice,
-            normalize_exit=self.normalize_non_buy,
+            normalize_exit=self.add_exit_choice,
             axis=-1,
         )
 

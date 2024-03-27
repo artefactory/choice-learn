@@ -347,6 +347,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
                 shared_features_by_choice.append(col)
 
         shared_features_by_choice = long_data[shared_features_by_choice].to_numpy()
+        choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
             shared_features_by_choice=(shared_features_by_choice.astype("float32"),),
