@@ -55,7 +55,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Conditional MultiNomialLogit [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
-  - TasteNet [[7]](#citation) [[Example]](notebooks/tastenet_example.ipynb)
+  - TasteNet [[7]](#citation)[[Example]](notebooks/tastenet_example.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
   - Nested MultiNomialLogit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
@@ -184,7 +184,7 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
 [5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva, M.; Bolduc, D.; Bradley, M. (1993)\
 [6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
-[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability]((https://arxiv.org/abs/2002.00922)), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)
+[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)
