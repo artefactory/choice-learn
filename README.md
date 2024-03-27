@@ -115,45 +115,36 @@ from choice_learn.models import ConditionalMNL, RUMnet
 # Onl need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
-                                            contexts_id_column="case",
+                                            choices_id_column="case",
                                             choices_column="choice",
-                                            contexts_features_columns=["income"],
-                                            contexts_items_features_columns=["cost", "freq", "ovt", "ivt"],
+                                            shared_features_columns=["income"],
+                                            items_features_columns=["cost", "freq", "ovt", "ivt"],
                                             choice_format="item_id")
 
 # Initialization of the model
-model = ConditionalMNL(optimizer="lbfgs")
+model = ConditionalMNL()
 
 # Creation of the different weights:
 
-
 # add_coefficients adds one coefficient for each specified item_index
 # intercept, and income are added for each item except the first one that needs to be zeroed
-model.add_coefficients(coefficient_name="beta_inter",
-                       feature_name="intercept",
+model.add_coefficients(feature_name="intercept",
                        items_indexes=[1, 2, 3])
-model.add_coefficients(coefficient_name="beta_income",
-                       feature_name="income",
+model.add_coefficients(feature_name="income",
                        items_indexes=[1, 2, 3])
-
-# ivt is added for each item:
-model.add_coefficients(coefficient_name="beta_ivt",
-                       feature_name="ivt",
+model.add_coefficients(feature_name="ivt",
                        items_indexes=[0, 1, 2, 3])
 
 # shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
-model.add_shared_coefficient(coefficient_name="beta_cost",
-                             feature_name="cost",
+model.add_shared_coefficient(feature_name="cost",
                              items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_freq",
-                             feature_name="freq",
+model.add_shared_coefficient(feature_name="freq",
                              items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_ovt",
-                             feature_name="ovt",
+model.add_shared_coefficient(feature_name="ovt",
                              items_indexes=[0, 1, 2, 3])
 
-history = model.fit(dataset, epochs=1000, get_report=True)
+history = model.fit(dataset, get_report=True)
 print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
 print(model.report)
 ```
