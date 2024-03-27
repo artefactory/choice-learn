@@ -28,6 +28,7 @@ class TasteNet(ChoiceModel):
         taste_net_layers,
         taste_net_activation,
         items_features_by_choice_parametrization,
+        exp_paramater_mu=1.0,
         **kwargs,
     ):
         """Initialization of the model.
@@ -42,11 +43,20 @@ class TasteNet(ChoiceModel):
             List of list of strings or floats. Each list corresponds to the features of an item.
             Each string is the name of an activation function to apply to the feature.
             Each float is a constant to multiply the feature by.
+            e.g. for the swissmetro that has 3 items with 4 features each:
+            [[-1., "-exp", "-exp", 0., "linear", 0., 0.],
+            [-1., "-exp", "-exp", "linear", 0., "linear", 0.],
+            [-1., "-exp", 0., 0., 0., 0., 0.]]
+        exp_paramater_mu : float
+            Parameter of the exponential function to use in the
+            items_features_by_choice_parametrization.
+            x = exp(x / exp_paramater_mu), default is 1.0.
         """
         super().__init__(**kwargs)
         self.taste_net_layers = taste_net_layers
         self.taste_net_activation = taste_net_activation
         self.items_features_by_choice_parametrization = items_features_by_choice_parametrization
+        self.exp_paramater_mu = exp_paramater_mu
 
         for item_params in items_features_by_choice_parametrization:
             if len(item_params) != len(items_features_by_choice_parametrization[0]):
@@ -83,9 +93,9 @@ class TasteNet(ChoiceModel):
         if name == "-relu":
             return lambda x: -tf.nn.relu(-x)
         if name == "exp":
-            return tf.exp
+            return lambda x: tf.exp(x / self.exp_paramater_mu)
         if name == "-exp":
-            return lambda x: -tf.exp(-x)
+            return lambda x: -tf.exp(-x / self.exp_paramater_mu)
         if name == "tanh":
             return tf.nn.tanh
         if name == "sigmoid":
@@ -170,18 +180,15 @@ class TasteNet(ChoiceModel):
             items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
 
         taste_weights = self.taste_params_module(shared_features_by_choice)
-
         item_utility_by_choice = []
         for i, item_param in enumerate(self.items_features_by_choice_parametrization):
             utility = tf.zeros_like(choices, dtype=tf.float32)
             for j, param in enumerate(item_param):
                 if isinstance(param, str):
-                    item_feature = self.get_activation_function(param)(
-                        items_features_by_choice[:, i, j]
-                    )
-                    item_feature = (
-                        taste_weights[:, self.items_features_to_weight_index[(i, j)]] * item_feature
-                    )
+                    weight = taste_weights[:, self.items_features_to_weight_index[(i, j)]]
+                    weight = self.get_activation_function(param)(weight)
+                    item_feature = items_features_by_choice[:, i, j] * weight
+
                 elif isinstance(param, float):
                     item_feature = param * items_features_by_choice[:, i, j]
                 utility += item_feature
