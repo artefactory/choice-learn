@@ -749,8 +749,8 @@ class PaperRUMnet(ChoiceModel):
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-                Specific version for RUMnet because it is needed to average probabilities over
-                heterogeneities.
+        Specifically recoded for RUMnet because it is needed to average probabilities over
+        heterogeneities.
 
         Parameters:
         -----------
@@ -834,8 +834,8 @@ class CPURUMnet(PaperRUMnet):
     ):
         """Compute utility from a batch of ChoiceDataset.
 
-                Here we asssume that: item features = {fixed item features + contexts item features}
-                                      user features = {contexts features}
+        Here we asssume that: item features = {fixed item features + contexts item features}
+                                user features = {contexts features}
 
         Parameters:
         -----------
@@ -960,8 +960,8 @@ class GPURUMnet(PaperRUMnet):
     ):
         """Compute utility from a batch of ChoiceDataset.
 
-                Here we asssume that: item features = {fixed item features + contexts item features}
-                                      user features = {contexts features}
+        Here we asssume that: item features = {fixed item features + contexts item features}
+                                user features = {contexts features}
 
         Parameters:
         -----------
