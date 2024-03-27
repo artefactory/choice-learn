@@ -234,17 +234,17 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df["NOT_GA"] = 1 - swiss_df["GA"]
         shared_features_by_choice_names += ["GA", "NOT_GA"]
 
-        age_dummy = pd.get_dummies(swiss_df.AGE, prefix="AGE")
+        age_dummy = pd.get_dummies(swiss_df.AGE, prefix="AGE").astype(int)
         swiss_df = pd.concat([swiss_df, age_dummy], axis=1)
         shared_features_by_choice_names += age_dummy.columns.to_list()
 
         swiss_df.INCOME = swiss_df.apply(lambda row: 1 if row.INCOME == 0 else row.INCOME, axis=1)
-        income_dummy = pd.get_dummies(swiss_df.INCOME, prefix="INCOME")
+        income_dummy = pd.get_dummies(swiss_df.INCOME, prefix="INCOME").astype(int)
         swiss_df = pd.concat([swiss_df, income_dummy], axis=1)
         shared_features_by_choice_names += income_dummy.columns.to_list()
 
         swiss_df.WHO = swiss_df.apply(lambda row: 1 if row.WHO == 0 else row.WHO, axis=1)
-        who_dummy = pd.get_dummies(swiss_df.WHO, prefix="WHO")
+        who_dummy = pd.get_dummies(swiss_df.WHO, prefix="WHO").astype(int)
         swiss_df = pd.concat([swiss_df, who_dummy], axis=1)
         shared_features_by_choice_names += who_dummy.columns.to_list()
 
@@ -260,11 +260,11 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             8: 4,
         }
         swiss_df.PURPOSE = swiss_df.apply(lambda row: purpose_dict[row.PURPOSE], axis=1)
-        purpose_dummy = pd.get_dummies(swiss_df.PURPOSE, prefix="PURPOSE")
+        purpose_dummy = pd.get_dummies(swiss_df.PURPOSE, prefix="PURPOSE").astype(int)
         swiss_df = pd.concat([swiss_df, purpose_dummy], axis=1)
         shared_features_by_choice_names += purpose_dummy.columns.to_list()
 
-        luggage_dummy = pd.get_dummies(swiss_df.LUGGAGE, prefix="LUGGAGE")
+        luggage_dummy = pd.get_dummies(swiss_df.LUGGAGE, prefix="LUGGAGE").astype(int)
         swiss_df = pd.concat([swiss_df, luggage_dummy], axis=1)
         shared_features_by_choice_names += luggage_dummy.columns.to_list()
 
