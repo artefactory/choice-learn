@@ -49,8 +49,12 @@ class TasteNet(ChoiceModel):
         self.items_features_by_choice_parametrization = items_features_by_choice_parametrization
 
         for item_params in items_features_by_choice_parametrization:
-            if len(item_params) != items_features_by_choice_parametrization[0]:
-                raise ValueError("All items must have the same number of features parametrization.")
+            if len(item_params) != len(items_features_by_choice_parametrization[0]):
+                raise ValueError(
+                    f"""All items must have the same number of features parametrization.
+                                 Found {len(item_params)} and
+                                 {len(items_features_by_choice_parametrization[0])}"""
+                )
         self.n_items = len(items_features_by_choice_parametrization)
         self.n_items_features = len(items_features_by_choice_parametrization[0])
         logging.info(
