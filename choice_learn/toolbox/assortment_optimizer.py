@@ -13,8 +13,8 @@ class AssortmentOptimizer(object):
     def __init__(self, utilities, itemwise_values, assortment_size, outside_option_given=False):
         """Initializes the AssortmentOptimizer object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         utilities : Iterable
             List of utilities for each item.
         itemwise_values: Iterable

@@ -21,8 +21,8 @@ class MNLCoefficients(object):
     def add(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
         """Adds a coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -57,8 +57,8 @@ class MNLCoefficients(object):
     def add_shared(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -80,7 +80,7 @@ class MNLCoefficients(object):
             raise ValueError("Either items_indexes or items_names must be specified")
 
         if not coefficient_name:
-            coefficient_name = "beta_%s" % feature_name
+            coefficient_name = f"beta_{feature_name}"
 
         if isinstance(items_indexes, int):
             logging.warning(
@@ -105,8 +105,8 @@ class MNLCoefficients(object):
     def get(self, coefficient_name):
         """Getter of a coefficient specification, from its name.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name of the coefficient to get.
 
@@ -120,8 +120,8 @@ class MNLCoefficients(object):
     def _add_tf_weight(self, weight_name, weight_index):
         """Method used by cMNL class to create the Tensorflow weight corresponding.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         weight_name : str
             Name of the weight to add.
         weight_index : int
@@ -159,8 +159,8 @@ class MNLCoefficients(object):
     def get_weight_item_indexes(self, feature_name):
         """Get the indexes of the concerned items for a given weight.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         feature_name : str
             Features that is concerned by the weight.
 
@@ -230,8 +230,8 @@ class ConditionalMNL(ChoiceModel):
     ):
         """Adds a coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         feature_name : str
             features name to which the coefficient is associated. It should work with
             the names given in the ChoiceDataset that will be used for parameters estimation.
@@ -262,8 +262,8 @@ class ConditionalMNL(ChoiceModel):
     ):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         feature_name : str
             features name to which the coefficient is associated. It should work with
             the names given in the ChoiceDataset that will be used for parameters estimation.
@@ -307,8 +307,8 @@ class ConditionalMNL(ChoiceModel):
     def instantiate(self, choice_dataset):
         """Instantiate the model using the features in the choice_dataset.
 
-        Params:
-        --------
+        Parameters:
+        -----------
         choice_dataset: choice dataset to match the features names with the model coefficients.
         """
         if not self.instantiated:
@@ -355,8 +355,8 @@ class ConditionalMNL(ChoiceModel):
     def _build_coefficients_from_dict(self, n_items):
         """Build coefficients when they are given as a dictionnay.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of different items in the assortment. Used to create the right number of weights.
         """
@@ -376,8 +376,8 @@ class ConditionalMNL(ChoiceModel):
     def _store_dataset_features_names(self, dataset):
         """Registers the name of the features in the dataset. For later use in utility computation.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used to fit the model.
         """
@@ -394,8 +394,8 @@ class ConditionalMNL(ChoiceModel):
     ):
         """Computes the utility when the model is constructed from a MNLCoefficients object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -409,7 +409,7 @@ class ConditionalMNL(ChoiceModel):
             Choices
             Shape must be (n_choices, )
         verbose : int, optional
-            Parametrization of the logging outputs, by default 0
+            Parametrization of the logging outputs, by default 1
 
         Returns:
         --------
@@ -550,8 +550,8 @@ class ConditionalMNL(ChoiceModel):
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         get_report: bool, optional
@@ -578,8 +578,8 @@ class ConditionalMNL(ChoiceModel):
     ):
         """Specific fit function to estimate the paramters with LBFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         n_epochs : int
@@ -608,8 +608,8 @@ class ConditionalMNL(ChoiceModel):
     def compute_report(self, dataset):
         """Computes a report of the estimated weights.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
@@ -650,8 +650,8 @@ class ConditionalMNL(ChoiceModel):
     def get_weights_std(self, dataset):
         """Approximates Std Err with Hessian matrix.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.

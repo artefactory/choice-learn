@@ -42,8 +42,8 @@ class SimpleMNL(ChoiceModel):
 
         Parameters
         --------
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
         n_shared_features : int
@@ -112,8 +112,8 @@ class SimpleMNL(ChoiceModel):
     ):
         """Main method to compute the utility of the model. Selects the right method to compute.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -173,8 +173,8 @@ class SimpleMNL(ChoiceModel):
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         get_report: bool, optional
@@ -201,8 +201,8 @@ class SimpleMNL(ChoiceModel):
     def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
         """Specific fit function to estimate the paramters with LBFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         n_epochs : int
@@ -233,8 +233,8 @@ class SimpleMNL(ChoiceModel):
     def compute_report(self, dataset):
         """Computes a report of the estimated weights.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
@@ -275,8 +275,8 @@ class SimpleMNL(ChoiceModel):
     def get_weights_std(self, dataset):
         """Approximates Std Err with Hessian matrix.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.

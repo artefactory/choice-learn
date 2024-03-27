@@ -13,8 +13,8 @@ class Storage(ABC):
     def __init__(self, features_to_store):
         """Instantiation.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         features_to_store : object
             Object to store
         """
@@ -24,8 +24,8 @@ class Storage(ABC):
     def __getitem__(self, keys):
         """Base function to access an element. To be implemented in children classes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         keys : float, int, str or list of
             values among indexes of the stiage
         """
@@ -48,8 +48,8 @@ class FeaturesStorage(Storage):
     def __init__(self, ids=None, values=None, values_names=None, name=None, indexer=StorageIndexer):
         """Builds the store.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         ids : array_like or None
             list of ids of features to store. If None is given, ids are created from
             apparition order of values
@@ -105,8 +105,8 @@ class FeaturesStorage(Storage):
         Returns the features stored at index index. Compared to __getitem__, it does take
         the index-th element of sequence but the index-th element of the store.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         index : (int, list, slice)
             index argument of the feature
 
@@ -127,8 +127,8 @@ class FeaturesStorage(Storage):
     def __getitem__(self, id_keys):
         """Subset FeaturesStorage, keeping only features which id is in keys.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         id_keys : Iterable
             List of ids to keep.
 
@@ -175,8 +175,8 @@ class OneHotStorage(Storage):
     ):
         """Builds the store.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         ids : array_like or None
             list of ids of features to store. If None is given, ids are created from
             apparition order of values
@@ -231,8 +231,8 @@ class OneHotStorage(Storage):
     def __getitem__(self, id_keys):
         """Subset FeaturesStorage, keeping only features which id is in keys.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         id_keys : Iterable
             List of ids to keep.
 
@@ -250,8 +250,8 @@ class OneHotStorage(Storage):
     def astype(self, dtype):
         """Method to change (mainly int or float) type of returned OneHot features vectors.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dtype : type
             Type to set the features as
         """
@@ -263,8 +263,8 @@ class OneHotStorage(Storage):
         Returns the features stored at index index. Compared to __getitem__, it does take
         the index-th element of sequence but the index-th element of the store.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         index : (int, list, slice)
             index argument of the feature
 

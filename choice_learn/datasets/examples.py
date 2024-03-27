@@ -15,8 +15,8 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
     Orginal file and informations can be found here:
     https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional

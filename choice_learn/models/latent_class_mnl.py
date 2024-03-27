@@ -25,8 +25,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     ):
         """Initialization.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -74,8 +74,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     ):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
         n_fixed_items_features : int
@@ -112,8 +112,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
@@ -144,8 +144,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Initialization.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -207,8 +207,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
         items_features_names: str,
@@ -264,8 +264,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Adds a coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -300,8 +300,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -334,8 +334,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """

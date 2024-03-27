@@ -151,8 +151,8 @@ class ParallelDense(tf.keras.layers.Layer):
         Following tf.keras.Layer API. Note that there will be width * depth * heterogeneity
         number of neurons in the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Number of neurons for each dense layer.
         depth : int
@@ -171,8 +171,8 @@ class ParallelDense(tf.keras.layers.Layer):
     def build(self, input_shape):
         """Lazy build of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
@@ -216,8 +216,8 @@ class ParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_features) as input of the model.
 
@@ -248,8 +248,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
     def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
         """Inialization of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Number of neurons of each dense layer.
         depth : int
@@ -270,8 +270,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, num_features).
@@ -315,8 +315,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_items, n_features) as input of the model.
 
@@ -344,8 +344,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     def __init__(self, width, depth, activation="relu", add_last=True, **kwargs):
         """Initialization of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Nnumber of neurons of each dense layer.
         depth : int
@@ -366,8 +366,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, width, heterogeneity).
@@ -413,8 +413,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     def call(self, inputs):
         """Predict of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Input Tensor of shape (batch_size, num_items, width, heterogeneity)
 
@@ -481,8 +481,8 @@ class PaperRUMnet(ChoiceModel):
     ):
         """Initiation of the RUMnet Model.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         num_products_features : int
             Number of features each product will be described with.
             In terms of ChoiceDataset it is the number of
@@ -605,8 +605,8 @@ class PaperRUMnet(ChoiceModel):
         Here we asssume that: item features = {fixed item features + contexts item features}
                               user features = {contexts features}
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
             products fixed features.
@@ -676,8 +676,8 @@ class PaperRUMnet(ChoiceModel):
         Function that represents one training step (= one gradient descent step) of the model.
         Handles a batch of data of size n_contexts = n_choices = batch_size
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
             products fixed features.
@@ -753,8 +753,8 @@ class PaperRUMnet(ChoiceModel):
         Specific version for RUMnet because it is needed to average probabilities over
         heterogeneities.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
             products fixed features.
@@ -827,8 +827,8 @@ class CPURUMnet(PaperRUMnet):
         Here we asssume that: item features = {fixed item features + contexts item features}
                               user features = {contexts features}
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
             products fixed features.
@@ -966,8 +966,8 @@ class GPURUMnet(PaperRUMnet):
         Here we asssume that: item features = {fixed item features + contexts item features}
                               user features = {contexts features}
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         fixed_items_features : tuple of np.ndarray (n_items, n_features)
             Items-Features: formatting from ChoiceDataset: a matrix representing the
             products fixed features.
@@ -1068,8 +1068,8 @@ class GPURUMnet(PaperRUMnet):
         Recoded because heterogeneities generate different shapes of tensors.
         # TODO: verify that it is indeed different than PaperRUMnet
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         items_batch : tuple of np.ndarray (items_features)
             Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
             constant features.
@@ -1148,8 +1148,8 @@ class GPURUMnet(PaperRUMnet):
     ):
         """RUMnet batch_predict.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         items_batch : tuple of np.ndarray (items_features)
             Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
             constant features.
