@@ -195,6 +195,22 @@ class TasteNet(ChoiceModel):
             item_utility_by_choice.append(utility)
         return tf.stack(item_utility_by_choice, axis=1)
 
+    def predict_tastes(self, shared_features_by_choice):
+        """Predict the tastes of the model for a given dataset.
+
+        Parameters
+        ----------
+        shared_features_by_choice : np.ndarray
+            Shared Features by choice.
+
+        Returns:
+        --------
+        np.ndarray
+            Taste of each product for each choice.
+            Shape is (n_choices, n_taste_parameters)
+        """
+        return self.taste_params_module(shared_features_by_choice)
+
     def fit(self, choice_dataset, **kwargs):
         """Main fit function to estimate the paramters.
 
