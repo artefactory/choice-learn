@@ -214,6 +214,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         return swiss_df
 
     if preprocessing == "tastenet":
+        swiss_df = swiss_df.loc[swiss_df.AGE != 6]
         swiss_df["TRAIN_ASC_TRAIN"] = 1.0
         swiss_df["SM_ASC_TRAIN"] = 0.0
         swiss_df["CAR_ASC_TRAIN"] = 0.0
@@ -225,6 +226,63 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df["TRAIN_ASC_CAR"] = 0.0
         swiss_df["SM_ASC_CAR"] = 0.0
         swiss_df["CAR_ASC_CAR"] = 1.0
+
+        swiss_df["FEMALE"] = 1 - swiss_df["MALE"]
+        shared_features_by_choice_names = ["MALE", "FEMALE"]
+        swiss_df["NOT_FIRST"] = 1 - swiss_df["FIRST"]
+        shared_features_by_choice_names += ["FIRST", "NOT_FIRST"]
+        swiss_df["NOT_GA"] = 1 - swiss_df["GA"]
+        shared_features_by_choice_names += ["GA", "NOT_GA"]
+
+        age_dummy = pd.get_dummies(swiss_df.AGE, prefix="AGE")
+        swiss_df = pd.concat([swiss_df, age_dummy], axis=1)
+        shared_features_by_choice_names += age_dummy.columns.to_list()
+
+        swiss_df.INCOME = swiss_df.apply(lambda row: 1 if row.INCOME == 0 else row.INCOME, axis=1)
+        income_dummy = pd.get_dummies(swiss_df.INCOME, prefix="INCOME")
+        swiss_df = pd.concat([swiss_df, income_dummy], axis=1)
+        shared_features_by_choice_names += income_dummy.columns.to_list()
+
+        swiss_df.WHO = swiss_df.apply(lambda row: 1 if row.WHO == 0 else row.WHO, axis=1)
+        who_dummy = pd.get_dummies(swiss_df.WHO, prefix="WHO")
+        swiss_df = pd.concat([swiss_df, who_dummy], axis=1)
+        shared_features_by_choice_names += who_dummy.columns.to_list()
+
+        swiss_df = swiss_df.loc[swiss_df.PURPOSE != 9]
+        purpose_dict = {
+            1: 1,
+            2: 2,
+            3: 3,
+            4: 4,
+            5: 1,
+            6: 2,
+            7: 3,
+            8: 4,
+        }
+        swiss_df.PURPOSE = swiss_df.apply(lambda row: purpose_dict[row.PURPOSE], axis=1)
+        purpose_dummy = pd.get_dummies(swiss_df.PURPOSE, prefix="PURPOSE")
+        swiss_df = pd.concat([swiss_df, purpose_dummy], axis=1)
+        shared_features_by_choice_names += purpose_dummy.columns.to_list()
+
+        luggage_dummy = pd.get_dummies(swiss_df.LUGGAGE, prefix="LUGGAGE")
+        swiss_df = pd.concat([swiss_df, luggage_dummy], axis=1)
+        shared_features_by_choice_names += luggage_dummy.columns.to_list()
+
+        swiss_df["SM_CO"] = swiss_df["SM_CO"] * (swiss_df["GA"] == 0)
+        swiss_df["TRAIN_CO"] = swiss_df["TRAIN_CO"] * (swiss_df["GA"] == 0)
+
+        for col in [
+            "TRAIN_TT",
+            "TRAIN_HE",
+            "TRAIN_CO",
+            "SM_TT",
+            "SM_HE",
+            "SM_CO",
+            "CAR_TT",
+            "CAR_CO",
+        ]:
+            swiss_df[col] = swiss_df[col] / 100
+
         return ChoiceDataset.from_single_wide_df(
             df=swiss_df,
             items_id=items,
