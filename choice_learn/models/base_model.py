@@ -1,5 +1,6 @@
 """Base class for choice models."""
 import json
+import logging
 import os
 import time
 from abc import abstractmethod
@@ -701,9 +702,13 @@ class ChoiceModel(object):
         # after training, the final optimized parameters are still in results.position
         # so we have to manually put them back to the model
         func.assign_new_model_parameters(results.position)
+        if results[1].numpy():
+            logging.error("L-BFGS Optimization failed.")
         if verbose > 0:
-            print("L-BFGS Opimization finished:")
-            print("---------------------------------------------------------------")
-            print("Number of iterations:", results[2].numpy())
-            print("Algorithm converged before reaching max iterations:", results[0].numpy())
-        return func.history
+            logging.warning("L-BFGS Opimization finished:")
+            logging.warning("---------------------------------------------------------------")
+            logging.warning(f"Number of iterations: {results[2].numpy()}")
+            logging.warning(
+                f"Algorithm converged before reaching max iterations: {results[0].numpy()}",
+            )
+        return {"train_loss": func.history}
