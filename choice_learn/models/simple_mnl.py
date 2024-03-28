@@ -182,8 +182,8 @@ class SimpleMNL(ChoiceModel):
 
         Returns:
         --------
-        ConditionalMNL
-            With estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             # Lazy Instantiation
@@ -214,8 +214,8 @@ class SimpleMNL(ChoiceModel):
 
         Returns:
         --------
-        conditionalMNL
-            self with estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             # Lazy Instantiation
