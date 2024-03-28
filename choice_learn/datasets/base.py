@@ -41,8 +41,8 @@ def get_path(data_file_name, module=DATA_MODULE):
 def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     data_file_name : str
         name of the csv file to load
     data_module : str, optional
@@ -70,8 +70,8 @@ def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
 def load_gzip(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load zipped .csv.gz files.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     data_file_name : str
         name of the csv.gz file to load
     data_module : str, optional
@@ -100,8 +100,8 @@ def slice_from_names(array, slice_names, all_names):
 
     Slices array in the second dimension from column names.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     array : np.ndarray
         array to be sliced
     slice_names : list
@@ -120,8 +120,8 @@ def slice_from_names(array, slice_names, all_names):
 def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, preprocessing=None):
     """Load and return the SwissMetro dataset from Bierlaire et al. (2001).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     add_items_one_hot : bool, optional
         Whether to add a OneHot encoding of items as items_features, by default False
     as_frame : bool, optional
@@ -460,8 +460,8 @@ def load_modecanada(
 ):
     """Load and return the ModeCanada dataset from Koppleman et al. (1993).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     one_hot_cat_data : bool, optional
         Whether to transform categorical data as OneHot, by default False.
     add_is_public : bool, optional
@@ -659,8 +659,8 @@ def load_heating(
 ):
     """Load and return the Heating dataset from Kenneth Train.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
@@ -722,8 +722,8 @@ def load_electricity(
 ):
     """Load and return the Electricity dataset from Kenneth Train.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
@@ -793,8 +793,8 @@ def load_train(
 ):
     """Load and return the Train dataset from Koppleman et al. (1993).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.

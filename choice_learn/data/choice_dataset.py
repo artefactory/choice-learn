@@ -35,8 +35,8 @@ class ChoiceDataset(object):
     ):
         """Builds the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices: list or np.ndarray
             list of chosen items indexes
         shared_features_by_choice : tuple of (array_like, )
@@ -635,8 +635,8 @@ class ChoiceDataset(object):
     ):
         """Builds contexts_items_features and contexts_items_availabilities from dataframe.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             Dataframe containing all the features for each item and sessions
         items_index : list
@@ -724,8 +724,8 @@ class ChoiceDataset(object):
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             dataframe in Wide format
         items_id : list
@@ -868,8 +868,8 @@ class ChoiceDataset(object):
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             dataframe in Long format
         choices_column: str, optional
@@ -969,7 +969,7 @@ class ChoiceDataset(object):
         print("%=====================================================================%")
 
         if self.shared_features_by_choice is not None:
-            print(" shared Features by Choice:")
+            print(" Shared Features by Choice:")
             print(f" {sum([f.shape[1] for f in self.shared_features_by_choice])} shared features")
             if self.shared_features_by_choice_names is not None:
                 if self.shared_features_by_choice_names[0] is not None:
@@ -981,8 +981,8 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             print(" Items Features by Choice:")
             print(
-                f""" {sum([f.shape[2] for f in self.items_features_by_choice])}
-                 items features """
+                f""" {sum([f.shape[2] for f in self.items_features_by_choice])
+                     } items features """
             )
             if self.items_features_by_choice_names is not None:
                 if self.items_features_by_choice_names[0] is not None:
@@ -995,8 +995,8 @@ class ChoiceDataset(object):
     def get_choices_batch(self, choices_indexes, features=None):
         """Method to access a chunk of data within the ChoiceDataset from choice indexes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
         features : list of str, optional
@@ -1258,8 +1258,8 @@ class ChoiceDataset(object):
     def __getitem__(self, choices_indexes):
         """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : np.ndarray
             indexes of the contexts / choices to keep, shape should be (num_choices,)
 
@@ -1335,8 +1335,8 @@ class ChoiceDataset(object):
 
         Newer version.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         batch_size : int
             batch size to set
         shuffle: bool
@@ -1372,8 +1372,8 @@ class ChoiceDataset(object):
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         bool_list : list of boolean
             list of booleans of length self.get_n_contexts() to filter contexts.
             True to keep, False to discard.

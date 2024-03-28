@@ -11,8 +11,8 @@ class Indexer(object):
     def __init__(self, indexed_object):
         """Instanciate an Indexer object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         indexed_object : object
             object to be indexed.
         """
@@ -22,8 +22,8 @@ class Indexer(object):
     def __getitem__(self, index):
         """Main method to be coded for children classes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         index : int, slice, list
             index(es) of elements of self.indexed_object to be returned.
         """
@@ -36,8 +36,8 @@ class StoreIndexer(Indexer):
     def __init__(self, store):
         """StoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         store : choice_modeling.data.store.FeaturesStore
             Store object to be indexed.
         """
@@ -46,8 +46,8 @@ class StoreIndexer(Indexer):
     def __getitem__(self, sequence_index):
         """Returns the features appearing at the sequence_index-th position of sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_index : (int, list, slice)
             index position of the sequence
 
@@ -72,8 +72,8 @@ class StorageIndexer(Indexer):
     def __init__(self, storage):
         """StoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         storage : choice_modeling.data.store.FeaturesStorage
             Storage object to be indexed.
         """
@@ -82,8 +82,8 @@ class StorageIndexer(Indexer):
     def __getitem__(self, sequence_keys):
         """Returns the features appearing at the sequence_index-th position of sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_keys : (int, list, slice)
             keys of values to be retrieved
 
@@ -108,8 +108,8 @@ class OneHotStorageIndexer(Indexer):
     def __init__(self, storage):
         """OneHotStorageIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         storage : choice_modeling.data.store.OneHotStorage
             OneHotStorage object to be indexed.
         """
@@ -120,8 +120,8 @@ class OneHotStorageIndexer(Indexer):
     def __getitem__(self, sequence_keys):
         """Get the 1 indexes corresponding to the sequence_keys and builds the OneHot matrix.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_keys : (int, list, slice)
             keys of values to be retrieved
 
@@ -150,8 +150,8 @@ class OneHotStoreIndexer(Indexer):
     def __init__(self, store):
         """OneHotStoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         store : choice_modeling.data.store.OneHotStore
             OneHotStore object to be indexed.
         """
@@ -162,8 +162,8 @@ class OneHotStoreIndexer(Indexer):
     def __getitem__(self, sequence_index):
         """Main method to get an element at sequence_index-th position of self.sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_index : (int, list, slice)
             index from sequence of element to get
 
@@ -192,8 +192,8 @@ class ChoiceDatasetIndexer(Indexer):
     def __init__(self, choice_dataset):
         """Instanciate a ChoiceDatasetIndexer object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : choce_modeling.data.dataset.ChoiceDataset
             Dataset to be indexed.
         """
@@ -202,8 +202,8 @@ class ChoiceDatasetIndexer(Indexer):
     def _get_shared_features_by_choice(self, choices_indexes):
         """Method to access sessions features of the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : list of ints or int
             choices indexes of the shared features to return
 
@@ -228,8 +228,8 @@ class ChoiceDatasetIndexer(Indexer):
     def _get_items_features_by_choice(self, choices_indexes):
         """Method to access sessions items features of the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : list of ints or int
             indexes of the choices for which to select the items features
 
@@ -259,8 +259,8 @@ class ChoiceDatasetIndexer(Indexer):
             - Items availabilities
             - Choices
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
 

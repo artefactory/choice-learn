@@ -12,7 +12,15 @@ DATA_MODULE = "choice_learn.datasets.data"
 
 
 def load_expedia(as_frame=False, preprocessing="rumnet"):
-    """Load the Expedia dataset."""
+    """Load the Expedia dataset.
+
+    Parameters:
+    -----------
+    as_frame : bool, optional
+        Whether to return the original file as pd.DF, by default False
+    preprocessing : str, optional
+        predefined pre-processing to apply, by default None
+    """
     filename = "expedia.csv"
     data_path = get_path(filename, module=DATA_MODULE)
     if not Path.exists(data_path):

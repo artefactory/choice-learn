@@ -29,8 +29,8 @@ class ChoiceModel(object):
     ):
         """Instantiates the ChoiceModel.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         label_smoothing : float, optional
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing,
         during training, by default 0.0
@@ -97,8 +97,8 @@ class ChoiceModel(object):
         MUST be implemented in children classe !
         For simpler use-cases this is the only method to be user-defined.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -133,8 +133,8 @@ class ChoiceModel(object):
     ):
         """Function that represents one training step (= one gradient descent step) of the model.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -190,8 +190,8 @@ class ChoiceModel(object):
     ):
         """Method to train the model with a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Input data in the form of a ChoiceDataset
         sample_weight : np.ndarray, optional
@@ -378,8 +378,8 @@ class ChoiceModel(object):
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -437,8 +437,8 @@ class ChoiceModel(object):
     def save_model(self, path):
         """Method to save the different models on disk.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         path : str
             path to the folder where to save the model
         """
@@ -458,8 +458,8 @@ class ChoiceModel(object):
     def load_model(cls, path):
         """Method to load a ChoiceModel previously saved with save_model().
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         path : str
             path to the folder where the saved model files are
 
@@ -488,8 +488,8 @@ class ChoiceModel(object):
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
         batch_size : int, optional
@@ -523,8 +523,8 @@ class ChoiceModel(object):
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
 
@@ -565,8 +565,8 @@ class ChoiceModel(object):
     def _lbfgs_train_step(self, dataset, sample_weight=None):
         """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
@@ -663,8 +663,8 @@ class ChoiceModel(object):
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int

@@ -21,8 +21,8 @@ class RandomChoiceModel(ChoiceModel):
     ):
         """Computes the random utility for each product of each choice.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -81,8 +81,8 @@ class DistribMimickingModel(ChoiceModel):
     ):
         """Returns utility that is fixed. U = log(P).
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)

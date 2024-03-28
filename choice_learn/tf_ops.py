@@ -86,8 +86,8 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
 
         Follows structure of tf.keras.losses.CategoricalCrossentropy.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         from_logits : bool, optional
             Whether to compute the softmax from logits or probabilities, by default False
         sparse : bool, optional
@@ -115,8 +115,8 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
     def call(self, y_true, y_pred):
         """Computes the cross-entropy loss.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         y_true : np.ndarray | tf.Tenosr
             Ground truth labels
         y_pred : np.ndarray | tf.Tenosr
