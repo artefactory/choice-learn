@@ -107,8 +107,9 @@ class TasteNet(ChoiceModel):
 
         Parameters
         ----------
-        n_shared_features : _type_
-            _description_
+        n_shared_features : int
+            Number of shared_features or customer features.
+            It is needed to set-up the neural network input shape.
         """
         # TODO: Add possibility for MNL-type weights
         items_features_to_weight_index = {}
