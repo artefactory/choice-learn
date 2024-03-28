@@ -283,7 +283,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         ]:
             swiss_df[col] = swiss_df[col] / 100
 
-        return ChoiceDataset.from_single_wide_df(
+        return swiss_df.ID.to_numpy(), ChoiceDataset.from_single_wide_df(
             df=swiss_df,
             items_id=items,
             shared_features_columns=shared_features_by_choice_names,
