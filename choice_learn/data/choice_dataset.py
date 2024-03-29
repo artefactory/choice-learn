@@ -740,7 +740,7 @@ class ChoiceDataset(object):
                 available_items_by_choice.append(sess_av)
 
         if features is not None:
-            items_features_by_choice = (np.array(items_features_by_choice),)
+            items_features_by_choice = np.array(items_features_by_choice)
         else:
             items_features_by_choice = None
         return items_features_by_choice, np.array(available_items_by_choice).astype("float32")
@@ -938,9 +938,9 @@ class ChoiceDataset(object):
                 shared_features_columns + [choices_id_column]
             ].drop_duplicates()
             shared_features_by_choice = shared_features_by_choice.set_index(choices_id_column)
-            shared_features_by_choice = (shared_features_by_choice.loc[choices_ids].to_numpy(),)
+            shared_features_by_choice = shared_features_by_choice.loc[choices_ids].to_numpy()
 
-            shared_features_by_choice_names = (shared_features_columns,)
+            shared_features_by_choice_names = shared_features_columns
         else:
             shared_features_by_choice = None
             shared_features_by_choice_names = None
@@ -957,9 +957,7 @@ class ChoiceDataset(object):
             choices_index=choices_ids,
         )
 
-        items_features_by_choice_names = (
-            (items_features_columns,) if items_features_columns is not None else None
-        )
+        items_features_by_choice_names = items_features_columns
 
         if choice_format == "items_id":
             choices = df[[choices_column, choices_id_column]].drop_duplicates(choices_id_column)
