@@ -349,13 +349,16 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
-            shared_features_by_choice=(shared_features_by_choice,),
-            items_features_by_choice=(items_features_by_choice,),
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
             available_items_by_choice=available_items_by_choice,
-            shared_features_by_choice_names=(
-                ["train_survey", "regular_class", "single_luggage_piece", "multiple_luggage_piece"],
-            ),
-            items_features_by_choice_names=(["cost", "travel_time", "headway", "seats"],),
+            shared_features_by_choice_names=[
+                "train_survey",
+                "regular_class",
+                "single_luggage_piece",
+                "multiple_luggage_piece",
+            ],
+            items_features_by_choice_names=["cost", "travel_time", "headway", "seats"],
             choices=choices,
         )
     if preprocessing == "rumnet":
@@ -431,8 +434,8 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
-            shared_features_by_choice=(shared_features_by_choice.astype("float32"),),
-            items_features_by_choice=(items_features_by_choice.astype("float32"),),
+            shared_features_by_choice=shared_features_by_choice.astype("float32"),
+            items_features_by_choice=items_features_by_choice.astype("float32"),
             available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
