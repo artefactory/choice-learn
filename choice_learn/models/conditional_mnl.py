@@ -433,6 +433,11 @@ class ConditionalMNL(ChoiceModel):
         n_choices = available_items_by_choice.shape[0]
         items_utilities_by_choice = []
 
+        if not isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = (shared_features_by_choice,)
+        if not isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = (items_features_by_choice,)
+
         # Shared features
         if self._shared_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._shared_features_by_choice_names):
