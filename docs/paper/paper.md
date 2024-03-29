@@ -24,7 +24,7 @@ authors:
   - name: Vincent Mousseau
     affiliation: 1
 affiliations:
- - name: CentraleSupélec, université Paris-Saclay, France
+ - name: CentraleSupélec, Université Paris-Saclay, France
    index: 1
  - name: Artefact Research Center, France
    index: 2
@@ -79,7 +79,8 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 
 ## RAM usage comparison
 
-We conduct a small stydy comparing different (implementation ? packages ?) on datasets memory usage.
+We conduct a small stydy comparing different on datasets memory usage. We consider the case of usage of the Features by ID provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different values of n_locations and daataset_size. It shows how Choice-learn can save several magnitude of memory usage.
+![Memory usage comparison. \label{fig:ram_usage}](../illustrations/memory_usage_comparison.png)
 
 ## Choice model customization
 
