@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
@@ -315,6 +316,24 @@ class ConditionalMNL(ChoiceModel):
             if not isinstance(self.coefficients, MNLCoefficients):
                 self._build_coefficients_from_dict(n_items=choice_dataset.get_n_items())
             self.trainable_weights = self._instantiate_tf_weights()
+
+            # Checking that no weight has been attributed to non existing feature in dataset
+            dataset_stacked_features_names = []
+            if choice_dataset.shared_features_by_choice_names is not None:
+                for i, feat_tuple in enumerate(choice_dataset.shared_features_by_choice_names):
+                    dataset_stacked_features_names.append(feat_tuple)
+            if choice_dataset.items_features_by_choice_names is not None:
+                for i, feat_tuple in enumerate(choice_dataset.items_features_by_choice_names):
+                    dataset_stacked_features_names.append(feat_tuple)
+            dataset_stacked_features_names = np.concatenate(dataset_stacked_features_names).ravel()
+
+            for feature_with_weight in self.coefficients.features_with_weights:
+                if feature_with_weight != "intercept":
+                    if feature_with_weight not in dataset_stacked_features_names:
+                        raise ValueError(
+                            f"""Feature {feature_with_weight} has an attributed coefficient
+                            but is not in dataset"""
+                        )
             self._store_dataset_features_names(choice_dataset)
             self.instantiated = True
 
@@ -338,16 +357,8 @@ class ConditionalMNL(ChoiceModel):
                 name=weight_name,
             )
             weights.append(weight)
-            """
-            feat_to_weight[self.coefficients[weight_name]["feature_name"]] = (
-                weight,
-                self.coefficients[weight_name],
-            )
-            """
             self.coefficients._add_tf_weight(weight_name, weight_nb)
 
-            ## Fill items_indexes here
-            # Better organize feat_to_weight and specifications
         self.trainable_weights = weights
 
         return weights
@@ -422,6 +433,11 @@ class ConditionalMNL(ChoiceModel):
         n_choices = available_items_by_choice.shape[0]
         items_utilities_by_choice = []
 
+        if not isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = (shared_features_by_choice,)
+        if not isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = (items_features_by_choice,)
+
         # Shared features
         if self._shared_features_by_choice_names is not None:
             for i, feat_tuple in enumerate(self._shared_features_by_choice_names):
@@ -440,7 +456,7 @@ class ConditionalMNL(ChoiceModel):
                             for q, idx in enumerate(item_index):
                                 if isinstance(idx, list):
                                     for k in idx:
-                                        shared_features_by_choice[i][:, j]
+                                        tf.cast(shared_features_by_choice[i][:, j], tf.float32)
                                         compute = tf.multiply(
                                             shared_features_by_choice[i][:, j],
                                             self.trainable_weights[weight_index][:, q],
@@ -448,7 +464,7 @@ class ConditionalMNL(ChoiceModel):
                                         partial_items_utility_by_choice[k] += compute
                                 else:
                                     compute = tf.multiply(
-                                        shared_features_by_choice[i][:, j],
+                                        tf.cast(shared_features_by_choice[i][:, j], tf.float32),
                                         self.trainable_weights[weight_index][:, q],
                                     )
                                     partial_items_utility_by_choice[idx] += compute
@@ -459,7 +475,7 @@ class ConditionalMNL(ChoiceModel):
                                 )
                             )
                     elif verbose > 0:
-                        logging.warning(
+                        logging.info(
                             f"Feature {feat} is in dataset but has no weight assigned\
                                 in utility computations"
                         )
@@ -484,7 +500,10 @@ class ConditionalMNL(ChoiceModel):
                                                 partial_items_utility_by_choice[:, :k],
                                                 tf.expand_dims(
                                                     tf.multiply(
-                                                        items_features_by_choice[i][:, k, j],
+                                                        tf.cast(
+                                                            items_features_by_choice[i][:, k, j],
+                                                            tf.float32,
+                                                        ),
                                                         self.trainable_weights[weight_index][:, q],
                                                     ),
                                                     axis=-1,
@@ -499,7 +518,10 @@ class ConditionalMNL(ChoiceModel):
                                             partial_items_utility_by_choice[:, :idx],
                                             tf.expand_dims(
                                                 tf.multiply(
-                                                    items_features_by_choice[i][:, idx, j],
+                                                    tf.cast(
+                                                        items_features_by_choice[i][:, idx, j],
+                                                        tf.float32,
+                                                    ),
                                                     self.trainable_weights[weight_index][:, q],
                                                 ),
                                                 axis=-1,
@@ -513,7 +535,7 @@ class ConditionalMNL(ChoiceModel):
                                 tf.cast(partial_items_utility_by_choice, tf.float32)
                             )
                     elif verbose > 0:
-                        logging.warning(
+                        logging.info(
                             f"Feature {feat} is in dataset but has no weight assigned\
                                 in utility computations"
                         )
