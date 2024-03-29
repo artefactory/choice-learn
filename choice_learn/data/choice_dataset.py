@@ -404,6 +404,16 @@ class ChoiceDataset(object):
                                     feature_by_id.name,
                                 )
 
+                                unique_values = np.unique(self.shared_features_by_choice[i][:, j])
+                                try:
+                                    for val in unique_values:
+                                        feature_by_id.batch[unique_values]
+                                except KeyError:
+                                    raise ValueError(
+                                        f"""Key {val} in Shared Feature {column_name}
+                                                     not found in {feature_by_id.name}"""
+                                    )
+
         if self.items_features_by_choice_names is not None:
             for i, feature in enumerate(self.items_features_by_choice_names):
                 if feature is not None:
@@ -417,6 +427,16 @@ class ChoiceDataset(object):
                                     "Feature by ID found for items_features_by_choice:",
                                     feature_by_id.name,
                                 )
+
+                                unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
+                                try:
+                                    for val in unique_values:
+                                        feature_by_id.batch[unique_values]
+                                except KeyError:
+                                    raise ValueError(
+                                        f"""Key {val} in Items Feature {column_name}
+                                                     not found in {feature_by_id.name}"""
+                                    )
 
         # Checking number of found features_by_id
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
