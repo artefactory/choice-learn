@@ -10,31 +10,33 @@ authors:
   - name: Vincent Auriau
     corresponding: true # (This is how to denote the corresponding author)
     orcid: 0000-0000-0000-0000
-    equal-contrib: true
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Author Without ORCID
-    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
+    affiliation: "1, 2"
+  - name: Maxime Lutel
     affiliation: 2
-  - name: Author with no affiliation
+  - name: Emmanuel Malherbe
+    affiliation: 2
+  - name: Martin Mozina
     affiliation: 3
-  - given-names: Ludwig
-    dropping-particle: van
-    surname: Beethoven
-    affiliation: 3
+  - name: Ali Aouad
+    affiliation: 4
+  - name: Antoine Désir
+    affiliation: 5
+  - name: Vincent Mousseau
+    affiliation: 1
 affiliations:
  - name: CentraleSupélec, université Paris-Saclay, France
    index: 1
  - name: Artefact Research Center, France
    index: 2
- - name: Independent Researcher, Country
+ - name: Fortenova Group, Croatia
    index: 3
-date: 13 August 2017
+ - name: London Business School, Great-Britain
+   index: 4
+ - name: INSEAD, France
+   index: 5
+date: 29 March 2024
 bibliography: paper.bib
 
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
