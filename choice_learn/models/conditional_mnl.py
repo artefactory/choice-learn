@@ -456,7 +456,7 @@ class ConditionalMNL(ChoiceModel):
                             for q, idx in enumerate(item_index):
                                 if isinstance(idx, list):
                                     for k in idx:
-                                        shared_features_by_choice[i][:, j]
+                                        tf.cast(shared_features_by_choice[i][:, j], tf.float32)
                                         compute = tf.multiply(
                                             shared_features_by_choice[i][:, j],
                                             self.trainable_weights[weight_index][:, q],
@@ -464,7 +464,7 @@ class ConditionalMNL(ChoiceModel):
                                         partial_items_utility_by_choice[k] += compute
                                 else:
                                     compute = tf.multiply(
-                                        shared_features_by_choice[i][:, j],
+                                        tf.cast(shared_features_by_choice[i][:, j], tf.float32),
                                         self.trainable_weights[weight_index][:, q],
                                     )
                                     partial_items_utility_by_choice[idx] += compute
@@ -500,7 +500,10 @@ class ConditionalMNL(ChoiceModel):
                                                 partial_items_utility_by_choice[:, :k],
                                                 tf.expand_dims(
                                                     tf.multiply(
-                                                        items_features_by_choice[i][:, k, j],
+                                                        tf.cast(
+                                                            items_features_by_choice[i][:, k, j],
+                                                            tf.float32,
+                                                        ),
                                                         self.trainable_weights[weight_index][:, q],
                                                     ),
                                                     axis=-1,
@@ -515,7 +518,10 @@ class ConditionalMNL(ChoiceModel):
                                             partial_items_utility_by_choice[:, :idx],
                                             tf.expand_dims(
                                                 tf.multiply(
-                                                    items_features_by_choice[i][:, idx, j],
+                                                    tf.cast(
+                                                        items_features_by_choice[i][:, idx, j],
+                                                        tf.float32,
+                                                    ),
                                                     self.trainable_weights[weight_index][:, q],
                                                 ),
                                                 axis=-1,

@@ -137,6 +137,7 @@ class SimpleMNL(ChoiceModel):
         if "shared_features" in self.indexes.keys():
             if isinstance(shared_features_by_choice, tuple):
                 shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
+            shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
             shared_features_utilities = tf.tensordot(
                 shared_features_by_choice,
                 self.trainable_weights[self.indexes["shared_features"]],
@@ -149,6 +150,7 @@ class SimpleMNL(ChoiceModel):
         if "items_features" in self.indexes.keys():
             if isinstance(items_features_by_choice, tuple):
                 items_features_by_choice = tf.concat([*items_features_by_choice], axis=2)
+            items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
             items_features_utilities = tf.tensordot(
                 items_features_by_choice,
                 self.trainable_weights[self.indexes["items_features"]],

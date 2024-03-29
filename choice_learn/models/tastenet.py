@@ -179,6 +179,8 @@ class TasteNet(ChoiceModel):
             shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
         if isinstance(items_features_by_choice, tuple):
             items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
+        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
+        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
 
         taste_weights = self.taste_params_module(shared_features_by_choice)
         item_utility_by_choice = []
