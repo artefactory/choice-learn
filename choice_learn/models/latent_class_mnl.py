@@ -3,8 +3,8 @@ import copy
 
 import tensorflow as tf
 
-from .base_model import BaseLatentClassModel
 from .conditional_mnl import ConditionalMNL, ModelSpecification
+from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import SimpleMNL
 
 
@@ -25,8 +25,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     ):
         """Initialization.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -69,31 +69,25 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
-    ):
+    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
-        n_fixed_items_features : int
-            Number of fixed items features.
-        n_contexts_features : int
-            Number of contexts features
-        n_contexts_items_features : int
-            Number of contexts items features
+        n_shared_features : int
+            Number of shared features
+        n_items_features : int
+            Number of items features
         """
         for model in self.models:
             model.indexes, model.weights = model.instantiate(
-                n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
+                n_items, n_shared_features, n_items_features
             )
             model.instantiated = True
 
-    def instantiate(
-        self, n_items, n_fixed_items_features, n_contexts_features, n_contexts_items_features
-    ):
+    def instantiate(self, n_items, n_shared_features, n_items_features):
         """Instantiation of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
@@ -104,25 +98,23 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
 
         self.instantiate_latent_models(
             n_items=n_items,
-            n_fixed_items_features=n_fixed_items_features,
-            n_contexts_features=n_contexts_features,
-            n_contexts_items_features=n_contexts_items_features,
+            n_shared_features=n_shared_features,
+            n_items_features=n_items_features,
         )
 
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
             self.instantiate(
                 n_items=dataset.get_n_items(),
-                n_fixed_items_features=dataset.get_n_fixed_items_features(),
-                n_contexts_features=dataset.get_n_contexts_features(),
-                n_contexts_items_features=dataset.get_n_contexts_items_features(),
+                n_shared_features=dataset.get_n_shared_features(),
+                n_items_features=dataset.get_n_items_features(),
             )
         return super().fit(dataset, **kwargs)
 
@@ -144,8 +136,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Initialization.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -201,48 +193,42 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     def instantiate_latent_models(
         self,
         n_items,
+        shared_features_names,
         items_features_names,
-        contexts_features_names,
-        contexts_items_features_names,
     ):
         """Instantiation of the Latent Models that are SimpleMNLs.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
-        items_features_names: str,
-            Names of fixed_items_features
-        contexts_features_names: str,
-            Names of contexts features
-        contexts_items_features_names: str,
-            Names of contexts items features
+        shared_features_names : list of str
+            Names of the shared features in the dataset.
+        items_features_names : list of str
+            Names of the items features in the dataset.
         """
         if isinstance(self.params, ModelSpecification):
             for model in self.models:
                 model.params = copy.deepcopy(self.params)
                 model.weights = model.instantiate_from_specifications()
 
-                model._items_features_names = items_features_names
-                model._contexts_features_names = contexts_features_names
-                model._contexts_items_features_names = contexts_items_features_names
+                model._shared_features_by_choice_names = shared_features_names
+                model._items_features_by_choice_names = items_features_names
         else:
             for model in self.models:
                 model.params = self.params
                 model.indexes, model.weights = model.instantiate(
                     num_items=n_items,
+                    shared_features_names=shared_features_names,
                     items_features_names=items_features_names,
-                    contexts_features_names=contexts_features_names,
-                    contexts_items_features_names=contexts_items_features_names,
                 )
         model.instantiated = True
 
     def instantiate(
         self,
         n_items,
+        shared_features_names,
         items_features_names,
-        contexts_features_names,
-        contexts_items_features_names,
     ):
         """Instantiation of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
@@ -254,9 +240,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
 
         self.instantiate_latent_models(
             n_items=n_items,
+            shared_features_names=shared_features_names,
             items_features_names=items_features_names,
-            contexts_features_names=contexts_features_names,
-            contexts_items_features_names=contexts_items_features_names,
         )
 
     def add_coefficients(
@@ -264,8 +249,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Adds a coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -300,8 +285,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     ):
         """Adds a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -334,16 +319,15 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
             self.instantiate(
                 n_items=dataset.get_n_items(),
-                items_features_names=dataset.fixed_items_features_names,
-                contexts_features_names=dataset.contexts_features_names,
-                contexts_items_features_names=dataset.contexts_items_features_names,
+                shared_features_names=dataset.shared_features_by_choice_names,
+                items_features_names=dataset.items_features_by_choice_names,
             )
         return super().fit(dataset, **kwargs)

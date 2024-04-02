@@ -23,8 +23,8 @@ class BaseLatentClassModel(object):
     ):
         """Instantiation of the model mixture.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_latent_classes : int
             Number of latent classes
         model_class : BaseModel
@@ -89,8 +89,8 @@ class BaseLatentClassModel(object):
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -130,9 +130,9 @@ class BaseLatentClassModel(object):
         probabilities = []
         for i, class_utilities in enumerate(utilities):
             class_probabilities = tf_ops.softmax_with_availabilities(
-                items_logit_by_choice=utilities,
+                items_logit_by_choice=class_utilities,
                 available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.normalize_non_buy,
+                normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
             probabilities.append(class_probabilities * latent_probabilities[i])
@@ -166,8 +166,8 @@ class BaseLatentClassModel(object):
 
         It computes the utility for each of the latent models and stores them in a list.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -204,8 +204,8 @@ class BaseLatentClassModel(object):
     def fit(self, dataset, sample_weight=None, verbose=0):
         """Fit the model on a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         sample_weight : np.ndarray, optional
@@ -239,8 +239,8 @@ class BaseLatentClassModel(object):
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
 
@@ -281,8 +281,8 @@ class BaseLatentClassModel(object):
     def _lbfgs_train_step(self, dataset, sample_weight=None):
         """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
@@ -394,8 +394,8 @@ class BaseLatentClassModel(object):
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
@@ -452,8 +452,8 @@ class BaseLatentClassModel(object):
     def _nothing(self, inputs):
         """_summary_.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : _type_
             _description_
 
@@ -511,8 +511,8 @@ class BaseLatentClassModel(object):
     def _maximization(self, dataset, verbose=0):
         """_summary_.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : _type_
             _description_
         verbose : int, optional
@@ -536,8 +536,8 @@ class BaseLatentClassModel(object):
     def _em_fit(self, dataset, verbose=0):
         """Fit with Expectation-Maximization Algorithm.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset: ChoiceDataset
             Dataset to be used for coefficients estimations
         verbose : int, optional
@@ -570,8 +570,8 @@ class BaseLatentClassModel(object):
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
         batch_size : int, optional

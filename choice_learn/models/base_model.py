@@ -1,5 +1,6 @@
 """Base class for choice models."""
 import json
+import logging
 import os
 import time
 from abc import abstractmethod
@@ -18,7 +19,7 @@ class ChoiceModel(object):
     def __init__(
         self,
         label_smoothing=0.0,
-        normalize_non_buy=False,
+        add_exit_choice=False,
         optimizer="lbfgs",
         tolerance=1e-8,
         callbacks=None,
@@ -28,13 +29,13 @@ class ChoiceModel(object):
     ):
         """Instantiates the ChoiceModel.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         label_smoothing : float, optional
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing,
         during training, by default 0.0
             by default None. Label smoothing is applied to LogLikelihood loss.
-        normalize_non_buy : bool, optional
+        add_exit_choice : bool, optional
             Whether or not to add a normalization (then U=1) with the exit option in probabilites
             normalization,by default True
         callbacks : list of tf.kera callbacks, optional
@@ -52,7 +53,7 @@ class ChoiceModel(object):
             Not used in the case of L-BFGS optimizer, by default 32
         """
         self.is_fitted = False
-        self.normalize_non_buy = normalize_non_buy
+        self.add_exit_choice = add_exit_choice
         self.label_smoothing = label_smoothing
         self.stop_training = False
 
@@ -96,8 +97,8 @@ class ChoiceModel(object):
         MUST be implemented in children classe !
         For simpler use-cases this is the only method to be user-defined.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -132,8 +133,8 @@ class ChoiceModel(object):
     ):
         """Function that represents one training step (= one gradient descent step) of the model.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -166,7 +167,7 @@ class ChoiceModel(object):
             probabilities = tf_ops.softmax_with_availabilities(
                 items_logit_by_choice=utilities,
                 available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.normalize_non_buy,
+                normalize_exit=self.add_exit_choice,
                 axis=-1,
             )
             # Negative Log-Likelihood
@@ -189,8 +190,8 @@ class ChoiceModel(object):
     ):
         """Method to train the model with a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Input data in the form of a ChoiceDataset
         sample_weight : np.ndarray, optional
@@ -377,8 +378,8 @@ class ChoiceModel(object):
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -413,7 +414,7 @@ class ChoiceModel(object):
         probabilities = tf_ops.softmax_with_availabilities(
             items_logit_by_choice=utilities,
             available_items_by_choice=available_items_by_choice,
-            normalize_exit=self.normalize_non_buy,
+            normalize_exit=self.add_exit_choice,
             axis=-1,
         )
 
@@ -436,8 +437,8 @@ class ChoiceModel(object):
     def save_model(self, path):
         """Method to save the different models on disk.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         path : str
             path to the folder where to save the model
         """
@@ -457,8 +458,8 @@ class ChoiceModel(object):
     def load_model(cls, path):
         """Method to load a ChoiceModel previously saved with save_model().
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         path : str
             path to the folder where the saved model files are
 
@@ -487,8 +488,8 @@ class ChoiceModel(object):
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
         batch_size : int, optional
@@ -522,8 +523,8 @@ class ChoiceModel(object):
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
 
@@ -564,8 +565,8 @@ class ChoiceModel(object):
     def _lbfgs_train_step(self, dataset, sample_weight=None):
         """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
@@ -662,8 +663,8 @@ class ChoiceModel(object):
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
@@ -701,9 +702,13 @@ class ChoiceModel(object):
         # after training, the final optimized parameters are still in results.position
         # so we have to manually put them back to the model
         func.assign_new_model_parameters(results.position)
+        if results[1].numpy():
+            logging.error("L-BFGS Optimization failed.")
         if verbose > 0:
-            print("L-BFGS Opimization finished:")
-            print("---------------------------------------------------------------")
-            print("Number of iterations:", results[2].numpy())
-            print("Algorithm converged before reaching max iterations:", results[0].numpy())
-        return func.history
+            logging.warning("L-BFGS Opimization finished:")
+            logging.warning("---------------------------------------------------------------")
+            logging.warning(f"Number of iterations: {results[2].numpy()}")
+            logging.warning(
+                f"Algorithm converged before reaching max iterations: {results[0].numpy()}",
+            )
+        return {"train_loss": func.history}

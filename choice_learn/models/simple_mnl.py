@@ -33,7 +33,7 @@ class SimpleMNL(ChoiceModel):
         lr: float
             Learning Rate to be used with optimizer.
         """
-        super().__init__(normalize_non_buy=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.instantiated = False
         self.intercept = intercept
 
@@ -42,8 +42,8 @@ class SimpleMNL(ChoiceModel):
 
         Parameters
         --------
-        Parameters
-        ----------
+        Parameters:
+        -----------
         n_items : int
             Number of items/aternatives to consider.
         n_shared_features : int
@@ -112,8 +112,8 @@ class SimpleMNL(ChoiceModel):
     ):
         """Main method to compute the utility of the model. Selects the right method to compute.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -137,6 +137,7 @@ class SimpleMNL(ChoiceModel):
         if "shared_features" in self.indexes.keys():
             if isinstance(shared_features_by_choice, tuple):
                 shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
+            shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
             shared_features_utilities = tf.tensordot(
                 shared_features_by_choice,
                 self.trainable_weights[self.indexes["shared_features"]],
@@ -149,6 +150,7 @@ class SimpleMNL(ChoiceModel):
         if "items_features" in self.indexes.keys():
             if isinstance(items_features_by_choice, tuple):
                 items_features_by_choice = tf.concat([*items_features_by_choice], axis=2)
+            items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
             items_features_utilities = tf.tensordot(
                 items_features_by_choice,
                 self.trainable_weights[self.indexes["items_features"]],
@@ -173,8 +175,8 @@ class SimpleMNL(ChoiceModel):
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Main fit function to estimate the paramters.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         get_report: bool, optional
@@ -182,8 +184,8 @@ class SimpleMNL(ChoiceModel):
 
         Returns:
         --------
-        ConditionalMNL
-            With estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             # Lazy Instantiation
@@ -201,8 +203,8 @@ class SimpleMNL(ChoiceModel):
     def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
         """Specific fit function to estimate the paramters with LBFGS.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         n_epochs : int
@@ -214,8 +216,8 @@ class SimpleMNL(ChoiceModel):
 
         Returns:
         --------
-        conditionalMNL
-            self with estimated weights.
+        dict
+            dict with fit history.
         """
         if not self.instantiated:
             # Lazy Instantiation
@@ -233,8 +235,8 @@ class SimpleMNL(ChoiceModel):
     def compute_report(self, dataset):
         """Computes a report of the estimated weights.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
@@ -275,8 +277,8 @@ class SimpleMNL(ChoiceModel):
     def get_weights_std(self, dataset):
         """Approximates Std Err with Hessian matrix.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
@@ -316,7 +318,7 @@ class SimpleMNL(ChoiceModel):
     def clone(self):
         """Returns a clone of the model."""
         clone = SimpleMNL(
-            add_exit_choice=self.normalize_non_buy,
+            add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
         )
         if hasattr(self, "history"):

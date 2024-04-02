@@ -35,8 +35,8 @@ class ChoiceDataset(object):
     ):
         """Builds the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices: list or np.ndarray
             list of chosen items indexes
         shared_features_by_choice : tuple of (array_like, )
@@ -78,6 +78,11 @@ class ChoiceDataset(object):
                                            {len(shared_features_by_choice[0])} and
                                             {len(shared_features_by_choice_names)}"""
                         )
+                else:
+                    logging.warning(
+                        """Shared Features Names were not provided, will not be able to
+                                    fit models needing them such as Conditional Logit."""
+                    )
 
                 shared_features_by_choice_names = (shared_features_by_choice_names,)
                 shared_features_by_choice = (shared_features_by_choice,)
@@ -94,9 +99,12 @@ class ChoiceDataset(object):
                                 f"""{sub_k}-th given shared_features_by_choice and
                                 shared_features_by_choice_names shapes do not match"""
                             )
-
                 # In this case names are missing, still transform it as a tuple
                 else:
+                    logging.warning(
+                        """Shared Features Names were not provided, will not be able to
+                                    fit models needing them such as Conditional Logit."""
+                    )
                     shared_features_by_choice_names = (None,) * len(shared_features_by_choice)
         else:
             self._return_shared_features_by_choice_tuple = False
@@ -114,6 +122,11 @@ class ChoiceDataset(object):
                                      {len(items_features_by_choice[0][0])} and
                                      {len(items_features_by_choice_names)}"""
                     )
+            else:
+                logging.warning(
+                    """Items Features Names were not provided, will not be able to
+                                fit models needing them such as Conditional Logit."""
+                )
             items_features_by_choice = (items_features_by_choice,)
             items_features_by_choice_names = (items_features_by_choice_names,)
 
@@ -131,6 +144,10 @@ class ChoiceDataset(object):
 
         # In this case names are missing, still transform it as a tuple
         elif items_features_by_choice is not None:
+            logging.warning(
+                """Items Features Names were not provided, will not be able to
+                            fit models needing them such as Conditional Logit."""
+            )
             self._return_items_features_by_choice_tuple = True
             items_features_by_choice_names = (None,) * len(items_features_by_choice)
 
@@ -387,6 +404,16 @@ class ChoiceDataset(object):
                                     feature_by_id.name,
                                 )
 
+                                unique_values = np.unique(self.shared_features_by_choice[i][:, j])
+                                try:
+                                    for val in unique_values:
+                                        feature_by_id.batch[unique_values]
+                                except KeyError:
+                                    raise ValueError(
+                                        f"""Key {val} in Shared Feature {column_name}
+                                                     not found in {feature_by_id.name}"""
+                                    )
+
         if self.items_features_by_choice_names is not None:
             for i, feature in enumerate(self.items_features_by_choice_names):
                 if feature is not None:
@@ -400,6 +427,16 @@ class ChoiceDataset(object):
                                     "Feature by ID found for items_features_by_choice:",
                                     feature_by_id.name,
                                 )
+
+                                unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
+                                try:
+                                    for val in unique_values:
+                                        feature_by_id.batch[unique_values]
+                                except KeyError:
+                                    raise ValueError(
+                                        f"""Key {val} in Items Feature {column_name}
+                                                     not found in {feature_by_id.name}"""
+                                    )
 
         # Checking number of found features_by_id
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
@@ -635,8 +672,8 @@ class ChoiceDataset(object):
     ):
         """Builds contexts_items_features and contexts_items_availabilities from dataframe.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             Dataframe containing all the features for each item and sessions
         items_index : list
@@ -703,7 +740,7 @@ class ChoiceDataset(object):
                 available_items_by_choice.append(sess_av)
 
         if features is not None:
-            items_features_by_choice = (np.array(items_features_by_choice),)
+            items_features_by_choice = np.array(items_features_by_choice)
         else:
             items_features_by_choice = None
         return items_features_by_choice, np.array(available_items_by_choice).astype("float32")
@@ -724,8 +761,8 @@ class ChoiceDataset(object):
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             dataframe in Wide format
         items_id : list
@@ -868,8 +905,8 @@ class ChoiceDataset(object):
     ):
         """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         df : pandas.DataFrame
             dataframe in Long format
         choices_column: str, optional
@@ -901,9 +938,9 @@ class ChoiceDataset(object):
                 shared_features_columns + [choices_id_column]
             ].drop_duplicates()
             shared_features_by_choice = shared_features_by_choice.set_index(choices_id_column)
-            shared_features_by_choice = (shared_features_by_choice.loc[choices_ids].to_numpy(),)
+            shared_features_by_choice = shared_features_by_choice.loc[choices_ids].to_numpy()
 
-            shared_features_by_choice_names = (shared_features_columns,)
+            shared_features_by_choice_names = shared_features_columns
         else:
             shared_features_by_choice = None
             shared_features_by_choice_names = None
@@ -920,9 +957,7 @@ class ChoiceDataset(object):
             choices_index=choices_ids,
         )
 
-        items_features_by_choice_names = (
-            (items_features_columns,) if items_features_columns is not None else None
-        )
+        items_features_by_choice_names = items_features_columns
 
         if choice_format == "items_id":
             choices = df[[choices_column, choices_id_column]].drop_duplicates(choices_id_column)
@@ -969,7 +1004,7 @@ class ChoiceDataset(object):
         print("%=====================================================================%")
 
         if self.shared_features_by_choice is not None:
-            print(" shared Features by Choice:")
+            print(" Shared Features by Choice:")
             print(f" {sum([f.shape[1] for f in self.shared_features_by_choice])} shared features")
             if self.shared_features_by_choice_names is not None:
                 if self.shared_features_by_choice_names[0] is not None:
@@ -981,8 +1016,8 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             print(" Items Features by Choice:")
             print(
-                f""" {sum([f.shape[2] for f in self.items_features_by_choice])}
-                 items features """
+                f""" {sum([f.shape[2] for f in self.items_features_by_choice])
+                     } items features """
             )
             if self.items_features_by_choice_names is not None:
                 if self.items_features_by_choice_names[0] is not None:
@@ -995,8 +1030,8 @@ class ChoiceDataset(object):
     def get_choices_batch(self, choices_indexes, features=None):
         """Method to access a chunk of data within the ChoiceDataset from choice indexes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
         features : list of str, optional
@@ -1127,127 +1162,6 @@ class ChoiceDataset(object):
             available_items_by_choice,
             choice,
         ) = self._get_choices_batch(choices_indexes)
-        """
-        ### New
-        choice = self.choices[choices_indexes]
-
-        if self.contexts_features is None:
-            contexts_features = None
-        else:
-            contexts_features = list(
-                contexts_feature[choices_indexes] for contexts_feature in self.contexts_features
-            )
-
-        if self.contexts_items_features is None:
-            contexts_items_features = None
-        else:
-            contexts_items_features = list(
-                contexts_items_feature[choices_indexes]
-                for contexts_items_feature in self.contexts_items_features
-            )
-
-        if self.contexts_items_availabilities is None:
-            contexts_items_availabilities = np.ones((self.base_num_items)).astype("float32")
-        else:
-            contexts_items_availabilities = self.contexts_items_availabilities[choices_indexes]
-
-        if len(self.shared_items_features_map) > 0:
-            mapped_features = []
-            for tuple_index in np.sort(list(self.shared_items_features_map.keys())):
-                feat_ind_min = 0
-                unstacked_feat = []
-                for feature_index in np.sort(
-                    list(self.shared_items_features_map[tuple_index].keys())
-                ):
-                    unstacked_feat.append(
-                        shared_items_features[tuple_index][:, feat_ind_min:feature_index]
-                    )
-                    unstacked_feat.append(
-                        self.shared_items_features_map[tuple_index][feature_index].batch[
-                            shared_items_features[tuple_index][:, feature_index]
-                        ]
-                    )
-                    feat_ind_min = feature_index + 1
-                mapped_features.append(np.concatenate(unstacked_feat, axis=1))
-
-            shared_items_features = mapped_features
-
-        if len(self.contexts_features_map) > 0:
-            mapped_features = []
-            for tuple_index in np.sort(list(self.contexts_features_map.keys())):
-                feat_ind_min = 0
-                unstacked_feat = []
-                for feature_index in np.sort(list(self.contexts_features_map[tuple_index].keys())):
-                    unstacked_feat.append(
-                        contexts_features[tuple_index][feat_ind_min:feature_index]
-                    )
-                    unstacked_feat.append(
-                        self.contexts_features_map[tuple_index][feature_index].batch[
-                            contexts_features[tuple_index][feature_index]
-                        ]
-                    )
-                    feat_ind_min = feature_index + 1
-                mapped_features.append(np.concatenate(unstacked_feat, axis=0))
-
-            contexts_features = mapped_features
-
-        if len(self.contexts_items_features_map) > 0:
-            mapped_features = []
-            for tuple_index in np.sort(list(self.contexts_items_features_map.keys())):
-                feat_ind_min = 0
-                unstacked_feat = []
-                for feature_index in np.sort(
-                    list(self.contexts_items_features_map[tuple_index].keys())
-                ):
-                    unstacked_feat.append(
-                        contexts_items_features[tuple_index][:, feat_ind_min:feature_index]
-                    )
-                    unstacked_feat.append(
-                        self.contexts_items_features_map[tuple_index][feature_index].batch[
-                            contexts_items_features[tuple_index][:, feature_index]
-                        ]
-                    )
-                    feat_ind_min = feature_index + 1
-                mapped_features.append(np.concatenate(unstacked_feat, axis=1))
-
-            contexts_items_features = mapped_features
-
-        if shared_items_features is not None:
-            for i in range(len(shared_items_features)):
-                shared_items_features[i] = shared_items_features[i].astype(self._return_types[0][i])
-            # items_features were not given as a tuple, so we return do not return it as a tuple
-            if not self._return_items_features_tuple:
-                shared_items_features = shared_items_features[0]
-            else:
-                shared_items_features = tuple(shared_items_features)
-
-        if contexts_features is not None:
-            for i in range(len(contexts_features)):
-                contexts_features[i] = contexts_features[i].astype(self._return_types[1][i])
-            if not self._return_contexts_features_tuple:
-                contexts_features = contexts_features[0]
-            else:
-                contexts_features = tuple(contexts_features)
-
-        if contexts_items_features is not None:
-            for i in range(len(contexts_items_features)):
-                contexts_items_features[i] = contexts_items_features[i].astype(
-                    self._return_types[2][i]
-                )
-            # sessions_items_features were not given as a tuple, so we return do not return
-            # it as a tuple
-            if not self._return_contexts_items_features_tuple:
-                contexts_items_features = contexts_items_features[0]
-            else:
-                contexts_items_features = tuple(contexts_items_features)
-        return (
-            shared_items_features,
-            contexts_features,
-            contexts_items_features,
-            contexts_items_availabilities,
-            choice,
-        )
-        """
         return (
             shared_items_features_by_choices[0],
             items_features_by_choice[0],
@@ -1258,8 +1172,8 @@ class ChoiceDataset(object):
     def __getitem__(self, choices_indexes):
         """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : np.ndarray
             indexes of the contexts / choices to keep, shape should be (num_choices,)
 
@@ -1335,8 +1249,8 @@ class ChoiceDataset(object):
 
         Newer version.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         batch_size : int
             batch size to set
         shuffle: bool
@@ -1372,8 +1286,8 @@ class ChoiceDataset(object):
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         bool_list : list of boolean
             list of booleans of length self.get_n_contexts() to filter contexts.
             True to keep, False to discard.

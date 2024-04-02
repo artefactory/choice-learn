@@ -41,8 +41,8 @@ def get_path(data_file_name, module=DATA_MODULE):
 def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load csv files.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     data_file_name : str
         name of the csv file to load
     data_module : str, optional
@@ -70,8 +70,8 @@ def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
 def load_gzip(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     """Base function to load zipped .csv.gz files.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     data_file_name : str
         name of the csv.gz file to load
     data_module : str, optional
@@ -100,8 +100,8 @@ def slice_from_names(array, slice_names, all_names):
 
     Slices array in the second dimension from column names.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     array : np.ndarray
         array to be sliced
     slice_names : list
@@ -120,8 +120,8 @@ def slice_from_names(array, slice_names, all_names):
 def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, preprocessing=None):
     """Load and return the SwissMetro dataset from Bierlaire et al. (2001).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     add_items_one_hot : bool, optional
         Whether to add a OneHot encoding of items as items_features, by default False
     as_frame : bool, optional
@@ -213,6 +213,87 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     if as_frame:
         return swiss_df
 
+    if preprocessing == "tastenet":
+        swiss_df = swiss_df.loc[swiss_df.AGE != 6]
+        swiss_df["TRAIN_ASC_TRAIN"] = 1.0
+        swiss_df["SM_ASC_TRAIN"] = 0.0
+        swiss_df["CAR_ASC_TRAIN"] = 0.0
+
+        swiss_df["TRAIN_ASC_SM"] = 0.0
+        swiss_df["SM_ASC_SM"] = 1.0
+        swiss_df["CAR_ASC_SM"] = 0.0
+
+        swiss_df["TRAIN_ASC_CAR"] = 0.0
+        swiss_df["SM_ASC_CAR"] = 0.0
+        swiss_df["CAR_ASC_CAR"] = 1.0
+
+        swiss_df["FEMALE"] = 1 - swiss_df["MALE"]
+        shared_features_by_choice_names = ["MALE", "FEMALE"]
+        swiss_df["NOT_FIRST"] = 1 - swiss_df["FIRST"]
+        shared_features_by_choice_names += ["FIRST", "NOT_FIRST"]
+        swiss_df["NOT_GA"] = 1 - swiss_df["GA"]
+        shared_features_by_choice_names += ["GA", "NOT_GA"]
+
+        age_dummy = pd.get_dummies(swiss_df.AGE, prefix="AGE").astype(int)
+        swiss_df = pd.concat([swiss_df, age_dummy], axis=1)
+        shared_features_by_choice_names += age_dummy.columns.to_list()
+
+        swiss_df.INCOME = swiss_df.apply(lambda row: 1 if row.INCOME == 0 else row.INCOME, axis=1)
+        income_dummy = pd.get_dummies(swiss_df.INCOME, prefix="INCOME").astype(int)
+        swiss_df = pd.concat([swiss_df, income_dummy], axis=1)
+        shared_features_by_choice_names += income_dummy.columns.to_list()
+
+        swiss_df.WHO = swiss_df.apply(lambda row: 1 if row.WHO == 0 else row.WHO, axis=1)
+        who_dummy = pd.get_dummies(swiss_df.WHO, prefix="WHO").astype(int)
+        swiss_df = pd.concat([swiss_df, who_dummy], axis=1)
+        shared_features_by_choice_names += who_dummy.columns.to_list()
+
+        swiss_df = swiss_df.loc[swiss_df.PURPOSE != 9]
+        purpose_dict = {
+            1: 1,
+            2: 2,
+            3: 3,
+            4: 4,
+            5: 1,
+            6: 2,
+            7: 3,
+            8: 4,
+        }
+        swiss_df.PURPOSE = swiss_df.apply(lambda row: purpose_dict[row.PURPOSE], axis=1)
+        purpose_dummy = pd.get_dummies(swiss_df.PURPOSE, prefix="PURPOSE").astype(int)
+        swiss_df = pd.concat([swiss_df, purpose_dummy], axis=1)
+        shared_features_by_choice_names += purpose_dummy.columns.to_list()
+
+        luggage_dummy = pd.get_dummies(swiss_df.LUGGAGE, prefix="LUGGAGE").astype(int)
+        swiss_df = pd.concat([swiss_df, luggage_dummy], axis=1)
+        shared_features_by_choice_names += luggage_dummy.columns.to_list()
+
+        swiss_df["SM_CO"] = swiss_df["SM_CO"] * (swiss_df["GA"] == 0)
+        swiss_df["TRAIN_CO"] = swiss_df["TRAIN_CO"] * (swiss_df["GA"] == 0)
+
+        for col in [
+            "TRAIN_TT",
+            "TRAIN_HE",
+            "TRAIN_CO",
+            "SM_TT",
+            "SM_HE",
+            "SM_CO",
+            "CAR_TT",
+            "CAR_CO",
+        ]:
+            swiss_df[col] = swiss_df[col] / 100
+
+        return swiss_df.ID.to_numpy(), ChoiceDataset.from_single_wide_df(
+            df=swiss_df,
+            items_id=items,
+            shared_features_columns=shared_features_by_choice_names,
+            items_features_suffixes=items_features_by_choice_names
+            + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"],
+            available_items_suffix=availabilities_column,
+            choices_column=choice_column,
+            choice_format="item_index",
+        )
+
     if preprocessing == "tutorial":
         # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
@@ -268,13 +349,16 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
-            shared_features_by_choice=(shared_features_by_choice,),
-            items_features_by_choice=(items_features_by_choice,),
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
             available_items_by_choice=available_items_by_choice,
-            shared_features_by_choice_names=(
-                ["train_survey", "regular_class", "single_luggage_piece", "multiple_luggage_piece"],
-            ),
-            items_features_by_choice_names=(["cost", "travel_time", "headway", "seats"],),
+            shared_features_by_choice_names=[
+                "train_survey",
+                "regular_class",
+                "single_luggage_piece",
+                "multiple_luggage_piece",
+            ],
+            items_features_by_choice_names=["cost", "travel_time", "headway", "seats"],
             choices=choices,
         )
     if preprocessing == "rumnet":
@@ -347,10 +431,11 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
                 shared_features_by_choice.append(col)
 
         shared_features_by_choice = long_data[shared_features_by_choice].to_numpy()
+        choices = swiss_df.CHOICE.to_numpy()
 
         return ChoiceDataset(
-            shared_features_by_choice=(shared_features_by_choice.astype("float32"),),
-            items_features_by_choice=(items_features_by_choice.astype("float32"),),
+            shared_features_by_choice=shared_features_by_choice.astype("float32"),
+            items_features_by_choice=items_features_by_choice.astype("float32"),
             available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
@@ -378,8 +463,8 @@ def load_modecanada(
 ):
     """Load and return the ModeCanada dataset from Koppleman et al. (1993).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     one_hot_cat_data : bool, optional
         Whether to transform categorical data as OneHot, by default False.
     add_is_public : bool, optional
@@ -577,8 +662,8 @@ def load_heating(
 ):
     """Load and return the Heating dataset from Kenneth Train.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
@@ -640,8 +725,8 @@ def load_electricity(
 ):
     """Load and return the Electricity dataset from Kenneth Train.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
@@ -711,8 +796,8 @@ def load_train(
 ):
     """Load and return the Train dataset from Koppleman et al. (1993).
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
