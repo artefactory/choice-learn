@@ -151,8 +151,8 @@ class ParallelDense(tf.keras.layers.Layer):
         Following tf.keras.Layer API. Note that there will be width * depth * heterogeneity
         number of neurons in the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Number of neurons for each dense layer.
         depth : int
@@ -171,8 +171,8 @@ class ParallelDense(tf.keras.layers.Layer):
     def build(self, input_shape):
         """Lazy build of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
@@ -216,8 +216,8 @@ class ParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_features) as input of the model.
 
@@ -248,8 +248,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
     def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
         """Inialization of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Number of neurons of each dense layer.
         depth : int
@@ -270,8 +270,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, num_features).
@@ -315,8 +315,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_items, n_features) as input of the model.
 
@@ -344,8 +344,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     def __init__(self, width, depth, activation="relu", add_last=True, **kwargs):
         """Initialization of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         width : int
             Nnumber of neurons of each dense layer.
         depth : int
@@ -366,8 +366,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, width, heterogeneity).
@@ -413,8 +413,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     def call(self, inputs):
         """Predict of the layer.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         inputs : tf.Tensor, np.ndarray
             Input Tensor of shape (batch_size, num_items, width, heterogeneity)
 
@@ -440,7 +440,7 @@ class PaperRUMnet(ChoiceModel):
     """Re-Implementation of the RUMnet model.
 
     Re-implemented from the paper:
-    Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir
+    Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir.
     https://arxiv.org/abs/2207.12877
 
     --- Attention: ---
@@ -448,14 +448,12 @@ class PaperRUMnet(ChoiceModel):
         - customer features
         - product features
     >>> In this implementation, please make sure that the features are correctly formatted:
-        - customer features: (n_contexts, n_features) are given as 'contexts_features' in the
-        ChoiceDataset used to fit the model
-        - product features: (n_contexts, n_items, n_features) are given as 'contexts_items_features'
+        - customer features: (n_choices, n_features) are given as 'shared_features_by_choice'
         in the ChoiceDataset used to fit the model
+        - product features: (n_choices, n_items, n_features) are given as
+        'items_features_by_choice' in the ChoiceDataset used to fit the model
     ---
-
     Inherits from base_model.ChoiceModel
-    TODO: Verify that all parameters are implemented.
     """
 
     def __init__(
@@ -473,7 +471,7 @@ class PaperRUMnet(ChoiceModel):
         tol,
         optimizer,
         lr,
-        normalize_non_buy=False,
+        add_exit_choice=False,
         logmin=1e-5,
         l2_regularization_coef=0.0,
         label_smoothing=0.0,
@@ -481,8 +479,8 @@ class PaperRUMnet(ChoiceModel):
     ):
         """Initiation of the RUMnet Model.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         num_products_features : int
             Number of features each product will be described with.
             In terms of ChoiceDataset it is the number of
@@ -513,7 +511,7 @@ class PaperRUMnet(ChoiceModel):
             Should be within tf.keras.optimizers.
         lr : float
             Starting learning rate to associate with optimizer.
-        normalize_non_buy : bool, optional
+        add_exit_choice : bool, optional
             Whether or not to add exit option with utility 1, by default True
         logmin : float, optional
             Value to be added within log computation to avoid infinity, by default 1e-5
@@ -522,8 +520,12 @@ class PaperRUMnet(ChoiceModel):
         label_smoothing : float, optional
             Value of smoothing to apply in CrossEntropy loss computation, by default 0.0
         """
-        super().__init__(normalize_non_buy=normalize_non_buy, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, **kwargs)
         # Number of features
+        if num_customer_features <= 0:
+            raise ValueError("Number of customer features must be at least 1.")
+        if num_products_features <= 0:
+            raise ValueError("Number of product features must be at least 1.")
         self.num_products_features = num_products_features
         self.num_customer_features = num_customer_features
 
@@ -544,7 +546,7 @@ class PaperRUMnet(ChoiceModel):
         self.logmin = logmin
         self.tol = tol
         self.lr = lr
-        self.normalize_non_buy = normalize_non_buy
+        self.add_exit_choice = add_exit_choice
         self.l2_regularization_coef = l2_regularization_coef
         self.label_smoothing = label_smoothing
 
@@ -584,7 +586,7 @@ class PaperRUMnet(ChoiceModel):
         )
 
         # Storing weights for back-propagation
-        self.weights = self.x_model.weights + self.z_model.weights + self.u_model.weights
+        self.trainable_weights = self.x_model.weights + self.z_model.weights + self.u_model.weights
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=self.label_smoothing,
@@ -594,10 +596,9 @@ class PaperRUMnet(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
@@ -605,47 +606,47 @@ class PaperRUMnet(ChoiceModel):
         Here we asssume that: item features = {fixed item features + contexts item features}
                               user features = {contexts features}
 
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray (n_items, n_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products fixed features.
-        contexts_features : tuple of np.ndarray (n_contexts, n_features)
-            Contexts-Features: features varying with contexts, shared by all products
-        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
-            Features varying with contexts and products
-        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
-            Availabilities: here for ChoiceModel signature
-        choices :  np.ndarray (n_contexts, )
-            Choices: here for ChoiceModel signature
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_choices, )
 
         Returns:
         --------
         np.ndarray
-            Utility of each product for each contexts.
-            Shape must be (n_contexts, n_items)
+            Utility of each product for each choice.
+            Shape must be (n_choices, n_items)
         """
-        (_, _) = contexts_items_availabilities, choices
+        (_, _) = available_items_by_choice, choices
         ### Restacking of the item features
-        items_features_batch = tf.concat([*fixed_items_features], axis=-1)
-        contexts_features_batch = tf.concat([*contexts_features], axis=-1)
-        contexts_items_features_batch = tf.concat([*contexts_items_features], axis=-1)
+        if isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+        if isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
 
-        full_item_features = tf.stack(
-            [items_features_batch] * contexts_items_features_batch.shape[0], axis=0
-        )
-        full_item_features = tf.concat([contexts_items_features_batch, full_item_features], axis=-1)
+        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
+        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
 
         ### Computation of utilities
         utilities = []
 
         # Computation of the customer features embeddings
-        z_embeddings = self.z_model(contexts_features_batch)
+        z_embeddings = self.z_model(shared_features_by_choice)
 
         # Iterate over items in assortment
-        for item_i in range(full_item_features.shape[1]):
+        for item_i in range(items_features_by_choice.shape[1]):
             # Computation of item features embeddings
-            x_embeddings = self.x_model(full_item_features[:, item_i, :])
+            x_embeddings = self.x_model(items_features_by_choice[:, item_i, :])
 
             utilities.append([])
 
@@ -654,7 +655,7 @@ class PaperRUMnet(ChoiceModel):
             for _x in x_embeddings:
                 for _z in z_embeddings:
                     _u = tf.keras.layers.Concatenate()(
-                        [full_item_features[:, item_i, :], _x, contexts_features_batch, _z]
+                        [items_features_by_choice[:, item_i, :], _x, shared_features_by_choice, _z]
                     )
                     utilities[-1].append(self.u_model(_u))
 
@@ -664,10 +665,9 @@ class PaperRUMnet(ChoiceModel):
     @tf.function
     def train_step(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
@@ -676,19 +676,20 @@ class PaperRUMnet(ChoiceModel):
         Function that represents one training step (= one gradient descent step) of the model.
         Handles a batch of data of size n_contexts = n_choices = batch_size
 
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray (n_items, n_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products fixed features.
-        contexts_features : tuple of np.ndarray (n_contexts, n_features)
-            Contexts-Features: features varying with contexts, shared by all products
-        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
-            Features varying with contexts and products
-        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
-            Availabilities of items
-        choices :  np.ndarray (n_contexts, )
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -701,10 +702,9 @@ class PaperRUMnet(ChoiceModel):
         with tf.GradientTape() as tape:
             ### Computation of utilities
             all_u = self.compute_batch_utility(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
             probabilities = []
@@ -716,7 +716,7 @@ class PaperRUMnet(ChoiceModel):
             probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
 
             # It is not in the paper, but let's normalize with availabilities
-            probabilities = tf.multiply(probabilities, contexts_items_availabilities)
+            probabilities = tf.multiply(probabilities, available_items_by_choice)
             probabilities = tf.divide(
                 probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
             )
@@ -734,38 +734,38 @@ class PaperRUMnet(ChoiceModel):
                 sample_weight=sample_weight,
             )
 
-        grads = tape.gradient(batch_nll, self.weights)
-        self.optimizer.apply_gradients(zip(grads, self.weights))
+        grads = tape.gradient(batch_nll, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return batch_nll
 
     @tf.function
     def batch_predict(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
         """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-        Specific version for RUMnet because it is needed to average probabilities over
+        Specifically recoded for RUMnet because it is needed to average probabilities over
         heterogeneities.
 
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray (n_items, n_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products fixed features.
-        contexts_features : tuple of np.ndarray (n_contexts, n_features)
-            Contexts-Features: features varying with contexts, shared by all products
-        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
-            Features varying with contexts and products
-        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
-            Availabilities of items
-        choices :  np.ndarray (n_contexts, )
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -778,17 +778,16 @@ class PaperRUMnet(ChoiceModel):
             Probabilities for each product to be chosen for each contexts
         """
         utilities = self.compute_batch_utility(
-            fixed_items_features=fixed_items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=contexts_items_availabilities,
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
         probabilities = tf.nn.softmax(utilities, axis=1)
         probabilities = tf.reduce_mean(probabilities, axis=-1)
 
         # Normalization with availabilties
-        probabilities = tf.multiply(probabilities, contexts_items_availabilities)
+        probabilities = tf.multiply(probabilities, available_items_by_choice)
         probabilities = tf.divide(
             probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
         )
@@ -811,87 +810,75 @@ class PaperRUMnet(ChoiceModel):
 class CPURUMnet(PaperRUMnet):
     """CPU-optimized Re-Implementation of the RUMnet model.
 
-    This implementation handles in parallel the heterogeneities so that the training is faster.
+    Re-implemented from the paper:
+    Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir.
+    https://arxiv.org/abs/2207.12877
+
+    --- Attention: ---
+    Note that the model uses two type of features that are treated differently:
+        - customer features
+        - product features
+    >>> In this implementation, please make sure that the features are correctly formatted:
+        - customer features: (n_choices, n_features) are given as 'shared_features_by_choice'
+        in the ChoiceDataset used to fit the model
+        - product features: (n_choices, n_items, n_features) are given as
+        'items_features_by_choice' in the ChoiceDataset used to fit the model
     """
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
 
         Here we asssume that: item features = {fixed item features + contexts item features}
-                              user features = {contexts features}
+                                user features = {contexts features}
 
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray (n_items, n_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products fixed features.
-        contexts_features : tuple of np.ndarray (n_contexts, n_features)
-            Contexts-Features: features varying with contexts, shared by all products
-        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
-            Features varying with contexts and products
-        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
-            Availabilities of items
-        choices :  np.ndarray (n_contexts, )
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
 
         Returns:
         --------
         np.ndarray
             Utility of each product for each contexts.
-            Shape must be (n_contexts, n_items)
+            Shape must be (n_choices, n_items)
         """
-        (_, _) = contexts_items_availabilities, choices
+        (_, _) = available_items_by_choice, choices
         ### Restacking of the item features
-        if fixed_items_features is not None and fixed_items_features[0] is not None:
-            stacked_fixed_items_features = tf.cast(
-                tf.concat([*fixed_items_features], axis=-1), tf.float32
-            )
-        else:
-            if contexts_items_features is None or contexts_items_features[0] is None:
-                raise ValueError("No item features provided")
-            stacked_fixed_items_features = tf.zeros((contexts_items_features[0].shape[1], 0))
-        if contexts_features is not None and contexts_features[0] is not None:
-            stacked_contexts_features = tf.cast(
-                tf.concat([*contexts_features], axis=-1), tf.float32
-            )
-        else:
-            raise ValueError("No Customer features provided")
-        if contexts_items_features is not None and contexts_items_features[0] is not None:
-            stacked_contexts_items_features = tf.cast(
-                tf.concat([*contexts_items_features], axis=-1), tf.float32
-            )
-        else:
-            if fixed_items_features is None or fixed_items_features[0] is None:
-                raise ValueError("No item features provided")
-            stacked_fixed_items_features = tf.zeros(
-                (contexts_items_features.shape[0], fixed_items_features[0].shape[0], 0)
-            )
+        if isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+        if isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
 
-        full_item_features = tf.stack(
-            [stacked_fixed_items_features] * stacked_contexts_items_features.shape[0], axis=0
-        )
-        full_item_features = tf.concat(
-            [stacked_contexts_items_features, full_item_features], axis=-1
-        )
+        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
+        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
 
         ### Computation of utilities
         utilities = []
-        batch_size = stacked_contexts_features.shape[0]
+        batch_size = shared_features_by_choice.shape[0]
 
         # Computation of the customer features embeddings
-        z_embeddings = self.z_model(stacked_contexts_features)
+        z_embeddings = self.z_model(shared_features_by_choice)
 
         # Iterate over items in assortment
-        for item_i in range(full_item_features.shape[1]):
+        for item_i in range(items_features_by_choice.shape[1]):
             # Computation of item features embeddings
-            x_embeddings = self.x_model(full_item_features[:, item_i, :])
+            x_embeddings = self.x_model(items_features_by_choice[:, item_i, :])
 
             stacked_heterogeneities = []
             # Computation of utilites from embeddings, iteration over heterogeneities
@@ -899,7 +886,7 @@ class CPURUMnet(PaperRUMnet):
             for _x in x_embeddings:
                 for _z in z_embeddings:
                     full_embedding = tf.keras.layers.Concatenate()(
-                        [full_item_features[:, item_i, :], _x, stacked_contexts_features, _z]
+                        [items_features_by_choice[:, item_i, :], _x, shared_features_by_choice, _z]
                     )
                     stacked_heterogeneities.append(full_embedding)
             item_utilities = self.u_model(tf.concat(stacked_heterogeneities, axis=0))
@@ -918,8 +905,19 @@ class CPURUMnet(PaperRUMnet):
 class GPURUMnet(PaperRUMnet):
     """GPU-optimized Re-Implementation of the RUMnet model.
 
-    This implementation handles in parallel the heterogeneities so that the training is faster
-    on GPU.
+    Re-implemented from the paper:
+    Representing Random Utility Choice Models with Neural Networks from Ali Aouad and Antoine Désir.
+    https://arxiv.org/abs/2207.12877
+
+    --- Attention: ---
+    Note that the model uses two type of features that are treated differently:
+        - customer features
+        - product features
+    >>> In this implementation, please make sure that the features are correctly formatted:
+        - customer features: (n_choices, n_features) are given as 'shared_features_by_choice'
+        in the ChoiceDataset used to fit the model
+        - product features: (n_choices, n_items, n_features) are given as
+        'items_features_by_choice' in the ChoiceDataset used to fit the model
     """
 
     def instantiate(self):
@@ -942,7 +940,7 @@ class GPURUMnet(PaperRUMnet):
         )
 
         # Storing weights for back-propagation
-        self.weights = (
+        self.trainable_weights = (
             self.x_model.trainable_variables
             + self.z_model.trainable_variables
             + self.u_model.trainable_variables
@@ -955,75 +953,56 @@ class GPURUMnet(PaperRUMnet):
 
     def compute_batch_utility(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
 
         Here we asssume that: item features = {fixed item features + contexts item features}
-                              user features = {contexts features}
+                                user features = {contexts features}
 
-        Parameters
-        ----------
-        fixed_items_features : tuple of np.ndarray (n_items, n_features)
-            Items-Features: formatting from ChoiceDataset: a matrix representing the
-            products fixed features.
-        contexts_features : tuple of np.ndarray (n_contexts, n_features)
-            Contexts-Features: features varying with contexts, shared by all products
-        contexts_items_features :tuple of np.ndarray (n_contexts, n_items, n_features)
-            Features varying with contexts and products
-        contexts_items_availabilities : np.ndarray (n_contexts, n_items)
-            Availabilities of items
-        choices :  np.ndarray (n_contexts, )
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
 
         Returns:
         --------
         np.ndarray
             Utility of each product for each contexts.
-            Shape must be (n_contexts, n_items)
+            Shape must be (n_choices, n_items)
         """
-        (_, _) = contexts_items_availabilities, choices
+        (_, _) = available_items_by_choice, choices
 
         ### Restacking of the item features
-        if fixed_items_features is not None and fixed_items_features[0] is not None:
-            stacked_fixed_items_features = tf.concat([*fixed_items_features], axis=-1)
-        else:
-            if contexts_items_features is None or contexts_items_features[0] is None:
-                raise ValueError("No item features provided")
-            stacked_fixed_items_features = tf.zeros((contexts_items_features.shape[1], 0))
-        if contexts_features is not None and contexts_features[0] is not None:
-            stacked_contexts_features = tf.concat([*contexts_features], axis=-1)
-        else:
-            raise ValueError("No Customer features provided")
-        if contexts_items_features is not None and contexts_items_features[0] is not None:
-            stacked_contexts_items_features = tf.concat([*contexts_items_features], axis=-1)
-        else:
-            if fixed_items_features is None or fixed_items_features[0] is None:
-                raise ValueError("No item features provided")
-            stacked_fixed_items_features = tf.zeros(
-                (contexts_items_features.shape[0], fixed_items_features.shape[0], 0)
-            )
+        if isinstance(shared_features_by_choice, tuple):
+            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+        if isinstance(items_features_by_choice, tuple):
+            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
 
-        # Reshaping
-        # Beware if contexts_items_features is None...!
-        full_item_features = tf.repeat(
-            [stacked_fixed_items_features], repeats=stacked_contexts_items_features.shape[0], axis=0
-        )
-        full_item_features = tf.concat(
-            [stacked_contexts_items_features, full_item_features], axis=-1
-        )
-        utilities = []
+        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
+        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
+
+        item_utility_by_choice = []
 
         # Computation of the customer features embeddings
-        z_embeddings = self.z_model(stacked_contexts_features)
-        x_embeddings = self.x_model(full_item_features)
+        z_embeddings = self.z_model(shared_features_by_choice)
+        x_embeddings = self.x_model(items_features_by_choice)
         # Reshaping
         big_z = tf.tile(
-            tf.expand_dims(stacked_contexts_features, axis=2),
+            tf.expand_dims(shared_features_by_choice, axis=2),
             multiples=[1, 1, self.heterogeneity_z],
         )
         big_z = tf.repeat(
@@ -1031,23 +1010,23 @@ class GPURUMnet(PaperRUMnet):
         )
 
         # Iterate over items in assortment
-        for item_i in range(full_item_features.shape[1]):
+        for item_i in range(items_features_by_choice.shape[1]):
             # Computation of item features embeddings
             # utilities.append([])
 
             # Computation of utilites from embeddings, iteration over heterogeneities
             # (eps_x * eps_z)
             x_fixed_features = tf.repeat(
-                tf.expand_dims(full_item_features[:, item_i, :], axis=2),
+                tf.expand_dims(items_features_by_choice[:, item_i, :], axis=2),
                 repeats=self.heterogeneity_x * self.heterogeneity_z,
                 axis=2,
             )
             big_x = tf.repeat(x_embeddings[:, item_i], repeats=self.heterogeneity_z, axis=2)
 
-            utilities.append(tf.concat([big_z, x_fixed_features, big_x], axis=1))
+            item_utility_by_choice.append(tf.concat([big_z, x_fixed_features, big_x], axis=1))
 
         # Computing resulting utilitiies
-        utilities = self.u_model(tf.stack(utilities, axis=1))
+        utilities = self.u_model(tf.stack(item_utility_by_choice, axis=1))
         utilities = tf.squeeze(utilities, -2)
 
         # Reshape & return
@@ -1056,10 +1035,9 @@ class GPURUMnet(PaperRUMnet):
     @tf.function
     def train_step(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
@@ -1068,19 +1046,20 @@ class GPURUMnet(PaperRUMnet):
         Recoded because heterogeneities generate different shapes of tensors.
         # TODO: verify that it is indeed different than PaperRUMnet
 
-        Parameters
-        ----------
-        items_batch : tuple of np.ndarray (items_features)
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant features.
-        contexts_batch : tuple of np.ndarray (contexts_features)
-            Time-Features
-        contexts_items_batch : tuple of np.ndarray (contexts_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (contexts_items_availabilities)
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -1093,10 +1072,9 @@ class GPURUMnet(PaperRUMnet):
         with tf.GradientTape() as tape:
             ### Computation of utilities
             utilities = self.compute_batch_utility(
-                fixed_items_features=fixed_items_features,
-                contexts_features=contexts_features,
-                contexts_items_features=contexts_items_features,
-                contexts_items_availabilities=contexts_items_availabilities,
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
             eps_probabilities = tf.nn.softmax(utilities, axis=2)
@@ -1104,7 +1082,7 @@ class GPURUMnet(PaperRUMnet):
             probabilities = tf.reduce_mean(eps_probabilities, axis=1)
 
             # Availability normalization
-            probabilities = tf.multiply(probabilities, contexts_items_availabilities)
+            probabilities = tf.multiply(probabilities, available_items_by_choice)
             probabilities = tf.divide(
                 probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
             )
@@ -1139,28 +1117,28 @@ class GPURUMnet(PaperRUMnet):
     @tf.function
     def batch_predict(
         self,
-        fixed_items_features,
-        contexts_features,
-        contexts_items_features,
-        contexts_items_availabilities,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
         choices,
         sample_weight=None,
     ):
         """RUMnet batch_predict.
 
-        Parameters
-        ----------
-        items_batch : tuple of np.ndarray (items_features)
-            Fixed-Item-Features: formatting from ChoiceDataset: a matrix representing the products
-            constant features.
-        contexts_batch : tuple of np.ndarray (contexts_features)
-            Time-Features
-        contexts_items_batch : tuple of np.ndarray (contexts_items_features)
-            Time-Item-Features
-        availabilities_batch : np.ndarray
-            Availabilities (contexts_items_availabilities)
+        Parameters:
+        -----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
         choices_batch : np.ndarray
             Choices
+            Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
@@ -1173,17 +1151,16 @@ class GPURUMnet(PaperRUMnet):
             Probabilities for each product to be chosen for each contexts
         """
         utilities = self.compute_batch_utility(
-            fixed_items_features=fixed_items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
-            contexts_items_availabilities=contexts_items_availabilities,
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
             choices=choices,
         )
         probabilities = tf.nn.softmax(utilities, axis=2)
         probabilities = tf.reduce_mean(probabilities, axis=1)
 
         # Test with availability normalization
-        probabilities = tf.multiply(probabilities, contexts_items_availabilities)
+        probabilities = tf.multiply(probabilities, available_items_by_choice)
         probabilities = tf.divide(
             probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
         )

@@ -1,4 +1,5 @@
 """Indexer classes for data classes."""
+import logging
 from abc import abstractmethod
 
 import numpy as np
@@ -10,8 +11,8 @@ class Indexer(object):
     def __init__(self, indexed_object):
         """Instanciate an Indexer object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         indexed_object : object
             object to be indexed.
         """
@@ -21,8 +22,8 @@ class Indexer(object):
     def __getitem__(self, index):
         """Main method to be coded for children classes.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         index : int, slice, list
             index(es) of elements of self.indexed_object to be returned.
         """
@@ -35,8 +36,8 @@ class StoreIndexer(Indexer):
     def __init__(self, store):
         """StoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         store : choice_modeling.data.store.FeaturesStore
             Store object to be indexed.
         """
@@ -45,8 +46,8 @@ class StoreIndexer(Indexer):
     def __getitem__(self, sequence_index):
         """Returns the features appearing at the sequence_index-th position of sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_index : (int, list, slice)
             index position of the sequence
 
@@ -71,8 +72,8 @@ class StorageIndexer(Indexer):
     def __init__(self, storage):
         """StoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         storage : choice_modeling.data.store.FeaturesStorage
             Storage object to be indexed.
         """
@@ -81,8 +82,8 @@ class StorageIndexer(Indexer):
     def __getitem__(self, sequence_keys):
         """Returns the features appearing at the sequence_index-th position of sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_keys : (int, list, slice)
             keys of values to be retrieved
 
@@ -107,8 +108,8 @@ class OneHotStorageIndexer(Indexer):
     def __init__(self, storage):
         """OneHotStorageIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         storage : choice_modeling.data.store.OneHotStorage
             OneHotStorage object to be indexed.
         """
@@ -119,8 +120,8 @@ class OneHotStorageIndexer(Indexer):
     def __getitem__(self, sequence_keys):
         """Get the 1 indexes corresponding to the sequence_keys and builds the OneHot matrix.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_keys : (int, list, slice)
             keys of values to be retrieved
 
@@ -149,8 +150,8 @@ class OneHotStoreIndexer(Indexer):
     def __init__(self, store):
         """OneHotStoreIndexer constructor.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         store : choice_modeling.data.store.OneHotStore
             OneHotStore object to be indexed.
         """
@@ -161,8 +162,8 @@ class OneHotStoreIndexer(Indexer):
     def __getitem__(self, sequence_index):
         """Main method to get an element at sequence_index-th position of self.sequence.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         sequence_index : (int, list, slice)
             index from sequence of element to get
 
@@ -191,82 +192,61 @@ class ChoiceDatasetIndexer(Indexer):
     def __init__(self, choice_dataset):
         """Instanciate a ChoiceDatasetIndexer object.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choice_dataset : choce_modeling.data.dataset.ChoiceDataset
             Dataset to be indexed.
         """
         self.choice_dataset = choice_dataset
 
-    def _get_fixed_items_features(self):
-        """Method to access items features of the ChoiceDataset.
-
-        Returns:
-        --------
-        tuple of np.ndarray or np.ndarray
-            items_features of the ChoiceDataset
-        """
-        if self.choice_dataset.fixed_items_features is None:
-            items_features = None
-        else:
-            items_features = list(
-                items_feature.astype(self.choice_dataset._return_types[0][i])
-                for i, items_feature in enumerate(self.choice_dataset.fixed_items_features)
-            )
-        return items_features
-
-    def _get_contexts_features(self, choices_indexes):
+    def _get_shared_features_by_choice(self, choices_indexes):
         """Method to access sessions features of the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : list of ints or int
-            choices indexes of the contexts features to return
+            choices indexes of the shared features to return
 
         Returns:
         --------
         tuple of np.ndarray or np.ndarray
-            right indexed contexts_features of the ChoiceDataset
+            right indexed contexts_fshared_features_by_choiceeatures of the ChoiceDataset
         """
-        if self.choice_dataset.contexts_features is None:
-            contexts_features = None
+        if self.choice_dataset.shared_features_by_choice is None:
+            shared_features_by_choice = None
         else:
-            contexts_features = []
-            for i, contexts_feature in enumerate(self.choice_dataset.contexts_features):
-                if hasattr(contexts_feature, "batch"):
-                    contexts_features.append(
-                        contexts_feature.batch[choices_indexes].astype(
-                            self.choice_dataset._return_types[1][i]
-                        )
-                    )
+            shared_features_by_choice = []
+            for i, shared_feature in enumerate(self.choice_dataset.shared_features_by_choice):
+                if hasattr(shared_feature, "batch"):
+                    shared_features_by_choice.append(shared_feature.batch[choices_indexes])
                 else:
-                    contexts_features.append(np.stack(contexts_feature[choices_indexes], axis=0))
-        return contexts_features
+                    shared_features_by_choice.append(
+                        np.stack(shared_feature[choices_indexes], axis=0)
+                    )
+        return shared_features_by_choice
 
-    def _get_contexts_items_features(self, choices_indexes):
+    def _get_items_features_by_choice(self, choices_indexes):
         """Method to access sessions items features of the ChoiceDataset.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : list of ints or int
-            indexes of the choices for which we want the contexts items features
+            indexes of the choices for which to select the items features
 
         Returns:
         --------
         tuple of np.ndarray or np.ndarray
-            right indexes contexts_items_features of the ChoiceDataset
+            right indexes items_features_by_choice of the ChoiceDataset
         """
-        if self.choice_dataset.contexts_items_features is None:
+        if self.choice_dataset.items_features_by_choice is None:
             return None
-        contexts_items_features = []
-        for i, contexts_items_feature in enumerate(self.choice_dataset.contexts_items_features):
-            if hasattr(contexts_items_feature, "iloc"):
-                contexts_items_features.append(contexts_items_feature.iloc[choices_indexes])
+        items_features_by_choice = []
+        for i, items_feature in enumerate(self.choice_dataset.items_features_by_choice):
+            if hasattr(items_feature, "batch"):
+                items_features_by_choice.append(items_feature.batch[choices_indexes])
             else:
-                contexts_items_features.append(
-                    np.stack(contexts_items_feature[choices_indexes], axis=0)
-                )
-        return contexts_items_features
+                items_features_by_choice.append(np.stack(items_feature[choices_indexes], axis=0))
+        return items_features_by_choice
 
     def __getitem__(self, choices_indexes):
         """Method to access data within the ChoiceDataset from its index.
@@ -279,150 +259,117 @@ class ChoiceDatasetIndexer(Indexer):
             - Items availabilities
             - Choices
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
 
         """
         if isinstance(choices_indexes, list):
             # Get the features
-            fixed_items_features = self._get_fixed_items_features()
-            contexts_features = self._get_contexts_features(choices_indexes)
-            contexts_items_features = self._get_contexts_items_features(choices_indexes)
+            shared_features_by_choice = self._get_shared_features_by_choice(choices_indexes)
+            items_features_by_choice = self._get_items_features_by_choice(choices_indexes)
 
             # Get availabilities
-            if self.choice_dataset.contexts_items_availabilities is None:
-                contexts_items_availabilities = np.ones(
-                    (len(choices_indexes), self.choice_dataset.base_num_items)
+            if self.choice_dataset.available_items_by_choice is None:
+                available_items_by_choice = np.ones(
+                    (len(choices_indexes), self.choice_dataset.get_n_items())
                 ).astype("float32")
             else:
-                if hasattr(self.choice_dataset.contexts_items_availabilities, "batch"):
-                    contexts_items_availabilities = (
-                        self.choice_dataset.contexts_items_availabilities.batch[
-                            choices_indexes
-                        ].astype(self.choice_dataset._return_types[3])
-                    )
+                if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
+                        choices_indexes
+                    ].astype(self.choice_dataset._return_types[2])
                 else:
-                    contexts_items_availabilities = (
-                        self.choice_dataset.contexts_items_availabilities[choices_indexes].astype(
-                            self.choice_dataset._return_types[3]
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice[
+                        choices_indexes
+                    ].astype(self.choice_dataset._return_types[2])
+
+            if len(self.choice_dataset.shared_features_by_choice_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.shared_features_by_choice_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.shared_features_by_choice_map[tuple_index].keys())
+                    ):
+                        # Adding ''normal'' features
+                        unstacked_feat.append(
+                            shared_features_by_choice[tuple_index][:, feat_ind_min:feature_index]
                         )
+                        # Mapping and adding mapped features
+                        unstacked_feat.append(
+                            self.choice_dataset.shared_features_by_choice_map[tuple_index][
+                                feature_index
+                            ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    # Adding last '''normal''' features
+                    unstacked_feat.append(shared_features_by_choice[tuple_index][:, feat_ind_min:])
+                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+
+                shared_features_by_choice = mapped_features
+
+            if len(self.choice_dataset.items_features_by_choice_map) > 0:
+                mapped_features = []
+                for tuple_index in np.sort(
+                    list(self.choice_dataset.items_features_by_choice_map.keys())
+                ):
+                    feat_ind_min = 0
+                    unstacked_feat = []
+                    for feature_index in np.sort(
+                        list(self.choice_dataset.items_features_by_choice_map[tuple_index].keys())
+                    ):
+                        unstacked_feat.append(
+                            items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
+                        )
+                        unstacked_feat.append(
+                            self.choice_dataset.items_features_by_choice_map[tuple_index][
+                                feature_index
+                            ].batch[items_features_by_choice[tuple_index][:, :, feature_index]]
+                        )
+                        feat_ind_min = feature_index + 1
+                    unstacked_feat.append(
+                        items_features_by_choice[tuple_index][:, :, feat_ind_min:]
                     )
-
-            if len(self.choice_dataset.fixed_items_features_map) > 0:
-                mapped_features = []
-                for tuple_index in np.sort(
-                    list(self.choice_dataset.fixed_items_features_map.keys())
-                ):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.choice_dataset.fixed_items_features_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            fixed_items_features[tuple_index][:, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.choice_dataset.fixed_items_features_map[tuple_index][
-                                feature_index
-                            ].batch[fixed_items_features[tuple_index][:, feature_index]]
-                        )
-                        feat_ind_min = feature_index + 1
-                    unstacked_feat.append(fixed_items_features[tuple_index][feat_ind_min:])
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
-
-                fixed_items_features = mapped_features
-
-            if len(self.choice_dataset.contexts_features_map) > 0:
-                mapped_features = []
-                for tuple_index in np.sort(list(self.choice_dataset.contexts_features_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.choice_dataset.contexts_features_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            contexts_features[tuple_index][:, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.choice_dataset.contexts_features_map[tuple_index][
-                                feature_index
-                            ].batch[contexts_features[tuple_index][:, feature_index]]
-                        )
-                        feat_ind_min = feature_index + 1
-                    unstacked_feat.append(contexts_features[tuple_index][:, feat_ind_min:])
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
-
-                contexts_features = mapped_features
-
-            if len(self.choice_dataset.contexts_items_features_map) > 0:
-                mapped_features = []
-                for tuple_index in np.sort(
-                    list(self.choice_dataset.contexts_items_features_map.keys())
-                ):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.choice_dataset.contexts_items_features_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            contexts_items_features[tuple_index][:, :, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.choice_dataset.contexts_items_features_map[tuple_index][
-                                feature_index
-                            ].batch[contexts_items_features[tuple_index][:, :, feature_index]]
-                        )
-                        feat_ind_min = feature_index + 1
-                    unstacked_feat.append(contexts_items_features[tuple_index][:, :, feat_ind_min:])
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
 
-                contexts_items_features = mapped_features
+                items_features_by_choice = mapped_features
 
-            # Shaping and typing
-            if fixed_items_features is not None:
-                for i in range(len(fixed_items_features)):
-                    fixed_items_features[i] = fixed_items_features[i].astype(
+            if shared_features_by_choice is not None:
+                # Typing
+                for i in range(len(shared_features_by_choice)):
+                    shared_features_by_choice[i] = shared_features_by_choice[i].astype(
                         self.choice_dataset._return_types[0][i]
                     )
-                # items_features were not given as a tuple, so we return do not return it as a tuple
-                if not self.choice_dataset._return_items_features_tuple:
-                    fixed_items_features = fixed_items_features[0]
+                # Return as tuple or not ?
+                if not self.choice_dataset._return_shared_features_by_choice_tuple:
+                    shared_features_by_choice = shared_features_by_choice[0]
                 else:
-                    fixed_items_features = tuple(fixed_items_features)
+                    shared_features_by_choice = tuple(shared_features_by_choice)
 
-            if contexts_features is not None:
-                for i in range(len(contexts_features)):
-                    contexts_features[i] = contexts_features[i].astype(
+            if items_features_by_choice is not None:
+                # Typing
+                for i in range(len(items_features_by_choice)):
+                    items_features_by_choice[i] = items_features_by_choice[i].astype(
                         self.choice_dataset._return_types[1][i]
                     )
-                if not self.choice_dataset._return_contexts_features_tuple:
-                    contexts_features = contexts_features[0]
+                # Return as tuple or not ?
+                if not self.choice_dataset._return_items_features_by_choice_tuple:
+                    items_features_by_choice = items_features_by_choice[0]
                 else:
-                    contexts_features = tuple(contexts_features)
-
-            if contexts_items_features is not None:
-                for i in range(len(contexts_items_features)):
-                    contexts_items_features[i] = contexts_items_features[i].astype(
-                        self.choice_dataset._return_types[2][i]
-                    )
-                # sessions_items_features were not given as a tuple, so we return do not return
-                # it as a tuple
-                if not self.choice_dataset._return_contexts_items_features_tuple:
-                    contexts_items_features = contexts_items_features[0]
-                else:
-                    contexts_items_features = tuple(contexts_items_features)
+                    items_features_by_choice = tuple(items_features_by_choice)
 
             choices = self.choice_dataset.choices[choices_indexes].astype(
-                self.choice_dataset._return_types[4]
+                self.choice_dataset._return_types[3]
             )
 
             return (
-                fixed_items_features,
-                contexts_features,
-                contexts_items_features,
-                contexts_items_availabilities,
+                shared_features_by_choice,
+                items_features_by_choice,
+                available_items_by_choice,
                 choices,
             )
 
@@ -431,6 +378,26 @@ class ChoiceDatasetIndexer(Indexer):
                 list(range(*choices_indexes.indices(self.choice_dataset.choices.shape[0])))
             )
 
+        if isinstance(choices_indexes, int):
+            ### Attemps at simplifying the code
+            choices_indexes = [choices_indexes]
+            (
+                fixed_items_features_by_choices,
+                items_features_by_choice,
+                available_items_by_choice,
+                choice,
+            ) = self.__getitem__(choices_indexes)
+            if fixed_items_features_by_choices is not None:
+                fixed_items_features_by_choices = fixed_items_features_by_choices[0]
+            if items_features_by_choice is not None:
+                items_features_by_choice = items_features_by_choice[0]
+            return (
+                fixed_items_features_by_choices,
+                items_features_by_choice,
+                available_items_by_choice[0],
+                choice[0],
+            )
+        """
         if isinstance(choices_indexes, int):
             # Get the features
             fixed_items_features = self._get_fixed_items_features()
@@ -558,5 +525,6 @@ class ChoiceDatasetIndexer(Indexer):
                 contexts_items_availabilities,
                 choice,
             )
-        print(f"Type{type(choices_indexes)} not handled")
+        """
+        logging.error(f"Type{type(choices_indexes)} not handled")
         raise NotImplementedError(f"Type{type(choices_indexes)} not handled")

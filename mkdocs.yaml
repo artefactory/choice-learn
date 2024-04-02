@@ -56,21 +56,39 @@ nav:
   - HomePage: index.md
   - Tutorials:
     - Introduction: tutorials.md
-    - Getting Started with Data: notebooks/choice_learn_introduction_data.md
-    - Getting Started with Conditional Logit: notebooks/choice_learn_introduction_clogit.md
+    - Introductive Example: notebooks/introductive_example.md
   - How-To Guides:
     - Introduction: how-to-guides.md
-    - Exhaustive example of ChoiceDataset creation: notebooks/dataset_creation.md
-    - Optimize RAM usage with Features Storage: notebooks/features_byID_example.md
-    - RUMnet Usage: notebooks/rumnet_example.md
-    - Custom Choice Model Creation: notebooks/custom_model.md
+    - Data Handling:
+      - More in-depth introduction to data handling: notebooks/choice_learn_introduction_to_data.md
+      - Exhaustive example of ChoiceDataset creation: notebooks/dataset_creation.md
+      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/features_byID_example.md
+    - Modelling:
+      - Introduction to Choice Models - the SimpleMNL: notebooks/simple_mnl_example.md
+      - Conditional Logit Usage: notebooks/choice_learn_introduction_clogit.md
+      - RUMnet model Usage: notebooks/rumnet_example.md
+      - Building a custom choice model and handling hyper-parameters: notebooks/paramters_and_model_customization.md
+      - Latent Class MNLs Usage: notebooks/latent_class_model.md
+      - A reproductive example, the logistic regression: notebooks/logistic_regression.md
+    - Toolbox for choice modellers:
+      - Optimizing a product assortment: notebooks/assortment_example.md
   - References:
     - Data:
       - ChoiceDataset: references/data/references_choice_dataset.md
-      - Features Storage: references/data/references_store.md
-      - Available Datasets: references/data/references_dataset.md
+      - ChoiceDataset Indexer: references/data/references_indexer.md
+      - Features Storage: references/data/references_storage.md
+    - Available Open-Source Datasets:
+      - Base Datasets: references/datasets/references_base.md
+      - TaFeng Dataset: references/datasets/references_tafeng.md
+      - ICDM Expedia Dataset: references/datasets/references_expedia.md
     - Choice Models:
       - Base Model: references/models/references_base_model.md
+      - Baseline Models: references/models/references_baseline_models.md
+      - SimpleMNL Model: references/models/references_simple_mnl.md
       - Conditional Logit: references/models/references_clogit.md
       - RUMnet: references/models/references_rumnet.md
+      - Latent Class BaseModel: reference/models/latent_class_base_model.md
+      - Latent Class MNL: references/models/references_latent_class_mnl.md
+    Toolbox:
+      - Assortment Optimizer: references/toolbox/references_assortment_optimizer.md
   - explanations.md

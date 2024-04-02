@@ -15,8 +15,8 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
     Orginal file and informations can be found here:
     https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     as_frame : bool, optional
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional
@@ -120,10 +120,10 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
 
         # Create Dataset
         return ChoiceDataset(
-            contexts_features=customer_features,
+            shared_features_by_choice=customer_features,
             choices=choices,
-            contexts_items_features=all_prices,
-            contexts_items_availabilities=np.ones((len(choices), 25)).astype("float32"),
+            items_features_by_choice=all_prices,
+            available_items_by_choice=np.ones((len(choices), 25)).astype("float32"),
         )
 
     return load_tafeng(as_frame=False, preprocessing="assort_example")
