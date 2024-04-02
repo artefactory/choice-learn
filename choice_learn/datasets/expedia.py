@@ -1,4 +1,5 @@
 """ICDM 2013 Expedia dataset."""
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +14,7 @@ DATA_MODULE = "choice_learn.datasets.data"
 
 def load_expedia(as_frame=False, preprocessing="rumnet"):
     """Load the Expedia dataset."""
+    logging.info("Loading Expedia dataset")
     filename = "expedia.csv"
     data_path = get_path(filename, module=DATA_MODULE)
     if not Path.exists(data_path):
@@ -23,16 +25,19 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         print("The downloaded train.csv file should be named 'expedia.csv'")
         raise FileNotFoundError(f"File {filename} not found in {data_path}")
 
-    expedia_df = pd.read_csv(data_path)
+    expedia_df = pd.read_csv(data_path, engine="pyarrow")
+    logging.info("Expedia csv loaded")
     if as_frame:
         return expedia_df
 
     if preprocessing == "rumnet":
+        logging.info("rumnet preprocessing selected, starting preprocessing...")
         expedia_df.date_time = pd.to_datetime(expedia_df.date_time, format="%Y-%m-%d %H:%M:%S")
         expedia_df.loc[:, "day_of_week"] = expedia_df.loc[:, "date_time"].dt.dayofweek
         expedia_df.loc[:, "month"] = expedia_df.loc[:, "date_time"].dt.month
         expedia_df.loc[:, "hour"] = expedia_df.loc[:, "date_time"].dt.hour
 
+        logging.info("Filtering ids with less than 1000 occurrences")
         for id_col in [
             "site_id",
             "visitor_location_country_id",
@@ -45,6 +50,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 if id_ not in kept_ids:
                     expedia_df.loc[expedia_df[id_col] == id_, id_col] = -1
 
+        logging.info("Filtering DF for price, stay length, booking window, etc.")
         # Filtering
         expedia_df = expedia_df[expedia_df.price_usd <= 1000]
         expedia_df = expedia_df[expedia_df.price_usd >= 10]
@@ -54,6 +60,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         expedia_df["booking_window"] = np.log(expedia_df["srch_booking_window"] + 1)
         expedia_df = expedia_df.fillna(-1)
 
+        logging.info("Sorting DF columns")
         order_cols = [
             "srch_id",
             "prop_id",
@@ -86,9 +93,11 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         ]
         expedia_df = expedia_df[order_cols]
 
+        logging.info("Creating dummy availabilities")
         expedia_df["av"] = 1
         asst_size = 38  # Fixed number of items in the assortment
 
+        logging.info("Creating dummy products to reach assortment size")
         # Loop to fill the data frame with dummy products
         # next loop creates the dummy products
         for _ in range(asst_size):
@@ -107,6 +116,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         # adding no_purchase fixed effect
         expedia_df["is_no_purchase"] = 0
 
+        logging.info("Creating the no purchase option")
         # adding the no_purchase option to the data
         df1 = (
             expedia_df.groupby("srch_id")
@@ -131,9 +141,11 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         df2.loc[:, "booking_bool"] = 1
         expedia_df = pd.concat([expedia_df, df1, df2])
 
+        logging.info("Sorting the data frame")
         expedia_df = expedia_df.sort_values("srch_id")
         choices = expedia_df.groupby("srch_id").apply(lambda x: x.booking_bool.argmax())
 
+        logging.info("Creating the Storage objects")
         fixed_items_features = None
         site_id_storage = OneHotStorage(ids=expedia_df.site_id.unique(), name="site_id")
         visitor_location_country_id_storage = OneHotStorage(
@@ -146,6 +158,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
             ids=expedia_df.prop_country_id.unique(), name="prop_country_id"
         )
 
+        logging.info("DF to NDarray and creating the ChoiceDataset object")
         contexts_features_names = [
             "srch_id",
             "srch_length_of_stay",
