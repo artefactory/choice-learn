@@ -11,9 +11,9 @@ authors:
     corresponding: true # (This is how to denote the corresponding author)
     orcid: 0000-0000-0000-0000
     affiliation: "1, 2"
-  - name: Maxime Lutel
-    affiliation: 2
   - name: Emmanuel Malherbe
+    affiliation: 2
+  - name: Maxime Lutel
     affiliation: 2
   - name: Martin Mozina
     affiliation: 3
@@ -41,29 +41,25 @@ bibliography: paper.bib
 
 # Introduction
 
-Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores. One key attribute of choice models is their ability to handle sets of variable sizes, with some alternatives being possibly unavailable. Choice models can be used to estimate interpretable values such as a consumer's price elasticity. Once estimated, they can also be used in a second processing step such as assortment optimization or pricing. Recent outbreaks in the Machine-Learning community calls for the use of more complex models and larger datasets in the estimation of choice models.
+Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing a person's choice of transportation mode or modelling in-stores products purchases. One key attribute of choice models is their ability to handle sets of variable sizes, with some alternatives being potentially unavailable. Choice models are often used to estimate interpretable values such as a consumer's price elasticity or cross-effects. Other usages add a second processing step with a choice model as input. For example, assortment optimization or pricing can be formulated as linear programming optimization problems from a choice model's outputs. Usual formulations of choice models keep a linear form, however, recent outbreaks in the Machine-Learning community call for the use of more complex models with larger datasets.
 
-`Choice-Learn` provides useful tools for academic researchers as well as practioners. The package integrates two levels of interaction in order to satisfy these different usages. The higher-level API allows a fast integration of any dataset and estimation of predefined models. The lower level API offers the possibility for better optimizations such as memory usage and customization for modelling and models usages. The package focuses on three main points to extend choice modelling tools:
+`Choice-Learn` provides useful choice modelling tools for academic researchers as well as practioners. In order to offer a high flexibility while keeping a simple signature, the package is organized around two levels of interaction. The higher-level API allows a fast integration of any dataset and estimation of predefined models. The lower level API offers the possibility for better optimizations such as memory consumption and modelling customization. Choice-Learn focuses on three main features to extend existing choice modelling tools:
 - Making possible to work with very large datasets with RAM usage optimization and batching processes
 - Handling parametrized as well as Machine-Learning formulations of choice models within the same codebase
 - Providing common tools for choice models usage
 ![General Organization of Choice-Learn package \label{fig:general_organization}](../illustrations/choice_learn_high_level.png)
-The package revolves around this tryptich: data, model and usage. It is illustrated on Figure \autoref{fig:general_organization} with examples of the two levels of interactions.
+This tryptich, data, model and usage, is illustrated on Figure \ref{fig:general_organization} with examples of the two levels of interactions.
 
 # Statement of need
 
-## Large Datasets
+## Handling Large Datasets
+Choice modelling is a natural tool for retailers or marketplaces to understand their customer base and to improve or optimize their commercial offers. With the fast-paced improvement of companies data architectures, larger and more reliable datasets emerge. While several efficient Python packages have been made available to estimate choice models [@Bierlaire:2023; @Brathwaite:2018] they are usually not built to work with large-scale datasets.
 
-With the fast-paced improvement of companies data architectures, larger reliable datasets emerge. Choice modelling is a natural tool for a retailer to understand its customer base and to improve or optimize its commercial offer. While several efficient Python packages have been made available to estimate choice models [@Bierlaire:2023; @Brathwaite:2018] they are usually not built to work with large-scale datasets.
-
-![Organisation of the ChoiceDataset. \label{fig:dataset}](../illustrations/choice_learn_dataset.png)
 ![Organisation of the FeaturesbyID. \label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
 
-Choice-Learn's ChoiceDataset is built specifically to handle choice data. It mainly relies on NumPy [@Harris:2020] with the objective to limit the memory footprint of the dataset. The key idea is to minimize features repetition and to rebuild the full data structure only for batches of the dataset.
-- Features splitting: We define 'items_features' that describe each alternative among which to choose and 'shared_features' that are common to all alternatives for one given choice. These shared features usually change from one choice to another and can represent a customer attributes for example. Its functioning is illustrated on Figure \autoref{fig:dataset}.
+Choice-Learn's ChoiceDataset is built specifically to handle large choice datasets. It mainly relies on NumPy [@Harris:2020] with the objective to limit the memory footprint of the dataset. The key idea is to minimize features repetition and to rebuild the full data structure only for batches of the dataset.
+- Features splitting: We define 'items_features' that describe each alternative among which to choose and 'shared_features' that are common to all alternatives for one given choice. These shared features usually change from one choice to another and can represent customer attributes for example.
 - Features by ID: We allow to store features in specific object and to reference it only by its ID in the dataset. These features are stacked with the others only by batches. It is particularly efficient for features that are repeated in the datasets. A usual example can be the one-hot representations of the place where the choice happens. The one hot representation is stored in a specific object and only a reference is kept in the choice dataset. On Figure \autoref{fig:fbi} an example of use is illustrated.
-
-Finally, Choice-Learn is the result of significant work to provide a light and modular signature. It is compatible with many different popular data format for easy to use while offering personnalization for more in-depth optimizations.
 
 ## Parametrized and Machine-Learning based models
 ## Interpretable and ML-based models ?
@@ -72,6 +68,7 @@ The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are usually
 
 Choice-Learn's proposes a model structure that integrates parametrized models such as the Conditional-MNL [@Train:1987] as well as more complex ones like RUMnet [@Aouad:2023] or TasteNet [@Han:2022]. It is based on Tensorflow [@Abadi:2015] using already existing efficient implementation of optimization algorithms such as LBFGS[@Nocedal:2006] or different version of the gradient descent[@Tieleman:2012; @Kingma:2017]. It also enables GPUs usage for parameters estimation that can prove to be particularly time saving.
 Moreover, Choice-Learn also aims at helping for building new and custom choice models with a common inheritance scheme that minimizes the user's work. Compared to usual implementations non linear formulations of utility are possible, as long as it is possible to define it with derivable Tensorflow operations.
+Finally, this TensorFlow backbone ensures an efficient use of the models in a production environment. Many state-of-the-art tools are provided for TF based models deployment and serving.
 
 ## Tools for choice modelling
 
@@ -81,8 +78,10 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 
 ## RAM usage comparison
 
-We conduct a small stydy comparing different on datasets memory usage. We consider the case of usage of the Features by ID provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different values of n_locations and daataset_size. It shows how Choice-learn can save several magnitude of memory usage.
+We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by ID provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different values of n_locations and dataset_size. It shows how Choice-learn can save several magnitude of memory usage.
 ![Memory usage comparison. \label{fig:ram_usage}](../illustrations/memory_usage_comparison.png)
+
+We conduct another experiment on the real ICDM 2013 Expedia dataset [@]. We compare four data handling methods: pandas.DataFrames in long and wide format that are commonly used in choice modelling packages, and Choice-Learn's ChoiceDataset with and without Features by IDs. Following [@Aouad:2023] preprocessing of the dataset, four features are represented as one-hot values.
 
 ## Choice model customization
 
