@@ -56,7 +56,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/tastenet_example.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
-  - Nested MultiNomialLogit
+  - Nested Logit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/custom_model.ipynb)
