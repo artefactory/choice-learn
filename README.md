@@ -40,7 +40,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ## What's in there ?
 
 ### Data
-- Generic dataset handling with the ChoiceDataset class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_data.ipynb)
+- Generic dataset handling with the ChoiceDataset class [[Example]](notebooks/introduction/2_data_handling.ipynb)
 - Ready-To-Use datasets:
   - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#citation)
   - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#citation)
@@ -51,27 +51,28 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 ### Model estimation
 - Ready-to-use models:
-  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
-  - Latent Class MultiNomialLogit [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/latent_class_model.ipynb)
-  - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
-  - TasteNet [[7]](#citation)[[Example]](notebooks/tastenet_example.ipynb)
+  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
+  - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
+  - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
+  - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
   - Nested Logit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
-- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/custom_model.ipynb)
+- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment optimization algorithms [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/assortment_example.ipynb)
+- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb)
 - (WIP) Standardization of evaluation protocols
 - (WIP) Interfaces
 
-## Getting Started - Fast Track
+## Getting Started
 
-You can find the following notebooks to help you getting started with the package:
-- [Introduction to data management](notebooks/choice_learn_introduction_data.ipynb)
-- [Introduction to modelling with the conditional logit model on ModeCanada dataset](notebooks/choice_learn_introduction_clogit.ipynb)
-- [Introduction to custom modelling with the ModeCanada dataset](notebooks/custom_model.ipynb)
+You can find the following [notebooks](notebooks/introduction/) to help you getting started with the package:
+- [Generic and simple introduction](notebooks/introduction/1_introductive_example.ipynb)
+- [Detailed explanations of data handling depending on the data format](notebooks/introduction/2_data_handling.ipynb)
+- [A detailed example of conditional logit estimation](notebooks/introduction/3_model_clogit.ipynb)
+- [Introduction to custom modelling and more complex parametrization](notebooks/introduction/4_model_customization.ipynb)
 
 ## Installation
 
