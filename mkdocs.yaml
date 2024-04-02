@@ -79,7 +79,7 @@ nav:
       - Features Storage: references/data/references_storage.md
     - Available Open-Source Datasets:
       - Base Datasets: references/datasets/references_base.md
-      - Example Datasets: references/datasets/references_examples.md
+      - TaFeng Dataset: references/datasets/references_tafeng.md
       - ICDM Expedia Dataset: references/datasets/references_expedia.md
     - Choice Models:
       - Base Model: references/models/references_base_model.md

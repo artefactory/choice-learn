@@ -41,6 +41,16 @@ class Storage(ABC):
         """Indexing method."""
         pass
 
+    def __str__(self):
+        """String representation method.
+
+        Returns:
+        --------
+        str
+            Description of the storage.
+        """
+        return f"FeatureStorage with name {self.name}"
+
 
 class FeaturesStorage(Storage):
     """Function to store features with ids."""
