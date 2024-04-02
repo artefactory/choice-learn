@@ -12,7 +12,15 @@ DATA_MODULE = "choice_learn.datasets.data"
 
 
 def load_expedia(as_frame=False, preprocessing="rumnet"):
-    """Load the Expedia dataset."""
+    """Load the Expedia dataset.
+
+    Parameters:
+    -----------
+    as_frame : bool, optional
+        Whether to return the original file as pd.DF, by default False
+    preprocessing : str, optional
+        predefined pre-processing to apply, by default None
+    """
     filename = "expedia.csv"
     data_path = get_path(filename, module=DATA_MODULE)
     if not Path.exists(data_path):
@@ -134,7 +142,6 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         expedia_df = expedia_df.sort_values("srch_id")
         choices = expedia_df.groupby("srch_id").apply(lambda x: x.booking_bool.argmax())
 
-        fixed_items_features = None
         site_id_storage = OneHotStorage(ids=expedia_df.site_id.unique(), name="site_id")
         visitor_location_country_id_storage = OneHotStorage(
             ids=expedia_df.visitor_location_country_id.unique(), name="visitor_location_country_id"
@@ -193,9 +200,8 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         contexts_items_features = np.stack(contexts_items_features)
 
         return ChoiceDataset(
-            fixed_items_features=fixed_items_features,
-            contexts_features=contexts_features,
-            contexts_items_features=contexts_items_features,
+            shared_features_by_choice=contexts_features,
+            items_features_by_choice=contexts_items_features,
             features_by_ids=[
                 site_id_storage,
                 visitor_location_country_id_storage,
@@ -203,9 +209,9 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 prop_country_id_storage,
             ],
             choices=choices.to_numpy(),
-            contexts_features_names=contexts_features_names[1:],
-            contexts_items_features_names=contexts_items_features_names[1:],
-            contexts_items_availabilities=np.stack(contexts_items_availabilities.to_numpy()),
+            shared_features_by_choice_names=contexts_features_names[1:],
+            items_features_by_choice_names=contexts_items_features_names[1:],
+            available_items_by_choice=np.stack(contexts_items_availabilities.to_numpy()),
         )
 
     raise ValueError(

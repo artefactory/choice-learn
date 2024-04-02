@@ -47,16 +47,16 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - The [Train](./choice_learn/datasets/data/train_data.csv.gz) [[5]](#citation)
   - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
-  - The IDCM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
+  - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
 
 ### Model estimation
 - Ready-to-use models:
   - Conditional MultiNomialLogit [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
+  - TasteNet [[7]](#citation)[[Example]](notebooks/tastenet_example.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
-  - Nested Logit choice model
-  - [TasteNet](https://arxiv.org/abs/2002.00922)
+  - Nested MultiNomialLogit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/custom_model.ipynb)
@@ -114,45 +114,36 @@ from choice_learn.models import ConditionalMNL, RUMnet
 # Onl need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
-                                            contexts_id_column="case",
+                                            choices_id_column="case",
                                             choices_column="choice",
-                                            contexts_features_columns=["income"],
-                                            contexts_items_features_columns=["cost", "freq", "ovt", "ivt"],
+                                            shared_features_columns=["income"],
+                                            items_features_columns=["cost", "freq", "ovt", "ivt"],
                                             choice_format="item_id")
 
 # Initialization of the model
-model = ConditionalMNL(optimizer="lbfgs")
+model = ConditionalMNL()
 
 # Creation of the different weights:
 
-
 # add_coefficients adds one coefficient for each specified item_index
 # intercept, and income are added for each item except the first one that needs to be zeroed
-model.add_coefficients(coefficient_name="beta_inter",
-                       feature_name="intercept",
+model.add_coefficients(feature_name="intercept",
                        items_indexes=[1, 2, 3])
-model.add_coefficients(coefficient_name="beta_income",
-                       feature_name="income",
+model.add_coefficients(feature_name="income",
                        items_indexes=[1, 2, 3])
-
-# ivt is added for each item:
-model.add_coefficients(coefficient_name="beta_ivt",
-                       feature_name="ivt",
+model.add_coefficients(feature_name="ivt",
                        items_indexes=[0, 1, 2, 3])
 
 # shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
-model.add_shared_coefficient(coefficient_name="beta_cost",
-                             feature_name="cost",
+model.add_shared_coefficient(feature_name="cost",
                              items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_freq",
-                             feature_name="freq",
+model.add_shared_coefficient(feature_name="freq",
                              items_indexes=[0, 1, 2, 3])
-model.add_shared_coefficient(coefficient_name="beta_ovt",
-                             feature_name="ovt",
+model.add_shared_coefficient(feature_name="ovt",
                              items_indexes=[0, 1, 2, 3])
 
-history = model.fit(dataset, epochs=1000, get_report=True)
+history = model.fit(dataset, get_report=True)
 print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
 print(model.report)
 ```
@@ -182,7 +173,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [3][Applications and Interpretation of Nested Logit Models of Intercity Mode Choice](https://trid.trb.org/view/385097), Forinash, C., V.; Koppelman, F., S. (1993)\
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
 [5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva, M.; Bolduc, D.; Bradley, M. (1993)\
-[6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)
+[6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
+[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)
