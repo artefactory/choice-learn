@@ -39,14 +39,16 @@ bibliography: paper.bib
 
 ---
 
-# Summary
+# Introduction
 
 Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores. One key attribute of choice models is their ability to handle sets of variable sizes, with some alternatives being possibly unavailable. Choice models can be used to estimate interpretable values such as a consumer's price elasticity. Once estimated, they can also be used in a second processing step such as assortment optimization or pricing. Recent outbreaks in the Machine-Learning community calls for the use of more complex models and larger datasets in the estimation of choice models.
 
-`Choice-Learn` provides useful tools for academic researchs as well as practioners. In particular, the package focuses on three main points to extend choice modelling tools:
-- Handling parametrized as well as Machine-Learning formulations of choice models within the same codebase
+`Choice-Learn` provides useful tools for academic researchers as well as practioners. The package integrates two levels of interaction in order to satisfy these different usages. The higher-level API allows a fast integration of any dataset and estimation of predefined models. The lower level API offers the possibility for better optimizations such as memory usage and customization for modelling and models usages. The package focuses on three main points to extend choice modelling tools:
 - Making possible to work with very large datasets with RAM usage optimization and batching processes
+- Handling parametrized as well as Machine-Learning formulations of choice models within the same codebase
 - Providing common tools for choice models usage
+![General Organization of Choice-Learn package \label{fig:general_organization}](../illustrations/choice_learn_high_level.png)
+The package revolves around this tryptich: data, model and usage. It is illustrated on Figure \autoref{fig:general_organization} with examples of the two levels of interactions.
 
 # Statement of need
 
