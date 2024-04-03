@@ -150,6 +150,10 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
 
         logging.info("Sorting the data frame")
         expedia_df = expedia_df.sort_values("srch_id")
+        expedia_df.to_csv(
+            get_path("expedia_rumnet_preprocessing.csv", module=DATA_MODULE), index=False
+        )
+
         choices = expedia_df.groupby("srch_id").apply(lambda x: x.booking_bool.argmax())
 
         logging.info("Creating the Storage objects")
