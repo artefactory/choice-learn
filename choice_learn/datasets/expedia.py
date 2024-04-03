@@ -153,12 +153,47 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         choices = expedia_df.groupby("srch_id").apply(lambda x: x.booking_bool.argmax())
 
         logging.info("Creating the Storage objects")
+        site_id_dict = {site_id: i for i, site_id in enumerate(expedia_df.site_id.unique())}
+        expedia_df["site_id"] = (
+            expedia_df["site_id"].apply(lambda x: site_id_dict[x]).astype("uint8")
+        )
         site_id_storage = OneHotStorage(ids=expedia_df.site_id.unique(), name="site_id")
+
+        visitor_location_country_id_dict = {
+            visitor_location_country_id: i
+            for i, visitor_location_country_id in enumerate(
+                expedia_df.visitor_location_country_id.unique()
+            )
+        }
+        expedia_df["visitor_location_country_id"] = (
+            expedia_df["visitor_location_country_id"]
+            .apply(lambda x: visitor_location_country_id_dict[x])
+            .astype("uint8")
+        )
         visitor_location_country_id_storage = OneHotStorage(
-            ids=expedia_df.visitor_location_country_id.unique(), name="visitor_location_country_id"
+            ids=expedia_df.visitor_location_country_id.unique(),
+            name="visitor_location_country_id",
+        )
+
+        srch_destination_id_dict = {
+            srch_destination_id: i
+            for i, srch_destination_id in enumerate(expedia_df.srch_destination_id.unique())
+        }
+        expedia_df["srch_destination_id"] = (
+            expedia_df["srch_destination_id"]
+            .apply(lambda x: srch_destination_id_dict[x])
+            .astype("uint8")
         )
         srch_destination_id_storage = OneHotStorage(
             ids=expedia_df.srch_destination_id.unique(), name="srch_destination_id"
+        )
+
+        prop_country_id_dict = {
+            prop_country_id: i
+            for i, prop_country_id in enumerate(expedia_df.prop_country_id.unique())
+        }
+        expedia_df["prop_country_id"] = (
+            expedia_df["prop_country_id"].apply(lambda x: prop_country_id_dict[x]).astype("uint8")
         )
         prop_country_id_storage = OneHotStorage(
             ids=expedia_df.prop_country_id.unique(), name="prop_country_id"
@@ -184,7 +219,10 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
 
         contexts_features = expedia_df[contexts_features_names].drop_duplicates()
         contexts_features = contexts_features.set_index("srch_id")
-        contexts_features = contexts_features.to_numpy()
+        contexts_features = (
+            contexts_features[contexts_features_names[1:-3]].to_numpy(),
+            contexts_features[contexts_features_names[-3:]].to_numpy(),
+        )
 
         contexts_items_features_names = [
             "srch_id",
@@ -204,12 +242,21 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         contexts_items_features = (
             expedia_df[contexts_items_features_names]
             .groupby("srch_id")
-            .apply(lambda x: x[contexts_items_features_names[1:]].to_numpy())
+            .apply(lambda x: x[contexts_items_features_names[1:-1]].to_numpy())
         )
+        contexts_items_features = np.stack(contexts_items_features)
+
+        contexts_items_prop_country_id = (
+            expedia_df[contexts_items_features_names]
+            .groupby("srch_id")
+            .apply(lambda x: x[contexts_items_features_names[-1:]].to_numpy())
+        )
+        contexts_items_prop_country_id = np.stack(contexts_items_prop_country_id)
+        contexts_items_features = (contexts_items_features, contexts_items_prop_country_id)
+
         contexts_items_availabilities = (
             expedia_df[["srch_id", "av"]].groupby("srch_id").apply(lambda x: x["av"].to_numpy())
         )
-        contexts_items_features = np.stack(contexts_items_features)
 
         return ChoiceDataset(
             shared_features_by_choice=contexts_features,
@@ -221,8 +268,18 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 prop_country_id_storage,
             ],
             choices=choices.to_numpy(),
-            shared_features_by_choice_names=contexts_features_names[1:],
-            items_features_by_choice_names=contexts_items_features_names[1:],
+            shared_features_by_choice_names=(
+                contexts_features_names[1:-3],
+                [
+                    "site_id",
+                    "visitor_location_country_id",
+                    "srch_destination_id",
+                ],
+            ),
+            items_features_by_choice_names=(
+                contexts_items_features_names[1:-1],
+                ["prop_country_id"],
+            ),
             available_items_by_choice=np.stack(contexts_items_availabilities.to_numpy()),
         )
 
