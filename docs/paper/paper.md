@@ -89,7 +89,13 @@ Choice models following the Random Utility principle define the utility of an al
 
 $$\mathbb{P}(i) = \frac{e^{U_i}}{\sum_j e^{U_j}}$$
 
-Most choice modelling packages only handle linear formulation of the utility. Choice-Learn allows flexibility and an easy creation of a custom choice model. Inheriting the ChoiceModel class lets the user define its own choice model. One only needs to precise how to compute the utility of a batch of data using TensorFlow operations. Here is an example.
+Most choice modelling packages only handle linear formulation of the utility. Choice-Learn allows flexibility and an easy creation of a custom choice model. Inheriting the ChoiceModel class lets the user define its own choice model. One only needs to precise how to compute the utility of a batch of data using TensorFlow operations. Here is an example where we use the following formulation of utility for an alternative $i$ considered by a customer:
+
+$$U_i = \beta_l \cdot (elu(\Gamma_x \cdot x_i) + elu(\Gamma_z \cdot z)) $$
+with $x_i$ features describing the alternative $i$, $z$ features describing a customer and $\Gamma_x$, $\Gamma_z$ matrixes and $\beta_l$ a vector to be estimated.
+elu is the function so that $elu(x) = x$ if $x > 0$ and $elu(x) = e^x-1$ if $x < 0$
+Here is an example implementation using TensorFlow's Dense layers and Choice-Learn:
+
 ### Check example > What would be a great example ?
 ### An example: Definition of non linear utility function
 ```python
