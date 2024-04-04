@@ -85,7 +85,7 @@ Finally, this TensorFlow backbone ensures an efficient use of the models in a pr
 
 ## RAM usage comparison
 
-![RAM usage with and without FeaturesByIDs. \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=50% } 
+![RAM usage with and without FeaturesByIDs. \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=50% }
 
 ![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png){ width=50% }
 
