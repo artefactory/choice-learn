@@ -36,6 +36,7 @@ affiliations:
    index: 5
 date: 29 March 2024
 bibliography: paper.bib
+output: paper_pdf
 
 ---
 
@@ -47,8 +48,8 @@ Discrete choice models aim at explaining or predicting a choice from a set of al
 - Making possible to work with very large datasets with RAM usage optimization and batching processes
 - Handling parametrized as well as Machine-Learning formulations of choice models within the same codebase
 - Providing common tools for choice models usage
-![General Organization of Choice-Learn package \label{fig:general_organization}](../illustrations/choice_learn_high_level.png)
-This tryptich, data, model and usage, is illustrated on Figure \ref{fig:general_organization} with examples of the two levels of interactions.
+![General Organization of Choice-Learn package \label{fig:generalorganization}](../illustrations/choice_learn_high_level.png)
+This tryptich, data, model and usage, is illustrated on Figure \autoref{fig:generalorganization} with examples of the two levels of interactions.
 
 # Statement of need
 
@@ -77,12 +78,12 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 # Examples
 
 ## RAM usage comparison
+![Memory usage comparison. \label{fig:ram_usage}](../illustrations/fbid_RAM.png)
+![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png)
 
 We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by IDs provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different dataset sizes and n_locations=10 and 100. It shows how Choice-learn can save several magnitude of memory usage.
-![Memory usage comparison. \label{fig:ram_usage}](../illustrations/fbid_RAM.png)
 
 We conduct another experiment on the real ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames in long and wide format that are commonly used in choice modelling packages, and Choice-Learn's ChoiceDataset with and without Features by IDs. Following [@Aouad:2023] preprocessing of the dataset, four features are represented as one-hot values and are optimized with Choice-Learn data management.
-![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png)
 
 ## Choice model customization
 
@@ -111,10 +112,10 @@ class ExampleCustomizedModel(ChoiceModel):
         self.n_neurons = n_neurons
 
         # Items Features Layer
-        self.dense_items_features = Dense(units=n_neurons, activation="elu")
+        self.dense_items = Dense(units=n_neurons, activation="elu")
 
         # Shared Features Layer
-        self.dense_shared_features = Dense(units=n_neurons, activation="elu")
+        self.dense_shared = Dense(units=n_neurons, activation="elu")
 
         # Third layer: embeddings to utility (dense representation of features > U)
         self.final_layer = Dense(units=1, activation="linear")
@@ -128,8 +129,8 @@ class ExampleCustomizedModel(ChoiceModel):
         list
             list of trainable_weights
         """
-        return model.dense_items_features.trainable_variables\
-              + model.dense_shared_features.trainable_variables\
+        return model.dense_items.trainable_variables\
+              + model.dense_shared.trainable_variables\
                   + model.final_layer.trainable_variables
 
     def compute_batch_utility(self,
@@ -141,12 +142,13 @@ class ExampleCustomizedModel(ChoiceModel):
         _, _ = available_items_by_choice, choices
         # We apply the neural network to all items_features_by_choice for all the items
         # We then concatenate the utilities of each item of shape (n_choices, 1) into a single one of shape (n_choices, n_items)
-        shared_features_embeddings = self.dense_shared_features(shared_features_by_choice[0])
+        shared_embeddings = self.dense_shared(shared_features_by_choice[0])
 
+        # Iterate over items
         items_features_embeddings = []
         for i in range(items_features_by_choice[0].shape[1]):
             # Utility is Dense(embeddings sum)
-            item_embedding = shared_features_embeddings + self.dense_items_features(items_features_by_choice[0][:, i])
+            item_embedding = shared_embeddings + self.dense_items(items_features_by_choice[0][:, i])
             items_features_embeddings.append(self.final_layer(item_embedding))
 
         # Concatenation to get right shape (n_choices, n_items, )
