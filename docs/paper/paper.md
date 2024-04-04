@@ -82,9 +82,7 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 
 ## RAM usage comparison
 
-![Memory usage comparison. \label{fig:ram_usage}](../illustrations/fbid_RAM.png)
-
-![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png)
+![RAM usage with and without FeaturesByIDs. \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=60% } ![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png){ width=60% }
 
 We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by IDs provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different dataset sizes and n_locations=10 and 100. It shows how Choice-learn can save several magnitude of memory usage.
 
