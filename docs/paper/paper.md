@@ -48,8 +48,10 @@ Discrete choice models aim at explaining or predicting a choice from a set of al
 - Making possible to work with very large datasets with RAM usage optimization and batching processes
 - Handling parametrized as well as Machine-Learning formulations of choice models within the same codebase
 - Providing common tools for choice models usage
-![General Organization of Choice-Learn package \label{fig:generalorganization}](../illustrations/choice_learn_high_level.png)
-This tryptich, data, model and usage, is illustrated on Figure \autoref{fig:generalorganization} with examples of the two levels of interactions.
+
+![General Organization of Choice-Learn package. \label{fig:generalorg}](../illustrations/choice_learn_high_level.png)
+
+This tryptich, data, model and usage, is illustrated on Figure \autoref{fig:generalorg} with examples of the two levels of API interactions.
 
 # Statement of need
 
@@ -64,6 +66,7 @@ Choice-Learn's ChoiceDataset is built specifically to handle large choice datase
 
 ## Parametrized and Machine-Learning based models
 > Naming still unsatisfactory imo (Parametrized/Interpretable vs ?)
+
 The large datasets now available open the door for the use of more complex machine learning models that can otherwise be difficult to estimate with little data. Recent publications outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024].
 The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are usually not built to integrate such non-linear approaches.
 
@@ -78,7 +81,9 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 # Examples
 
 ## RAM usage comparison
+
 ![Memory usage comparison. \label{fig:ram_usage}](../illustrations/fbid_RAM.png)
+
 ![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png)
 
 We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by IDs provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different dataset sizes and n_locations=10 and 100. It shows how Choice-learn can save several magnitude of memory usage.
@@ -141,7 +146,8 @@ class ExampleCustomizedModel(ChoiceModel):
         """Computes batch utility from features."""
         _, _ = available_items_by_choice, choices
         # We apply the neural network to all items_features_by_choice for all the items
-        # We then concatenate the utilities of each item of shape (n_choices, 1) into a single one of shape (n_choices, n_items)
+        # We then concatenate the utilities of each item of shape (n_choices, 1) into
+        # a single one of shape (n_choices, n_items)
         shared_embeddings = self.dense_shared(shared_features_by_choice[0])
 
         # Iterate over items
