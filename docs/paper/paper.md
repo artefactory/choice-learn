@@ -63,9 +63,9 @@ Choice modelling is a natural tool for retailers or marketplaces to understand t
 
 `Choice-Learn`'s ChoiceDataset is built specifically to handle large choice datasets. It mainly relies on NumPy [@Harris:2020] with the objective to limit the memory footprint of the dataset. The key idea is to minimize features repetition and to rebuild the full data structure only for batches of the dataset.
 
-- *Features splitting:* We define 'items_features' that describe each available alternative and 'shared_features' that are common to all alternatives for one given choice. These shared features usually change from one choice to another and can represent customer attributes for example.
+- *Features splitting:* We define 'items_features' that describe each available alternative and 'shared_features' that are common to all alternatives for one given choice. These shared features usually change from one choice to another and can represent customer attributes for example. This split let us avoid repeating these 'shared_features' for each alternative as it is neede with a Long format.
 
-- *Features by IDs:* We allow to store features in specific object and to reference it only by its ID in the dataset. These features are stacked with the others only by batches. It is particularly efficient for features that are repeated in the dataset. As an example, let's take a case where we have a few different stores represented by features. Those features never changing, we can store them in an object and only reference the id of store where the choice happens in the dataset. Then when a batch of data is retrieved, the full features matrix is reconstitued from the id. On \autoref{fig:fbi} an example illustrates its functioning.
+- *Features by IDs:* We allow to store features in specific object and to reference it only by its ID in the dataset. These features are stacked with the others only in batches. It is particularly efficient for features that are repeated in the dataset. As an example, let's take a case where we have a few different stores represented by their surface, position, etc... Those features never changing, they can be stored in an object and the store where the choice happens referenced by some id in the dataset. Then when a batch of data is retrieved, the full features matrix is reconstitued from the id. On \autoref{fig:fbi} an example illustrates its functioning.
 
 ## Parametrized and Machine-Learning based models
 > Naming still unsatisfactory imo (Parametrized/Interpretable vs ?)
@@ -85,9 +85,9 @@ Finally, this TensorFlow backbone ensures an efficient use of the models in a pr
 
 ## RAM usage comparison
 
-![RAM usage with and without FeaturesByIDs. \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=40% } 
+![RAM usage with and without FeaturesByIDs. \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=50% } 
 
-![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png){ width=40% }
+![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png){ width=50% }
 
 We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by IDs provided by `Choice-Learn`. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. On \autoref{fig:ram_usage} we compare the memory usage for different dataset sizes and n_locations=10 and 100. It shows how `Choice-Learn` can save several orders of magnitude of bytes in memory usage.
 
