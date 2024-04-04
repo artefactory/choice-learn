@@ -62,13 +62,13 @@ Choice-Learn's ChoiceDataset is built specifically to handle large choice datase
 - Features by ID: We allow to store features in specific object and to reference it only by its ID in the dataset. These features are stacked with the others only by batches. It is particularly efficient for features that are repeated in the datasets. A usual example can be the one-hot representations of the place where the choice happens. The one hot representation is stored in a specific object and only a reference is kept in the choice dataset. On Figure \autoref{fig:fbi} an example of use is illustrated.
 
 ## Parametrized and Machine-Learning based models
-## Interpretable and ML-based models ?
+> Naming still unsatisfactory imo (Parametrized/Interpretable vs ?)
 The large datasets now available open the door for the use of more complex machine learning models that can otherwise be difficult to estimate with little data. Recent publications outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024].
 The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are usually not built to integrate such non-linear approaches.
 
 Choice-Learn's proposes a model structure that integrates parametrized models such as the Conditional-MNL [@Train:1987] as well as more complex ones like RUMnet [@Aouad:2023] or TasteNet [@Han:2022]. It is based on Tensorflow [@Abadi:2015] using already existing efficient implementation of optimization algorithms such as LBFGS[@Nocedal:2006] or different version of the gradient descent[@Tieleman:2012; @Kingma:2017]. It also enables GPUs usage for parameters estimation that can prove to be particularly time saving.
-Moreover, Choice-Learn also aims at helping for building new and custom choice models with a common inheritance scheme that minimizes the user's work. Compared to usual implementations non linear formulations of utility are possible, as long as it is possible to define it with derivable Tensorflow operations.
-Finally, this TensorFlow backbone ensures an efficient use of the models in a production environment. Many state-of-the-art tools are provided for TF based models deployment and serving.
+Moreover, Choice-Learn also aims at helping for building new and custom choice models with a common inheritance scheme that minimizes the user's work. Compared to usual implementations there are not limit to utility formulation, as long as it is possible to define a derivative function.
+Finally, this TensorFlow backbone ensures an efficient use of the models in a production environment. Many state-of-the-art tools are provided for TensorFlow based models deployment and serving.
 
 ## Tools for choice modelling
 
@@ -78,16 +78,21 @@ Choice-Learn also ambitions to offer a set of tools revolving around choice mode
 
 ## RAM usage comparison
 
-We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by ID provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different values of n_locations and dataset_size. It shows how Choice-learn can save several magnitude of memory usage.
-![Memory usage comparison. \label{fig:ram_usage}](../illustrations/memory_usage_comparison.png)
+We conduct a small study on datasets memory usage in order to showcase the efficiency of Features by IDs provided by Choice-Learn. We consider a case where we have a feature that repeats itself over the dataset. For example if we represent a location with one-hot encoding, the different locations can be represented by a matrix of shape (n_locations, n_locations) that are repeated over the dataset of size dataset_size. In the Figure \autoref{fig:ram_usage} we compare the memory usage for different dataset sizes and n_locations=10 and 100. It shows how Choice-learn can save several magnitude of memory usage.
+![Memory usage comparison. \label{fig:ram_usage}](../illustrations/fbid_RAM.png)
 
-We conduct another experiment on the real ICDM 2013 Expedia dataset [@]. We compare four data handling methods: pandas.DataFrames in long and wide format that are commonly used in choice modelling packages, and Choice-Learn's ChoiceDataset with and without Features by IDs. Following [@Aouad:2023] preprocessing of the dataset, four features are represented as one-hot values.
+We conduct another experiment on the real ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames in long and wide format that are commonly used in choice modelling packages, and Choice-Learn's ChoiceDataset with and without Features by IDs. Following [@Aouad:2023] preprocessing of the dataset, four features are represented as one-hot values and are optimized with Choice-Learn data management.
+![Memory usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png)
 
 ## Choice model customization
 
 Choice models following the Random Utility principle define the utility of an alternative $i \in \mathcal{A}$ as the sum of a deterministic part $U_i$ and an error random term $\epsilon_i$. If $\epsilon$ is supposed to be i.i.d. over all the available alternative and following a Gumbel distribution, the probability function can be written as the softmax normalization over the available alternatives $j\in \mathcal{A}$:
 
 $$\mathbb{P}(i) = \frac{e^{U_i}}{\sum_j e^{U_j}}$$
+
+
+### An example: Definition of non linear utility function
+> What would be a better example ?
 
 Most choice modelling packages only handle linear formulation of the utility. Choice-Learn allows flexibility and an easy creation of a custom choice model. Inheriting the ChoiceModel class lets the user define its own choice model. One only needs to precise how to compute the utility of a batch of data using TensorFlow operations. Here is an example where we use the following formulation of utility for an alternative $i$ considered by a customer:
 
@@ -96,8 +101,6 @@ with $x_i$ features describing the alternative $i$, $z$ features describing a cu
 elu is the function so that $elu(x) = x$ if $x > 0$ and $elu(x) = e^x-1$ if $x < 0$
 Here is an example implementation using TensorFlow's Dense layers and Choice-Learn:
 
-### Check example > What would be a great example ?
-### An example: Definition of non linear utility function
 ```python
 from tensorflow.keras.layers import Dense
 from choice_learn.models import ChoiceModel
