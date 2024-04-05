@@ -1076,47 +1076,61 @@ class ChoiceDataset(object):
                 available_items_by_choice = self.available_items_by_choice[choices_indexes]
                 # .astype(self._return_types[3])
 
-            choices = self.choices[choices_indexes].astype(self._return_types[4])
+            choices = self.choices[choices_indexes].astype(self._return_types[3])
 
+            ###
             if len(self.shared_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.shared_features_by_choice_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.shared_features_by_choice_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            shared_features_by_choice[tuple_index][:, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.shared_features_by_choice_map[tuple_index][feature_index].batch[
-                                shared_features_by_choice[tuple_index][:, feature_index]
-                            ]
-                        )
-                        feat_ind_min = feature_index + 1
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+                ###
+                for tuple_index in range(len(shared_features_by_choice)):
+                    if tuple_index in self.shared_features_by_choice_map.keys():
+                        feat_ind_min = 0
+                        unstacked_feat = []
+                        for feature_index in np.sort(
+                            list(self.shared_features_by_choice_map[tuple_index].keys())
+                        ):
+                            unstacked_feat.append(
+                                shared_features_by_choice[tuple_index][
+                                    :, feat_ind_min:feature_index
+                                ]
+                            )
+                            unstacked_feat.append(
+                                self.shared_features_by_choice_map[tuple_index][
+                                    feature_index
+                                ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
+                            )
+                            feat_ind_min = feature_index + 1
+                        mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+                    else:
+                        mapped_features.append(shared_features_by_choice[tuple_index])
 
                 shared_features_by_choice = mapped_features
 
+            ###
             if len(self.items_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.items_features_by_choice_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.items_features_by_choice_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.items_features_by_choice_map[tuple_index][feature_index].batch[
-                                items_features_by_choice[tuple_index][:, :, feature_index]
-                            ]
-                        )
-                        feat_ind_min = feature_index + 1
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                ###
+                for tuple_index in range(len(items_features_by_choice)):
+                    if tuple_index in self.items_features_by_choice_map.keys():
+                        feat_ind_min = 0
+                        unstacked_feat = []
+                        for feature_index in np.sort(
+                            list(self.items_features_by_choice_map[tuple_index].keys())
+                        ):
+                            unstacked_feat.append(
+                                items_features_by_choice[tuple_index][
+                                    :, :, feat_ind_min:feature_index
+                                ]
+                            )
+                            unstacked_feat.append(
+                                self.items_features_by_choice_map[tuple_index][feature_index].batch[
+                                    items_features_by_choice[tuple_index][:, :, feature_index]
+                                ]
+                            )
+                            feat_ind_min = feature_index + 1
+                        mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                    else:
+                        mapped_features.append(items_features_by_choice[tuple_index])
 
                 items_features_by_choice = mapped_features
 
@@ -1150,21 +1164,33 @@ class ChoiceDataset(object):
             )
 
         if isinstance(choices_indexes, slice):
-            return self.get_choice_batch(
+            return self.get_choices_batch(
                 list(range(*choices_indexes.indices(self.choices.shape[0])))
             )
 
         ### Attemps at simplifying the code
         choices_indexes = [choices_indexes]
         (
-            shared_items_features_by_choices,
+            shared_features_by_choices,
             items_features_by_choice,
             available_items_by_choice,
             choice,
-        ) = self._get_choices_batch(choices_indexes)
+        ) = self.get_choices_batch(choices_indexes)
+        if shared_features_by_choices is not None:
+            if isinstance(shared_features_by_choices, tuple):
+                shared_features_by_choices = tuple(feat[0] for feat in shared_features_by_choices)
+            else:
+                shared_features_by_choices = shared_features_by_choices[0]
+        if items_features_by_choice is not None:
+            if isinstance(items_features_by_choice, tuple):
+                items_features_by_choice = tuple(feat[0] for feat in items_features_by_choice)
+            else:
+                items_features_by_choice = items_features_by_choice[0]
+
+        # TODO: fix
         return (
-            shared_items_features_by_choices[0],
-            items_features_by_choice[0],
+            shared_features_by_choices,
+            items_features_by_choice,
             available_items_by_choice[0],
             choice[0],
         )
