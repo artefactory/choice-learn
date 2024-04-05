@@ -41,7 +41,9 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
     if preprocessing == "rumnet":
         logging.info("rumnet preprocessing selected, starting preprocessing...")
         try:
-            expedia_df = pd.read_csv(get_path("preprocessed_expedia_rumnet.csv", module=DATA_MODULE), engine="pyarrow")
+            expedia_df = pd.read_csv(
+                get_path("preprocessed_expedia_rumnet.csv", module=DATA_MODULE), engine="pyarrow"
+            )
         except FileNotFoundError:
             expedia_df.date_time = pd.to_datetime(expedia_df.date_time, format="%Y-%m-%d %H:%M:%S")
             expedia_df.loc[:, "day_of_week"] = expedia_df.loc[:, "date_time"].dt.dayofweek
@@ -55,7 +57,9 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 "prop_country_id",
                 "srch_destination_id",
             ]:
-                value_counts = expedia_df[["srch_id", id_col]].drop_duplicates()[id_col].value_counts()
+                value_counts = (
+                    expedia_df[["srch_id", id_col]].drop_duplicates()[id_col].value_counts()
+                )
                 kept_ids = value_counts.index[value_counts.gt(1000)]
                 for id_ in expedia_df[id_col].unique():
                     if id_ not in kept_ids:
