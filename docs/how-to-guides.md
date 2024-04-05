@@ -9,3 +9,6 @@ In particular you will find notebooks to handle:
 **MODELS**
 - Custom modelling - important if you want to build your own model
 - RUMnet
+
+**AUXILIARY TOOLS**
+- Assortment optimization
