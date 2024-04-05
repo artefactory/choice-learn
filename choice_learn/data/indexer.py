@@ -381,7 +381,9 @@ class ChoiceDatasetIndexer(Indexer):
             )
 
         if isinstance(choices_indexes, slice):
-            return self.__getitem__(list(range(*choices_indexes.indices(self.choices.shape[0]))))
+            return self.__getitem__(
+                list(range(*choices_indexes.indices(self.choice_dataset.choices.shape[0])))
+            )
 
         if isinstance(choices_indexes, int):
             ### Attemps at simplifying the code
