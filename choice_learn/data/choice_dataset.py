@@ -1073,7 +1073,12 @@ class ChoiceDataset(object):
                     (len(choices_indexes), self.base_num_items)
                 ).astype("float32")
             else:
-                available_items_by_choice = self.available_items_by_choice[choices_indexes]
+                if hasattr(self.available_items_by_choice, "batch"):
+                    available_items_by_choice = self.available_items_by_choice.batch[
+                        choices_indexes
+                    ]
+                else:
+                    available_items_by_choice = self.available_items_by_choice[choices_indexes]
                 # .astype(self._return_types[3])
 
             choices = self.choices[choices_indexes].astype(self._return_types[3])
@@ -1187,7 +1192,6 @@ class ChoiceDataset(object):
             else:
                 items_features_by_choice = items_features_by_choice[0]
 
-        # TODO: fix
         return (
             shared_features_by_choices,
             items_features_by_choice,
