@@ -63,7 +63,7 @@ class SimpleMNL(ChoiceModel):
             ["shared_features", "items_features"],
         ):
             if n_feat > 0:
-                weights = [
+                weights += [
                     tf.Variable(
                         tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
                         name=f"Weights_{feat_name}",

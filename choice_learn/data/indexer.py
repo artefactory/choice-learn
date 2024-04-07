@@ -283,7 +283,9 @@ class ChoiceDatasetIndexer(Indexer):
                     available_items_by_choice = self.choice_dataset.available_items_by_choice[
                         choices_indexes
                     ]
-                # .astype(self._return_types[3])
+                available_items_by_choice = available_items_by_choice.astype(
+                    self.choice_dataset._return_types[2]
+                )
 
             choices = self.choice_dataset.choices[choices_indexes].astype(
                 self.choice_dataset._return_types[3]
