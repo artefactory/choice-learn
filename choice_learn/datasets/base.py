@@ -210,6 +210,38 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
 
     swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
     swiss_df.CHOICE = swiss_df.CHOICE - 1
+
+    if preprocessing == "long_format":
+        long = []
+        for n_row, row in swiss_df.iterrows():
+            df_dict = {
+                "PURPOSE": [],
+                "AGE": [],
+                "item_id": [],
+                "TT": [],
+                "CO": [],
+                "CHOICE": [],
+                "choice_id": [],
+            }
+
+            for item_index, item_id in enumerate(["TRAIN", "SM", "CAR"]):
+                if row[f"{item_id}_AV"] > 0:
+                    if item_index == row.CHOICE:
+                        df_dict["CHOICE"].append(1)
+                    else:
+                        df_dict["CHOICE"].append(0)
+
+                    df_dict["item_id"].append(item_id)
+                    df_dict["TT"].append(row[f"{item_id}_TT"])
+                    df_dict["CO"].append(row[f"{item_id}_CO"])
+
+                    df_dict["PURPOSE"].append(row["PURPOSE"])
+                    df_dict["AGE"].append(row["AGE"])
+                    df_dict["choice_id"].append(n_row)
+            long.append(pd.DataFrame(df_dict))
+        swiss_df = pd.concat(long, axis=0)
+        swiss_df = swiss_df.reset_index(drop=True)
+        as_frame = True
     if as_frame:
         return swiss_df
 
