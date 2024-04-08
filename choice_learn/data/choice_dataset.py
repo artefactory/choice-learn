@@ -52,8 +52,8 @@ class ChoiceDataset(object):
             over the different choices, default is None
         features_by_ids : list of (name, FeaturesStorage)
             List of Storage objects. Their name must correspond to a feature name
-            among shared_items, contexts,
-            contexts_items and their ids must match to those features values. Default is []
+            among shared_features_by_choice or items_features_by_choice
+            and their ids must match to those features values. Default is []
         shared_features_by_choice_names : tuple of (array_like, )
             list of names of the contexts_features, default is None
         items_features_by_choice_names : tuple of (array_like, )
