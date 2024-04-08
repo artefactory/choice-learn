@@ -1,7 +1,4 @@
 """Testing that model instantiation works as expected."""
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 from choice_learn.datasets import load_modecanada
 from choice_learn.models import ConditionalMNL, RUMnet, SimpleMNL, TasteNet

@@ -1,7 +1,4 @@
 """Tests specific config of cLogit and .evaluate() with ground truth weight."""
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import tensorflow as tf
 

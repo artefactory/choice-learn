@@ -628,7 +628,7 @@ class PaperRUMnet(ChoiceModel):
             Shape must be (n_choices, n_items)
         """
         (_, _) = available_items_by_choice, choices
-        ### Restacking of the item features
+        # Restacking of the item features
         if isinstance(shared_features_by_choice, tuple):
             shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
         if isinstance(items_features_by_choice, tuple):
@@ -637,7 +637,7 @@ class PaperRUMnet(ChoiceModel):
         shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
         items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
 
-        ### Computation of utilities
+        # Computation of utilities
         utilities = []
 
         # Computation of the customer features embeddings
@@ -659,7 +659,7 @@ class PaperRUMnet(ChoiceModel):
                     )
                     utilities[-1].append(self.u_model(_u))
 
-        ### Reshape utilities: (batch_size, num_items, heterogeneity)
+        # Reshape utilities: (batch_size, num_items, heterogeneity)
         return tf.transpose(tf.squeeze(tf.stack(utilities, axis=0), -1))
 
     @tf.function
@@ -700,7 +700,7 @@ class PaperRUMnet(ChoiceModel):
             Value of NegativeLogLikelihood loss for the batch
         """
         with tf.GradientTape() as tape:
-            ### Computation of utilities
+            # Computation of utilities
             all_u = self.compute_batch_utility(
                 shared_features_by_choice=shared_features_by_choice,
                 items_features_by_choice=items_features_by_choice,
@@ -859,7 +859,7 @@ class CPURUMnet(PaperRUMnet):
             Shape must be (n_choices, n_items)
         """
         (_, _) = available_items_by_choice, choices
-        ### Restacking of the item features
+        # Restacking of the item features
         if isinstance(shared_features_by_choice, tuple):
             shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
         if isinstance(items_features_by_choice, tuple):
@@ -868,7 +868,7 @@ class CPURUMnet(PaperRUMnet):
         shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
         items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
 
-        ### Computation of utilities
+        # Computation of utilities
         utilities = []
         batch_size = shared_features_by_choice.shape[0]
 
@@ -898,7 +898,7 @@ class CPURUMnet(PaperRUMnet):
                 axis=1,
             )
             utilities.append(item_utilities)
-        ### Reshape utilities: (batch_size, num_items, heterogeneity)
+        # Reshape utilities: (batch_size, num_items, heterogeneity)
         return tf.squeeze(tf.stack(utilities, axis=1), -1)
 
 
@@ -986,7 +986,7 @@ class GPURUMnet(PaperRUMnet):
         """
         (_, _) = available_items_by_choice, choices
 
-        ### Restacking of the item features
+        # Restacking of the item features
         if isinstance(shared_features_by_choice, tuple):
             shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
         if isinstance(items_features_by_choice, tuple):
@@ -1070,7 +1070,7 @@ class GPURUMnet(PaperRUMnet):
             Value of NegativeLogLikelihood loss for the batch
         """
         with tf.GradientTape() as tape:
-            ### Computation of utilities
+            # Computation of utilities
             utilities = self.compute_batch_utility(
                 shared_features_by_choice=shared_features_by_choice,
                 items_features_by_choice=items_features_by_choice,
