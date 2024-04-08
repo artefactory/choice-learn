@@ -1,7 +1,7 @@
 """Models classes and functions."""
 import tensorflow as tf
 
-from .conditional_mnl import ConditionalMNL
+from .conditional_logit import ConditionalLogit
 from .simple_mnl import SimpleMNL
 from .tastenet import TasteNet
 
@@ -13,4 +13,4 @@ else:
 
     print("No GPU detected, importing CPU version of RUMnet.")
 
-__all__ = ["ConditionalMNL", "RUMnet", "SimpleMNL", "TasteNet"]
+__all__ = ["ConditionalLogit", "RUMnet", "SimpleMNL", "TasteNet"]

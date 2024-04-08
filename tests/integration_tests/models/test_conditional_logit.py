@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 from choice_learn.datasets import load_modecanada
-from choice_learn.models import ConditionalMNL
+from choice_learn.models import ConditionalLogit
 
 
 def test_mode_canada_gt():
@@ -29,7 +29,7 @@ def test_mode_canada_gt():
         tf.constant([[0.0595089, -0.00678188, -0.00645982, -0.00145029]]),
         tf.constant([[0.697311, 1.8437, 3.27381]]),
     ]
-    gt_model = ConditionalMNL(coefficients=coefficients)
+    gt_model = ConditionalLogit(coefficients=coefficients)
     gt_model.instantiate(canada_dataset)
 
     gt_model.trainable_weights = gt_weights

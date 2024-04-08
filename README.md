@@ -109,7 +109,7 @@ pip install choice-learn
 ## Usage
 ```python
 from choice_learn.data import ChoiceDataset
-from choice_learn.models import ConditionalMNL, RUMnet
+from choice_learn.models import ConditionalLogit, RUMnet
 
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
 # Onl need to specify how the file is encoded:
@@ -122,7 +122,7 @@ dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             choice_format="item_id")
 
 # Initialization of the model
-model = ConditionalMNL()
+model = ConditionalLogit()
 
 # Creation of the different weights:
 
