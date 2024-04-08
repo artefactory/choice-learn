@@ -65,7 +65,7 @@ quote-style = "double"
 known-first-party = ["choice_learn", "config", "tests"]
 
 [tool.ruff.lint]
-extend-select = ["E"]
+extend-select = ["E402"]
 preview = true
 
 [tool.bandit.assert_used]
