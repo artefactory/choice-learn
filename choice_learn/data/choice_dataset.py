@@ -1225,6 +1225,8 @@ class ChoiceDataset(object):
                     self.shared_features_by_choice[i][choices_indexes]
                     for i in range(len(self.shared_features_by_choice))
                 )
+                if not self._return_shared_features_by_choice_tuple:
+                    shared_features_by_choice = shared_features_by_choice[0]
         except TypeError:
             shared_features_by_choice = None
 
@@ -1236,6 +1238,8 @@ class ChoiceDataset(object):
                     self.items_features_by_choice[i][choices_indexes]
                     for i in range(len(self.items_features_by_choice))
                 )
+                if not self._return_items_features_by_choice_tuple:
+                    items_features_by_choice = items_features_by_choice[0]
         except TypeError:
             items_features_by_choice = None
 
@@ -1300,18 +1304,15 @@ class ChoiceDataset(object):
         yielded_size = 0
         while yielded_size < num_choices:
             # Return sample_weight if not None, for index matching
+            batch_indexes = indexes[yielded_size : yielded_size + batch_size].tolist()
             if sample_weight is not None:
                 yield (
-                    self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()],
-                    sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()],
+                    self.batch[batch_indexes],
+                    sample_weight[batch_indexes],
                 )
             else:
-                yield self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()]
+                yield self.batch[batch_indexes]
             yielded_size += batch_size
-
-            # Special exit strategy for batch_size = -1
-            if batch_size == -1:
-                yielded_size += 2 * num_choices
 
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
