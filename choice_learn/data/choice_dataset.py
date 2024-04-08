@@ -1248,6 +1248,8 @@ class ChoiceDataset(object):
                 shared_features_by_choice_names = None
             else:
                 shared_features_by_choice_names = self.shared_features_by_choice_names
+                if not self._return_shared_features_by_choice_tuple:
+                    shared_features_by_choice_names = shared_features_by_choice_names[0]
         except TypeError:
             shared_features_by_choice_names = None
         try:
@@ -1255,6 +1257,8 @@ class ChoiceDataset(object):
                 items_features_by_choice_names = None
             else:
                 items_features_by_choice_names = self.items_features_by_choice_names
+                if not self._return_items_features_by_choice_tuple:
+                    items_features_by_choice_names = items_features_by_choice_names[0]
         except TypeError:
             items_features_by_choice_names = None
 
