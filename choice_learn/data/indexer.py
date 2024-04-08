@@ -323,10 +323,8 @@ class ChoiceDatasetIndexer(Indexer):
 
                 shared_features_by_choice = mapped_features
 
-            ###
             if len(self.choice_dataset.items_features_by_choice_map) > 0:
                 mapped_features = []
-                ###
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.choice_dataset.items_features_by_choice_map.keys():
                         feat_ind_min = 0
@@ -388,7 +386,6 @@ class ChoiceDatasetIndexer(Indexer):
             )
 
         if isinstance(choices_indexes, int):
-            ### Attemps at simplifying the code
             choices_indexes = [choices_indexes]
             (
                 shared_features_by_choices,

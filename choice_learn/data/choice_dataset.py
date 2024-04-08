@@ -400,8 +400,8 @@ class ChoiceDataset(object):
                                 index_dict[j] = feature_by_id
                                 shared_features_map[i] = index_dict
                                 logging.info(
-                                    "Feature by ID found for shared_features_by_choice:",
-                                    feature_by_id.name,
+                                    f"""Feature by ID found for shared_features_by_choice:
+                                    {feature_by_id.name}"""
                                 )
 
                                 unique_values = np.unique(self.shared_features_by_choice[i][:, j])
@@ -424,8 +424,8 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 items_features_map[i] = index_dict
                                 logging.info(
-                                    "Feature by ID found for items_features_by_choice:",
-                                    feature_by_id.name,
+                                    f"""Feature by ID found for shared_features_by_choice:
+                                    {feature_by_id.name}"""
                                 )
 
                                 unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
@@ -1083,10 +1083,8 @@ class ChoiceDataset(object):
 
             choices = self.choices[choices_indexes].astype(self._return_types[3])
 
-            ###
             if len(self.shared_features_by_choice_map) > 0:
                 mapped_features = []
-                ###
                 for tuple_index in range(len(shared_features_by_choice)):
                     if tuple_index in self.shared_features_by_choice_map.keys():
                         feat_ind_min = 0
@@ -1111,10 +1109,8 @@ class ChoiceDataset(object):
 
                 shared_features_by_choice = mapped_features
 
-            ###
             if len(self.items_features_by_choice_map) > 0:
                 mapped_features = []
-                ###
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.items_features_by_choice_map.keys():
                         feat_ind_min = 0
@@ -1173,7 +1169,6 @@ class ChoiceDataset(object):
                 list(range(*choices_indexes.indices(self.choices.shape[0])))
             )
 
-        ### Attemps at simplifying the code
         choices_indexes = [choices_indexes]
         (
             shared_features_by_choices,

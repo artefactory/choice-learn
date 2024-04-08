@@ -561,8 +561,6 @@ class ConditionalMNL(ChoiceModel):
                     [partial_items_utility_by_choice] * n_choices, axis=0
                 )
 
-                ### Need reshaping here
-
                 items_utilities_by_choice.append(
                     tf.cast(partial_items_utility_by_choice, tf.float32)
                 )
