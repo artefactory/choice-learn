@@ -64,5 +64,9 @@ quote-style = "double"
 [tool.ruff.isort]
 known-first-party = ["choice_learn", "config", "tests"]
 
+[tool.ruff.lint]
+preview = true
+extend-select = ["E402"]
+
 [tool.bandit.assert_used]
 exclude_dirs = ["tests/"]
