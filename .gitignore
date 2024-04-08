@@ -139,3 +139,5 @@ secrets/*
 
 # Specific data
 choice_learn/datasets/data/expedia.csv
+choice_learn/datasets/cache/*
+!choice_learn/datasets/cache/.gitkeep

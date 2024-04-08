@@ -400,8 +400,8 @@ class ChoiceDataset(object):
                                 index_dict[j] = feature_by_id
                                 shared_features_map[i] = index_dict
                                 logging.info(
-                                    "Feature by ID found for shared_features_by_choice:",
-                                    feature_by_id.name,
+                                    f"""Feature by ID found for shared_features_by_choice:
+                                    {feature_by_id.name}"""
                                 )
 
                                 unique_values = np.unique(self.shared_features_by_choice[i][:, j])
@@ -424,8 +424,8 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 items_features_map[i] = index_dict
                                 logging.info(
-                                    "Feature by ID found for items_features_by_choice:",
-                                    feature_by_id.name,
+                                    f"""Feature by ID found for shared_features_by_choice:
+                                    {feature_by_id.name}"""
                                 )
 
                                 unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
