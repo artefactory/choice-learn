@@ -174,13 +174,20 @@ class TasteNet(ChoiceModel):
             Shape must be (n_choices, n_items)
         """
         _ = available_items_by_choice
-        ### Restacking of the item features
+        # Restacking and dtyping of the item features
         if isinstance(shared_features_by_choice, tuple):
-            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+            shared_features_by_choice = tf.concat(
+                [
+                    tf.cast(shared_feature, tf.float32)
+                    for shared_feature in shared_features_by_choice
+                ],
+                axis=-1,
+            )
         if isinstance(items_features_by_choice, tuple):
-            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
-        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
-        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
+            items_features_by_choice = tf.concat(
+                [tf.cast(items_feature, tf.float32) for items_feature in items_features_by_choice],
+                axis=-1,
+            )
 
         taste_weights = self.taste_params_module(shared_features_by_choice)
         item_utility_by_choice = []
