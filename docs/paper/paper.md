@@ -70,7 +70,7 @@ Choice modelling is a natural tool for retailers or marketplaces to understand t
 ## Parametrized and Machine-Learning based models
 > Naming still unsatisfactory imo (Parametrized/Interpretable vs ?)
 
-The availability of detailed customer choice data enables estimating more complex choice models. Recent research outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024; AouadMarket:2023].
+The availability of detailed customer choice data enables estimating more complex choice models. Recent research outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024; &@AouadMarket:2023].
 The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches.
 
 `Choice-Learn` proposes a model object structure and a unified estimation tools using automatic differentiation library which can flexibly accommodate parametric models such as the Conditional Logit [@Train:1987] as well as machine learning-based such as RUMnet [@Aouad:2023] or TasteNet [@Han:2022]. Specifically, we rely on the Tensorflow library [@Abadi:2015] implementing efficiently optimization algorithms such as LBFGS[@Nocedal:2006] and various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017]. It also enables GPUs usage for parameters estimation that can prove to be time saving on high-dimensional or large-sample datasets.
