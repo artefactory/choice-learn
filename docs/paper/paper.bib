@@ -1,6 +1,6 @@
 @TechReport{Bierlaire:2023,
   author = {Michel Bierlaire},
-  title = {A short introduction to Biogeme},
+  title = {A short introduction to {Biogeme}},
   institution = {Transport and Mobility Laboratory, Ecole Polytechnique F\'ed\'erale de Lausanne},
   year = {2023},
   type = {Technical Report},
@@ -40,15 +40,19 @@
       primaryClass={cs.LG}
 }
 
-@misc{Han:2022,
-      title={A Neural-embedded Choice Model: TasteNet-MNL Modeling Taste Heterogeneity with Flexibility and Interpretability},
-      author={Yafei Han and Francisco Camara Pereira and Moshe Ben-Akiva and Christopher Zegras},
-      year={2022},
-      eprint={2002.00922},
-      archivePrefix={arXiv},
-      primaryClass={econ.EM}
+@article{Han:2022,
+title = {A neural-embedded discrete choice model: Learning taste representation with strengthened interpretability},
+journal = {Transportation Research Part B: Methodological},
+volume = {163},
+pages = {166-186},
+year = {2022},
+issn = {0191-2615},
+doi = {https://doi.org/10.1016/j.trb.2022.07.001},
+url = {https://www.sciencedirect.com/science/article/pii/S0191261522001138},
+author = {Yafei Han and Francisco Camara Pereira and Moshe Ben-Akiva and Christopher Zegras},
+keywords = {Discrete choice models, Neural networks, Taste heterogeneity, Interpretability, Utility specification, Machine learning, Deep learning},
+abstract = {Discrete choice models (DCMs) require a priori knowledge of the utility functions, especially how tastes vary across individuals. Utility misspecification may lead to biased estimates, inaccurate interpretations and limited predictability. In this paper, we utilize a neural network to learn taste representation. Our formulation consists of two modules: a neural network (TasteNet) that learns taste parameters (e.g., time coefficient) as flexible functions of individual characteristics; and a multinomial logit (MNL) model with utility functions defined with expert knowledge. Taste parameters learned by the neural network are fed into the choice model and link the two modules. Our approach extends the L-MNL model (Sifringer et al., 2020) by allowing the neural network to learn the interactions between individual characteristics and alternative attributes. Moreover, we formalize and strengthen the interpretability condition — requiring realistic estimates of behavior indicators (e.g., value-of-time, elasticity) at the disaggregated level, which is crucial for a model to be suitable for scenario analysis and policy decisions. Through a unique network architecture and parameter transformation, we incorporate prior knowledge and guide the neural network to output realistic behavior indicators at the disaggregated level. We show that TasteNet-MNL reaches the ground-truth model’s predictability and recovers the nonlinear taste functions on synthetic data. Its estimated value-of-time and choice elasticities at the individual level are close to the ground truth. In contrast, exemplary logit models with misspecified systematic utility lead to biased parameter estimates and lower prediction accuracy. On a publicly available Swissmetro dataset, TasteNet-MNL outperforms benchmarking MNLs and Mixed Logit model’s predictability. It learns a broader spectrum of taste variations within the population and suggests a higher average value-of-time. Our source code is available for research and application.}
 }
-
 @misc{Salvadé:2024,
       title={RUMBoost: Gradient Boosted Random Utility Models},
       author={Nicolas Salvadé and Tim Hillel},
@@ -106,6 +110,7 @@ year = {2015}
 
 @Inbook{Nocedal:2006,
 title="Large-Scale Unconstrained Optimization",
+author ={Nocedal, Jorge and Wright, Stephen J.},
 bookTitle="Numerical Optimization",
 year="2006",
 publisher="Springer New York",
@@ -126,7 +131,7 @@ url="https://doi.org/10.1007/978-0-387-40065-5_7"
 }
 
 @article{Tieleman:2012,
-  title={Lecture 6.5-rmsprop, coursera: Neural networks for machine learning},
+  title={Lecture 6.5 {RMSProp}, coursera: Neural networks for machine learning},
   author={Tieleman, Tijmen and Hinton, Geoffrey},
   journal={University of Toronto, Technical Report},
   volume={6},
@@ -138,4 +143,13 @@ url="https://doi.org/10.1007/978-0-387-40065-5_7"
       author={Ben Hamner, Adam and Friedman, Dan},
       year={2013},
       eprint={https://www.kaggle.com/c/expedia-personalized-sort},
+      URL={https://www.kaggle.com/c/expedia-personalized-sort},
+}
+@misc{AouadMarket:2023,
+      title={Market Segmentation Trees},
+      author={Ali Aouad and Adam N. Elmachtoub and Kris J. Ferreira and Ryan McNellis},
+      year={2023},
+      eprint={1906.01174},
+      archivePrefix={arXiv},
+      primaryClass={stat.AP}
 }
