@@ -142,9 +142,14 @@ class LatentClassAssortmentOptimizer(object):
     """Assortment optimizer for latent class models.
 
     Implementation of the paper:
-    "A branch-and-cuta algorithm for the latent-class logit assortment problem"
-    by Isabel Mendez-Diaz, Juan José Miranda-Bront, Gustavo Vulcano and Paula Zabala.
-    2012.
+    Isabel Méndez-Díaz, Juan José Miranda-Bront, Gustavo Vulcano, Paula Zabala,
+    A branch-and-cut algorithm for the latent-class logit assortment problem,
+    Discrete Applied Mathematics,
+    Volume 164, Part 1,
+    2014,
+    Pages 246-263,
+    ISSN 0166-218X,
+    https://doi.org/10.1016/j.dam.2012.03.003.
     """
 
     def __init__(
@@ -159,8 +164,11 @@ class LatentClassAssortmentOptimizer(object):
 
         Parameters:
         -----------
-        utilities : Iterable
-            List of utilities for each item.
+        class_weights: Iterable
+            List of weights for each latent class.
+        class_utilities: Iterable
+            List of utilities for each item of each latent class.
+            Must have a shape of (n_classes, n_items)
         itemwise_values: Iterable
             List of to-be-optimized values for each item, e.g. prices.
         assortment_size : int
@@ -185,7 +193,10 @@ class LatentClassAssortmentOptimizer(object):
                 ]
             )
             self.itemwise_values = np.concatenate([[0.0], itemwise_values], axis=0)
-        self.n_items = len(self.utilities) - 1
+        else:
+            self.class_utilities = class_utilities
+            self.itemwise_values = itemwise_values
+        self.n_items = len(self.itemwise_values) - 1
         self.assortment_size = assortment_size
         self.class_weights = class_weights
         if self.assortment_size > self.n_items:
@@ -324,7 +335,13 @@ class LatentClassAssortmentOptimizer(object):
             if self.y[i].x > 0:
                 assortment[i] = 1
 
-        chosen_utilities = assortment * self.utilities
+        chosen_utilities = np.sum(
+            [
+                assortment * self.class_utilities[class_index]
+                for class_index in range(len(self.class_utilities))
+            ],
+            axis=0,
+        )
         norm = np.sum(chosen_utilities)
 
         recomputed_obj = np.sum(chosen_utilities * self.itemwise_values / norm)
