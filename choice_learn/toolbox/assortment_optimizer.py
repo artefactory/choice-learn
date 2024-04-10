@@ -315,6 +315,44 @@ class LatentClassAssortmentOptimizer(object):
         """Function to add constraints."""
         raise NotImplementedError
 
+    def add_maximal_capacity_constraint(self, itemwise_capacities, maximum_capacity):
+        """Add maximal capacity constraint.
+
+        The added constraint is basically sum_{i} y_i * itemwise_capacities[i] <= maximum_capacity
+
+        Parameters
+        ----------
+        itemwise_capacities : Iterable
+            Values of capacity for each item in the assortment.
+            Shape must match with itemwise_values.
+        maximum_capacity : int/float
+            Value of the maximal capacity.
+        """
+        assortment_capacity = gp.quicksum(
+            [self.y[j] * itemwise_capacities[j - 1] for j in range(1, self.n_items + 1)]
+        )
+        self.solver.addConstr(assortment_capacity <= maximum_capacity)
+        self.solver.update()
+
+    def add_minimal_capacity_constraint(self, itemwise_capacities, minimum_capacity):
+        """Add maximal capacity constraint.
+
+        The added constraint is basically sum_{i} y_i * itemwise_capacities[i] <= maximum_capacity
+
+        Parameters
+        ----------
+        itemwise_capacities : Iterable
+            Values of capacity for each item in the assortment.
+            Shape must match with itemwise_values.
+        minimum_capacity : int/float
+            Value of the maximal capacity.
+        """
+        assortment_capacity = gp.quicksum(
+            [self.y[j] * itemwise_capacities[j - 1] for j in range(1, self.n_items + 1)]
+        )
+        self.solver.addConstr(assortment_capacity >= minimum_capacity)
+        self.solver.update()
+
     def solve(self):
         """Function to solve the optimization problem.
 
@@ -335,16 +373,13 @@ class LatentClassAssortmentOptimizer(object):
             if self.y[i].x > 0:
                 assortment[i] = 1
 
-        chosen_utilities = np.sum(
-            [
-                assortment * self.class_utilities[class_index]
-                for class_index in range(len(self.class_utilities))
-            ],
-            axis=0,
-        )
-        norm = np.sum(chosen_utilities)
-
-        recomputed_obj = np.sum(chosen_utilities * self.itemwise_values / norm)
+        recomputed_obj = 0
+        for class_index in range(len(self.class_weights)):
+            chosen_utilities = assortment * self.class_utilities[class_index]
+            chosen_probabilities = chosen_utilities / (np.sum(chosen_utilities) + 1)
+            recomputed_obj += self.class_weights[class_index] * np.sum(
+                chosen_probabilities * self.itemwise_values
+            )
 
         if not self.outside_option_given:
             assortment = assortment[1:]
