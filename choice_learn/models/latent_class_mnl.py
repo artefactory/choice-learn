@@ -3,7 +3,7 @@ import copy
 
 import tensorflow as tf
 
-from .conditional_mnl import ConditionalMNL, ModelSpecification
+from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import SimpleMNL
 
@@ -119,8 +119,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         return super().fit(dataset, **kwargs)
 
 
-class LatentClassConditionalMNL(BaseLatentClassModel):
-    """Latent Class for ConditionalMNL."""
+class LatentClassConditionalLogit(BaseLatentClassModel):
+    """Latent Class for ConditionalLogit."""
 
     def __init__(
         self,
@@ -142,7 +142,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             Number of latent classes.
         fit_method : str
             Method to be used to estimate the model.
-        parameters : dict or ModelSpecification
+        parameters : dict or MNLCoefficients
             Dictionnary containing the parametrization of the model.
             The dictionnary must have the following structure:
             {feature_name_1: mode_1, feature_name_2: mode_2, ...}
@@ -178,7 +178,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         }
 
         super().__init__(
-            model_class=ConditionalMNL,
+            model_class=ConditionalLogit,
             model_parameters=model_params,
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
@@ -207,7 +207,7 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         items_features_names : list of str
             Names of the items features in the dataset.
         """
-        if isinstance(self.params, ModelSpecification):
+        if isinstance(self.params, MNLCoefficients):
             for model in self.models:
                 model.params = copy.deepcopy(self.params)
                 model.weights = model.instantiate_from_specifications()
@@ -270,8 +270,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             When names or indexes are both not specified.
         """
         if self.params is None:
-            self.params = ModelSpecification()
-        elif not isinstance(self.params, ModelSpecification):
+            self.params = MNLCoefficients()
+        elif not isinstance(self.params, MNLCoefficients):
             raise ValueError("Cannot add coefficient on top of a dict instantiation.")
         self.params.add_coefficients(
             coefficient_name=coefficient_name,
@@ -306,8 +306,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             When names or indexes are both not specified.
         """
         if self.params is None:
-            self.params = ModelSpecification()
-        elif not isinstance(self.params, ModelSpecification):
+            self.params = MNLCoefficients()
+        elif not isinstance(self.params, MNLCoefficients):
             raise ValueError("Cannot add shared coefficient on top of a dict instantiation.")
         self.params.add_shared_coefficient(
             coefficient_name=coefficient_name,

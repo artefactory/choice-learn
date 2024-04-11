@@ -1,7 +1,7 @@
 """Testing that model instantiation works as expected."""
 
 from choice_learn.datasets import load_modecanada
-from choice_learn.models import ConditionalMNL, RUMnet, SimpleMNL, TasteNet
+from choice_learn.models import ConditionalLogit, RUMnet, SimpleMNL, TasteNet
 
 canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
 
@@ -17,14 +17,14 @@ def test_clogit_dict():
         "intercept": "item",
     }
 
-    cmnl = ConditionalMNL(coefficients=coefficients)
+    cmnl = ConditionalLogit(coefficients=coefficients)
     cmnl.instantiate(canada_dataset)
     assert True
 
 
 def test_clogit_specification():
     """Tests cLogit instantiation with MNLCoefficient specification."""
-    model = ConditionalMNL()
+    model = ConditionalLogit()
     model.add_shared_coefficient(feature_name="cost", items_indexes=[0, 1, 2, 3])
     model.add_shared_coefficient(
         feature_name="freq", coefficient_name="beta_frequence", items_indexes=[0, 1, 2, 3]

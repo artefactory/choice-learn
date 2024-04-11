@@ -10,7 +10,7 @@ from .base_model import ChoiceModel
 
 
 class MNLCoefficients(object):
-    """Base class to specify the structure of a cMNL."""
+    """Base class to specify the structure of a cLogit."""
 
     def __init__(self):
         """Instantiate a MNLCoefficients object."""
@@ -191,7 +191,7 @@ class MNLCoefficients(object):
         return list(self.coefficients.keys())
 
 
-class ConditionalMNL(ChoiceModel):
+class ConditionalLogit(ChoiceModel):
     """Conditional MNL that has a generic structure. It can be parametrized with a dictionnary.
 
     Arguments:
@@ -711,7 +711,7 @@ class ConditionalMNL(ChoiceModel):
 
     def clone(self):
         """Returns a clone of the model."""
-        clone = ConditionalMNL(
+        clone = ConditionalLogit(
             coefficients=self.coefficients,
             add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,

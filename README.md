@@ -62,7 +62,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb)
+- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 - (WIP) Standardization of evaluation protocols
 - (WIP) Interfaces
 
@@ -109,7 +109,7 @@ pip install choice-learn
 ## Usage
 ```python
 from choice_learn.data import ChoiceDataset
-from choice_learn.models import ConditionalMNL, RUMnet
+from choice_learn.models import ConditionalLogit, RUMnet
 
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
 # Onl need to specify how the file is encoded:
@@ -122,7 +122,7 @@ dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             choice_format="item_id")
 
 # Initialization of the model
-model = ConditionalMNL()
+model = ConditionalLogit()
 
 # Creation of the different weights:
 
@@ -175,7 +175,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
 [5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva, M.; Bolduc, D.; Bradley, M. (1993)\
 [6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
-[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)
+[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)\
+[8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)
