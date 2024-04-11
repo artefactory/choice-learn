@@ -131,10 +131,10 @@ class ExampleCustomizedModel(ChoiceModel):
 
     @property
     def trainable_weights(self):
-        """Endpoint to acces model's trainable_weights.
+        """Access model's trainable_weights.
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             list of trainable_weights
         """
@@ -147,7 +147,7 @@ class ExampleCustomizedModel(ChoiceModel):
                               items_features_by_choice,
                               available_items_by_choice,
                               choices):
-        """Computes batch utility from features."""
+        """Compute batch utility from features."""
         _, _ = available_items_by_choice, choices
         # We apply the neural network to all items_features_by_choice for all the items
         # We then concatenate the utilities of each item of shape (n_choices, 1) into
