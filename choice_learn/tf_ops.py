@@ -6,7 +6,7 @@ import tensorflow as tf
 def softmax_with_availabilities(
     items_logit_by_choice, available_items_by_choice, axis=-1, normalize_exit=False, eps=1e-5
 ):
-    """Function to compute softmax probabilities from utilities.
+    """Compute softmax probabilities from utilities.
 
     Takes into account availabilties (1 if the product is available, 0 otherwise) to set
     probabilities to 0 for unavailable products and to renormalize the probabilities of
@@ -27,8 +27,8 @@ def softmax_with_availabilities(
         Value to avoid division by 0 when a product with probability almost 1 is unavailable,
         by default 1e-5
 
-    Returns:
-    --------
+    Returns
+    -------
     tf.Tensor (n_chocies, n_products)
         Probabilities of each product for each choice computed from Logits
     """
@@ -82,12 +82,12 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         name="eps_categorical_crossentropy",
         reduction=tf.keras.losses.Reduction.AUTO,
     ):
-        """Initialization function.
+        """Initialize function.
 
         Follows structure of tf.keras.losses.CategoricalCrossentropy.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         from_logits : bool, optional
             Whether to compute the softmax from logits or probabilities, by default False
         sparse : bool, optional
@@ -113,17 +113,17 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         self.epsilon = epsilon
 
     def call(self, y_true, y_pred):
-        """Computes the cross-entropy loss.
+        """Compute the cross-entropy loss.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         y_true : np.ndarray | tf.Tenosr
             Ground truth labels
         y_pred : np.ndarray | tf.Tenosr
             Predicted labels
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Average Cross-Entropy loss
         """

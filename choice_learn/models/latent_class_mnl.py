@@ -23,10 +23,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization.
+        """Initialize model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -70,10 +70,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         )
 
     def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
-        """Instantiation of the Latent Models that are SimpleMNLs.
+        """Instantiate the Latent Models that are SimpleMNLs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_items : int
             Number of items/aternatives to consider.
         n_shared_features : int
@@ -88,7 +88,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             model.instantiated = True
 
     def instantiate(self, n_items, n_shared_features, n_items_features):
-        """Instantiation of the Latent Class MNL model."""
+        """Instantiate the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
@@ -105,8 +105,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
@@ -134,10 +134,10 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization.
+        """Initialize model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -196,10 +196,10 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         shared_features_names,
         items_features_names,
     ):
-        """Instantiation of the Latent Models that are SimpleMNLs.
+        """Instantiate of the Latent Models that are SimpleMNLs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_items : int
             Number of items/aternatives to consider.
         shared_features_names : list of str
@@ -230,7 +230,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         shared_features_names,
         items_features_names,
     ):
-        """Instantiation of the Latent Class MNL model."""
+        """Instantiate of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
@@ -247,10 +247,10 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
     def add_coefficients(
         self, coefficient_name, feature_name, items_indexes=None, items_names=None
     ):
-        """Adds a coefficient to the model throught the specification of the utility.
+        """Add a coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -264,8 +264,8 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             list of items names (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -283,10 +283,10 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
     def add_shared_coefficient(
         self, coefficient_name, feature_name, items_indexes=None, items_names=None
     ):
-        """Adds a single, shared coefficient to the model throught the specification of the utility.
+        """Add a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -300,8 +300,8 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             list of items names (in the ChoiceDataset) for which the coefficient will be used,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -319,8 +319,8 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """

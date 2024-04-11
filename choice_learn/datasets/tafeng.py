@@ -10,13 +10,13 @@ DATA_MODULE = "choice_learn.datasets.data"
 
 
 def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
-    """Function to load the TaFeng dataset.
+    """Load the TaFeng dataset.
 
     Orginal file and informations can be found here:
     https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset/
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     as_frame : bool, optional
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional
@@ -24,8 +24,8 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
     return_desc : bool, optional
         Whether to return the description of the dataset, by default False
 
-    Returns:
-    --------
+    Returns
+    -------
     pd.DF or ChoiceDataset
         TaFeng Grocery Dataset.
     """

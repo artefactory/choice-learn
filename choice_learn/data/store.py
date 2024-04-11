@@ -8,10 +8,10 @@ class Store(object):
     """Class to keep OneHotStore and FeaturesStore with same parent."""
 
     def __init__(self, indexes=None, values=None, sequence=None, name=None, indexer=StoreIndexer):
-        """Builds the store.
+        """Build the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         indexes : array_like or None
             list of indexes of features to store. If None is given, indexes are created from
             apparition order of values
@@ -43,13 +43,13 @@ class Store(object):
         Returns the features stored at index index. Compared to __getitem__, it does take
         the index-th element of sequence but the index-th element of the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         index : (int, list, slice)
             index argument of the feature
 
-        Returns:
-        --------
+        Returns
+        -------
         array_like
             features corresponding to the index index in self.store
         """
@@ -59,7 +59,7 @@ class Store(object):
         return self.store[index]
 
     def __len__(self):
-        """Returns the length of the sequence of apparition of the features."""
+        """Return the length of the sequence of apparition of the features."""
         return len(self.sequence)
 
     @property
@@ -75,8 +75,8 @@ class FeaturesStore(Store):
     An example would be to store the features of a customers (supposing that the same customers come
     several times over the work sequence) and to save which customer is concerned for each choice.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     store : dict
         Dictionary stocking features that can be called from indexes: {index: features}
     shape : tuple
@@ -91,17 +91,17 @@ class FeaturesStore(Store):
 
     @classmethod
     def from_dict(cls, values_dict, sequence):
-        """Instantiates the FeaturesStore from a dictionary of values.
+        """Instantiate the FeaturesStore from a dictionary of values.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         values_dict : dict
             dictionary of values to store, {index: value}
         sequence : array_like
             sequence of apparitions of the features
 
-        Returns:
-        --------
+        Returns
+        -------
         FeaturesStore created from the values in the dictionnary
         """
         # Check uniform shape of values
@@ -111,19 +111,19 @@ class FeaturesStore(Store):
 
     @classmethod
     def from_list(cls, values_list, sequence):
-        """Instantiates the FeaturesStore from a list of values.
+        """Instantiate the FeaturesStore from a list of values.
 
         Creates indexes for each value
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         values_list : list
             List of values to store
         sequence : array_like
             sequence of apparitions of the features
 
-        Returns:
-        --------
+        Returns
+        -------
         FeaturesStore
         """
         # Check uniform shape of list
@@ -133,13 +133,13 @@ class FeaturesStore(Store):
     def __getitem__(self, sequence_index):
         """Subsets self with sequence_index.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sequence_index : (int, list, slice)
             index position of the sequence
 
-        Returns:
-        --------
+        Returns
+        -------
         array_like
             features corresponding to the sequence_index-th position of sequence
         """
@@ -156,13 +156,13 @@ class FeaturesStore(Store):
         return FeaturesStore.from_dict(store, new_sequence)
 
     def astype(self, dtype):
-        """Changes the dtype of the features.
+        """Change the dtype of the features.
 
         The type of the features should implement the astype method.
         Typically, should work like np.ndarrays.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dtype : str or type
             type to set the features as
         """
@@ -187,10 +187,10 @@ class OneHotStore(Store):
         name=None,
         dtype=np.float32,
     ):
-        """Builds the OneHot features store.
+        """Build the OneHot features store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         indexes : array_like or None
             list of indexes of features to store. If None is given, indexes are created from
             apparition order of values
@@ -216,19 +216,19 @@ class OneHotStore(Store):
 
     @classmethod
     def from_sequence(cls, sequence):
-        """Creates a OneHotFeatureStore from a sequence of apparition.
+        """Create a OneHotFeatureStore from a sequence of apparition.
 
         One Hot vector are created from the order of apparition in the sequence: feature vectors
         created have a length of the number of different values in the sequence and the 1 is
         positioned in order of first appartitions in the sequence.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sequence : array-like
             Sequence of apparitions of values, or indexes. Will be used to index self.store
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureStore
             Created from the sequence.
         """
@@ -237,15 +237,15 @@ class OneHotStore(Store):
         return cls(indexes=all_indexes, values=values, sequence=sequence)
 
     def __getitem__(self, sequence_index):
-        """Main method to get an element at sequence_index-th position of self.sequence.
+        """Get an element at sequence_index-th position of self.sequence.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sequence_index : (int, list, slice)
             index from sequence of element to get
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             OneHot features corresponding to the sequence_index-th position of sequence
         """
@@ -264,10 +264,10 @@ class OneHotStore(Store):
         )
 
     def astype(self, dtype):
-        """Method to change (mainly int or float) type of returned OneHot features vectors.
+        """Change (mainly int or float) type of returned OneHot features vectors.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dtype : type
             Type to set the features as
         """

@@ -33,10 +33,10 @@ class ChoiceDataset(object):
         shared_features_by_choice_names=None,
         items_features_by_choice_names=None,
     ):
-        """Builds the ChoiceDataset.
+        """Build the ChoiceDataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices: list or np.ndarray
             list of chosen items indexes
         shared_features_by_choice : tuple of (array_like, )
@@ -353,13 +353,13 @@ class ChoiceDataset(object):
         self.indexer = ChoiceDatasetIndexer(self)
 
     def _build_features_by_ids(self):
-        """Builds mapping function.
+        """Build mapping function.
 
         Those mapping functions are so that at indexing,
         the features are rebuilt with the features by id.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             indexes and features_by_id of shared_features_by_choice
         tuple
@@ -450,7 +450,7 @@ class ChoiceDataset(object):
         return shared_features_map, items_features_map
 
     def _check_dataset(self):
-        """Verifies that the shapes of the different features are consistent.
+        """Verify that the shapes of the different features are consistent.
 
         Particularly:
             - Over number of items
@@ -462,7 +462,7 @@ class ChoiceDataset(object):
         self._check_choices_coherence()
 
     def _check_num_items_shapes(self):
-        """Verifies that the shapes of the different features are consistent over number of items.
+        """Verify that the shapes of the different features are consistent over number of items.
 
         Particularly:
             - items_features_by_choice
@@ -497,7 +497,7 @@ class ChoiceDataset(object):
                 )
 
     def _check_num_sessions_shapes(self):
-        """Verifies that the shapes of the different features are consistent over nb of sessions.
+        """Verify that the shapes of the different features are consistent over nb of sessions.
 
         Particularly:
             - shared_features_by_choice
@@ -532,7 +532,7 @@ class ChoiceDataset(object):
                 )
 
     def _check_choices_coherence(self):
-        """Verifies that the choices are coherent with the nb of items present in other features.
+        """Verify that the choices are coherent with the nb of items present in other features.
 
         Particularly:
             - There is no choice index higher than detected number of items
@@ -550,7 +550,7 @@ class ChoiceDataset(object):
             logging.warning(f"Some choices never happen in the dataset: {missing_choices}")
 
     def _check_types(self):
-        """Checks types of elements and store it in order to return right types.
+        """Check types of elements and store it in order to return right types.
 
         Particularly:
             - Either int32 or float32 consistently for features.
@@ -589,7 +589,7 @@ class ChoiceDataset(object):
         return return_types
 
     def _check_names(self):
-        """Verifies that names and features shapes are consistent with each other."""
+        """Verify that names and features shapes are consistent with each other."""
         if self.shared_features_by_choice_names is not None:
             for k, (name, features) in enumerate(
                 zip(self.shared_features_by_choice_names, self.shared_features_by_choice)
@@ -616,9 +616,9 @@ class ChoiceDataset(object):
                         )
 
     def __len__(self):
-        """Returns length of the dataset e.g. total number of choices.
+        """Return length of the dataset e.g. total number of choices.
 
-        Returns:
+        Returns
         -------
         int
             total number of choices
@@ -626,10 +626,10 @@ class ChoiceDataset(object):
         return len(self.choices)
 
     def __str__(self):
-        """Returns short representation of ChoiceDataset.
+        """Return short representation of ChoiceDataset.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             short representation of ChoiceDataset
         """
@@ -641,9 +641,9 @@ class ChoiceDataset(object):
         )
 
     def get_n_items(self):
-        """Method to access the total number of different items.
+        """Access the total number of different items.
 
-        Returns:
+        Returns
         -------
         int
             total number of different items
@@ -651,11 +651,11 @@ class ChoiceDataset(object):
         return self.base_num_items
 
     def get_n_choices(self):
-        """Method to access the total number of different choices.
+        """Access the total number of different choices.
 
         Redundant with __len__ method.
 
-        Returns:
+        Returns
         -------
         int
             total number of different choices
@@ -672,10 +672,10 @@ class ChoiceDataset(object):
         items_index=None,
         choices_index=None,
     ):
-        """Builds items_features_by_choice and available_items_by_choice from dataframe.
+        """Build items_features_by_choice and available_items_by_choice from dataframe.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             Dataframe containing all the features for each item and sessions
         items_index : list
@@ -689,7 +689,7 @@ class ChoiceDataset(object):
         choices_id_column: str, optional
             Name of the column containing the choices ids, default is "choice_id"
 
-        Returns:
+        Returns
         -------
         np.ndarray of shape (n_choices, n_items, n_features)
             Corresponding items_features_by_choice
@@ -761,10 +761,10 @@ class ChoiceDataset(object):
         choices_column="choice",
         choice_format="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
+        """Build numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             dataframe in Wide format
         items_id : list
@@ -792,7 +792,7 @@ class ChoiceDataset(object):
             How choice is indicated in df, either "items_name" or "items_index",
             default is "items_id"
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             corresponding ChoiceDataset
@@ -905,10 +905,10 @@ class ChoiceDataset(object):
         items_features_columns=None,
         choice_format="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
+        """Build numpy arrays for ChoiceDataset from a single dataframe in long format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             dataframe in Long format
         choices_column: str, optional
@@ -926,7 +926,7 @@ class ChoiceDataset(object):
             How choice is indicated in df, either "items_name" or "one_zero",
             default is "items_id"
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             corresponding ChoiceDataset
@@ -990,11 +990,11 @@ class ChoiceDataset(object):
         )
 
     def save(self):
-        """Method to save the dataset."""
+        """Save the dataset."""
         raise NotImplementedError
 
     def summary(self):
-        """Method to display a summary of the dataset."""
+        """Display a summary of the dataset."""
         print("%=====================================================================%")
         print("%%% Summary of the dataset:")
         print("%=====================================================================%")
@@ -1030,17 +1030,17 @@ class ChoiceDataset(object):
         return ""
 
     def get_choices_batch(self, choices_indexes, features=None):
-        """Method to access a chunk of data within the ChoiceDataset from choice indexes.
+        """Access a chunk of data within the ChoiceDataset from choice indexes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
         features : list of str, optional
             list of features to return. None returns all of them, default is None.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple of (array_like, )
             tuple of arrays containing a batch of shared_features_by_choice
         tuple of (array_like, )
@@ -1197,14 +1197,14 @@ class ChoiceDataset(object):
         )
 
     def __getitem__(self, choices_indexes):
-        """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
+        """Create a sub-ChoiceDataset with only a subset of choices, from their indexes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices_indexes : np.ndarray
             indexes of the choices to keep, shape should be (num_choices,)
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             ChoiceDataset with only the sessions indexed by indexes
@@ -1280,12 +1280,12 @@ class ChoiceDataset(object):
         return self.indexer
 
     def iter_batch(self, batch_size, shuffle=False, sample_weight=None):
-        """Iterates over dataset return batches of length batch_size.
+        """Iterate over dataset return batches of length batch_size.
 
         Newer version.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         batch_size : int
             batch size to set
         shuffle: bool
@@ -1318,8 +1318,8 @@ class ChoiceDataset(object):
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         bool_list : list of boolean
             list of booleans of length self.get_n_choices() to filter choices.
             True to keep, False to discard.
@@ -1328,9 +1328,9 @@ class ChoiceDataset(object):
         return self[indexes]
 
     def get_n_shared_features(self):
-        """Method to access the number of shared features.
+        """Access the number of shared features.
 
-        Returns:
+        Returns
         -------
         int
             number of shared items features
@@ -1343,9 +1343,9 @@ class ChoiceDataset(object):
         return 0
 
     def get_n_items_features(self):
-        """Method to access the number of items features.
+        """Access the number of items features.
 
-        Returns:
+        Returns
         -------
         int
             number of items features

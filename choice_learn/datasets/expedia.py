@@ -16,8 +16,8 @@ CACHE_MODULE = "choice_learn.datasets.cache"
 def load_expedia(as_frame=False, preprocessing="rumnet"):
     """Load the Expedia dataset.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     as_frame : bool, optional
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional

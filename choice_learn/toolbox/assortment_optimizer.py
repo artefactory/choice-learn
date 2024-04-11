@@ -13,10 +13,10 @@ class AssortmentOptimizer(object):
     """Base class for assortment optimization."""
 
     def __init__(self, utilities, itemwise_values, assortment_size, outside_option_given=False):
-        """Initializes the AssortmentOptimizer object.
+        """Initialize the AssortmentOptimizer object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         utilities : Iterable
             List of utilities for each item.
         itemwise_values: Iterable
@@ -42,10 +42,10 @@ class AssortmentOptimizer(object):
         self.set_base_constraints()
 
     def base_instantiate(self):
-        """Base instantiation of the solver.
+        """Instantiate of the solver.
 
-        Returns:
-        --------
+        Returns
+        -------
         gurobipy.Model
             solver with basic variables and constraints.
         """
@@ -96,24 +96,24 @@ class AssortmentOptimizer(object):
         self.solver.update()
 
     def set_objective_function(self, itemwise_values):
-        """Function to define the objective function to maximize with the assortment.
+        """Define the objective function to maximize with the assortment.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         itemwise_values : list-like
             List of values for each item - total value to be optimized.
         """
         raise NotImplementedError
 
     def add_constraint(self):
-        """Function to add constraints."""
+        """Aadd constraints."""
         raise NotImplementedError
 
     def solve(self):
-        """Function to solve the optimization problem.
+        """Solve the optimization problem.
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray:
             Array of 0s and 1s, indicating the presence of each item in the optimal assortment.
         """
@@ -160,10 +160,10 @@ class LatentClassAssortmentOptimizer(object):
         assortment_size,
         outside_option_given=False,
     ):
-        """Initializes the AssortmentOptimizer object.
+        """Initialize the AssortmentOptimizer object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         class_weights: Iterable
             List of weights for each latent class.
         class_utilities: Iterable
@@ -209,10 +209,10 @@ class LatentClassAssortmentOptimizer(object):
         self.set_base_constraints()
 
     def base_instantiate(self):
-        """Base instantiation of the solver.
+        """Instantiate the solver.
 
-        Returns:
-        --------
+        Returns
+        -------
         gurobipy.Model
             solver with basic variables and constraints.
         """
@@ -289,7 +289,7 @@ class LatentClassAssortmentOptimizer(object):
         self.solver.update()
 
     def base_set_objective_function(self):
-        """Base function to set optimization objective."""
+        """Set optimization objective."""
         objective = 0
         for class_index in range(len(self.class_weights)):
             for j in range(self.n_items + 1):
@@ -302,17 +302,17 @@ class LatentClassAssortmentOptimizer(object):
         self.solver.setObjective(objective, gp.GRB.MAXIMIZE)
 
     def set_objective_function(self, itemwise_values):
-        """Function to define the objective function to maximize with the assortment.
+        """Define the objective function to maximize with the assortment.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         itemwise_values : list-like
             List of values for each item - total value to be optimized.
         """
         raise NotImplementedError
 
     def add_constraint(self):
-        """Function to add constraints."""
+        """Add constraints."""
         raise NotImplementedError
 
     def add_maximal_capacity_constraint(self, itemwise_capacities, maximum_capacity):
@@ -354,10 +354,10 @@ class LatentClassAssortmentOptimizer(object):
         self.solver.update()
 
     def solve(self):
-        """Function to solve the optimization problem.
+        """Solve the optimization problem.
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray:
             Array of 0s and 1s, indicating the presence of each item in the optimal assortment.
         """
@@ -408,10 +408,10 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         assortment_size,
         outside_option_given=False,
     ):
-        """Initializes the AssortmentOptimizer object.
+        """Initialize the AssortmentOptimizer object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         class_weights: Iterable
             List of weights for each latent class.
             Must have shape of (n_classes)
@@ -469,10 +469,10 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         self.set_base_constraints()
 
     def base_instantiate(self):
-        """Base instantiation of the solver.
+        """Instantiate the solver.
 
-        Returns:
-        --------
+        Returns
+        -------
         gurobipy.Model
             solver with basic variables and constraints.
         """
@@ -580,7 +580,7 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         self.solver.update()
 
     def base_set_objective_function(self):
-        """Base function to set optimization objective."""
+        """Set optimization objective."""
         objective = 0
         for class_index in range(len(self.class_weights)):
             for j in range(1, self.n_items + 1):
@@ -594,17 +594,17 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         self.solver.setObjective(objective, gp.GRB.MAXIMIZE)
 
     def set_objective_function(self, itemwise_values):
-        """Function to define the objective function to maximize with the assortment.
+        """Define the objective function to maximize with the assortment.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         itemwise_values : list-like
             List of values for each item - total value to be optimized.
         """
         raise NotImplementedError
 
     def add_constraint(self):
-        """Function to add constraints."""
+        """Add constraints."""
         raise NotImplementedError
 
     def add_maximal_capacity_constraint(self, itemwise_capacities, maximum_capacity):
@@ -650,10 +650,10 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         self.solver.update()
 
     def solve(self):
-        """Function to solve the optimization problem.
+        """Solve the optimization problem.
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray:
             Array of 0s and 1s, indicating the presence of each item in the optimal assortment.
         """

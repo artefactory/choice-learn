@@ -20,10 +20,10 @@ class MNLCoefficients(object):
         self.feature_to_weight = {}
 
     def add(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
-        """Adds a coefficient to the model throught the specification of the utility.
+        """Add a coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -36,8 +36,8 @@ class MNLCoefficients(object):
             list of items names (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -56,10 +56,10 @@ class MNLCoefficients(object):
         }
 
     def add_shared(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
-        """Adds a single, shared coefficient to the model throught the specification of the utility.
+        """Add a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -72,8 +72,8 @@ class MNLCoefficients(object):
             list of items names (in the ChoiceDataset) for which the coefficient will be used,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -106,23 +106,23 @@ class MNLCoefficients(object):
     def get(self, coefficient_name):
         """Getter of a coefficient specification, from its name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name of the coefficient to get.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             specification of the coefficient.
         """
         return self.coefficients[coefficient_name]
 
     def _add_tf_weight(self, weight_name, weight_index):
-        """Method used by cMNL class to create the Tensorflow weight corresponding.
+        """Create the Tensorflow weight corresponding for cLogit.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         weight_name : str
             Name of the weight to add.
         weight_index : int
@@ -150,8 +150,8 @@ class MNLCoefficients(object):
     def features_with_weights(self):
         """Get a list of the features that have a weight to be estimated.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict.keys
             List of the features that have a weight to be estimated.
         """
@@ -160,13 +160,13 @@ class MNLCoefficients(object):
     def get_weight_item_indexes(self, feature_name):
         """Get the indexes of the concerned items for a given weight.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_name : str
             Features that is concerned by the weight.
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of indexes of the items concerned by the weight.
         int
@@ -183,8 +183,8 @@ class MNLCoefficients(object):
     def names(self):
         """Returns the list of coefficients.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict keys
             List of coefficients in the specification.
         """
@@ -208,10 +208,10 @@ class ConditionalLogit(ChoiceModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization of Conditional-MNL.
+        """Initialize of Conditional-MNL.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficients : dict or MNLCoefficients
             Dictionnary containing the coefficients parametrization of the model.
             The dictionnary must have the following structure:
@@ -229,10 +229,10 @@ class ConditionalLogit(ChoiceModel):
     def add_coefficients(
         self, feature_name, coefficient_name="", items_indexes=None, items_names=None
     ):
-        """Adds a coefficient to the model throught the specification of the utility.
+        """Add a coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_name : str
             features name to which the coefficient is associated. It should work with
             the names given in the ChoiceDataset that will be used for parameters estimation.
@@ -245,8 +245,8 @@ class ConditionalLogit(ChoiceModel):
             list of items names (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -261,10 +261,10 @@ class ConditionalLogit(ChoiceModel):
     def add_shared_coefficient(
         self, feature_name, coefficient_name="", items_indexes=None, items_names=None
     ):
-        """Adds a single, shared coefficient to the model throught the specification of the utility.
+        """Add a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_name : str
             features name to which the coefficient is associated. It should work with
             the names given in the ChoiceDataset that will be used for parameters estimation.
@@ -277,8 +277,8 @@ class ConditionalLogit(ChoiceModel):
             list of items names (in the ChoiceDataset) for which the coefficient will be used,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
@@ -308,8 +308,8 @@ class ConditionalLogit(ChoiceModel):
     def instantiate(self, choice_dataset):
         """Instantiate the model using the features in the choice_dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset: choice dataset to match the features names with the model coefficients.
         """
         if not self.instantiated:
@@ -340,8 +340,8 @@ class ConditionalLogit(ChoiceModel):
     def _instantiate_tf_weights(self):
         """Instantiate the model from MNLCoefficients object.
 
-        Returns:
-        --------
+        Returns
+        -------
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
@@ -366,8 +366,8 @@ class ConditionalLogit(ChoiceModel):
     def _build_coefficients_from_dict(self, n_items):
         """Build coefficients when they are given as a dictionnay.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_items : int
             Number of different items in the assortment. Used to create the right number of weights.
         """
@@ -385,10 +385,10 @@ class ConditionalLogit(ChoiceModel):
         self.coefficients = coefficients
 
     def _store_dataset_features_names(self, dataset):
-        """Registers the name of the features in the dataset. For later use in utility computation.
+        """Register the name of the features in the dataset. For later use in utility computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             ChoiceDataset used to fit the model.
         """
@@ -403,10 +403,10 @@ class ConditionalLogit(ChoiceModel):
         choices,
         verbose=1,
     ):
-        """Computes the utility when the model is constructed from a MNLCoefficients object.
+        """Compute the utility when the model is constructed from a MNLCoefficients object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -422,8 +422,8 @@ class ConditionalLogit(ChoiceModel):
         verbose : int, optional
             Parametrization of the logging outputs, by default 1
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Utilities corresponding of shape (n_choices, n_items)
         """
@@ -568,17 +568,17 @@ class ConditionalLogit(ChoiceModel):
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
-        """Main fit function to estimate the paramters.
+        """Fit function to estimate the paramters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """
@@ -598,8 +598,8 @@ class ConditionalLogit(ChoiceModel):
     ):
         """Specific fit function to estimate the paramters with LBFGS.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         n_epochs : int
@@ -609,8 +609,8 @@ class ConditionalLogit(ChoiceModel):
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """
@@ -626,16 +626,16 @@ class ConditionalLogit(ChoiceModel):
         return fit
 
     def compute_report(self, dataset):
-        """Computes a report of the estimated weights.
+        """Compute a report of the estimated weights.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
-        Returns:
-        --------
+        Returns
+        -------
         pandas.DataFrame
             A DF with estimation, Std Err, z_value and p_value for each coefficient.
         """
@@ -670,14 +670,14 @@ class ConditionalLogit(ChoiceModel):
     def get_weights_std(self, dataset):
         """Approximates Std Err with Hessian matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Estimation of the Std Err for the weights.
         """
@@ -710,7 +710,7 @@ class ConditionalLogit(ChoiceModel):
         )
 
     def clone(self):
-        """Returns a clone of the model."""
+        """Return a clone of the model."""
         clone = ConditionalLogit(
             coefficients=self.coefficients,
             add_exit_choice=self.add_exit_choice,
