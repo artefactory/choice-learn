@@ -84,11 +84,11 @@ class AssortmentOptimizer(object):
         # Assortment size constraint
         if self.assortment_size is not None:
             self.solver.addConstr(
-                gp.quicksum([self.y[j] for j in range(1, self.n_items)])
+                gp.quicksum([self.y[j] for j in range(1, self.n_items + 1)])
                 <= self.assortment_size * self.y[0]
             )
             self.solver.addConstr(
-                gp.quicksum([-self.y[j] for j in range(1, self.n_items)])
+                gp.quicksum([-self.y[j] for j in range(1, self.n_items + 1)])
                 <= -self.assortment_size * self.y[0]
             )
 
@@ -282,7 +282,7 @@ class LatentClassAssortmentOptimizer(object):
         # Assortment size constraint
         if self.assortment_size is not None:
             self.solver.addConstr(
-                gp.quicksum([self.y[j] for j in range(1, self.n_items)]) <= self.assortment_size
+                gp.quicksum([self.y[j] for j in range(1, self.n_items + 1)]) <= self.assortment_size
             )
 
         # Integrate constraints
@@ -447,11 +447,13 @@ class LatentClassAssortmentOptimizerWithPricing(object):
 
         self.outside_option_given = outside_option_given
         if not self.outside_option_given:
-            self.class_utilities = [
-                [[np.exp(0.0)]] + class_utilities[i] for i in range(len(class_weights))
-            ]
-            self.itemwise_values = [[0.0]] + itemwise_values
+            self.outside_utility = [np.exp(0.0) for _ in range(len(class_weights))]
+            self.outside_value = [0.0 for _ in range(len(class_weights))]
+
+            self.class_utilities = class_utilities
+            self.itemwise_values = itemwise_values
         else:
+            # TO DO
             self.class_utilities = class_utilities
             self.itemwise_values = itemwise_values
         self.n_items = len(self.itemwise_values) - 1
@@ -480,18 +482,22 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         solver.setParam("OutputFlag", False)
 
         # Create yik variables
-        y = {}
+        y = {(0, 0): solver.addVar(vtype=gp.GRB.BINARY, name="y_0_0")}
 
-        for i in range(self.n_items + 1):
-            for k in range(self.itemwise_values[i]):
+        for i in range(1, self.n_items + 1):
+            for k in range(len(self.itemwise_values[i - 1])):
                 y[(i, k)] = solver.addVar(vtype=gp.GRB.BINARY, name=f"y_{i}_{k}")
         self.y = y
 
         # Create zlik variables
-        z = {}
-        for i in range(self.n_items + 1):
+        z = {
+            (0, 0, 0): solver.addVar(vtype=gp.GRB.CONTINUOUS, name="z_0_0_0", lb=0),
+            (1, 0, 0): solver.addVar(vtype=gp.GRB.CONTINUOUS, name="z_1_0_0", lb=0),
+            (2, 0, 0): solver.addVar(vtype=gp.GRB.CONTINUOUS, name="z_2_0_0", lb=0),
+        }
+        for i in range(1, self.n_items + 1):
             for class_index in range(len(self.class_weights)):
-                for k in range(self.itemwise_values[i]):
+                for k in range(len(self.itemwise_values[i - 1])):
                     z[(class_index, i, k)] = solver.addVar(
                         vtype=gp.GRB.CONTINUOUS, name=f"z_{class_index}_{i}_{k}", lb=0
                     )
@@ -516,43 +522,58 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         """
         # Base Charnes-Cooper Constraint for Normalization
         for class_index in range(len(self.class_weights)):
-            charnes_cooper = gp.quicksum(
-                self.class_utilities[class_index][i][k] * self.z[(class_index, i, k)]
+            charnes_cooper = 0
+            for i in range(1, self.n_items + 1):
+                for k in range(len(self.itemwise_values[i - 1])):
+                    charnes_cooper += (
+                        self.class_utilities[class_index][i - 1][k] * self.z[(class_index, i, k)]
+                    )
+            """charnes_cooper = gp.quicksum(
+                [self.class_utilities[class_index][i][k] * self.z[(class_index, i, k)]
                 for i in range(1, self.n_items + 1)
-                for k in range(self.itemwise_values[i])
-            )
+                for k in range(self.itemwise_values[i])]
+            )"""
             charnes_cooper = (
-                charnes_cooper + self.x[class_index] * self.class_utilities[class_index][0]
+                charnes_cooper + self.x[class_index] * self.outside_utility[class_index]
             )
             self.solver.addConstr(charnes_cooper == 1)
 
         # Charnes-Cooper for variables constraints
         for class_index in range(len(self.class_weights)):
             for i in range(1, self.n_items + 1):
-                for k in range(self.itemwise_values[i]):
+                for k in range(len(self.itemwise_values[i - 1])):
                     self.solver.addConstr(self.z[(class_index, i, k)] <= self.x[class_index])
-                    self.solver.addConstr(
-                        self.x[class_index] * self.class_utilities[class_index][0]
-                        - self.z[(class_index, i, k)] * self.class_utilities[class_index][0]
-                        <= 1 - self.y[(i, k)]
+                    u = (
+                        self.x[class_index] * self.outside_utility[class_index]
+                        - self.z[(class_index, i, k)] * self.outside_utility[class_index]
                     )
+
+                    self.solver.addConstr(u <= (1 - self.y[(i, k)]))
                     self.solver.addConstr(
                         self.z[(class_index, i, k)]
                         * (
-                            self.class_utilities[class_index][0]
-                            + self.class_utilities[class_index][i][k]
+                            self.outside_utility[class_index]
+                            + self.class_utilities[class_index][i - 1][k]
                         )
                         <= self.y[(i, k)]
                     )
-        # Unique constraint
+        self.ctr = {}
+        # Unique price constraint
         for i in range(1, self.n_items + 1):
-            self.solver.addConstr(
-                gp.quicksum([self.y[(i, k)] for k in range(self.itemwise_values[i])]) <= 1
+            self.ctr[i] = self.solver.addConstr(
+                gp.quicksum([self.y[(i, k)] for k in range(len(self.itemwise_values[i - 1]))]) <= 1
             )
         # Assortment size constraint
         if self.assortment_size is not None:
             self.solver.addConstr(
-                gp.quicksum([self.y[j] for j in range(1, self.n_items)]) <= self.assortment_size
+                gp.quicksum(
+                    [
+                        self.y[(j, k)]
+                        for j in range(1, self.n_items + 1)
+                        for k in range(len(self.itemwise_values[j - 1]))
+                    ]
+                )
+                <= self.assortment_size
             )
 
         # Integrate constraints
@@ -562,12 +583,12 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         """Base function to set optimization objective."""
         objective = 0
         for class_index in range(len(self.class_weights)):
-            for j in range(self.n_items + 1):
-                for k in range(self.itemwise_values[j]):
+            for j in range(1, self.n_items + 1):
+                for k in range(len(self.itemwise_values[j - 1])):
                     objective += (
                         self.class_weights[class_index]
-                        * self.itemwise_values[j][k]
-                        * self.class_utilities[class_index][j][k]
+                        * self.itemwise_values[j - 1][k]
+                        * self.class_utilities[class_index][j - 1][k]
                         * self.z[(class_index, j, k)]
                     )
         self.solver.setObjective(objective, gp.GRB.MAXIMIZE)
@@ -600,7 +621,11 @@ class LatentClassAssortmentOptimizerWithPricing(object):
             Value of the maximal capacity.
         """
         assortment_capacity = gp.quicksum(
-            [self.y[j] * itemwise_capacities[j - 1] for j in range(1, self.n_items + 1)]
+            [
+                self.y[(j, k)] * itemwise_capacities[j - 1]
+                for j in range(1, self.n_items + 1)
+                for k in range(len(self.itemwise_values[j - 1]))
+            ]
         )
         self.solver.addConstr(assortment_capacity <= maximum_capacity)
         self.solver.update()
@@ -640,20 +665,10 @@ class LatentClassAssortmentOptimizerWithPricing(object):
         self.status = self.solver.Status
 
         assortment = np.zeros(self.n_items + 1)
-        for i in range(0, self.n_items + 1):
-            for k in range(self.itemwise_values[i]):
+        for i in range(1, self.n_items + 1):
+            for k in range(len(self.itemwise_values[i - 1])):
                 if self.y[(i, k)].x > 0:
-                    assortment[i] = 1
+                    assortment[i - 1] = self.itemwise_values[i - 1][k]
 
-        """recomputed_obj = 0
-        for class_index in range(len(self.class_weights)):
-            chosen_utilities = assortment * self.class_utilities[class_index]
-            chosen_probabilities = chosen_utilities / (np.sum(chosen_utilities) + 1)
-            recomputed_obj += self.class_weights[class_index] * np.sum(
-                chosen_probabilities * self.itemwise_values
-            )
-
-        if not self.outside_option_given:
-            assortment = assortment[1:]"""
-        return assortment
+        return assortment, self.solver.objVal
         # return assortment, recomputed_obj
