@@ -63,14 +63,14 @@ nav:
   - How-To Guides:
     - Introduction: how-to-guides.md
     - Data Handling:
-      - More in-depth introduction to data handling: notebooks/data/choice_learn_introduction_to_data.md
+      - Intoduction to data handling: notebooks/introduction/2_data_handling.md
       - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
-      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_example.md
+      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
     - Modelling:
       - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl_example.md
-      - Conditional Logit Usage: notebooks/models/choice_learn_introduction_clogit.md
+      - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
+      - Building a custom choice model and handling hyper-parameters: notebooks/introduction/4_model_customization.md
       - RUMnet model Usage: notebooks/models/rumnet_example.md
-      - Building a custom choice model and handling hyper-parameters: notebooks/models/paramters_and_model_customization.md
       - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
     - Toolbox for choice modellers:
