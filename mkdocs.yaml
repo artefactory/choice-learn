@@ -56,22 +56,25 @@ nav:
   - HomePage: index.md
   - Tutorials:
     - Introduction: tutorials.md
-    - Introductive Example: notebooks/introductive_example.md
+    - Introductive Example: notebooks/introduction/1_introductive_example.md
+    - Intoduction to data handling: notebooks/introduction/2_data_handling.md
+    - Introduction to choice modelling with the Conditional Logit: notebooks/introduction/3_model_clogit.md
+    - Introduction to model customization: notebooks/introduction/4_model_customization.md
   - How-To Guides:
     - Introduction: how-to-guides.md
     - Data Handling:
-      - More in-depth introduction to data handling: notebooks/choice_learn_introduction_to_data.md
-      - Exhaustive example of ChoiceDataset creation: notebooks/dataset_creation.md
-      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/features_byID_example.md
+      - More in-depth introduction to data handling: notebooks/data/choice_learn_introduction_to_data.md
+      - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
+      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_example.md
     - Modelling:
-      - Introduction to Choice Models - the SimpleMNL: notebooks/simple_mnl_example.md
-      - Conditional Logit Usage: notebooks/choice_learn_introduction_clogit.md
-      - RUMnet model Usage: notebooks/rumnet_example.md
-      - Building a custom choice model and handling hyper-parameters: notebooks/paramters_and_model_customization.md
-      - Latent Class MNLs Usage: notebooks/latent_class_model.md
-      - A reproductive example, the logistic regression: notebooks/logistic_regression.md
+      - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl_example.md
+      - Conditional Logit Usage: notebooks/models/choice_learn_introduction_clogit.md
+      - RUMnet model Usage: notebooks/models/rumnet_example.md
+      - Building a custom choice model and handling hyper-parameters: notebooks/models/paramters_and_model_customization.md
+      - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
+      - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
     - Toolbox for choice modellers:
-      - Optimizing a product assortment: notebooks/assortment_example.md
+      - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
     - Data:
       - ChoiceDataset: references/data/references_choice_dataset.md
@@ -87,8 +90,8 @@ nav:
       - SimpleMNL Model: references/models/references_simple_mnl.md
       - Conditional Logit: references/models/references_clogit.md
       - RUMnet: references/models/references_rumnet.md
-      - Latent Class BaseModel: reference/models/latent_class_base_model.md
+      - Latent Class BaseModel: reference/models/references_latent_class_base_model.md
       - Latent Class MNL: references/models/references_latent_class_mnl.md
-  - Toolbox:
-      - Assortment Optimizer: references/toolbox/references_assortment_optimizer.md
+    - Toolbox:
+        - Assortment Optimizer: references/toolbox/references_assortment_optimizer.md
   - explanations.md
