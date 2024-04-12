@@ -4,9 +4,9 @@ import tensorflow as tf
 
 
 def softmax_with_availabilities(
-    contexts_items_logits, contexts_items_availabilities, axis=-1, normalize_exit=False, eps=1e-5
+    items_logit_by_choice, available_items_by_choice, axis=-1, normalize_exit=False, eps=1e-5
 ):
-    """Function to compute softmax probabilities from utilities.
+    """Compute softmax probabilities from utilities.
 
     Takes into account availabilties (1 if the product is available, 0 otherwise) to set
     probabilities to 0 for unavailable products and to renormalize the probabilities of
@@ -14,12 +14,12 @@ def softmax_with_availabilities(
 
     Parameters
     ----------
-    contexts_items_logits : np.ndarray (n_sessions, n_products)
+    items_logit_by_choice : np.ndarray (n_choices, n_products)
         Utilities / Logits on which to compute the softmax
-    contexts_items_availabilities : np.ndarray (n_sessions, n_products)
+    available_items_by_choice : np.ndarray (n_choices, n_products)
         Matrix indicating the availabitily (1) or not (0) of the products
     axis : int, optional
-        Axis of sessions_logits on which to apply the softmax, by default -1
+        Axis of items_logit_by_choice on which to apply the softmax, by default -1
     normalize_exit : bool, optional
         Whether to normalize the probabilities of available products with an exit choice of
         utility 1, by default False
@@ -27,17 +27,17 @@ def softmax_with_availabilities(
         Value to avoid division by 0 when a product with probability almost 1 is unavailable,
         by default 1e-5
 
-    Returns:
-    --------
-    tf.Tensor (n_sessions, n_products)
-        Probabilities of each product for each session computed from Logits
+    Returns
+    -------
+    tf.Tensor (n_chocies, n_products)
+        Probabilities of each product for each choice computed from Logits
     """
     # Substract max utility to avoid overflow
     numerator = tf.exp(
-        contexts_items_logits - tf.reduce_max(contexts_items_logits, axis=axis, keepdims=True)
+        items_logit_by_choice - tf.reduce_max(items_logit_by_choice, axis=axis, keepdims=True)
     )
     # Set unavailable products utility to 0
-    numerator = tf.multiply(numerator, contexts_items_availabilities)
+    numerator = tf.multiply(numerator, available_items_by_choice)
     # Sum of total available utilities
     denominator = tf.reduce_sum(numerator, axis=axis, keepdims=True)
     # Add 1 to the denominator to take into account the exit choice
@@ -82,7 +82,7 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         name="eps_categorical_crossentropy",
         reduction=tf.keras.losses.Reduction.AUTO,
     ):
-        """Initialization function.
+        """Initialize function.
 
         Follows structure of tf.keras.losses.CategoricalCrossentropy.
 
@@ -113,7 +113,7 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         self.epsilon = epsilon
 
     def call(self, y_true, y_pred):
-        """Computes the cross-entropy loss.
+        """Compute the cross-entropy loss.
 
         Parameters
         ----------
@@ -122,8 +122,8 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         y_pred : np.ndarray | tf.Tenosr
             Predicted labels
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Average Cross-Entropy loss
         """

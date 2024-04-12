@@ -56,13 +56,15 @@ exclude = [
 ]
 
 [tool.ruff.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"
 
 [tool.ruff.isort]
 known-first-party = ["choice_learn", "config", "tests"]
+
+[tool.ruff.lint]
 
 [tool.bandit.assert_used]
 exclude_dirs = ["tests/"]
