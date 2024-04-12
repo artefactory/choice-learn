@@ -9,7 +9,7 @@ class RandomChoiceModel(ChoiceModel):
     """Dumb model that randomly attributes utilities to products."""
 
     def __init__(self, **kwargs):
-        """Initialization of the model."""
+        """Initialize of the model."""
         super().__init__(**kwargs)
 
     def compute_batch_utility(
@@ -19,10 +19,10 @@ class RandomChoiceModel(ChoiceModel):
         available_items_by_choice,
         choices,
     ):
-        """Computes the random utility for each product of each choice.
+        """Compute the random utility for each product of each choice.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -36,8 +36,8 @@ class RandomChoiceModel(ChoiceModel):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             (n_choices, n_items) matrix of random utilities
         """
@@ -60,12 +60,12 @@ class DistribMimickingModel(ChoiceModel):
     """
 
     def __init__(self, **kwargs):
-        """Initialization of the model."""
+        """Initialize of the model."""
         super().__init__(**kwargs)
         self.weights = []
 
     def fit(self, choice_dataset, **kwargs):
-        """Computes the choice frequency of each product and defines it as choice probabilities."""
+        """Compute the choice frequency of each product and defines it as choice probabilities."""
         _ = kwargs
         choices = choice_dataset.choices
         for i in range(choice_dataset.get_num_items()):
@@ -79,10 +79,10 @@ class DistribMimickingModel(ChoiceModel):
         available_items_by_choice,
         choices,
     ):
-        """Returns utility that is fixed. U = log(P).
+        """Return utility that is fixed. U = log(P).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -96,13 +96,13 @@ class DistribMimickingModel(ChoiceModel):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray (n_choices, n_items)
             Utilities
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the model has not been fitted cannot evaluate the utility
         """

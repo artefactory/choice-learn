@@ -56,7 +56,7 @@ exclude = [
 ]
 
 [tool.ruff.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"

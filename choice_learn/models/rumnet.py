@@ -8,7 +8,7 @@ from choice_learn.models.base_model import ChoiceModel
 def create_ff_network(
     input_shape, depth, width, activation="elu", add_last=False, l2_regularization_coeff=0.0
 ):
-    """Base function to create a simple fully connected (Dense) network.
+    """Create a simple fully connected (Dense) network.
 
     Parameters
     ----------
@@ -25,8 +25,8 @@ def create_ff_network(
     l2_regularization_coeff : float, optional
         Regularization coefficient for Dense layers weights during training, by default 0.0
 
-    Returns:
-    --------
+    Returns
+    -------
     tf.keras.Model
         Dense Neural Network with tensorflow backend.
     """
@@ -55,7 +55,7 @@ def recreate_official_nets(
     depth_u,
     l2_regularization_coeff=0.0,
 ):
-    """Function to create the three nets used in RUMnet: X_net, Z_net and U_net.
+    """Create the three nets used in RUMnet: X_net, Z_net and U_net.
 
     Parameters
     ----------
@@ -85,8 +85,8 @@ def recreate_official_nets(
     l2_regularization_coef : float, optional
         Value of dense layers weights regulariation to apply during training, by default 0.0
 
-    Returns:
-    --------
+    Returns
+    -------
     tf.keras.Model
         Product features encoding network
     tf.keras.Model
@@ -146,13 +146,13 @@ class ParallelDense(tf.keras.layers.Layer):
     """
 
     def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
-        """Instantiation of the layer.
+        """Instantiate the layer.
 
         Following tf.keras.Layer API. Note that there will be width * depth * heterogeneity
         number of neurons in the layer.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         width : int
             Number of neurons for each dense layer.
         depth : int
@@ -171,8 +171,8 @@ class ParallelDense(tf.keras.layers.Layer):
     def build(self, input_shape):
         """Lazy build of the layer.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
@@ -216,13 +216,13 @@ class ParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_features) as input of the model.
 
-        Returns:
-        --------
+        Returns
+        -------
         outputs
             tensor of shape (batch_size, width, heterogeneity)
         """
@@ -248,8 +248,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
     def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
         """Inialization of the layer.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         width : int
             Number of neurons of each dense layer.
         depth : int
@@ -270,8 +270,8 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras API.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, num_features).
@@ -315,13 +315,13 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         inputs : tf.Tensor, np.ndarray
             Tensor of shape (batch_size, n_items, n_features) as input of the model.
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Embeddings of shape (batch_size, n_items, width, heterogeneity)
         """
@@ -342,10 +342,10 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     """
 
     def __init__(self, width, depth, activation="relu", add_last=True, **kwargs):
-        """Initialization of the layer.
+        """Initialize the layer.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         width : int
             Nnumber of neurons of each dense layer.
         depth : int
@@ -366,8 +366,8 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
 
         Follows tf.keras.Layer API.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of the input of the layer.
             Typically (batch_size, num_items, width, heterogeneity).
@@ -413,13 +413,13 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     def call(self, inputs):
         """Predict of the layer.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         inputs : tf.Tensor, np.ndarray
             Input Tensor of shape (batch_size, num_items, width, heterogeneity)
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Utilities of shape (batch_size, num_items, heterogeneity)
         """
@@ -477,10 +477,10 @@ class PaperRUMnet(ChoiceModel):
         label_smoothing=0.0,
         **kwargs,
     ):
-        """Initiation of the RUMnet Model.
+        """Initialize the RUMnet Model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         num_products_features : int
             Number of features each product will be described with.
             In terms of ChoiceDataset it is the number of
@@ -606,8 +606,8 @@ class PaperRUMnet(ChoiceModel):
         Here we asssume that: item features = {fixed item features + contexts item features}
                               user features = {contexts features}
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -621,8 +621,8 @@ class PaperRUMnet(ChoiceModel):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Utility of each product for each choice.
             Shape must be (n_choices, n_items)
@@ -677,13 +677,13 @@ class PaperRUMnet(ChoiceModel):
         choices,
         sample_weight=None,
     ):
-        """Modified version of train step, as we have to average probabilities over heterogeneities.
+        """Update model's weight with a step of gradient descent.
 
         Function that represents one training step (= one gradient descent step) of the model.
         Handles a batch of data of size n_contexts = n_choices = batch_size
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -700,8 +700,8 @@ class PaperRUMnet(ChoiceModel):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Value of NegativeLogLikelihood loss for the batch
         """
@@ -753,13 +753,13 @@ class PaperRUMnet(ChoiceModel):
         choices,
         sample_weight=None,
     ):
-        """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
+        """Represent one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
         Specifically recoded for RUMnet because it is needed to average probabilities over
         heterogeneities.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -776,8 +776,8 @@ class PaperRUMnet(ChoiceModel):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor (1, )
             Value of NegativeLogLikelihood loss for the batch
         tf.Tensor (batch_size, n_items)
@@ -843,8 +843,8 @@ class CPURUMnet(PaperRUMnet):
         Here we asssume that: item features = {fixed item features + contexts item features}
                                 user features = {contexts features}
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -858,8 +858,8 @@ class CPURUMnet(PaperRUMnet):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Utility of each product for each contexts.
             Shape must be (n_choices, n_items)
@@ -975,8 +975,8 @@ class GPURUMnet(PaperRUMnet):
         Here we asssume that: item features = {fixed item features + contexts item features}
                                 user features = {contexts features}
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -990,8 +990,8 @@ class GPURUMnet(PaperRUMnet):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Utility of each product for each contexts.
             Shape must be (n_choices, n_items)
@@ -1059,13 +1059,13 @@ class GPURUMnet(PaperRUMnet):
         choices,
         sample_weight=None,
     ):
-        """Function that represents one training step (= one gradient descent step) of the model.
+        """Represent one training step (= one gradient descent step) of the model.
 
         Recoded because heterogeneities generate different shapes of tensors.
         # TODO: verify that it is indeed different than PaperRUMnet
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -1082,8 +1082,8 @@ class GPURUMnet(PaperRUMnet):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Value of NegativeLogLikelihood loss for the batch
         """
@@ -1143,8 +1143,8 @@ class GPURUMnet(PaperRUMnet):
     ):
         """RUMnet batch_predict.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -1161,8 +1161,8 @@ class GPURUMnet(PaperRUMnet):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor (1, )
             Value of NegativeLogLikelihood loss for the batch
         tf.Tensor (batch_size, n_items)
