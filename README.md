@@ -164,7 +164,10 @@ If you consider this package and any of its feature useful for your research, pl
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
 ### Contributors
+
 ### Special Thanks
+
+### Affiliations
 
 ## References
 
