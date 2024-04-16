@@ -873,3 +873,46 @@ def load_train(
         choices_column="choice",
         choice_format="items_id",
     )
+
+
+def load_car_preferences(
+    as_frame=False,
+    return_desc=False,
+):
+    """Load and return the Car dataset from McFadden et al. (1993).
+
+    McFadden, Daniel and Kenneth Train (2000)
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    to_wide : bool, optional
+        Whether to return the dataset in wide format,
+        by default False (an thus retuned in long format).
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded Train dataset
+    """
+    desc = "Stated Preferences for Car Choice."
+    desc += """McFadden, Daniel and Kenneth Train (2000)
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470."""
+
+    data_file_name = "car.csv.gz"
+    # names, data = load_gzip(data_file_name)
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    train_df = pd.read_csv(full_path)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return train_df
+    raise NotImplementedError("Not implemented yet")
