@@ -908,11 +908,37 @@ def load_car_preferences(
     # names, data = load_gzip(data_file_name)
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
-    train_df = pd.read_csv(full_path)
+    cars_df = pd.read_csv(full_path)
 
     if return_desc:
         return desc
 
     if as_frame:
-        return train_df
-    raise NotImplementedError("Not implemented yet")
+        return cars_df
+
+    cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
+    shared_features = ["college", "hsg2", "coml5"]
+    items_features = [
+        "type",
+        "fuel",
+        "price",
+        "range",
+        "acc",
+        "speed",
+        "pollution",
+        "size",
+        "space",
+        "cost",
+        "station",
+    ]
+    items_id = [f"{i}" for i in range(1, 7)]
+
+    return ChoiceDataset.from_single_wide_df(
+        df=cars_df,
+        items_id=items_id,
+        shared_features_columns=shared_features,
+        items_features_prefixes=items_features,
+        delimiter="",
+        choices_column="choice",
+        choice_format="items_id",
+    )
