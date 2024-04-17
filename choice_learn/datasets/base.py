@@ -515,7 +515,7 @@ def load_modecanada(
         Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
 
@@ -704,7 +704,7 @@ def load_heating(
         Whether to return the description, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
 
     Returns
     -------
@@ -765,7 +765,7 @@ def load_electricity(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -836,7 +836,7 @@ def load_train(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -879,9 +879,8 @@ def load_car_preferences(
     as_frame=False,
     return_desc=False,
 ):
-    """Load and return the Car dataset from McFadden et al. (1993).
+    """Load and return the Car dataset from  McFadden, Daniel and Kenneth Train (2000).
 
-    McFadden, Daniel and Kenneth Train (2000)
     “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
 
     Parameters
@@ -889,9 +888,6 @@ def load_car_preferences(
     as_frame : bool, optional
         Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
         by default False.
-    to_wide : bool, optional
-        Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 

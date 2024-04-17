@@ -42,7 +42,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
 
 ### Examples
 
-Divers examples are provided in the How-To section, give it a look !
+Diverse examples are provided in the How-To section, give it a look !
 
 ## Introduction - Discrete Choice Modelling
 
