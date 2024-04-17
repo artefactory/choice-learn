@@ -3,6 +3,7 @@ import pandas as pd
 
 from choice_learn.data import ChoiceDataset
 from choice_learn.datasets import (
+    load_car_preferences,
     load_electricity,
     load_heating,
     load_modecanada,
@@ -72,3 +73,13 @@ def test_heating_loader():
 
     heating = load_heating()
     assert isinstance(heating, ChoiceDataset)
+
+
+def test_car_preferences_loader():
+    """Test loading the car preferences dataset."""
+    cars = load_car_preferences(as_frame=True)
+    assert isinstance(cars, pd.DataFrame)
+    assert cars.shape == (4654, 71)
+
+    cars = load_car_preferences()
+    assert isinstance(cars, ChoiceDataset)
