@@ -515,7 +515,7 @@ def load_modecanada(
         Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
 
@@ -704,7 +704,7 @@ def load_heating(
         Whether to return the description, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
 
     Returns
     -------
@@ -765,7 +765,7 @@ def load_electricity(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -836,7 +836,7 @@ def load_train(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -870,6 +870,71 @@ def load_train(
         items_features_prefixes=["price", "time", "change", "comfort"],
         delimiter="",
         available_items_suffix=None,
+        choices_column="choice",
+        choice_format="items_id",
+    )
+
+
+def load_car_preferences(
+    as_frame=False,
+    return_desc=False,
+):
+    """Load and return the Car dataset from  McFadden, Daniel and Kenneth Train (2000).
+
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded Train dataset
+    """
+    desc = "Stated Preferences for Car Choice."
+    desc += """McFadden, Daniel and Kenneth Train (2000)
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470."""
+
+    data_file_name = "car.csv.gz"
+    # names, data = load_gzip(data_file_name)
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    cars_df = pd.read_csv(full_path)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return cars_df
+
+    cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
+    shared_features = ["college", "hsg2", "coml5"]
+    items_features = [
+        "type",
+        "fuel",
+        "price",
+        "range",
+        "acc",
+        "speed",
+        "pollution",
+        "size",
+        "space",
+        "cost",
+        "station",
+    ]
+    items_id = [f"{i}" for i in range(1, 7)]
+
+    return ChoiceDataset.from_single_wide_df(
+        df=cars_df,
+        items_id=items_id,
+        shared_features_columns=shared_features,
+        items_features_prefixes=items_features,
+        delimiter="",
         choices_column="choice",
         choice_format="items_id",
     )

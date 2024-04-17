@@ -10,6 +10,40 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
 
 In this documentation you will find examples to be quickly getting started as well as some more in-depth example.
 
+## What's in there ?
+
+Here is a quick overview of the different functionalities offered by Choice-Learn. Further details are given in the rest of the documentation.
+
+### Data
+- [Custom data handling](./reference/data/references_choice_dataset.md) for choice datasets with possible memory usage optimizations
+- Some Open-Source ready-to use datasets are included within the datasets:
+  - [SwissMetro](./references/dataset/references_base.md)
+  - [ModeCanada](./references/dataset/references_base.md)
+  - The [Train](./references/dataset/references_base.md) dataset
+  - The [Heating](./references/dataset/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
+  - [Stated car preferences](./references/dataset/references_base.md)
+  - The [TaFeng](./references/dataset/references_tafeng.md) dataset from Kaggle
+  - The ICDM-2013 [Expedia](./references/dataset/references_expedia.md) dataset from Kaggle
+
+### Models
+- [Custom modelling](./notebooks/introduction/4_model_customization.md)
+- Ready to be used models:
+    - *Linear Models:*
+        - [Multinomial Logit](./references/models/references_simple_mnl.md)
+        - [Conditional Logit](./references/models/references_clogit.md)
+        - [Latent class MNL](./references/models/references_latent_class_mnl.md)
+    - *Non-Linear Models:*
+        - [RUMnet](./references/models/references_rumnet.md)
+        - [TasteNet](./references/models/references_tastenet.md)
+
+### Tools
+- [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)
+- [Assortment and Pricing](./references/toolbox/references_assortment_optimizer.md)
+
+### Examples
+
+Diverse examples are provided in the How-To section, give it a look !
+
 ## Introduction - Discrete Choice Modelling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.

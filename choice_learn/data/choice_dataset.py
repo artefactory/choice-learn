@@ -789,7 +789,7 @@ class ChoiceDataset(object):
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
         choice_format: str, optional
-            How choice is indicated in df, either "items_name" or "items_index",
+            How choice is indicated in df, either "items_id" or "items_index",
             default is "items_id"
 
         Returns
@@ -807,7 +807,7 @@ class ChoiceDataset(object):
                 "You cannot give both available_items_prefix and\
                     available_items_suffix."
             )
-        if choice_format not in ["items_index", "items_name"]:
+        if choice_format not in ["items_index", "items_id"]:
             logging.warning("choice_format not undersood, defaulting to 'items_index'")
 
         if shared_features_columns is not None:
@@ -881,9 +881,8 @@ class ChoiceDataset(object):
             if items_id is None:
                 raise ValueError("items_id must be given to use choice_format='items_id'")
             items_id = np.array(items_id)
-
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
-            if choices.shape[0] == 0:
+            if choices.size == 0:
                 raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
