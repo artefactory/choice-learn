@@ -381,6 +381,8 @@ class ConditionalLogit(ChoiceModel):
                 coefficients.add(feature + f"_w_{weight_counter}", feature, list(range(1, n_items)))
             elif mode == "item-full":
                 coefficients.add(feature + f"_w_{weight_counter}", feature, list(range(n_items)))
+            else:
+                raise ValueError(f"Mode {mode} not recognized.")
 
         self.coefficients = coefficients
 
