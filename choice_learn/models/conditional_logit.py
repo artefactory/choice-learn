@@ -651,7 +651,10 @@ class ConditionalLogit(ChoiceModel):
         i = 0
         for weight in self.trainable_weights:
             for j in range(weight.shape[1]):
-                names.append(f"{weight.name}_{j}")
+                if weight.shape[1] > 1:
+                    names.append(f"{weight.name[:-2]}_{j}")
+                else:
+                    names.append(f"{weight.name[:-2]}")
                 estimations.append(weight.numpy()[0][j])
                 z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
                 p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
