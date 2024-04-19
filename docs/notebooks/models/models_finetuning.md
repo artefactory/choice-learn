@@ -30,7 +30,7 @@ Gradient descent algorithms can be parametrized with the `lr` argument. The lear
 #### Batch Size
 
 The batch size hyperparameters sets up how many data (= choices) should be used in each update of the gradient descent algorithm. A compromise has to be found between higher values taking up a more memory that are more stable but can become slower in terms of convergence time and smaller values with fast iterations but that also introduce more noise.
-The default value is `batch_size=32`.
+The default value is `batch_size=32` and you can use `batch_size=-1` if you want your batch to be the whole dataset.
 
 #### Epochs
 
