@@ -106,7 +106,9 @@ class ChoiceModel(object):
                         l1=regularization_strength, l2=regularization_strength
                     )
             else:
-                raise ValueError("Regularization type not recognized, choose among l1 and l2.")
+                raise ValueError(
+                    "Regularization type not recognized, choose among l1, l2 and l1l2."
+                )
             self.regularization = regularization
             self.regularization_strength = regularization_strength
         else:

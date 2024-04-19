@@ -63,6 +63,7 @@ You can integrate a label smoothing that sometimes help the optimization process
 Basically, the probabilities are float in [0, 1]. When > 0, label values are smoothed, meaning the confidence on label values is relaxed. For example, if 0.1, use 0.1 / num_items for non-chosen labels and 0.9 + 0.1 / num_classes for chosen labels.
 
 More explanations [here](https://www.tensorflow.org/api_docs/python/tf/keras/losses/CategoricalCrossentropy).
+
 ## Final Word
 
 If you want or need more details checkout the [references page](./../../references/models/references_base_model.md) of models.
