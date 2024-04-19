@@ -50,10 +50,14 @@ def nested_softmax_with_availabilities(
     numerator = tf.exp(items_logit_by_choice / gammas)
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
-
     items_nest_utility = tf.zeros_like(numerator)
-    for nest_index in tf.unique(items_nests[0]):
-        nest_utility = tf.reduce_sum(numerator[items_nests == nest_index], keepdims=True)
+    for nest_index in tf.unique(items_nests)[0]:
+        stack = tf.stack([numerator[:, i[0]] for i in tf.where(items_nests == nest_index)], axis=-1)
+        nest_utility = tf.reduce_sum(
+            stack,
+            axis=-1,
+            keepdims=True,
+        )
         items_nest_utility += nest_utility * tf.cast(items_nests == nest_index, tf.float32)
 
     numerator = numerator * (items_nest_utility ** (gammas - 1))
@@ -117,6 +121,12 @@ class NestedLogit(ChoiceModel):
         if len(np.unique(flat_items)) != len(flat_items):
             raise ValueError("Got at least one items in several nests, which is not possible.")
         self.items_nests = items_nests
+        items_to_nest = []
+        for item_index in range(len(np.unique(flat_items))):
+            for i_nest, nest in enumerate(items_nests):
+                if item_index in nest:
+                    items_to_nest.append(i_nest)
+        self.items_to_nest = items_to_nest
 
     def add_coefficients(
         self, feature_name, coefficient_name="", items_indexes=None, items_names=None
@@ -251,6 +261,12 @@ class NestedLogit(ChoiceModel):
             )
             weights.append(weight)
             self.coefficients._add_tf_weight(weight_name, weight_nb)
+        weights.append(
+            tf.Variable(
+                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, len(self.items_nests))),
+                name="gammas_nests",
+            )
+        )
 
         self.trainable_weights = weights
 
@@ -467,6 +483,79 @@ class NestedLogit(ChoiceModel):
                 )
 
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
+
+    # @tf.function
+    def train_step(
+        self,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
+        choices,
+        sample_weight=None,
+    ):
+        """Represent one training step (= one gradient descent step) of the model.
+
+        Parameters
+        ----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_choices, )
+        sample_weight : np.ndarray, optional
+            List samples weights to apply during the gradient descent to the batch elements,
+            by default None
+
+        Returns
+        -------
+        tf.Tensor
+            Value of NegativeLogLikelihood loss for the batch
+        """
+        with tf.GradientTape() as tape:
+            utilities = self.compute_batch_utility(
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
+                choices=choices,
+            )
+
+            batch_size = utilities.shape[0]
+            batch_gammas = []
+            for i in range(len(self.items_to_nest)):
+                batch_gammas.append(
+                    [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
+                )
+            batch_gammas = tf.stack(batch_gammas, axis=-1)
+
+            probabilities = nested_softmax_with_availabilities(
+                items_logit_by_choice=utilities,
+                available_items_by_choice=available_items_by_choice,
+                items_nests=tf.constant(self.items_to_nest),
+                gammas=batch_gammas,
+                normalize_exit=self.add_exit_choice,
+            )
+            # Negative Log-Likelihood
+            neg_loglikelihood = self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            )
+            if self.regularization is not None:
+                regularization = tf.reduce_sum(
+                    [self.regularizer(w) for w in self.trainable_weights]
+                )
+                neg_loglikelihood += regularization
+
+        grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        return neg_loglikelihood
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
         """Fit function to estimate the paramters.
