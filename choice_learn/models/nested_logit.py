@@ -107,8 +107,8 @@ class NestedLogit(ChoiceModel):
         for i_nest, nest in enumerate(items_nests):
             if len(nest) < 1:
                 raise ValueError(f"Nest {i_nest} is empty.")
-            print(f"Got nest {i_nest} on {len(nest)} with {len(nest)} items.")
-        flat_items = np.stack(items_nests).flatten()
+            print(f"Got nest {i_nest+1} on {len(items_nests)} with {len(nest)} items.")
+        flat_items = np.concatenate(items_nests).flatten()
         if np.max(flat_items) >= len(flat_items):
             raise ValueError(
                 f"""{len(flat_items)} have been given,\
