@@ -25,7 +25,7 @@ This repository contains a private version of the package.
 - [choice-learn-private](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [What's in there ?](#whats-in-there)
-  - [Getting Started](#getting-started---fast-track)
+  - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)

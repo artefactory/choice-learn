@@ -73,6 +73,7 @@ nav:
       - RUMnet model Usage: notebooks/models/rumnet.md
       - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
+      - Model Finetuning and general hyperparamters: notebooks/models/model_finetuning.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
