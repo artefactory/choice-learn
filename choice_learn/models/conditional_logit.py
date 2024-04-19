@@ -310,7 +310,8 @@ class ConditionalLogit(ChoiceModel):
 
         Parameters
         ----------
-        choice_dataset: choice dataset to match the features names with the model coefficients.
+        choice_dataset: ChoiceDataset
+            Used to match the features names with the model coefficients.
         """
         if not self.instantiated:
             if not isinstance(self.coefficients, MNLCoefficients):

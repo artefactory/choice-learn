@@ -22,12 +22,16 @@ def nested_softmax_with_availabilities(
 
     Parameters
     ----------
-    items_logit_by_choice : np.ndarray (n_choices, n_products)
+    items_logit_by_choice : np.ndarray (n_choices, n_items)
         Utilities / Logits on which to compute the softmax
-    available_items_by_choice : np.ndarray (n_choices, n_products)
+    available_items_by_choice : np.ndarray (n_choices, n_items)
         Matrix indicating the availabitily (1) or not (0) of the products
-    axis : int, optional
-        Axis of items_logit_by_choice on which to apply the softmax, by default -1
+    items_nests : np.ndarray (n_items)
+        Nest index for each item  # Beware that nest index matches well gammas,
+        it is not verified.
+    gammas : np.ndarray of shape (n_choices, n_items)
+        Nest gammas value that must be reshaped so that it matches items_logit_by_choice
+        items_gammas_by_choice ?
     normalize_exit : bool, optional
         Whether to normalize the probabilities of available products with an exit choice of
         utility 1, by default False
@@ -37,7 +41,7 @@ def nested_softmax_with_availabilities(
 
     Returns
     -------
-    tf.Tensor (n_chocies, n_products)
+    tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
     numerator = tf.exp(items_logit_by_choice / gammas)
@@ -195,7 +199,8 @@ class NestedLogit(ChoiceModel):
 
         Parameters
         ----------
-        choice_dataset: choice dataset to match the features names with the model coefficients.
+        choice_dataset: ChoiceDataset
+            Used to match the features names with the model coefficients.
         """
         if not self.instantiated:
             if not isinstance(self.coefficients, MNLCoefficients):

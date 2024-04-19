@@ -14,9 +14,9 @@ def softmax_with_availabilities(
 
     Parameters
     ----------
-    items_logit_by_choice : np.ndarray (n_choices, n_products)
+    items_logit_by_choice : np.ndarray (n_choices, n_items)
         Utilities / Logits on which to compute the softmax
-    available_items_by_choice : np.ndarray (n_choices, n_products)
+    available_items_by_choice : np.ndarray (n_choices, n_items)
         Matrix indicating the availabitily (1) or not (0) of the products
     axis : int, optional
         Axis of items_logit_by_choice on which to apply the softmax, by default -1
@@ -29,7 +29,7 @@ def softmax_with_availabilities(
 
     Returns
     -------
-    tf.Tensor (n_chocies, n_products)
+    tf.Tensor (n_chocies, n_items)
         Probabilities of each product for each choice computed from Logits
     """
     # Substract max utility to avoid overflow
