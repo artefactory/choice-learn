@@ -26,7 +26,7 @@ class ChoiceModel(object):
         lr=0.001,
         epochs=1000,
         batch_size=32,
-        regularization_type=None,
+        regularization=None,
         regularization_strength=0.0,
     ):
         """Instantiate the ChoiceModel.
@@ -53,10 +53,11 @@ class ChoiceModel(object):
         batch_size: int, optional
             Batch size in the case of stochastic gradient descent optimizer.
             Not used in the case of L-BFGS optimizer, by default 32
-        regularization_type: str
-            Type of regularization to apply: "l1" or "l2", by default None
-        regularizaiton_strength: float
-            weight of regularization in loss computation, by default 0.
+        regularization: str
+            Type of regularization to apply: "l1", "l2" or "l1l2", by default None
+        regularization_strength: float or list
+            weight of regularization in loss computation. If "l1l2" is chosen as regularization,
+            can be given as list or tuple: [l1_strength, l2_strength], by default 0.
         """
         self.is_fitted = False
         self.add_exit_choice = add_exit_choice
@@ -90,18 +91,27 @@ class ChoiceModel(object):
         self.batch_size = batch_size
         self.tolerance = tolerance
 
-        if regularization_type is not None:
-            if regularization_type.lower() == "l1":
-                self.regularizer = tf.keras.regularizers.l1(regularization_strength)
-            elif regularization_type.lower() == "l2":
-                self.regularizer = tf.keras.regularizers.l2(regularization_strength)
+        if regularization is not None:
+            if regularization.lower() == "l1":
+                self.regularizer = tf.keras.regularizers.L1(l1=regularization_strength)
+            elif regularization.lower() == "l2":
+                self.regularizer = tf.keras.regularizers.L2(l2=regularization_strength)
+            elif regularization.lower() == "l1l2":
+                if isinstance(regularization_strength, (list, tuple)):
+                    self.regularizer = tf.keras.regularizers.L1L2(
+                        l1=regularization_strength[0], l2=regularization_strength[1]
+                    )
+                else:
+                    self.regularizer = tf.keras.regularizers.L1L2(
+                        l1=regularization_strength, l2=regularization_strength
+                    )
             else:
                 raise ValueError("Regularization type not recognized, choose among l1 and l2.")
-            self.regularization_type = regularization_type
+            self.regularization = regularization
             self.regularization_strength = regularization_strength
         else:
             self.regularization_strength = 0.0
-            self.regularization_type = None
+            self.regularization = None
 
     @abstractmethod
     def compute_batch_utility(
@@ -195,7 +205,7 @@ class ChoiceModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
-            if self.regularization_type is not None:
+            if self.regularization is not None:
                 regularization = tf.reduce_sum(
                     [self.regularizer(w) for w in self.trainable_weights]
                 )
@@ -660,7 +670,7 @@ class ChoiceModel(object):
                 loss_value = self.evaluate(
                     dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
                 )
-                if self.regularization_type is not None:
+                if self.regularization is not None:
                     regularization = tf.reduce_sum(
                         [self.regularizer(w) for w in self.trainable_weights]
                     )
