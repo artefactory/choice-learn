@@ -404,12 +404,11 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         )
 
         swiss_df["train_free_ticket"] = swiss_df.apply(
-            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+            lambda row: (row["GA"] == 1).astype(int), axis=1
         )
         swiss_df["sm_free_ticket"] = swiss_df.apply(
-            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+            lambda row: (row["GA"] == 1).astype(int), axis=1
         )
-        swiss_df["car_free_ticket"] = 0
 
         swiss_df["train_travel_cost"] = swiss_df.apply(
             lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
