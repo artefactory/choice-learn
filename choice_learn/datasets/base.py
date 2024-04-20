@@ -394,6 +394,49 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             items_features_by_choice_names=["cost", "travel_time", "headway", "seats"],
             choices=choices,
         )
+    if preprocessing == "biogeme_nested":
+        # Keep only commute an dbusiness trips
+        swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
+
+        # Normalizing values by 100
+        swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] = (
+            swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] / 100.0
+        )
+
+        swiss_df["train_free_ticket"] = swiss_df.apply(
+            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+        )
+        swiss_df["sm_free_ticket"] = swiss_df.apply(
+            lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
+        )
+        swiss_df["car_free_ticket"] = 0
+
+        swiss_df["train_travel_cost"] = swiss_df.apply(
+            lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["sm_travel_cost"] = swiss_df.apply(
+            lambda row: (row["SM_CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR_CO"] / 100, axis=1)
+
+        train_features = swiss_df[["train_travel_cost", "TRAIN_TT"]].to_numpy()
+        sm_features = swiss_df[["sm_travel_cost", "SM_TT"]].to_numpy()
+        car_features = swiss_df[["car_travel_cost", "CAR_TT"]].to_numpy()
+
+        items_features_by_choice = np.stack([train_features, sm_features, car_features], axis=1)
+
+        available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        # Re-Indexing choices from 1 to 3 to 0 to 2
+        choices = swiss_df.CHOICE.to_numpy()
+
+        return ChoiceDataset(
+            shared_features_by_choice=None,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
+            shared_features_by_choice_names=None,
+            items_features_by_choice_names=["cost", "travel_time"],
+            choices=choices,
+        )
     if preprocessing == "rumnet":
         # swiss_df = pd.DataFrame(data, columns=names)
         # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
