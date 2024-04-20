@@ -15,7 +15,7 @@ def nested_softmax_with_availabilities(
     items_nests,
     gammas,
     normalize_exit=False,
-    eps=1e-5,
+    eps=1e-10,
 ):
     """Compute softmax probabilities from utilities.
 
@@ -52,7 +52,7 @@ def nested_softmax_with_availabilities(
     numerator = tf.multiply(numerator, available_items_by_choice)
     items_nest_utility = tf.zeros_like(numerator)
     for nest_index in tf.unique(items_nests)[0]:
-        stack = tf.stack([numerator[:, i[0]] for i in tf.where(items_nests == nest_index)], axis=-1)
+        stack = tf.boolean_mask(numerator, items_nests == nest_index, axis=1)
         nest_utility = tf.reduce_sum(
             stack,
             axis=-1,
@@ -62,7 +62,7 @@ def nested_softmax_with_availabilities(
 
     numerator = numerator * (items_nest_utility ** (gammas - 1))
     # Sum of total available utilities
-    denominator = tf.reduce_sum((items_nest_utility**gammas), axis=-1, keepdims=True)
+    denominator = tf.reduce_sum(numerator, axis=-1, keepdims=True)
     # Add 1 to the denominator to take into account the exit choice
     if normalize_exit:
         denominator += 1
@@ -483,6 +483,80 @@ class NestedLogit(ChoiceModel):
                 )
 
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
+
+    # @tf.function
+    def batch_predict(
+        self,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
+        choices,
+        sample_weight=None,
+    ):
+        """Represent one prediction (Probas + Loss) for one batch of a ChoiceDataset.
+
+        Parameters
+        ----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_choices, )
+        sample_weight : np.ndarray, optional
+            List samples weights to apply during the gradient descent to the batch elements,
+            by default None
+
+        Returns
+        -------
+        tf.Tensor (1, )
+            Value of NegativeLogLikelihood loss for the batch
+        tf.Tensor (batch_size, n_items)
+            Probabilities for each product to be chosen for each choice
+        """
+        # Compute utilities from features
+        utilities = self.compute_batch_utility(
+            shared_features_by_choice,
+            items_features_by_choice,
+            available_items_by_choice,
+            choices,
+        )
+
+        batch_size = utilities.shape[0]
+        batch_gammas = []
+        for i in range(len(self.items_to_nest)):
+            batch_gammas.append([self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size)
+        batch_gammas = tf.stack(batch_gammas, axis=-1)
+
+        probabilities = nested_softmax_with_availabilities(
+            items_logit_by_choice=utilities,
+            available_items_by_choice=available_items_by_choice,
+            items_nests=tf.constant(self.items_to_nest),
+            gammas=batch_gammas,
+            normalize_exit=self.add_exit_choice,
+        )
+
+        # Compute loss from probabilities & actual choices
+        # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)
+        batch_loss = {
+            "optimized_loss": self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+        }
+        return batch_loss, probabilities
 
     # @tf.function
     def train_step(
