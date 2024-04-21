@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+import choice_learn.tf_ops as tf_ops
 from choice_learn.models.base_model import ChoiceModel
 from choice_learn.models.conditional_logit import MNLCoefficients
 
@@ -47,7 +48,10 @@ def nested_softmax_with_availabilities(
     tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
+    # gammas = tf.clip_by_value(gammas, 0.1, 40.0)
+    gammas = tf.math.sigmoid(gammas)
     numerator = tf.exp(items_logit_by_choice / gammas)
+    # numerator = tf.exp(numerator - tf.reduce_max(numerator, axis=-1, keepdims=True))
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
     items_nest_utility = tf.zeros_like(numerator)
@@ -69,7 +73,6 @@ def nested_softmax_with_availabilities(
     # Avoir division by 0 when only unavailable items have highest utilities
     elif eps:
         denominator += eps
-
     # Compute softmax
     return numerator / denominator
 
@@ -551,6 +554,11 @@ class NestedLogit(ChoiceModel):
                 sample_weight=sample_weight,
             ),
             "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            ),
+            "Exact-NegativeLogLikelihood": tf_ops.ExactCategoricalCrossEntropy()(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
