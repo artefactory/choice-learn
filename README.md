@@ -53,6 +53,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Model estimation
 - Ready-to-use models:
   - Conditional MultiNomialLogit [[4]](#citation)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
+  - Nested Logit [[10]](#citation) [[Example]](notebooks/models/nested_logit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
@@ -181,7 +182,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
 [7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)\
 [8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)\
-[9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)
+[9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
+[10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)
 
 ### Code and Repositories
 - [1][RUMnet](https://github.com/antoinedesir/rumnet)
