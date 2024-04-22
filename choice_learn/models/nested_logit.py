@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-import choice_learn.tf_ops as tf_ops
 from choice_learn.models.base_model import ChoiceModel
 from choice_learn.models.conditional_logit import MNLCoefficients
 
@@ -553,12 +552,12 @@ class NestedLogit(ChoiceModel):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
-                y_pred=probabilities,
-                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-                sample_weight=sample_weight,
-            ),
-            "Exact-NegativeLogLikelihood": tf_ops.ExactCategoricalCrossEntropy()(
+            # "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            #     y_pred=probabilities,
+            #     y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+            #     sample_weight=sample_weight,
+            # ),
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,

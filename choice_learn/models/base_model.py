@@ -69,6 +69,15 @@ class ChoiceModel(object):
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
+        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False,
+            label_smoothing=0.0,
+            sparse=False,
+            axis=-1,
+            epsilon=1e-35,
+            name="exact_categorical_crossentropy",
+            reduction=tf.keras.losses.Reduction.AUTO,
+        )
         self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)
 
@@ -462,12 +471,12 @@ class ChoiceModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
-                y_pred=probabilities,
-                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-                sample_weight=sample_weight,
-            ),
-            "Exact-NegativeLogLikelihood": tf_ops.ExactCategoricalCrossEntropy()(
+            # "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            #     y_pred=probabilities,
+            #     y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+            #     sample_weight=sample_weight,
+            # ),
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
