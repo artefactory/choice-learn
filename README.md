@@ -58,7 +58,6 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
-  - Nested Logit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
@@ -70,11 +69,11 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 ## Getting Started
 
-You can find the following [notebooks](notebooks/introduction/) to help you getting started with the package:
-- [Generic and simple introduction](notebooks/introduction/1_introductive_example.ipynb)
-- [Detailed explanations of data handling depending on the data format](notebooks/introduction/2_data_handling.ipynb)
-- [A detailed example of conditional logit estimation](notebooks/introduction/3_model_clogit.ipynb)
-- [Introduction to custom modelling and more complex parametrization](notebooks/introduction/4_model_customization.ipynb)
+You can find the following tutorials to help you getting started with the package:
+- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
+- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
+- Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
 ## Installation
 

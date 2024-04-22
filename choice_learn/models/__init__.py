@@ -2,6 +2,7 @@
 import tensorflow as tf
 
 from .conditional_logit import ConditionalLogit
+from .nested_logit import NestedLogit
 from .simple_mnl import SimpleMNL
 from .tastenet import TasteNet
 
@@ -13,4 +14,4 @@ else:
 
     print("No GPU detected, importing CPU version of RUMnet.")
 
-__all__ = ["ConditionalLogit", "RUMnet", "SimpleMNL", "TasteNet"]
+__all__ = ["ConditionalLogit", "RUMnet", "SimpleMNL", "TasteNet", "NestedLogit"]

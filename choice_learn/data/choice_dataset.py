@@ -886,7 +886,8 @@ class ChoiceDataset(object):
                 raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
-            shared_features_by_choice=shared_features_by_choice,
+            shared_features_by_choice=shared_features_by_choice.to_numpy(),
+            shared_features_by_choice_names=shared_features_columns,
             items_features_by_choice=items_features_by_choice,
             items_features_by_choice_names=items_features_names,
             available_items_by_choice=available_items_by_choice,
