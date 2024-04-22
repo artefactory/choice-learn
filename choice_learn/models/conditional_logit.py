@@ -700,20 +700,19 @@ class ConditionalLogit(ChoiceModel):
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
                 model.trainable_weights = mw
-                for batch in dataset.iter_batch(batch_size=-1):
-                    utilities = model.compute_batch_utility(*batch)
-                    probabilities = tf.nn.softmax(utilities, axis=-1)
-                    loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
-                        y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
-                    )
+                batch = next(dataset.iter_batch(batch_size=-1))
+                utilities = model.compute_batch_utility(*batch)
+                probabilities = tf.nn.softmax(utilities, axis=-1)
+                loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
+                    y_pred=probabilities,
+                    y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
+                )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.batch_jacobian(jacobian, w)
-        return tf.sqrt(
-            [tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(tf.squeeze(hessian)))]
-        )
+        inv_hessian = tf.linalg.inv(tf.squeeze(hessian))
+        return tf.sqrt([inv_hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
     def clone(self):
         """Return a clone of the model."""
