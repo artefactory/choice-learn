@@ -47,10 +47,9 @@ def nested_softmax_with_availabilities(
     tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
-    # gammas = tf.clip_by_value(gammas, 0.1, 40.0)
     gammas = tf.math.sigmoid(gammas)
     numerator = tf.exp(items_logit_by_choice / gammas)
-    # numerator = tf.exp(numerator - tf.reduce_max(numerator, axis=-1, keepdims=True))
+
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
     items_nest_utility = tf.zeros_like(numerator)
@@ -127,7 +126,10 @@ class NestedLogit(ChoiceModel):
         for item_index in range(len(np.unique(flat_items))):
             for i_nest, nest in enumerate(items_nests):
                 if item_index in nest:
-                    items_to_nest.append(i_nest)
+                    if len(nest) > 1:
+                        items_to_nest.append(i_nest)
+                    else:
+                        items_to_nest.append(-1)
         self.items_to_nest = items_to_nest
 
     def add_coefficients(
@@ -265,7 +267,9 @@ class NestedLogit(ChoiceModel):
             self.coefficients._add_tf_weight(weight_name, weight_nb)
         weights.append(
             tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, len(self.items_nests))),
+                tf.random_normal_initializer(0.0, 0.02, seed=42)(
+                    shape=(1, np.sum([1 if len(nest) > 1 else 0 for nest in self.items_nests]))
+                ),
                 name="gammas_nests",
             )
         )
@@ -533,7 +537,12 @@ class NestedLogit(ChoiceModel):
         batch_size = utilities.shape[0]
         batch_gammas = []
         for i in range(len(self.items_to_nest)):
-            batch_gammas.append([self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size)
+            if self.items_to_nest[i] == -1:
+                batch_gammas.append([tf.constant(1.0)] * batch_size)
+            else:
+                batch_gammas.append(
+                    [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
+                )
         batch_gammas = tf.stack(batch_gammas, axis=-1)
 
         probabilities = nested_softmax_with_availabilities(
@@ -722,7 +731,10 @@ class NestedLogit(ChoiceModel):
         i = 0
         for weight in self.trainable_weights:
             for j in range(weight.shape[1]):
-                names.append(f"{weight.name}_{j}")
+                if weight.shape[1] > 1:
+                    names.append(f"{weight.name[:-2]}_{j}")
+                else:
+                    names.append(f"{weight.name[:-2]}")
                 estimations.append(weight.numpy()[0][j])
                 z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
                 p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
@@ -765,20 +777,36 @@ class NestedLogit(ChoiceModel):
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
                 model.trainable_weights = mw
-                for batch in dataset.iter_batch(batch_size=-1):
-                    utilities = model.compute_batch_utility(*batch)
-                    probabilities = tf.nn.softmax(utilities, axis=-1)
-                    loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
-                        y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
-                    )
+                batch = next(dataset.iter_batch(batch_size=-1))
+                batch_gammas = []
+                for i in range(len(self.items_to_nest)):
+                    if self.items_to_nest[i] == -1:
+                        batch_gammas.append([tf.constant(1.0)] * len(dataset))
+                    else:
+                        batch_gammas.append(
+                            [model.trainable_weights[-1][0, self.items_to_nest[i]]] * len(dataset)
+                        )
+                batch_gammas = tf.stack(batch_gammas, axis=-1)
+
+                utilities = model.compute_batch_utility(*batch)
+                probabilities = nested_softmax_with_availabilities(
+                    items_logit_by_choice=utilities,
+                    available_items_by_choice=batch[2],
+                    items_nests=tf.constant(self.items_to_nest),
+                    gammas=batch_gammas,
+                    normalize_exit=self.add_exit_choice,
+                )
+                loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
+                    y_pred=probabilities,
+                    y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
+                )
+
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.batch_jacobian(jacobian, w)
-        return tf.sqrt(
-            [tf.linalg.inv(tf.squeeze(hessian))[i][i] for i in range(len(tf.squeeze(hessian)))]
-        )
+        inv_hessian = tf.linalg.inv(tf.squeeze(hessian))
+        return tf.sqrt([inv_hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
     def clone(self):
         """Return a clone of the model."""
