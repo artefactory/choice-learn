@@ -15,7 +15,7 @@ def nested_softmax_with_availabilities(
     items_nests,
     gammas,
     normalize_exit=False,
-    eps=1e-10,
+    eps=1e-15,
 ):
     """Compute softmax probabilities from utilities.
 
@@ -47,12 +47,12 @@ def nested_softmax_with_availabilities(
     tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
-    gammas = tf.math.sigmoid(gammas)
-    numerator = tf.exp(items_logit_by_choice / gammas)
-
+    # gammas = tf.math.sigmoid(tf.clip_by_value(gammas, -2, 20))
+    gammas = tf.clip_by_value(gammas, 0.05, 1.0)
+    numerator = tf.exp(tf.clip_by_value(items_logit_by_choice / gammas, tf.float32.min, 50))
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
-    items_nest_utility = tf.zeros_like(numerator)
+    items_nest_utility = tf.zeros_like(numerator) + eps
     for nest_index in tf.unique(items_nests)[0]:
         stack = tf.boolean_mask(numerator, items_nests == nest_index, axis=1)
         nest_utility = tf.reduce_sum(
@@ -61,7 +61,6 @@ def nested_softmax_with_availabilities(
             keepdims=True,
         )
         items_nest_utility += nest_utility * tf.cast(items_nests == nest_index, tf.float32)
-
     numerator = numerator * (items_nest_utility ** (gammas - 1))
     # Sum of total available utilities
     denominator = tf.reduce_sum(numerator, axis=-1, keepdims=True)
@@ -81,6 +80,7 @@ class NestedLogit(ChoiceModel):
     def __init__(
         self,
         items_nests,
+        shared_gammas_over_nests=False,
         coefficients=None,
         add_exit_choice=False,
         optimizer="lbfgs",
@@ -131,6 +131,7 @@ class NestedLogit(ChoiceModel):
                     else:
                         items_to_nest.append(-1)
         self.items_to_nest = items_to_nest
+        self.shared_gammas_over_nests = shared_gammas_over_nests
 
     def add_coefficients(
         self, feature_name, coefficient_name="", items_indexes=None, items_names=None
@@ -265,14 +266,20 @@ class NestedLogit(ChoiceModel):
             )
             weights.append(weight)
             self.coefficients._add_tf_weight(weight_name, weight_nb)
-        weights.append(
-            tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=42)(
-                    shape=(1, np.sum([1 if len(nest) > 1 else 0 for nest in self.items_nests]))
-                ),
-                name="gammas_nests",
+        if self.shared_gammas_over_nests:
+            weights.append(
+                tf.Variable(
+                    [[0.5]],
+                    name="gamma_nests",
+                )
             )
-        )
+        else:
+            weights.append(
+                tf.Variable(
+                    [[0.5] * np.sum([1 if len(nest) > 1 else 0 for nest in self.items_nests])],
+                    name="gammas_nests",
+                )
+            )
 
         self.trainable_weights = weights
 
@@ -471,14 +478,25 @@ class NestedLogit(ChoiceModel):
             for item_index, weight_index in zip(item_index_list, weight_index_list):
                 partial_items_utility_by_choice = tf.zeros((n_items,))
                 for q, idx in enumerate(item_index):
-                    partial_items_utility_by_choice = tf.concat(
-                        [
-                            partial_items_utility_by_choice[:idx],
-                            self.trainable_weights[weight_index][:, q],
-                            partial_items_utility_by_choice[idx + 1 :],
-                        ],
-                        axis=0,
-                    )
+                    if isinstance(idx, list):
+                        for idx_idx in idx:
+                            partial_items_utility_by_choice = tf.concat(
+                                [
+                                    partial_items_utility_by_choice[:idx_idx],
+                                    self.trainable_weights[weight_index][:, q],
+                                    partial_items_utility_by_choice[idx_idx + 1 :],
+                                ],
+                                axis=0,
+                            )
+                    else:
+                        partial_items_utility_by_choice = tf.concat(
+                            [
+                                partial_items_utility_by_choice[:idx],
+                                self.trainable_weights[weight_index][:, q],
+                                partial_items_utility_by_choice[idx + 1 :],
+                            ],
+                            axis=0,
+                        )
 
                 partial_items_utility_by_choice = tf.stack(
                     [partial_items_utility_by_choice] * n_choices, axis=0
@@ -536,14 +554,17 @@ class NestedLogit(ChoiceModel):
 
         batch_size = utilities.shape[0]
         batch_gammas = []
-        for i in range(len(self.items_to_nest)):
-            if self.items_to_nest[i] == -1:
-                batch_gammas.append([tf.constant(1.0)] * batch_size)
-            else:
-                batch_gammas.append(
-                    [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
-                )
-        batch_gammas = tf.stack(batch_gammas, axis=-1)
+        if self.shared_gammas_over_nests:
+            batch_gammas = self.trainable_weights[-1][0, 0] * tf.ones_like(utilities)
+        else:
+            for i in range(len(self.items_to_nest)):
+                if self.items_to_nest[i] == -1:
+                    batch_gammas.append([tf.constant(1.0)] * batch_size)
+                else:
+                    batch_gammas.append(
+                        [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
+                    )
+            batch_gammas = tf.stack(batch_gammas, axis=-1)
 
         probabilities = nested_softmax_with_availabilities(
             items_logit_by_choice=utilities,
@@ -618,11 +639,17 @@ class NestedLogit(ChoiceModel):
 
             batch_size = utilities.shape[0]
             batch_gammas = []
-            for i in range(len(self.items_to_nest)):
-                batch_gammas.append(
-                    [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
-                )
-            batch_gammas = tf.stack(batch_gammas, axis=-1)
+            if self.shared_gammas_over_nests:
+                batch_gammas = self.trainable_weights[-1][0, 0] * tf.ones_like(utilities)
+            else:
+                for i in range(len(self.items_to_nest)):
+                    if self.items_to_nest[i] == -1:
+                        batch_gammas.append([tf.constant(1.0)] * batch_size)
+                    else:
+                        batch_gammas.append(
+                            [self.trainable_weights[-1][0, self.items_to_nest[i]]] * batch_size
+                        )
+                batch_gammas = tf.stack(batch_gammas, axis=-1)
 
             probabilities = nested_softmax_with_availabilities(
                 items_logit_by_choice=utilities,
@@ -778,17 +805,22 @@ class NestedLogit(ChoiceModel):
                     index += _w.shape[1]
                 model.trainable_weights = mw
                 batch = next(dataset.iter_batch(batch_size=-1))
-                batch_gammas = []
-                for i in range(len(self.items_to_nest)):
-                    if self.items_to_nest[i] == -1:
-                        batch_gammas.append([tf.constant(1.0)] * len(dataset))
-                    else:
-                        batch_gammas.append(
-                            [model.trainable_weights[-1][0, self.items_to_nest[i]]] * len(dataset)
-                        )
-                batch_gammas = tf.stack(batch_gammas, axis=-1)
-
                 utilities = model.compute_batch_utility(*batch)
+
+                batch_gammas = []
+                if self.shared_gammas_over_nests:
+                    batch_gammas = model.trainable_weights[-1][0, 0] * tf.ones_like(utilities)
+                else:
+                    for i in range(len(self.items_to_nest)):
+                        if self.items_to_nest[i] == -1:
+                            batch_gammas.append([tf.constant(1.0)] * len(dataset))
+                        else:
+                            batch_gammas.append(
+                                [model.trainable_weights[-1][0, self.items_to_nest[i]]]
+                                * len(dataset)
+                            )
+                    batch_gammas = tf.stack(batch_gammas, axis=-1)
+
                 probabilities = nested_softmax_with_availabilities(
                     items_logit_by_choice=utilities,
                     available_items_by_choice=batch[2],
@@ -822,6 +854,8 @@ class NestedLogit(ChoiceModel):
             clone.is_fitted = self.is_fitted
         if hasattr(self, "instantiated"):
             clone.instantiated = self.instantiated
+        if hasattr(self, "shared_gammas_over_nests"):
+            clone.shared_gammas_over_nests = self.shared_gammas_over_nests
         clone.loss = self.loss
         clone.label_smoothing = self.label_smoothing
         if hasattr(self, "report"):
