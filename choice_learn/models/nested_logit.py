@@ -17,11 +17,14 @@ def nested_softmax_with_availabilities(
     normalize_exit=False,
     eps=1e-15,
 ):
-    """Compute softmax probabilities from utilities.
+    """Compute softmax probabilities from utilities and items repartition within nests.
 
     Takes into account availabilties (1 if the product is available, 0 otherwise) to set
     probabilities to 0 for unavailable products and to renormalize the probabilities of
     available products.
+    Takes also into account Items nest to compute a two step probability: first, probability
+    to choose a given nest then probability to choose a product within this nest.
+    See Nested Logit formulation for more details.
 
     Parameters
     ----------
@@ -48,7 +51,7 @@ def nested_softmax_with_availabilities(
         Probabilities of each product for each choice computed from Logits
     """
     # gammas = tf.math.sigmoid(tf.clip_by_value(gammas, -2, 20))
-    gammas = tf.clip_by_value(gammas, 0.05, 1.0)
+    gammas = tf.clip_by_value(gammas, 0.05, tf.float32.max)
     numerator = tf.exp(tf.clip_by_value(items_logit_by_choice / gammas, tf.float32.min, 50))
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
@@ -75,7 +78,7 @@ def nested_softmax_with_availabilities(
 
 
 class NestedLogit(ChoiceModel):
-    """Nested Logit Model."""
+    """Nested Logit Model class."""
 
     def __init__(
         self,
@@ -87,12 +90,16 @@ class NestedLogit(ChoiceModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialize of Conditional-MNL.
+        """Initialize the Nested Logit model.
 
         Parameters
         ----------
         items_nest: list
-            list containing nest index for each item
+            list of nests lists, each containing the items indexes in the nest.
+        shared_gammas_over_nests : bool, optional
+            Whether or not to share the gammas over the nests, by default False.
+            If True it means that only one gamma value is estimated, and used for
+            all the nests.
         coefficients : dict or MNLCoefficients
             Dictionnary containing the coefficients parametrization of the model.
             The dictionnary must have the following structure:
@@ -102,10 +109,17 @@ class NestedLogit(ChoiceModel):
         add_exit_choice : bool, optional
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
+        optimizer: str, optional
+            Optimizer to use for the estimation, by default "lbfgs"
+        lr: float, optional
+            Learning rate for the optimizer, by default 0.001
+        **kwargs
+            Additional arguments to pass to the ChoiceModel base class.
         """
         super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.coefficients = coefficients
         self.instantiated = False
+
         # Checking the items_nests format:
         if len(items_nests) < 2:
             raise ValueError(f"At least two nests should be given, got {len(items_nests)}")
@@ -121,6 +135,8 @@ class NestedLogit(ChoiceModel):
             )
         if len(np.unique(flat_items)) != len(flat_items):
             raise ValueError("Got at least one items in several nests, which is not possible.")
+
+        # create mapping items -> nests
         self.items_nests = items_nests
         items_to_nest = []
         for item_index in range(len(np.unique(flat_items))):
@@ -266,6 +282,9 @@ class NestedLogit(ChoiceModel):
             )
             weights.append(weight)
             self.coefficients._add_tf_weight(weight_name, weight_nb)
+
+        # Initialization of gammas a bit different, it's a sensible variable
+        # which should be in [eps, 1] -> initialized at 0.5
         if self.shared_gammas_over_nests:
             weights.append(
                 tf.Variable(
@@ -303,6 +322,8 @@ class NestedLogit(ChoiceModel):
                 coefficients.add(feature + f"_w_{weight_counter}", feature, list(range(1, n_items)))
             elif mode == "item-full":
                 coefficients.add(feature + f"_w_{weight_counter}", feature, list(range(n_items)))
+
+            # Additional mode compared to Conditional Logit
             elif mode == "nest":
                 for nest in self.items_nests:
                     items_in_nest = [i for (i, j) in enumerate(nest) if j == nest]
@@ -310,7 +331,7 @@ class NestedLogit(ChoiceModel):
                         feature + f"_w_{weight_counter}", feature, items_in_nest
                     )
             else:
-                raise ValueError(f"Mode {mode} not recognized.")
+                raise ValueError(f"Mode {mode} for coefficients not recognized.")
 
         self.coefficients = coefficients
 
@@ -508,7 +529,7 @@ class NestedLogit(ChoiceModel):
 
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
 
-    # @tf.function
+    @tf.function
     def batch_predict(
         self,
         shared_features_by_choice,
@@ -582,11 +603,6 @@ class NestedLogit(ChoiceModel):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            # "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
-            #     y_pred=probabilities,
-            #     y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
-            #     sample_weight=sample_weight,
-            # ),
             "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
@@ -595,7 +611,7 @@ class NestedLogit(ChoiceModel):
         }
         return batch_loss, probabilities
 
-    # @tf.function
+    @tf.function
     def train_step(
         self,
         shared_features_by_choice,
