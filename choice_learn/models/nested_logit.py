@@ -50,7 +50,11 @@ def nested_softmax_with_availabilities(
     tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
-    # gammas = tf.math.sigmoid(tf.clip_by_value(gammas, -2, 20))
+    if tf.reduce_any(gammas < 0.05):
+        logging.warning(
+            """At least one gamma value for nests is below 0.05 and is
+        clipped to 0.05 for numeric optimization purposes."""
+        )
     gammas = tf.clip_by_value(gammas, 0.05, tf.float32.max)
     numerator = tf.exp(tf.clip_by_value(items_logit_by_choice / gammas, tf.float32.min, 50))
     # Set unavailable products utility to 0
@@ -126,7 +130,11 @@ class NestedLogit(ChoiceModel):
         for i_nest, nest in enumerate(items_nests):
             if len(nest) < 1:
                 raise ValueError(f"Nest {i_nest} is empty.")
-            print(f"Got nest {i_nest+1} on {len(items_nests)} with {len(nest)} items.")
+            logging.info(
+                f"""Checking nest specification,
+                         got nest nb {i_nest+1} / {len(items_nests)}
+                         with {len(nest)} items within."""
+            )
         flat_items = np.concatenate(items_nests).flatten()
         if np.max(flat_items) >= len(flat_items):
             raise ValueError(
@@ -599,7 +607,6 @@ class NestedLogit(ChoiceModel):
         )
 
         # Compute loss from probabilities & actual choices
-        # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)
         batch_loss = {
             "optimized_loss": self.loss(
                 y_pred=probabilities,
@@ -768,7 +775,6 @@ class NestedLogit(ChoiceModel):
         import tensorflow_probability as tfp
 
         weights_std = self.get_weights_std(dataset)
-        print("std", weights_std)
         dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
         names = []
@@ -867,7 +873,7 @@ class NestedLogit(ChoiceModel):
         )
 
     def clone(self):
-        """Return a clone of the model."""
+        """Return a clone/deepcopy of the model."""
         clone = NestedLogit(
             coefficients=self.coefficients,
             add_exit_choice=self.add_exit_choice,
