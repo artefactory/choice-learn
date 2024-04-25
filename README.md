@@ -99,8 +99,8 @@ Choice-Learn requires the following:
 For modelling you need:
 - TensorFlow (>=2.13)
 
-> :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing
-> In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`
+> :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
+> In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
 Finally, an optional requirement used for report and LBFG-S optimization is:
 - TensorFlow Probability (>=0.20.1)
@@ -154,7 +154,7 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/)
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
 
 ## Citation
 
