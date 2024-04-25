@@ -80,7 +80,7 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
         axis=-1,
         epsilon=1e-10,
         name="eps_categorical_crossentropy",
-        reduction=tf.keras.losses.Reduction.AUTO,
+        reduction="sum_over_batch_size",
     ):
         """Initialization function.
 
