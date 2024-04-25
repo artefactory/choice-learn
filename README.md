@@ -102,7 +102,7 @@ For modelling you need:
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
-Finally, an optional requirement used for report and LBFG-S optimization is:
+Finally, an optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
 
 Once you have created your conda/pip python==3.9 environment, you can install requirements by:
