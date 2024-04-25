@@ -185,8 +185,11 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)
 
 ### Code and Repositories
-- [1][RUMnet](https://github.com/antoinedesir/rumnet)
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
+
+[1] [RUMnet](https://github.com/antoinedesir/rumnet)\
+[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
+
+[PyLogit](https://github.com/timothyb0912/pylogit)\
+[Torch Choice](https://gsbdbi.github.io/torch-choice)\
+[BioGeme](https://github.com/michelbierlaire/biogeme)\
+[mlogit](https://github.com/cran/mlogit)
