@@ -67,6 +67,7 @@ numpy = "^1.24.3"
 pandas = "^1.5.3"
 tensorflow = "^2.11.0"
 tensorflow-probability = "^0.20.1"
+tqdm = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.2"
