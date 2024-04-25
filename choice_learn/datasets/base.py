@@ -980,3 +980,73 @@ def load_car_preferences(
         choices_column="choice",
         choice_format="items_id",
     )
+
+
+def load_hc(
+    as_frame=False,
+    return_desc=False,
+):
+    """Load and return the HC dataset from Kenneth Train.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded Train dataset
+    """
+    desc = """HC contains data on the choice of heating and central cooling system for 250
+    single-family, newly built houses in California.
+
+    The alternatives are:
+
+    Gas central heat with cooling gcc,
+    Electric central resistence heat with cooling ecc,
+    Electric room resistence heat with cooling erc,
+    Electric heat pump, which provides cooling also hpc,
+    Gas central heat without cooling gc,
+    Electric central resistence heat without cooling ec,
+    Electric room resistence heat without cooling er.
+    Heat pumps necessarily provide both heating and cooling such that heat pump without cooling is
+    not an alternative.
+
+    The variables are:
+
+    depvar gives the name of the chosen alternative,
+    ich.alt are the installation cost for the heating portion of the system,
+    icca is the installation cost for cooling
+    och.alt are the operating cost for the heating portion of the system
+    occa is the operating cost for cooling
+    income is the annual income of the household
+    Note that the full installation cost of alternative gcc is ich.gcc+icca, and similarly for the
+    operating cost and for the other alternatives with cooling.
+    """
+
+    data_file_name = "HC.csv.gz"
+    # names, data = load_gzip(data_file_name)
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    hc_df = pd.read_csv(full_path)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return hc_df
+
+    items_id = ["gcc", "ecc", "erc", "hpc", "gc", "ec", "er"]
+    return ChoiceDataset.from_single_wide_df(
+        df=hc_df,
+        shared_features_columns=["income"],
+        items_features_prefixes=["ich", "och", "occa", "icca"],
+        delimiter=".",
+        items_id=items_id,
+        choices_column="depvar",
+        choice_format="items_id",
+    )
