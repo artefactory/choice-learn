@@ -152,8 +152,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     swiss_df = pd.read_csv(full_path)
     swiss_df["CAR_HE"] = 0.0
-    # names, data = load_gzip(data_file_name)
-    # data = data.astype(int)
 
     items = ["TRAIN", "SM", "CAR"]
     shared_features_by_choice_names = [
@@ -182,29 +180,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
                     swiss_df[f"{item}_oh_{item}"] = 1
                 else:
                     swiss_df[f"{item2}_oh_{item}"] = 0
-    """
-    # Adding dummy CAR_HE feature as 0 for consistency
-    names.append("CAR_HE")
-    data = np.hstack([data, np.zeros((data.shape[0], 1))])
-
-    session_features = slice_from_names(data, session_features_names, names)
-    sessions_items_features = np.stack(
-        [slice_from_names(data, features, names) for features in sessions_items_features_names],
-        axis=-1,
-    )
-    sessions_items_availabilities = slice_from_names(data, sessions_items_availabilities, names)
-    choices = data[:, names.index(choice_column)]
-
-    # Remove no choice
-    choice_done = np.where(choices > 0)[0]
-    session_features = session_features[choice_done]
-    sessions_items_features = sessions_items_features[choice_done]
-    sessions_items_availabilities = sessions_items_availabilities[choice_done]
-    choices = choices[choice_done]
-
-    # choices renormalization
-    choices = choices - 1
-    """
 
     if return_desc:
         return description
@@ -330,7 +305,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     if preprocessing == "tutorial":
         # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
-        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         # Keep only commute an dbusiness trips
         swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
 
@@ -437,11 +411,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             choices=choices,
         )
     if preprocessing == "rumnet":
-        # swiss_df = pd.DataFrame(data, columns=names)
-        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         swiss_df["One"] = 1.0
         swiss_df["Zero"] = 0.0
-        # choices = swiss_df.CHOICE.to_numpy() - 1
+
         available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
         items_features_by_choice = np.stack(
             [
@@ -451,8 +423,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             ],
             axis=1,
         )
-        # shared_features_by_choice = df[["GROUP", "PURPOSE", "FIRST", "TICKET", "WHO", "LUGGAGE",
-        # "AGE", "MALE", "INCOME", "GA", "ORIGIN", "DEST"]].to_numpy()
 
         items_features_by_choice[:, :, 0] = items_features_by_choice[:, :, 0] / 1000
         items_features_by_choice[:, :, 1] = items_features_by_choice[:, :, 1] / 5000
@@ -818,7 +788,6 @@ def load_electricity(
     """
     _ = to_wide
     data_file_name = "electricity.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     description = """A sample of 2308 households in the United States.
     - choice: the choice of the individual, one of 1, 2, 3, 4,
@@ -893,7 +862,6 @@ def load_train(
     ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
     _ = to_wide
     data_file_name = "train_data.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     train_df = pd.read_csv(full_path)
@@ -943,7 +911,6 @@ def load_car_preferences(
     “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470."""
 
     data_file_name = "car.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     cars_df = pd.read_csv(full_path)
@@ -1029,7 +996,6 @@ def load_hc(
     """
 
     data_file_name = "HC.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     hc_df = pd.read_csv(full_path)
