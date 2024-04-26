@@ -255,8 +255,8 @@ class SimpleMNL(ChoiceModel):
         p_z = []
         i = 0
         for weight in self.trainable_weights:
-            for j in range(weight.shape[1]):
-                if weight.shape[1] > 1:
+            for j in range(weight.shape[0]):
+                if weight.shape[0] > 1:
                     names.append(f"{weight.name[:-2]}_{j}")
                 else:
                     names.append(f"{weight.name[:-2]}")

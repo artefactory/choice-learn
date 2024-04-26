@@ -811,9 +811,11 @@ class ChoiceDataset(object):
             logging.warning("choice_format not undersood, defaulting to 'items_index'")
 
         if shared_features_columns is not None:
-            shared_features_by_choice = df[shared_features_columns]
+            shared_features_by_choice = df[shared_features_columns].to_numpy()
+            shared_features_by_choice_names = shared_features_columns
         else:
             shared_features_by_choice = None
+            shared_features_by_choice_names = None
 
         if items_features_suffixes is not None:
             items_features_names = items_features_suffixes
@@ -887,6 +889,7 @@ class ChoiceDataset(object):
 
         return ChoiceDataset(
             shared_features_by_choice=shared_features_by_choice,
+            shared_features_by_choice_names=shared_features_by_choice_names,
             items_features_by_choice=items_features_by_choice,
             items_features_by_choice_names=items_features_names,
             available_items_by_choice=available_items_by_choice,

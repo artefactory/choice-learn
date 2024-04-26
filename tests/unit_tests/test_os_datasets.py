@@ -5,6 +5,7 @@ from choice_learn.data import ChoiceDataset
 from choice_learn.datasets import (
     load_car_preferences,
     load_electricity,
+    load_hc,
     load_heating,
     load_modecanada,
     load_swissmetro,
@@ -83,3 +84,13 @@ def test_car_preferences_loader():
 
     cars = load_car_preferences()
     assert isinstance(cars, ChoiceDataset)
+
+
+def test_hc_loader():
+    """Test loading the car preferences dataset."""
+    hc = load_hc(as_frame=True)
+    assert isinstance(hc, pd.DataFrame)
+    assert hc.shape == (250, 19)
+
+    hc = load_hc(as_frame=False)
+    assert isinstance(hc, ChoiceDataset)

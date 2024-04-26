@@ -33,4 +33,7 @@ def test_mode_canada_gt():
     gt_model.instantiate(canada_dataset)
 
     gt_model.trainable_weights = gt_weights
-    assert (gt_model.evaluate(canada_dataset) * len(canada_dataset)) == 1874.3427
+    assert (gt_model.evaluate(canada_dataset) * len(canada_dataset)) <= 1874.4, gt_model.evaluate(
+        canada_dataset
+    ) * len(canada_dataset)
+    assert (gt_model.evaluate(canada_dataset) * len(canada_dataset)) >= 1874.1

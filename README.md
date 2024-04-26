@@ -45,7 +45,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#citation)
   - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#citation)
   - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset [[5]](#citation)
-  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz), [HC](./choice_learn/datasets/data/HC.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html), [here](https://cran.r-project.org/web/packages/mlogit/vignettes/e2nlogit.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
   - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#citation)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
   - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
@@ -53,11 +53,11 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Model estimation
 - Ready-to-use models:
   - Conditional MultiNomialLogit [[4]](#citation)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
+  - Nested Logit [[10]](#citation) [[Example]](notebooks/models/nested_logit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
 - (WIP) - Ready-to-use models to be implemented:
-  - Nested Logit
   - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
   - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
@@ -69,11 +69,11 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 ## Getting Started
 
-You can find the following [notebooks](notebooks/introduction/) to help you getting started with the package:
-- [Generic and simple introduction](notebooks/introduction/1_introductive_example.ipynb)
-- [Detailed explanations of data handling depending on the data format](notebooks/introduction/2_data_handling.ipynb)
-- [A detailed example of conditional logit estimation](notebooks/introduction/3_model_clogit.ipynb)
-- [Introduction to custom modelling and more complex parametrization](notebooks/introduction/4_model_customization.ipynb)
+You can find the following tutorials to help you getting started with the package:
+- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
+- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
+- Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
 ## Installation
 
@@ -184,11 +184,15 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
 [7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)\
 [8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)\
-[9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)
+[9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
+[10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)
 
 ### Code and Repositories
-- [1][RUMnet](https://github.com/antoinedesir/rumnet)
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
+
+[1] [RUMnet](https://github.com/antoinedesir/rumnet)\
+[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
+
+[PyLogit](https://github.com/timothyb0912/pylogit)\
+[Torch Choice](https://gsbdbi.github.io/torch-choice)\
+[BioGeme](https://github.com/michelbierlaire/biogeme)\
+[mlogit](https://github.com/cran/mlogit)

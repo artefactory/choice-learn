@@ -3,6 +3,7 @@
 from .base import (
     load_car_preferences,
     load_electricity,
+    load_hc,
     load_heating,
     load_modecanada,
     load_swissmetro,
@@ -20,4 +21,5 @@ __all__ = [
     "load_tafeng",
     "load_expedia",
     "load_car_preferences",
+    "load_hc",
 ]

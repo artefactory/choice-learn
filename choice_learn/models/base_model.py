@@ -69,6 +69,15 @@ class ChoiceModel(object):
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
+        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False,
+            label_smoothing=0.0,
+            sparse=False,
+            axis=-1,
+            epsilon=1e-35,
+            name="exact_categorical_crossentropy",
+            reduction=tf.keras.losses.Reduction.AUTO,
+        )
         self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)
 
@@ -462,7 +471,12 @@ class ChoiceModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            # "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            #     y_pred=probabilities,
+            #     y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+            #     sample_weight=sample_weight,
+            # ),
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
@@ -584,7 +598,7 @@ class ChoiceModel(object):
                 sample_weight=sample_weight,
             )
             if mode == "eval":
-                batch_losses.append(loss["NegativeLogLikelihood"])
+                batch_losses.append(loss["Exact-NegativeLogLikelihood"])
             elif mode == "optim":
                 batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
@@ -670,7 +684,7 @@ class ChoiceModel(object):
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
                 loss_value = self.evaluate(
-                    dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
+                    dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
                 )
                 if self.regularization is not None:
                     regularization = tf.reduce_sum(
@@ -681,7 +695,6 @@ class ChoiceModel(object):
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.trainable_weights)
             grads = tf.dynamic_stitch(idx, grads)
-
             # print out iteration & loss
             f.iter.assign_add(1)
 
@@ -729,7 +742,6 @@ class ChoiceModel(object):
 
         # convert initial model parameters to a 1D tf.Tensor
         init_params = tf.dynamic_stitch(func.idx, self.trainable_weights)
-
         # train the model with L-BFGS solver
         results = tfp.optimizer.lbfgs_minimize(
             value_and_gradients_function=func,
