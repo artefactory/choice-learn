@@ -14,7 +14,7 @@
 <img src="docs/choice_learn_official_logo.png" width="256">
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
-The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any model or create your own from scratch. In particular you will find efficient data handling to limit RAM usage and structure common to any choice model.
+The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
@@ -22,7 +22,7 @@ This repository contains a private version of the package.
 
 ## Table of Contents
 
-- [choice-learn-private](#choice-learn-private)
+[Choice-Learn](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [What's in there ?](#whats-in-there)
   - [Getting Started](#getting-started)
@@ -100,7 +100,10 @@ Choice-Learn requires the following:
 For modelling you need:
 - TensorFlow (>=2.13)
 
-Finally, an optional requirement used for report and LBFG-S optimization is:
+> :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
+> In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
+
+Finally, an optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
 
 Once you have created your conda/pip python==3.9 environment, you can install requirements by:
@@ -152,7 +155,7 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/)
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
 
 ## Citation
 
