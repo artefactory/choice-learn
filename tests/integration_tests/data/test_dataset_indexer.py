@@ -51,20 +51,20 @@ def test_batch():
     assert (batch[0][1] == np.array([1, 0, 0, 0])).all()
 
     assert (batch[1][0] == np.array([[2, 2, 2, 2], [2, 2, 2, 3]])).all()
-    assert (batch[1][0] == np.array([[1, 0, 0, 0], [0, 1, 0, 0]])).all()
+    assert (batch[1][1] == np.array([[1, 0, 0, 0], [0, 1, 0, 0]])).all()
 
-    assert (batch[3] == np.array([1.0, 1.0])).all()
-    assert batch[4] == 0
+    assert (batch[2] == np.array([1.0, 1.0])).all()
+    assert batch[3] == 0
 
     batch = dataset.batch[0]
     assert (batch[0][0] == np.array([2, 1])).all()
     assert (batch[0][1] == np.array([1, 0, 0, 0])).all()
 
     assert (batch[1][0] == np.array([[2, 2, 2, 2], [2, 2, 2, 3]])).all()
-    assert (batch[1][0] == np.array([[1, 0, 0, 0], [0, 1, 0, 0]])).all()
+    assert (batch[1][1] == np.array([[1, 0, 0, 0], [0, 1, 0, 0]])).all()
 
-    assert (batch[3] == np.array([1.0, 1.0])).all()
-    assert batch[4] == 0
+    assert (batch[2] == np.array([1.0, 1.0])).all()
+    assert batch[3] == 0
 
     batch = dataset.get_choices_batch([1, 2])
     assert (batch[0][0] == np.array([[3, 4], [9, 4]])).all()
@@ -74,11 +74,11 @@ def test_batch():
         batch[1][0] == np.array([[[2, 2, 3, 2], [3, 2, 2, 2]], [[3, 2, 2, 2], [2, 3, 2, 2]]])
     ).all()
     assert (
-        batch[1][0] == np.array([[[0, 0, 0, 1], [0, 0, 1, 0]], [[1, 0, 0, 0], [0, 1, 0, 0]]])
+        batch[1][1] == np.array([[[0, 0, 0, 1], [0, 0, 1, 0]], [[1, 0, 0, 0], [0, 1, 0, 0]]])
     ).all()
 
-    assert (batch[3] == np.array([[1.0, 1.0], [1.0, 1.0]])).all()
-    assert (batch[4] == np.array([1, 1])).all()
+    assert (batch[2] == np.array([[1.0, 1.0], [1.0, 1.0]])).all()
+    assert (batch[3] == np.array([1, 1])).all()
 
     batch = dataset.batch[[1, 2]]
     assert (batch[0][0] == np.array([[3, 4], [9, 4]])).all()
@@ -88,8 +88,8 @@ def test_batch():
         batch[1][0] == np.array([[[2, 2, 3, 2], [3, 2, 2, 2]], [[3, 2, 2, 2], [2, 3, 2, 2]]])
     ).all()
     assert (
-        batch[1][0] == np.array([[[0, 0, 0, 1], [0, 0, 1, 0]], [[1, 0, 0, 0], [0, 1, 0, 0]]])
+        batch[1][1] == np.array([[[0, 0, 0, 1], [0, 0, 1, 0]], [[1, 0, 0, 0], [0, 1, 0, 0]]])
     ).all()
 
-    assert (batch[3] == np.array([[1.0, 1.0], [1.0, 1.0]])).all()
-    assert (batch[4] == np.array([1, 1])).all()
+    assert (batch[2] == np.array([[1.0, 1.0], [1.0, 1.0]])).all()
+    assert (batch[3] == np.array([1, 1])).all()

@@ -22,7 +22,7 @@ This repository contains a private version of the package.
 
 ## Table of Contents
 
-- [choice-learn-private](#choice-learn-private)
+[Choice-Learn](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [What's in there ?](#whats-in-there)
   - [Getting Started](#getting-started---fast-track)
