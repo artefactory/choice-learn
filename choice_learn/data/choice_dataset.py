@@ -1295,27 +1295,29 @@ class ChoiceDataset(object):
         sample_weight : Iterable
             list of weights to be returned with the right indexing during the shuffling
         """
-        if batch_size == -1:
-            batch_size = len(self)
-        # Get indexes for each choice
-        num_choices = len(self)
-        indexes = np.arange(num_choices)
-        # Shuffle indexes
-        if shuffle and not batch_size == -1:
-            indexes = np.random.permutation(indexes)
+        if batch_size == -1 or batch_size == len(self):
+            yield self.indexer.get_full_dataset()
+        else:
+            # Get indexes for each choice
+            num_choices = len(self)
+            indexes = np.arange(num_choices)
 
-        yielded_size = 0
-        while yielded_size < num_choices:
-            # Return sample_weight if not None, for index matching
-            batch_indexes = indexes[yielded_size : yielded_size + batch_size].tolist()
-            if sample_weight is not None:
-                yield (
-                    self.batch[batch_indexes],
-                    sample_weight[batch_indexes],
-                )
-            else:
-                yield self.batch[batch_indexes]
-            yielded_size += batch_size
+            # Shuffle indexes
+            if shuffle and not batch_size == -1:
+                indexes = np.random.permutation(indexes)
+
+            yielded_size = 0
+            while yielded_size < num_choices:
+                # Return sample_weight if not None, for index matching
+                batch_indexes = indexes[yielded_size : yielded_size + batch_size].tolist()
+                if sample_weight is not None:
+                    yield (
+                        self.batch[batch_indexes],
+                        sample_weight[batch_indexes],
+                    )
+                else:
+                    yield self.batch[batch_indexes]
+                yielded_size += batch_size
 
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
