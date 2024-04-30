@@ -1,6 +1,9 @@
 <div align="center">
 
-# choice-learn-private
+
+<img src="docs/choice_learn_official_logo.png" width="256">
+
+*Design custom choice models for large dataset*
 
 [![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
@@ -11,18 +14,13 @@
 
 </div>
 
-<img src="docs/choice_learn_official_logo.png" width="256">
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
 The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
-This repository contains a private version of the package.
-
 ## Table of Contents
-
-[Choice-Learn](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [What's in there ?](#whats-in-there)
   - [Getting Started](#getting-started)
@@ -57,15 +55,10 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
-- (WIP) - Ready-to-use models to be implemented:
-  - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
-  - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
 - Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
-- (WIP) Standardization of evaluation protocols
-- (WIP) Interfaces
 
 ## Getting Started
 
@@ -111,6 +104,8 @@ Once you have created your conda/pip python==3.9 environment, you can install re
 pip install choice-learn
 ```
 ## Usage
+Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
