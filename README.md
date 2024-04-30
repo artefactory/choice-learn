@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="docs/choice_learn_official_logo.png" width="256">
+<img src="docs/choice_learn_official_logo.png" width="512">
 
 *Design custom choice models for large dataset*
 
