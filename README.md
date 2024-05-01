@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="docs/choice_learn_official_logo.png" width="512">
+<img src="docs/illustrations/logos/choice_learn_official_logo.png" width="512">
 
 *Design custom choice models for large dataset*
 
@@ -167,6 +167,16 @@ The use of this software is under the MIT license, with no limitation of usage, 
 ### Special Thanks
 
 ### Affiliations
+
+Choice-Learn has been developed through a collaboration between the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
+
+
+<center>
+<p float="left">
+  <img src="./docs/illustrations/logos/logo_arc.png" width="250" />
+  <img src="./docs/illustrations/logos/logo_CS.png" width="200" />
+</p>
+</center>
 
 ## References
 
