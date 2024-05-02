@@ -1,3 +1,4 @@
+name: Launching CI on main
 on:
   push:
     branches:
@@ -5,7 +6,6 @@ on:
 
 jobs:
   CI:
-    name: Launching CI
     runs-on: ubuntu-latest
     strategy:
       matrix:
