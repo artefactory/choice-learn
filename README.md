@@ -1,6 +1,9 @@
 <div align="center">
 
-# choice-learn-private
+
+<img src="docs/illustrations/logos/choice_learn_official_logo.png" width="512">
+
+*Design custom choice models for large dataset*
 
 [![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
@@ -11,24 +14,20 @@
 
 </div>
 
-<img src="docs/choice_learn_official_logo.png" width="256">
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
 The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
-This repository contains a private version of the package.
-
 ## Table of Contents
-
-[Choice-Learn](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
   - [What's in there ?](#whats-in-there)
   - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)
+  - [Contributing](#contributing)
   - [Citation](#citation)
 
 ## Introduction - Discrete Choice Modelling
@@ -57,15 +56,10 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
-- (WIP) - Ready-to-use models to be implemented:
-  - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
-  - Others ...
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
 - Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
-- (WIP) Standardization of evaluation protocols
-- (WIP) Interfaces
 
 ## Getting Started
 
@@ -111,6 +105,8 @@ Once you have created your conda/pip python==3.9 environment, you can install re
 pip install choice-learn
 ```
 ## Usage
+Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
@@ -157,6 +153,16 @@ print(model.report)
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
 
+## Contributing
+You are welcome to contribute to the project ! You can help in various ways:
+- raise issues
+- resolve issues already opened
+- develop new features
+- fix typos, improve code quality
+- develop new tests
+
+We recommend to open an [issue](https://github.com/artefactory/choice-learn-private/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
+
 ## Citation
 
 If you consider this package and any of its feature useful for your research, please cite our paper:
@@ -172,6 +178,12 @@ The use of this software is under the MIT license, with no limitation of usage, 
 ### Special Thanks
 
 ### Affiliations
+
+Choice-Learn has been developed through a collaboration between the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
+
+[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/events/launch-artefact-research-center/)  |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
+:-------------------------:|:-------------------------:|:-------------------------:
+
 
 ## References
 
