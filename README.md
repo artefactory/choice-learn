@@ -27,6 +27,7 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)
+  - [Contributing](#contributing)
   - [Citation](#citation)
 
 ## Introduction - Discrete Choice Modelling
@@ -151,6 +152,16 @@ print(model.report)
 ## Documentation
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
+
+## Contributing
+You are welcome to contribute to the project ! You can help in various ways:
+- raise issues
+- resolve issues already opened
+- develop new features
+- fix typos, improve code quality
+- develop new tests
+
+We recommend to open an [issue](https://github.com/artefactory/choice-learn-private/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
