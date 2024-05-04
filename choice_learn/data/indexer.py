@@ -285,10 +285,10 @@ class ChoiceDatasetIndexer(Indexer):
                     (len(choices_indexes), self.choice_dataset.base_num_items)
                 ).astype("float32")
             else:
-                if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
-                    available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
-                        choices_indexes
-                    ]
+                if isinstance(self.choice_dataset.available_items_by_choice, tuple):
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice[
+                        0
+                    ].batch[self.choice_dataset.available_items_by_choice[1][choices_indexes]]
                 else:
                     available_items_by_choice = self.choice_dataset.available_items_by_choice[
                         choices_indexes
@@ -450,14 +450,12 @@ class ChoiceDatasetIndexer(Indexer):
                 (len(self.choice_dataset), self.choice_dataset.base_num_items)
             ).astype("float32")
         else:
-            if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
-                available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
-                    list(range(len(self.choice_dataset)))
+            if isinstance(self.choice_dataset.available_items_by_choice, tuple):
+                available_items_by_choice = self.choice_dataset.available_items_by_choice[0].batch[
+                    self.choice_dataset.available_items_by_choice[1]
                 ]
             else:
-                available_items_by_choice = self.choice_dataset.available_items_by_choice[
-                    list(range(len(self.choice_dataset)))
-                ]
+                available_items_by_choice = self.choice_dataset.available_items_by_choice
         available_items_by_choice = available_items_by_choice.astype(
             self.choice_dataset._return_types[2]
         )

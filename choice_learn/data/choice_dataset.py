@@ -368,9 +368,22 @@ class ChoiceDataset(object):
         if len(self.features_by_ids) == 0:
             return {}, {}
 
+        found_av_fid = False
+        for fid in self.features_by_ids:
+            if fid.name == "available_items_by_choice":
+                logging.warning("FeaturesStorage for available_items_by_choice detected.")
+                if self.available_items_by_choice is None:
+                    raise ValueError(
+                        """Cannot provide availabilities_by_choice as\
+                        features_by_ids without indexes."""
+                    )
+                self.available_items_by_choice = (fid, self.available_items_by_choice)
+                found_av_fid = True
+
         if (
             self.shared_features_by_choice_names is None
             and self.items_features_by_choice_names is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -382,6 +395,7 @@ class ChoiceDataset(object):
             and self.shared_features_by_choice_names[0] is None
             and isinstance(self.items_features_by_choice_names, tuple)
             and self.items_features_by_choice_names[0] is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -444,7 +458,7 @@ class ChoiceDataset(object):
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
         num_if_maps = sum([len(val) for val in items_features_map.values()])
 
-        if num_ff_maps + num_if_maps != len(self.features_by_ids):
+        if num_ff_maps + num_if_maps != len(self.features_by_ids) - found_av_fid:
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return shared_features_map, items_features_map
@@ -472,7 +486,12 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
-            base_num_items = self.available_items_by_choice.shape[1]
+            if isinstance(self.available_items_by_choice, tuple):
+                base_num_items = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                base_num_items = self.available_items_by_choice.shape[1]
         else:
             logging.warning(
                 "No items features or items availabilities are defined. Using max value of choices"
@@ -489,10 +508,16 @@ class ChoiceDataset(object):
                         detected number of items: ({items_feature.shape[1]} and {base_num_items})"""
                     )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[1] != base_num_items:
+            if isinstance(self.available_items_by_choice, tuple):
+                extract = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                extract = self.available_items_by_choice[0]
+            if len(extract) != base_num_items:
                 raise ValueError(
                     f"""'available_items_by_choice' shape does not match the
-                        detected number of items: ({self.available_items_by_choice.shape[1]}
+                        detected number of items: ({len(extract)}
                         and {base_num_items})"""
                 )
 
@@ -524,12 +549,21 @@ class ChoiceDataset(object):
                          {self.n_choices})"""
                     )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[0] != self.n_choices:
-                raise ValueError(
-                    f"""Given 'available_items_by_choice' shape does not match
-                        the number of choices detected: ({self.available_items_by_choice.shape[0]}
+            if isinstance(self.available_items_by_choice, tuple):
+                if len(self.available_items_by_choice[1]) != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                        the number of choices detected: ({len(self.available_items_by_choice[1])}
                         and {self.n_choices})"""
-                )
+                    )
+            else:
+                if self.available_items_by_choice.shape[0] != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                            the number of choices detected:
+                            ({self.available_items_by_choice.shape[0]}
+                            and {self.n_choices})"""
+                    )
 
     def _check_choices_coherence(self):
         """Verify that the choices are coherent with the nb of items present in other features.
@@ -1077,9 +1111,9 @@ class ChoiceDataset(object):
                     (len(choices_indexes), self.base_num_items)
                 ).astype("float32")
             else:
-                if hasattr(self.available_items_by_choice, "batch"):
-                    available_items_by_choice = self.available_items_by_choice.batch[
-                        choices_indexes
+                if isinstance(self.available_items_by_choice, tuple):
+                    available_items_by_choice = self.available_items_by_choice[0].batch[
+                        self.available_items_by_choice[1][choices_indexes]
                     ]
                 else:
                     available_items_by_choice = self.available_items_by_choice[choices_indexes]
@@ -1262,7 +1296,10 @@ class ChoiceDataset(object):
             items_features_by_choice_names = None
 
         try:
-            available_items_by_choice = self.available_items_by_choice[choices_indexes]
+            if isinstance(self.available_items_by_choice, tuple):
+                available_items_by_choice = self.available_items_by_choice[1]
+            else:
+                available_items_by_choice = self.available_items_by_choice[choices_indexes]
         except TypeError:
             available_items_by_choice = None
 
