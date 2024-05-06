@@ -337,25 +337,36 @@ class ChoiceDatasetIndexer(Indexer):
                 mapped_features = []
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.choice_dataset.items_features_by_choice_map.keys():
-                        feat_ind_min = 0
-                        unstacked_feat = []
-                        for feature_index in np.sort(
-                            list(
-                                self.choice_dataset.items_features_by_choice_map[tuple_index].keys()
-                            )
-                        ):
-                            unstacked_feat.append(
-                                items_features_by_choice[tuple_index][
-                                    :, :, feat_ind_min:feature_index
-                                ]
-                            )
-                            unstacked_feat.append(
+                        if items_features_by_choice[tuple_index].ndim == 1:
+                            mapped_features.append(
                                 self.choice_dataset.items_features_by_choice_map[tuple_index][
-                                    feature_index
-                                ].batch[items_features_by_choice[tuple_index][:, :, feature_index]]
+                                    0
+                                ].batch[items_features_by_choice[tuple_index]]
                             )
-                            feat_ind_min = feature_index + 1
-                        mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                        else:
+                            feat_ind_min = 0
+                            unstacked_feat = []
+                            for feature_index in np.sort(
+                                list(
+                                    self.choice_dataset.items_features_by_choice_map[
+                                        tuple_index
+                                    ].keys()
+                                )
+                            ):
+                                unstacked_feat.append(
+                                    items_features_by_choice[tuple_index][
+                                        :, :, feat_ind_min:feature_index
+                                    ]
+                                )
+                                unstacked_feat.append(
+                                    self.choice_dataset.items_features_by_choice_map[tuple_index][
+                                        feature_index
+                                    ].batch[
+                                        items_features_by_choice[tuple_index][:, :, feature_index]
+                                    ]
+                                )
+                                feat_ind_min = feature_index + 1
+                            mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
                         mapped_features.append(items_features_by_choice[tuple_index])
 

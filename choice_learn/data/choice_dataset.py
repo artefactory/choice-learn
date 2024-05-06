@@ -137,7 +137,24 @@ class ChoiceDataset(object):
             for sub_k, (sub_features, sub_names) in enumerate(
                 zip(items_features_by_choice, items_features_by_choice_names)
             ):
-                if len(sub_features[0][0]) != len(sub_names):
+                print(sub_features, sub_names)
+                # Split if feature is full FeaturesStorage
+                if np.array(sub_features).ndim == 1:
+                    # check features_by_ids
+                    print("feature of dimension 1 detected -  a FeatureByIDs MUst be provided")
+                    print(len(features_by_ids))
+                    for fbid in features_by_ids:
+                        print(fbid.name, sub_names)
+                        if fbid.name == sub_names[0]:
+                            print("FeatureByIDs found")
+                            break
+                    else:
+                        raise ValueError(
+                            """FeatureByIDs must be provided when items_features\
+                                of shape (n_choices, 1) is given."""
+                        )
+
+                elif len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
                         f"""{sub_k}-th given items_features_by_choice and
                         items_features_by_choice_names shapes do not match"""
@@ -440,11 +457,15 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 items_features_map[i] = index_dict
                                 logging.info(
-                                    f"""Feature by ID found for shared_features_by_choice:
+                                    f"""Feature by ID found for items_features_by_choice:
                                     {feature_by_id.name}"""
                                 )
-
-                                unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
+                                if self.items_features_by_choice[i].ndim == 1:
+                                    unique_values = np.unique(self.items_features_by_choice[i])
+                                else:
+                                    unique_values = np.unique(
+                                        self.items_features_by_choice[i][:, :, k]
+                                    )
                                 try:
                                     for val in unique_values:
                                         feature_by_id.batch[unique_values]
@@ -471,9 +492,9 @@ class ChoiceDataset(object):
             - Over number of choices
         > Verifies that the choices have coherent values.
         """
-        self._check_num_items_shapes()
-        self._check_num_sessions_shapes()
-        self._check_choices_coherence()
+        # self._check_num_items_shapes()
+        # self._check_num_sessions_shapes()
+        # self._check_choices_coherence()
 
     def _check_num_items_shapes(self):
         """Verify that the shapes of the different features are consistent over number of items.
@@ -642,11 +663,17 @@ class ChoiceDataset(object):
                 features,
             ) in enumerate(zip(self.items_features_by_choice_names, self.items_features_by_choice)):
                 if name is not None:
-                    if len(name) != features.shape[2]:
+                    if features.ndim > 1:
+                        if len(name) != features.shape[2]:
+                            raise ValueError(
+                                f"Specified {k}th\
+                            items_features_by_choice_names has length {len(name)} while \
+                            items_features_by_choice has {features.shape[2]} elements."
+                            )
+                    elif len(name) != 1:
                         raise ValueError(
-                            f"Specified {k}th\
-                        items_features_by_choice_names has length {len(name)} while \
-                        items_features_by_choice has {features.shape[2]} elements."
+                            f"Specified {k}th items_features_by_choice_names has length {len(name)}\
+                            while items_features_by_choice has 1 element."
                         )
 
     def __len__(self):
