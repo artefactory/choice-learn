@@ -137,16 +137,15 @@ class ChoiceDataset(object):
             for sub_k, (sub_features, sub_names) in enumerate(
                 zip(items_features_by_choice, items_features_by_choice_names)
             ):
-                print(sub_features, sub_names)
                 # Split if feature is full FeaturesStorage
                 if np.array(sub_features).ndim == 1:
                     # check features_by_ids
-                    print("feature of dimension 1 detected -  a FeatureByIDs MUst be provided")
-                    print(len(features_by_ids))
+                    logging.info(
+                        "feature of dimension 1 detected -  a FeatureByIDs MUst be provided"
+                    )
                     for fbid in features_by_ids:
-                        print(fbid.name, sub_names)
                         if fbid.name == sub_names[0]:
-                            print("FeatureByIDs found")
+                            logging.info("FeatureByIDs found")
                             break
                     else:
                         raise ValueError(
@@ -492,9 +491,9 @@ class ChoiceDataset(object):
             - Over number of choices
         > Verifies that the choices have coherent values.
         """
-        # self._check_num_items_shapes()
-        # self._check_num_sessions_shapes()
-        # self._check_choices_coherence()
+        self._check_num_items_shapes()
+        self._check_num_sessions_shapes()
+        self._check_choices_coherence()
 
     def _check_num_items_shapes(self):
         """Verify that the shapes of the different features are consistent over number of items.
@@ -523,11 +522,21 @@ class ChoiceDataset(object):
 
         if self.items_features_by_choice is not None:
             for k, items_feature in enumerate(self.items_features_by_choice):
-                if items_feature.shape[1] != base_num_items:
-                    raise ValueError(
-                        f"""{k}-th 'items_features_by_choice' shape does not match the
-                        detected number of items: ({items_feature.shape[1]} and {base_num_items})"""
-                    )
+                if items_feature.ndim == 1:
+                    batch = self.items_features_by_choice_map[k][0].batch[[0, 1]]
+                    if batch.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
+                else:
+                    if items_feature.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
         if self.available_items_by_choice is not None:
             if isinstance(self.available_items_by_choice, tuple):
                 extract = self.available_items_by_choice[0].batch[
