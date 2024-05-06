@@ -1191,7 +1191,6 @@ class ChoiceDataset(object):
                 mapped_features = []
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.items_features_by_choice_map.keys():
-                        print(items_features_by_choice[tuple_index])
                         if items_features_by_choice[tuple_index].ndim == 1:
                             mapped_features.append(
                                 self.items_features_by_choice_map[tuple_index][0].batch[
