@@ -158,6 +158,7 @@ You are welcome to contribute to the project ! You can help in various ways:
 - raise issues
 - resolve issues already opened
 - develop new features
+- provide additional examples of use
 - fix typos, improve code quality
 - develop new tests
 
@@ -181,7 +182,7 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/events/launch-artefact-research-center/)  |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
+[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)  |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
 :-------------------------:|:-------------------------:|:-------------------------:
 
 

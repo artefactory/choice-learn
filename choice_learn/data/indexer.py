@@ -285,10 +285,10 @@ class ChoiceDatasetIndexer(Indexer):
                     (len(choices_indexes), self.choice_dataset.base_num_items)
                 ).astype("float32")
             else:
-                if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
-                    available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
-                        choices_indexes
-                    ]
+                if isinstance(self.choice_dataset.available_items_by_choice, tuple):
+                    available_items_by_choice = self.choice_dataset.available_items_by_choice[
+                        0
+                    ].batch[self.choice_dataset.available_items_by_choice[1][choices_indexes]]
                 else:
                     available_items_by_choice = self.choice_dataset.available_items_by_choice[
                         choices_indexes
@@ -337,25 +337,36 @@ class ChoiceDatasetIndexer(Indexer):
                 mapped_features = []
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.choice_dataset.items_features_by_choice_map.keys():
-                        feat_ind_min = 0
-                        unstacked_feat = []
-                        for feature_index in np.sort(
-                            list(
-                                self.choice_dataset.items_features_by_choice_map[tuple_index].keys()
-                            )
-                        ):
-                            unstacked_feat.append(
-                                items_features_by_choice[tuple_index][
-                                    :, :, feat_ind_min:feature_index
-                                ]
-                            )
-                            unstacked_feat.append(
+                        if items_features_by_choice[tuple_index].ndim == 1:
+                            mapped_features.append(
                                 self.choice_dataset.items_features_by_choice_map[tuple_index][
-                                    feature_index
-                                ].batch[items_features_by_choice[tuple_index][:, :, feature_index]]
+                                    0
+                                ].batch[items_features_by_choice[tuple_index]]
                             )
-                            feat_ind_min = feature_index + 1
-                        mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                        else:
+                            feat_ind_min = 0
+                            unstacked_feat = []
+                            for feature_index in np.sort(
+                                list(
+                                    self.choice_dataset.items_features_by_choice_map[
+                                        tuple_index
+                                    ].keys()
+                                )
+                            ):
+                                unstacked_feat.append(
+                                    items_features_by_choice[tuple_index][
+                                        :, :, feat_ind_min:feature_index
+                                    ]
+                                )
+                                unstacked_feat.append(
+                                    self.choice_dataset.items_features_by_choice_map[tuple_index][
+                                        feature_index
+                                    ].batch[
+                                        items_features_by_choice[tuple_index][:, :, feature_index]
+                                    ]
+                                )
+                                feat_ind_min = feature_index + 1
+                            mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
                         mapped_features.append(items_features_by_choice[tuple_index])
 
@@ -450,14 +461,12 @@ class ChoiceDatasetIndexer(Indexer):
                 (len(self.choice_dataset), self.choice_dataset.base_num_items)
             ).astype("float32")
         else:
-            if hasattr(self.choice_dataset.available_items_by_choice, "batch"):
-                available_items_by_choice = self.choice_dataset.available_items_by_choice.batch[
-                    list(range(len(self.choice_dataset)))
+            if isinstance(self.choice_dataset.available_items_by_choice, tuple):
+                available_items_by_choice = self.choice_dataset.available_items_by_choice[0].batch[
+                    self.choice_dataset.available_items_by_choice[1]
                 ]
             else:
-                available_items_by_choice = self.choice_dataset.available_items_by_choice[
-                    list(range(len(self.choice_dataset)))
-                ]
+                available_items_by_choice = self.choice_dataset.available_items_by_choice
         available_items_by_choice = available_items_by_choice.astype(
             self.choice_dataset._return_types[2]
         )

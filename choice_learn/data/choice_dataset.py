@@ -137,7 +137,23 @@ class ChoiceDataset(object):
             for sub_k, (sub_features, sub_names) in enumerate(
                 zip(items_features_by_choice, items_features_by_choice_names)
             ):
-                if len(sub_features[0][0]) != len(sub_names):
+                # Split if feature is full FeaturesStorage
+                if np.array(sub_features).ndim == 1:
+                    # check features_by_ids
+                    logging.info(
+                        "feature of dimension 1 detected -  a FeatureByIDs MUst be provided"
+                    )
+                    for fbid in features_by_ids:
+                        if fbid.name == sub_names[0]:
+                            logging.info("FeatureByIDs found")
+                            break
+                    else:
+                        raise ValueError(
+                            """FeatureByIDs must be provided when items_features\
+                                of shape (n_choices, 1) is given."""
+                        )
+
+                elif len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
                         f"""{sub_k}-th given items_features_by_choice and
                         items_features_by_choice_names shapes do not match"""
@@ -368,9 +384,22 @@ class ChoiceDataset(object):
         if len(self.features_by_ids) == 0:
             return {}, {}
 
+        found_av_fid = False
+        for fid in self.features_by_ids:
+            if fid.name == "available_items_by_choice":
+                logging.warning("FeaturesStorage for available_items_by_choice detected.")
+                if self.available_items_by_choice is None:
+                    raise ValueError(
+                        """Cannot provide availabilities_by_choice as\
+                        features_by_ids without indexes."""
+                    )
+                self.available_items_by_choice = (fid, self.available_items_by_choice)
+                found_av_fid = True
+
         if (
             self.shared_features_by_choice_names is None
             and self.items_features_by_choice_names is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -382,6 +411,7 @@ class ChoiceDataset(object):
             and self.shared_features_by_choice_names[0] is None
             and isinstance(self.items_features_by_choice_names, tuple)
             and self.items_features_by_choice_names[0] is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -426,11 +456,15 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 items_features_map[i] = index_dict
                                 logging.info(
-                                    f"""Feature by ID found for shared_features_by_choice:
+                                    f"""Feature by ID found for items_features_by_choice:
                                     {feature_by_id.name}"""
                                 )
-
-                                unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
+                                if self.items_features_by_choice[i].ndim == 1:
+                                    unique_values = np.unique(self.items_features_by_choice[i])
+                                else:
+                                    unique_values = np.unique(
+                                        self.items_features_by_choice[i][:, :, k]
+                                    )
                                 try:
                                     for val in unique_values:
                                         feature_by_id.batch[unique_values]
@@ -444,7 +478,7 @@ class ChoiceDataset(object):
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
         num_if_maps = sum([len(val) for val in items_features_map.values()])
 
-        if num_ff_maps + num_if_maps != len(self.features_by_ids):
+        if num_ff_maps + num_if_maps != len(self.features_by_ids) - found_av_fid:
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return shared_features_map, items_features_map
@@ -472,7 +506,12 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
-            base_num_items = self.available_items_by_choice.shape[1]
+            if isinstance(self.available_items_by_choice, tuple):
+                base_num_items = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                base_num_items = self.available_items_by_choice.shape[1]
         else:
             logging.warning(
                 "No items features or items availabilities are defined. Using max value of choices"
@@ -483,16 +522,32 @@ class ChoiceDataset(object):
 
         if self.items_features_by_choice is not None:
             for k, items_feature in enumerate(self.items_features_by_choice):
-                if items_feature.shape[1] != base_num_items:
-                    raise ValueError(
-                        f"""{k}-th 'items_features_by_choice' shape does not match the
-                        detected number of items: ({items_feature.shape[1]} and {base_num_items})"""
-                    )
+                if items_feature.ndim == 1:
+                    batch = self.items_features_by_choice_map[k][0].batch[[0, 1]]
+                    if batch.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
+                else:
+                    if items_feature.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[1] != base_num_items:
+            if isinstance(self.available_items_by_choice, tuple):
+                extract = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                extract = self.available_items_by_choice[0]
+            if len(extract) != base_num_items:
                 raise ValueError(
                     f"""'available_items_by_choice' shape does not match the
-                        detected number of items: ({self.available_items_by_choice.shape[1]}
+                        detected number of items: ({len(extract)}
                         and {base_num_items})"""
                 )
 
@@ -524,12 +579,21 @@ class ChoiceDataset(object):
                          {self.n_choices})"""
                     )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[0] != self.n_choices:
-                raise ValueError(
-                    f"""Given 'available_items_by_choice' shape does not match
-                        the number of choices detected: ({self.available_items_by_choice.shape[0]}
+            if isinstance(self.available_items_by_choice, tuple):
+                if len(self.available_items_by_choice[1]) != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                        the number of choices detected: ({len(self.available_items_by_choice[1])}
                         and {self.n_choices})"""
-                )
+                    )
+            else:
+                if self.available_items_by_choice.shape[0] != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                            the number of choices detected:
+                            ({self.available_items_by_choice.shape[0]}
+                            and {self.n_choices})"""
+                    )
 
     def _check_choices_coherence(self):
         """Verify that the choices are coherent with the nb of items present in other features.
@@ -608,11 +672,17 @@ class ChoiceDataset(object):
                 features,
             ) in enumerate(zip(self.items_features_by_choice_names, self.items_features_by_choice)):
                 if name is not None:
-                    if len(name) != features.shape[2]:
+                    if features.ndim > 1:
+                        if len(name) != features.shape[2]:
+                            raise ValueError(
+                                f"Specified {k}th\
+                            items_features_by_choice_names has length {len(name)} while \
+                            items_features_by_choice has {features.shape[2]} elements."
+                            )
+                    elif len(name) != 1:
                         raise ValueError(
-                            f"Specified {k}th\
-                        items_features_by_choice_names has length {len(name)} while \
-                        items_features_by_choice has {features.shape[2]} elements."
+                            f"Specified {k}th items_features_by_choice_names has length {len(name)}\
+                            while items_features_by_choice has 1 element."
                         )
 
     def __len__(self):
@@ -1054,6 +1124,11 @@ class ChoiceDataset(object):
         """
         _ = features
         if isinstance(choices_indexes, list):
+            if np.array(choices_indexes).ndim > 1:
+                raise ValueError(
+                    """ChoiceDataset unidimensional can only be batched along choices
+                                 dimension received a list with several axis of indexing."""
+                )
             if self.shared_features_by_choice is None:
                 shared_features_by_choice = None
             else:
@@ -1069,17 +1144,16 @@ class ChoiceDataset(object):
                 items_features_by_choice = list(
                     items_features_by_choice[choices_indexes]
                     # .astype(self._return_types[2][i])
-                    for i, items_features_by_choice in enumerate(self.items_features_by_choice)
+                    for _, items_features_by_choice in enumerate(self.items_features_by_choice)
                 )
-
             if self.available_items_by_choice is None:
                 available_items_by_choice = np.ones(
                     (len(choices_indexes), self.base_num_items)
                 ).astype("float32")
             else:
-                if hasattr(self.available_items_by_choice, "batch"):
-                    available_items_by_choice = self.available_items_by_choice.batch[
-                        choices_indexes
+                if isinstance(self.available_items_by_choice, tuple):
+                    available_items_by_choice = self.available_items_by_choice[0].batch[
+                        self.available_items_by_choice[1][choices_indexes]
                     ]
                 else:
                     available_items_by_choice = self.available_items_by_choice[choices_indexes]
@@ -1117,23 +1191,32 @@ class ChoiceDataset(object):
                 mapped_features = []
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.items_features_by_choice_map.keys():
-                        feat_ind_min = 0
-                        unstacked_feat = []
-                        for feature_index in np.sort(
-                            list(self.items_features_by_choice_map[tuple_index].keys())
-                        ):
-                            unstacked_feat.append(
-                                items_features_by_choice[tuple_index][
-                                    :, :, feat_ind_min:feature_index
+                        if items_features_by_choice[tuple_index].ndim == 1:
+                            mapped_features.append(
+                                self.items_features_by_choice_map[tuple_index][0].batch[
+                                    items_features_by_choice[tuple_index]
                                 ]
                             )
-                            unstacked_feat.append(
-                                self.items_features_by_choice_map[tuple_index][feature_index].batch[
-                                    items_features_by_choice[tuple_index][:, :, feature_index]
-                                ]
-                            )
-                            feat_ind_min = feature_index + 1
-                        mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                        else:
+                            feat_ind_min = 0
+                            unstacked_feat = []
+                            for feature_index in np.sort(
+                                list(self.items_features_by_choice_map[tuple_index].keys())
+                            ):
+                                unstacked_feat.append(
+                                    items_features_by_choice[tuple_index][
+                                        :, :, feat_ind_min:feature_index
+                                    ]
+                                )
+                                unstacked_feat.append(
+                                    self.items_features_by_choice_map[tuple_index][
+                                        feature_index
+                                    ].batch[
+                                        items_features_by_choice[tuple_index][:, :, feature_index]
+                                    ]
+                                )
+                                feat_ind_min = feature_index + 1
+                            mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
                         mapped_features.append(items_features_by_choice[tuple_index])
 
@@ -1262,7 +1345,10 @@ class ChoiceDataset(object):
             items_features_by_choice_names = None
 
         try:
-            available_items_by_choice = self.available_items_by_choice[choices_indexes]
+            if isinstance(self.available_items_by_choice, tuple):
+                available_items_by_choice = self.available_items_by_choice[1]
+            else:
+                available_items_by_choice = self.available_items_by_choice[choices_indexes]
         except TypeError:
             available_items_by_choice = None
 
