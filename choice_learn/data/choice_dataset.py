@@ -1124,6 +1124,11 @@ class ChoiceDataset(object):
         """
         _ = features
         if isinstance(choices_indexes, list):
+            if np.array(choices_indexes).ndim > 1:
+                raise ValueError(
+                    """ChoiceDataset unidimensional can only be batched along choices
+                                 dimension received a list with several axis of indexing."""
+                )
             if self.shared_features_by_choice is None:
                 shared_features_by_choice = None
             else:
@@ -1139,9 +1144,8 @@ class ChoiceDataset(object):
                 items_features_by_choice = list(
                     items_features_by_choice[choices_indexes]
                     # .astype(self._return_types[2][i])
-                    for i, items_features_by_choice in enumerate(self.items_features_by_choice)
+                    for _, items_features_by_choice in enumerate(self.items_features_by_choice)
                 )
-
             if self.available_items_by_choice is None:
                 available_items_by_choice = np.ones(
                     (len(choices_indexes), self.base_num_items)
@@ -1187,23 +1191,33 @@ class ChoiceDataset(object):
                 mapped_features = []
                 for tuple_index in range(len(items_features_by_choice)):
                     if tuple_index in self.items_features_by_choice_map.keys():
-                        feat_ind_min = 0
-                        unstacked_feat = []
-                        for feature_index in np.sort(
-                            list(self.items_features_by_choice_map[tuple_index].keys())
-                        ):
-                            unstacked_feat.append(
-                                items_features_by_choice[tuple_index][
-                                    :, :, feat_ind_min:feature_index
+                        print(items_features_by_choice[tuple_index])
+                        if items_features_by_choice[tuple_index].ndim == 1:
+                            mapped_features.append(
+                                self.items_features_by_choice_map[tuple_index][0].batch[
+                                    items_features_by_choice[tuple_index]
                                 ]
                             )
-                            unstacked_feat.append(
-                                self.items_features_by_choice_map[tuple_index][feature_index].batch[
-                                    items_features_by_choice[tuple_index][:, :, feature_index]
-                                ]
-                            )
-                            feat_ind_min = feature_index + 1
-                        mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                        else:
+                            feat_ind_min = 0
+                            unstacked_feat = []
+                            for feature_index in np.sort(
+                                list(self.items_features_by_choice_map[tuple_index].keys())
+                            ):
+                                unstacked_feat.append(
+                                    items_features_by_choice[tuple_index][
+                                        :, :, feat_ind_min:feature_index
+                                    ]
+                                )
+                                unstacked_feat.append(
+                                    self.items_features_by_choice_map[tuple_index][
+                                        feature_index
+                                    ].batch[
+                                        items_features_by_choice[tuple_index][:, :, feature_index]
+                                    ]
+                                )
+                                feat_ind_min = feature_index + 1
+                            mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
                         mapped_features.append(items_features_by_choice[tuple_index])
 
