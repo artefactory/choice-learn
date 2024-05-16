@@ -108,7 +108,7 @@ Once you have created your conda/pip python==3.9 environment, you can install re
 ```bash
 pip install choice-learn
 ```
-[![](https://upload.wikimedia.org/wikipedia/commons/a/ab/TensorFlow_logo.svg)](https://www.tensorflow.org/)  |  [![](https://github.com/Gurobi/.github/blob/main/img/gurobi-dark.png)](https://www.gurobi.com/) |  [![](https://github.com/google/or-tools/blob/stable/tools/doc/orLogo.png)](https://developers.google.com/optimization?hl=fr)
+[![](https://www.tensorflow.org/images/tf_logo_horizontal.png)](https://www.tensorflow.org/)  |  [![](https://github.com/Gurobi/.github/blob/main/img/gurobi-dark.png)](https://www.gurobi.com/) |  [![](https://github.com/google/or-tools/blob/stable/tools/doc/orLogo.png)](https://developers.google.com/optimization?hl=fr)
 :-------------------------:|:-------------------------:|:-------------------------:
 
 
