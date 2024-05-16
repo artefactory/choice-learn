@@ -108,7 +108,7 @@ Once you have created your conda/pip python==3.9 environment, you can install re
 ```bash
 pip install choice-learn
 ```
-[![](https://www.google.com/url?sa=i&url=https%3A%2F%2Fcommons.wikimedia.org%2Fwiki%2FFile%3ATensorflow_logo.svg&psig=AOvVaw1HqKzOQoq_ZRuYJEnEbaqf&ust=1715949513371000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCND4056YkoYDFQAAAAAdAAAAABAE)](https://www.tensorflow.org/)  |  [![](https://github.com/Gurobi/.github/blob/main/img/gurobi-dark.png)](https://www.gurobi.com/) |  [![](https://www.google.com/imgres?q=or%20tools&imgurl=https%3A%2F%2Fdevelopers.google.com%2Fstatic%2Foptimization%2Fimages%2ForLogo.png&imgrefurl=https%3A%2F%2Fdevelopers.google.com%2Foptimization&docid=tNcj9B4FLFmkfM&tbnid=7MTWER-yv1mbPM&vet=12ahUKEwiW1aLkmJKGAxWxU6QEHcKYCF0QM3oECBYQAA..i&w=120&h=120&hcb=2&ved=2ahUKEwiW1aLkmJKGAxWxU6QEHcKYCF0QM3oECBYQAA)](https://developers.google.com/optimization?hl=fr)
+[![](https://upload.wikimedia.org/wikipedia/commons/a/ab/TensorFlow_logo.svg)](https://www.tensorflow.org/)  |  [![](https://github.com/Gurobi/.github/blob/main/img/gurobi-dark.png)](https://www.gurobi.com/) |  [![](https://github.com/google/or-tools/blob/stable/tools/doc/orLogo.png)](https://developers.google.com/optimization?hl=fr)
 :-------------------------:|:-------------------------:|:-------------------------:
 
 
