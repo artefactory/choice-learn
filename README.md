@@ -109,13 +109,21 @@ Once you have created your conda/pip python==3.9 environment, you can install re
 pip install choice-learn
 ```
 <p align="center">
-  <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
-  <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+  <a href="https://numpy.org/">
+    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+  </a>
+  <a href="https://pandas.pydata.org/">
+    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+  </a>
   <a href="https://www.tensorflow.org">
     <img src="docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
-  <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
-  <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+  <a href="https://www.gurobi.com/">
+    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+  </a>
+  <a href="https://developers.google.com/optimization?hl=fr">
+    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+  </a>
 </p>
 
 
