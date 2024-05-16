@@ -111,7 +111,9 @@ pip install choice-learn
 <p align="center">
   <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
   <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
-  <img src="docs/illustrations/logos/tf_logo.png" width="60" href=https://www.tensorflow.org/ />
+  <a href="https://www.tensorflow.org">
+    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+  </a>
   <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
   <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
 </p>
