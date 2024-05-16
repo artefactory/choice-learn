@@ -59,7 +59,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
 ## Getting Started
 
@@ -97,13 +97,21 @@ For modelling you need:
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
-Finally, an optional requirement used for coefficients analysis and L-BFGS optimization is:
+An optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
+
+Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
+- gurobipy (>=11.0.0)
+- ortools (>=9.6.2534)
 
 Once you have created your conda/pip python==3.9 environment, you can install requirements by:
 ```bash
 pip install choice-learn
 ```
+[![](https://www.google.com/url?sa=i&url=https%3A%2F%2Fcommons.wikimedia.org%2Fwiki%2FFile%3ATensorflow_logo.svg&psig=AOvVaw1HqKzOQoq_ZRuYJEnEbaqf&ust=1715949513371000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCND4056YkoYDFQAAAAAdAAAAABAE)](https://www.tensorflow.org/)  |  [![](https://github.com/Gurobi/.github/blob/main/img/gurobi-dark.png)](https://www.gurobi.com/) |  [![](https://www.google.com/imgres?q=or%20tools&imgurl=https%3A%2F%2Fdevelopers.google.com%2Fstatic%2Foptimization%2Fimages%2ForLogo.png&imgrefurl=https%3A%2F%2Fdevelopers.google.com%2Foptimization&docid=tNcj9B4FLFmkfM&tbnid=7MTWER-yv1mbPM&vet=12ahUKEwiW1aLkmJKGAxWxU6QEHcKYCF0QM3oECBYQAA..i&w=120&h=120&hcb=2&ved=2ahUKEwiW1aLkmJKGAxWxU6QEHcKYCF0QM3oECBYQAA)](https://developers.google.com/optimization?hl=fr)
+:-------------------------:|:-------------------------:|:-------------------------:
+
+
 ## Usage
 Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
 
