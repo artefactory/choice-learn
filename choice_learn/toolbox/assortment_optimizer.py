@@ -9,7 +9,7 @@ TODO 2: ADD easy integration of additionnal constraints
 """
 
 
-class AssortmentOptimizer(object):
+class MNLAssortmentOptimizer(object):
     """Base class for assortment optimization."""
 
     def __init__(self, utilities, itemwise_values, assortment_size, outside_option_given=False):
@@ -59,7 +59,9 @@ class AssortmentOptimizer(object):
 
         for j in range(self.n_items + 1):
             y[j] = solver.addVar(
-                vtype=gp.GRB.CONTINUOUS, obj=self.itemwise_values[j], name="y_%s" % j
+                vtype=gp.GRB.CONTINUOUS,
+                obj=self.itemwise_values[j] * self.utilities[j],
+                name="y_%s" % j,
             )
         self.y = y
         # Integrate new variables
@@ -78,7 +80,7 @@ class AssortmentOptimizer(object):
             self.solver.addConstr(self.y[j] <= self.y[0])
 
         # Base Charnes-Cooper Constraint for Normalization
-        charnes_cooper = gp.quicksum(self.y[j] for j in range(self.n_items + 1))
+        charnes_cooper = gp.quicksum(self.y[j] * self.utilities[j] for j in range(self.n_items + 1))
         self.solver.addConstr(charnes_cooper == 1)
 
         # Assortment size constraint
@@ -127,7 +129,6 @@ class AssortmentOptimizer(object):
         for i in range(0, self.n_items + 1):
             if self.y[i].x > 0:
                 assortment[i] = 1
-
         chosen_utilities = assortment * self.utilities
         norm = np.sum(chosen_utilities)
 
@@ -386,7 +387,7 @@ class LatentClassAssortmentOptimizer(object):
         return assortment, recomputed_obj
 
 
-class LatentClassAssortmentOptimizerWithPricing(object):
+class LatentClassPricingOptimizer(object):
     """Assortment optimizer for latent class models with additional pricing optimization.
 
     Implementation of the paper:

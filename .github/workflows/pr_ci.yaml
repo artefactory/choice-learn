@@ -1,11 +1,10 @@
-name: Launching CI on main
-on:
-  push:
-    branches:
-      - main
+name: Pull-Request CI
+
+on: [pull_request]
 
 jobs:
   CI:
+    name: Launching CI
     runs-on: ubuntu-latest
     strategy:
       matrix:

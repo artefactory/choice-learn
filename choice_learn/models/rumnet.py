@@ -740,6 +740,12 @@ class PaperRUMnet(ChoiceModel):
                 sample_weight=sample_weight,
             )
 
+            if self.regularization_type is not None:
+                regularization = tf.reduce_sum(
+                    [self.regularizer(w) for w in self.trainable_weights]
+                )
+                batch_nll += regularization
+
         grads = tape.gradient(batch_nll, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return batch_nll

@@ -152,8 +152,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     swiss_df = pd.read_csv(full_path)
     swiss_df["CAR_HE"] = 0.0
-    # names, data = load_gzip(data_file_name)
-    # data = data.astype(int)
 
     items = ["TRAIN", "SM", "CAR"]
     shared_features_by_choice_names = [
@@ -182,29 +180,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
                     swiss_df[f"{item}_oh_{item}"] = 1
                 else:
                     swiss_df[f"{item2}_oh_{item}"] = 0
-    """
-    # Adding dummy CAR_HE feature as 0 for consistency
-    names.append("CAR_HE")
-    data = np.hstack([data, np.zeros((data.shape[0], 1))])
-
-    session_features = slice_from_names(data, session_features_names, names)
-    sessions_items_features = np.stack(
-        [slice_from_names(data, features, names) for features in sessions_items_features_names],
-        axis=-1,
-    )
-    sessions_items_availabilities = slice_from_names(data, sessions_items_availabilities, names)
-    choices = data[:, names.index(choice_column)]
-
-    # Remove no choice
-    choice_done = np.where(choices > 0)[0]
-    session_features = session_features[choice_done]
-    sessions_items_features = sessions_items_features[choice_done]
-    sessions_items_availabilities = sessions_items_availabilities[choice_done]
-    choices = choices[choice_done]
-
-    # choices renormalization
-    choices = choices - 1
-    """
 
     if return_desc:
         return description
@@ -330,7 +305,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
     if preprocessing == "tutorial":
         # swiss_df = pd.DataFrame(data, columns=names)
         # Removing unknown choices
-        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         # Keep only commute an dbusiness trips
         swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
 
@@ -394,12 +368,52 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             items_features_by_choice_names=["cost", "travel_time", "headway", "seats"],
             choices=choices,
         )
+    if preprocessing == "biogeme_nested":
+        # Keep only commute an dbusiness trips
+        swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
+
+        # Normalizing values by 100
+        swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] = (
+            swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] / 100.0
+        )
+
+        swiss_df["train_free_ticket"] = swiss_df.apply(
+            lambda row: (row["GA"] == 1).astype(int), axis=1
+        )
+        swiss_df["sm_free_ticket"] = swiss_df.apply(
+            lambda row: (row["GA"] == 1).astype(int), axis=1
+        )
+
+        swiss_df["train_travel_cost"] = swiss_df.apply(
+            lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["sm_travel_cost"] = swiss_df.apply(
+            lambda row: (row["SM_CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
+        )
+        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR_CO"] / 100, axis=1)
+
+        train_features = swiss_df[["train_travel_cost", "TRAIN_TT"]].to_numpy()
+        sm_features = swiss_df[["sm_travel_cost", "SM_TT"]].to_numpy()
+        car_features = swiss_df[["car_travel_cost", "CAR_TT"]].to_numpy()
+
+        items_features_by_choice = np.stack([train_features, sm_features, car_features], axis=1)
+
+        available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        # Re-Indexing choices from 1 to 3 to 0 to 2
+        choices = swiss_df.CHOICE.to_numpy()
+
+        return ChoiceDataset(
+            shared_features_by_choice=None,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
+            shared_features_by_choice_names=None,
+            items_features_by_choice_names=["cost", "travel_time"],
+            choices=choices,
+        )
     if preprocessing == "rumnet":
-        # swiss_df = pd.DataFrame(data, columns=names)
-        # swiss_df = swiss_df.loc[swiss_df.CHOICE != 0]
         swiss_df["One"] = 1.0
         swiss_df["Zero"] = 0.0
-        # choices = swiss_df.CHOICE.to_numpy() - 1
+
         available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
         items_features_by_choice = np.stack(
             [
@@ -409,8 +423,6 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             ],
             axis=1,
         )
-        # shared_features_by_choice = df[["GROUP", "PURPOSE", "FIRST", "TICKET", "WHO", "LUGGAGE",
-        # "AGE", "MALE", "INCOME", "GA", "ORIGIN", "DEST"]].to_numpy()
 
         items_features_by_choice[:, :, 0] = items_features_by_choice[:, :, 0] / 1000
         items_features_by_choice[:, :, 1] = items_features_by_choice[:, :, 1] / 5000
@@ -515,7 +527,7 @@ def load_modecanada(
         Whether to split features by type in different dataframes, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
 
@@ -704,7 +716,7 @@ def load_heating(
         Whether to return the description, by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
 
     Returns
     -------
@@ -765,7 +777,7 @@ def load_electricity(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -776,7 +788,6 @@ def load_electricity(
     """
     _ = to_wide
     data_file_name = "electricity.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     description = """A sample of 2308 households in the United States.
     - choice: the choice of the individual, one of 1, 2, 3, 4,
@@ -836,7 +847,7 @@ def load_train(
         by default False.
     to_wide : bool, optional
         Whether to return the dataset in wide format,
-        by default False (an thus retuned in long format).
+        by default False (an thus returned in long format).
     return_desc : bool, optional
         Whether to return the description, by default False.
 
@@ -851,7 +862,6 @@ def load_train(
     ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
     _ = to_wide
     data_file_name = "train_data.csv.gz"
-    # names, data = load_gzip(data_file_name)
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     train_df = pd.read_csv(full_path)
@@ -871,5 +881,138 @@ def load_train(
         delimiter="",
         available_items_suffix=None,
         choices_column="choice",
+        choice_format="items_id",
+    )
+
+
+def load_car_preferences(
+    as_frame=False,
+    return_desc=False,
+):
+    """Load and return the Car dataset from  McFadden, Daniel and Kenneth Train (2000).
+
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded Train dataset
+    """
+    desc = "Stated Preferences for Car Choice."
+    desc += """McFadden, Daniel and Kenneth Train (2000)
+    “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470."""
+
+    data_file_name = "car.csv.gz"
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    cars_df = pd.read_csv(full_path)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return cars_df
+
+    cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
+    shared_features = ["college", "hsg2", "coml5"]
+    items_features = [
+        "type",
+        "fuel",
+        "price",
+        "range",
+        "acc",
+        "speed",
+        "pollution",
+        "size",
+        "space",
+        "cost",
+        "station",
+    ]
+    items_id = [f"{i}" for i in range(1, 7)]
+
+    return ChoiceDataset.from_single_wide_df(
+        df=cars_df,
+        items_id=items_id,
+        shared_features_columns=shared_features,
+        items_features_prefixes=items_features,
+        delimiter="",
+        choices_column="choice",
+        choice_format="items_id",
+    )
+
+
+def load_hc(
+    as_frame=False,
+    return_desc=False,
+):
+    """Load and return the HC dataset from Kenneth Train.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False.
+    return_desc : bool, optional
+        Whether to return the description, by default False.
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded Train dataset
+    """
+    desc = """HC contains data on the choice of heating and central cooling system for 250
+    single-family, newly built houses in California.
+
+    The alternatives are:
+
+    Gas central heat with cooling gcc,
+    Electric central resistence heat with cooling ecc,
+    Electric room resistence heat with cooling erc,
+    Electric heat pump, which provides cooling also hpc,
+    Gas central heat without cooling gc,
+    Electric central resistence heat without cooling ec,
+    Electric room resistence heat without cooling er.
+    Heat pumps necessarily provide both heating and cooling such that heat pump without cooling is
+    not an alternative.
+
+    The variables are:
+
+    depvar gives the name of the chosen alternative,
+    ich.alt are the installation cost for the heating portion of the system,
+    icca is the installation cost for cooling
+    och.alt are the operating cost for the heating portion of the system
+    occa is the operating cost for cooling
+    income is the annual income of the household
+    Note that the full installation cost of alternative gcc is ich.gcc+icca, and similarly for the
+    operating cost and for the other alternatives with cooling.
+    """
+
+    data_file_name = "HC.csv.gz"
+
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    hc_df = pd.read_csv(full_path)
+
+    if return_desc:
+        return desc
+
+    if as_frame:
+        return hc_df
+
+    items_id = ["gcc", "ecc", "erc", "hpc", "gc", "ec", "er"]
+    return ChoiceDataset.from_single_wide_df(
+        df=hc_df,
+        shared_features_columns=["income"],
+        items_features_prefixes=["ich", "och", "occa", "icca"],
+        delimiter=".",
+        items_id=items_id,
+        choices_column="depvar",
         choice_format="items_id",
     )
