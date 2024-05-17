@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="docs/illustrations/logos/logo_choice_learn.png" width="200">
+<img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
 
 *Flexible choice modeling through the lens of machine learning*
 
