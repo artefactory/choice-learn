@@ -3,7 +3,7 @@
 
 <img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
 
-*Flexible choice modeling through the lens of machine learning*
+*Large-scale choice modeling through the lens of machine learning*
 
 [![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
