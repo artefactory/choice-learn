@@ -484,7 +484,8 @@ class ORToolsLatentClassPricingOptimizer(object):
             solver with basic variables and constraints.
         """
         # Create a new model
-        solver = pywraplp.Solver.CreateSolver("SCIP")
+        solver = pywraplp.Solver("PricingMIP", pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
+        # solver = pywraplp.Solver.CreateSolver("SCIP")
         infinity = solver.infinity()
 
         # Create yik variables
