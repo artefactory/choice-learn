@@ -55,13 +55,13 @@ A summary of the main contributions of Choice-Learn is provided in Table \ref{ta
 |              | Format      | Batching  | Non-stochastic | Stochstic | Regularization | Traditional | NeuralNet | Custom | Assortment | Pricing   |
 +--------------+-------------+-----------+----------------+-----------+----------------+-------------+-----------+--------+------------+-----------+
 | Biogeme      | cells span columns      | cells span columns                          | cells span columns      | cells span columns  | columns   |
-+--------------+-------------+-----------+-------------+--------------+----------------+-------------+-----------+--------+------------+-----------+
++--------------+-------------+-----------+----------------+-----------+----------------+-------------+-----------+--------+------------+-----------+
 | PyLogit      | cells span columns      | cells span columns                          | cells span columns      | cells span columns  | columns   |
-+--------------+-------------+-----------+-------------+--------------+----------------+-------------+-----------+--------+------------+-----------+
-| Torch-Choice | cells span columns      | cells       | - body                        | cells span columns      | cells span columns  | columns   |
-+--------------+-------------+-----------+-------------+--------------+----------------+-------------+-----------+--------+------------+-----------+
-| Choice-Learn | cells span columns      |             | - here                        | cells span columns      | cells span columns  | columns   |
-+==============+============+============+============+===============+================+============+============+========+==========+=============+
++--------------+-------------+-----------+----------------+-----------+----------------+-------------+-----------+--------+------------+-----------+
+| Torch-Choice | cells span columns      | cells          | - body                     | cells span columns      | cells span columns  | columns   |
++--------------+-------------+-----------+----------------+-----------+----------------+-------------+-----------+--------+------------+-----------+
+| Choice-Learn | cells span columns      |                | - here                     | cells span columns      | cells span columns  | columns   |
++==============+============+============+================+===========+================+============+============+========+==========+=============+
 
 
 # Statement of need
