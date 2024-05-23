@@ -52,15 +52,15 @@ A summary of the main contributions of Choice-Learn is provided in Table \ref{ta
 +--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
 | Package      | Data Processing                  | Estimation                                  | Models                            | Downstream Operations  |
 +--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-|              | Format      | Batching           | Non-stochastic | Stochastic | Regularization | Traditional | NeuralNet | Custom |  Assortment | Pricing  |
+|              | Format      | Batching           | Non-stochastic | Stochastic| Regularization | Traditional | NeuralNet |  Custom |  Assortment|  Pricing  |
 +:============:+:===========:+:==================:+:==============:+:=========:+:==============:+:===========:+:=========:+:=======:+:==========:+:=========:+
-| Biogeme      | wide        |     X              | cells span columns                          | cells span columns      | cells  span columns  | columns   |
+| Biogeme      | wide        |     X              | Newton BFGS    |           |                | cells span columns      | cells  span columns  | columns   |
 +--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| PyLogit      | format      |     X              | cells span columns                          | cells span columns      | cells  span columns  | columns   |
+| PyLogit      | format      |     X              | BFGS           |           |                | cells span columns      | cells  span columns  | columns   |
 +--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| Torch-Choice |             | :white_check_mark: | cells          | - body                     | cells span columns      | cells  span columns  | columns   |
+| Torch-Choice |             | :white_check_mark: | L-BFGS         | - body    |                | cells span columns      | cells  span columns  | columns   |
 +--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| Choice-Learn |             | :white_check_mark: |                | - here                     | cells span columns      | cells  span columns  | columns   |
+| Choice-Learn |             | :white_check_mark: | L-BFGS         | - here    |                | cells span columns      | cells  span columns  | columns   |
 +==============+=============+====================+================+===========+================+=============+===========+=========+============+===========+
 
 
