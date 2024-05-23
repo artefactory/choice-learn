@@ -1,5 +1,6 @@
 ---
-title: '`Choice-Learn`: A Python package for generic choice modelling with large datasets.'
+title: '`Choice-Learn`: Large-scale choice modeling for operational contexts through the lens of machine learning'
+
 # Idea to introduce: ML&Classical, toolbox
 # A Python Toolbox for generic and custom choice modelling ?
 tags:
@@ -8,33 +9,25 @@ tags:
   - decision
 authors:
   - name: Vincent Auriau
-    corresponding: true # (This is how to denote the corresponding author)
+    corresponding: true
     orcid: 0000-0000-0000-0000
     affiliation: "1, 2"
   - name: Emmanuel Malherbe
     affiliation: 2
-  - name: Maxime Lutel
-    affiliation: 2
-  - name: Martin Mozina
-    affiliation: 3
   - name: Ali Aouad
-    affiliation: 4
+    affiliation: 3
   - name: Antoine Désir
-    affiliation: 5
-  - name: Vincent Mousseau
-    affiliation: 1
+    affiliation: 4
 affiliations:
  - name: CentraleSupélec, Université Paris-Saclay, France
    index: 1
  - name: Artefact Research Center, France
    index: 2
- - name: Fortenova Group, Croatia
+ - name: London Business School, United Kingdom
    index: 3
- - name: London Business School, Great-Britain
-   index: 4
  - name: INSEAD, France
-   index: 5
-date: 29 March 2024
+   index: 4
+date: 23 May 2024
 bibliography: paper.bib
 output: paper_pdf
 
@@ -42,131 +35,123 @@ output: paper_pdf
 
 # Introduction
 
-Discrete choice models aim to explain or predict choices made by individuals from a set of alternatives, i.e. an assortment. Well known use-cases include analyzing a commuter's choice of transportation mode or modelling in-stores or online products purchases. A key feature of choice models is their ability to handle varying assortments, where some alternatives may be unavailable for the choice maker. Choice models are often used to estimate interpretable coefficients of consumer's utility function such as a own - or cross - price elasticities. Another practical usage is to plug a fitted choice model into an optimization process, in order to inform operational decisions. For example, assortment optimization or pricing can be formulated as linear programming optimization problems for certain classical parametric choice models. While traditional specifications of choice models are restricted to a linear form, recent advances based on Machine-Learning algorithms call for the use of more complex models that can be fitted to larger datasets.
+Discrete choice models aim at predicting choice decisions made by individuals from a menu of alternatives, which is known as an assortment. Well-known use cases include predicting a commuter's choice of transportation mode or a customer's in-store or online purchases. A key capability of choice models is their ability to handle assortment variations, such as predicting choices when some alternatives become unavailable or when their features change in different operational contexts. This adaptability to different scenarios allows these models to be used as inputs for optimization problems, such as assortment planning or pricing.
 
-`Choice-Learn` provides a scalable and modular suite of choice modelling tools for practitioners and academic researchers. In order to offer a high flexibility while keeping a simple signature, the package is organized around two levels of interaction. The higher-level API allows a fast integration of choice datasets, and the specification and estimation of standard logit-based choice models. The lower level API offers capabilities to optimize memory usage or customize model formulations. `Choice-Learn` focuses on three main features that complement and extend existing:
+Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced customization. This structure is inspired by Keras [@Chollet:2015], which is an overlay of TensorFlow [@Abadi:2015] endpoints, enabling a user-friendly modeling interface. Choice-Learn was designed with the following objectives:
 
-- *Large-scale datasets*: optimized RAM usage and batching processes for very large-scale datasets
-- *Model family*: Handling both parametric families of choice models and Machine Learning-based formulations within the same codebase
-- *Tools*: to estimate, deploy, evaluate and use choice models
+- **Streamlined:** The code signature is kept simple for fast integration of datasets and estimation of standard models. The higher-level API can be used with minimal code.
+- **Scalable:** Optimized processes are implemented, allowing the use of large datasets and large models.
+- **Flexible:** The codebase is designed to be customized in order to fit different use cases. The lower-level API offers more control over the possible parameterizations.
+- **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
+- **Downstream operations:** Post-processing tools  that leverage choice models for assortment optimization and pricing are also integrated into the library.
 
-![General Organization of Choice-Learn package. \label{fig:generalorg}](../illustrations/choice_learn_high_level.png)
+![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_high_level.png)
 
-This tryptich, data, model and usage, is illustrated on \autoref{fig:generalorg} with examples of the two levels of API interactions.
+A summary of the main contributions of Choice-Learn is provided in Table \ref{tab:comparison}.
 
 # Statement of need
 
-## Handling Large Datasets
-Choice modelling is a natural tool for retailers or marketplaces to understand their customer base and to improve or optimize their commercial offering or operational footprint. With the fast-paced improvement of companies data architectures, larger and more reliable customer-level datasets have emerged. While several efficient Python packages have been made available to estimate choice models [@Bierlaire:2023; @Brathwaite:2018] they are usually not built to work with large-scale datasets.
-
-![Organisation of the FeaturesbyID. \label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
-
-`Choice-Learn`'s ChoiceDataset is built specifically to handle large choice datasets. It mainly relies on NumPy [@Harris:2020] with the objective to limit the memory footprint of the dataset. The key idea is to minimize features repetition and to rebuild the full data structure only for batches of the dataset.
-
-- *Features splitting:* We define 'items_features' that describe each available alternative and 'shared_features' that are common to all alternatives for one given choice. These shared features usually change from one choice to another and can represent customer attributes for example. This split let us avoid repeating these 'shared_features' for each alternative as it would be implied by the standard "long format" of the input dataset.
-
-- *Features by IDs:* Features can be stored in specific objects which are only referenced in the dataset by their ID. These features are stacked with the main dataset only in batches, when the data is processed. It is particularly efficient for features that are repeated in the dataset. Consider the case where we have a few different stores represented by their surface, position, etc... Such features are static - they never change. Therefore, they can be stored in an object and it suffices to reference the store where the choice observation occurs in the input dataset. Then, when a batch of data is retrieved, the full features matrix is generated from the ID. \autoref{fig:fbi} illustrates this approach.
-
-## Parametrized and Machine-Learning based models
-> Naming still unsatisfactory imo (Parametrized/Interpretable vs ?)
-
-The availability of detailed customer choice data enables estimating more complex choice models. Recent research outlines this possibility with neural networks approaches [@Han:2022; @Aouad:2023] or tree-based boosting models [@Salvadé:2024; &@AouadMarket:2023].
-The existing libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches.
-
-`Choice-Learn` proposes a model object structure and a unified estimation tools using automatic differentiation library which can flexibly accommodate parametric models such as the Conditional Logit [@Train:1987] as well as machine learning-based such as RUMnet [@Aouad:2023] or TasteNet [@Han:2022]. Specifically, we rely on the Tensorflow library [@Abadi:2015] implementing efficiently optimization algorithms such as LBFGS[@Nocedal:2006] and various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017]. It also enables GPUs usage for parameters estimation that can prove to be time saving on high-dimensional or large-sample datasets.
-Moreover, `Choice-Learn` also enables building new and custom choice models with a common inheritance scheme that minimizes user's integration effort. Compared to standard implementations there is virtually no restriction in specifying the utility function, as long as its gradient can be computed.
-Finally, the TensorFlow backbone ensures an efficient use of the models in a production environment. Many state-of-the-art tools are provided for TensorFlow based models deployment and serving such as TFLite and TFServing.
-
-## Beyond choice modeling: Assortment and pricing optimization
-
-`Choice-Learn` also ambitions to offer a set of tools revolving around choice modelling. Assortment optimization is a common usecase that leverages a choice model in order to determine or design the optimal subset of alternative to offer customers in order to maximize a certain objective function. Examples includes assortment planning, display location optimization, and pricing. A generic implemenation is proposed in the library so that estimated choice models are easily plugged into such optimization processes.
-
-# Examples
-
-## RAM usage comparison
-
-![RAM usage with and without FeaturesByIDs for datasets including one hot representation of shapes (10, 10) and (100, 100). \label{fig:ram_usage}](../illustrations/fbid_RAM.png){ width=50% }
-
-![RAM usage comparison on the Expedia Dataset. \label{fig:exp_ram_usage}](../illustrations/expedia_RAM.png){ width=50% }
-
-We provide numerical examples of memory usage to showcase the efficiency of Features by IDs provided by `Choice-Learn`. We consider a case where we have a feature repeated in a dataset. For instance, this may represent a one-hot encoding for locations, identified by a matrix of shape (n_locations, n_locations). Each row of the dataset of size dataset_size refers to one of the locations. In \autoref{fig:ram_usage}, we compare the memory usage for different dataset sizes and n_locations=10 and 100. We find that `Choice-Learn` can save several orders of magnitude of bytes in memory usage.
-
-We conduct another experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames in long and wide format that are commonly used in choice modelling packages, and `Choice-Learn`'s ChoiceDataset with and without Features by IDs. Following [@Aouad:2023] preprocessing of the dataset, four features are represented as one-hot values and are optimized with `Choice-Learn` data management.The results obtained by varying the sample size are reported in \autoref{fig:exp_ram_usage}.
-
-## Choice model customization
-
-Choice models following the Random Utility principle define the utility of an alternative $i \in \mathcal{A}$ as the sum of a deterministic part $U_i$ and an error random term $\epsilon_i$. If $\epsilon_i$ is supposed to be i.i.d. over all the available alternatives and following a Gumbel distribution, the probability to choose $i$ can be written as the softmax normalization over the available alternatives $j\in \mathcal{A}$:
-
-$$\mathbb{P}(i) = \frac{e^{U_i}}{\sum_j e^{U_j}}$$\
-
-
-### An example: Definition of non linear utility function
-> What would be a better example ?
-
-Most choice modelling packages only handle linear formulation of the utility. `Choice-Learn` allows flexibility and an easy creation of a custom choice model. Inheriting the ChoiceModel class lets the user define its own utility function. One only needs to sepcify how to compute the utility of a batch of data using elementary TensorFlow operations. Here is an example where we use the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
-
-$$U_i = \beta_l \cdot (elu(\Gamma_x \cdot x_i) + elu(\Gamma_z \cdot z)) $$
-with $\Gamma_x$, $\Gamma_z$ matrixes and $\beta_l$ a vector to be estimated,
-$elu$ is the activation function so that $elu(x) = x$ if $x > 0$ and $elu(x) = e^x-1$ if $x < 0$.
-
-Below is an example of implementation using TensorFlow's Dense layers and `Choice-Learn`:
+## Streamlined signatures
+`Choice-Learn` proposes short signatures for a fast implementation. For example, the *ChoiceDataset* object, which handles the dataset, takes only 4 inputs: 'items_features' describing each available alternative, 'shared_features' describing the context of the choice, 'available_items' indicating the subset of alternatives offered in the assortment, and finally 'choices', the index of the chosen option. Choice-Learn also provides methods to seamlessly integrate popular data formats, such as long and wide format dataframes [@Helveston:2023].
 
 ```python
-from tensorflow.keras.layers import Dense
-from choice_learn.models import ChoiceModel
+dataset = ChoiceDataset(choices, shared_features, items_features, available_items)
+```
 
-class ExampleCustomizedModel(ChoiceModel):
+The signatures for data usage in model estimation and evaluation are designed to be consistent with mainstream machine learning packages such as scikit-learn [@Pedregosa:2011].
+
+## Data and model scalability
+
+Choice modeling is a standard tool for brick-and-mortar retailers and online marketplaces to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale and more reliable choice datasets are leveraged to manage customer-facing operations.
+
+`Choice-Learn`'s data structure relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of the same item or customer features and defers the instantiation of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object allows feature values to be referenced in the dataset only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, suppose that we have access to store features such as surface, position, or number of employees. These features are often stationary: they do not change over time when predicting customer choices. Thus, they can be stored in an auxiliary data structure and it suffices to reference in the main dataset in which specific store the choice observation is recorded. Figure~\ref{fig:fbi} illustrates this approach.
+
+The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
+Finally, the TensorFlow backbone ensures an efficient usage in a production environment, such as within an assortment recommendation software. Many state-of-the-art tools are provided for deployment and serving, such as TFLite and TFServing.
+
+![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
+
+## Flexible usage: from linear utility to customized specification
+
+Choice models following the *Random Utility Maximization* principle [@McFadden:2000] define the utility of an option $i \in \mathcal{A}$ as the sum of a deterministic part $U(i)$ and an error random term $\epsilon_i$. If the noise terms $(\epsilon_i)_{i \in \mathcal{A}}$ are assumed to be independent and Gumbel-distributed, the probability to choose option $i$ can be written as the softmax normalization over the available alternatives $j\in \mathcal{A}$:
+
+$$\mathbb{P}(i|\mathcal{A}) = \frac{e^{U(i)}}{\sum_{j \in \mathcal{A}} e^{U(j)}}$$
+
+The choice-modeller's job is to formulate an appropriate utility function depending on the context. In Choice-Learn, the user can parametrize predefined models such as the Conditional Logit or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class. This allows for tailoring choice models to different use cases.
+
+## Unifying  traditional random utility models and machine learning-based models
+
+Traditional parametric choice models often specify the utility function as a linear form. While this provides interpretable coefficients, such as price  elasticities, it also limits the predictive power of the model.
+The availability of detailed customer choice data, paired with advances in machine learning, enables the estimation of more complex models. Recent research outlines this potential with neural networks approaches [@Han:2022; @Aouad:2023] and tree-based models [@Salvadé:2024; @AouadMarket:2023]. However, existing choice libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches.
+
+Choice-Learn proposes a unified estimation tool based on  TensorFlow's automatic differentiation [@Abadi:2015], which can flexibly accommodate traditional parametric models, such as the Conditional Logit [@Train:1987], as well as neural network models, such as RUMnet [@Aouad:2023] or TasteNet [@Han:2022].
+
+
+## Downstream operations: Assortment and pricing optimization
+`Choice-Learn` also offers additional tools for downstream operations, which are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014]. It currently supports the optimization of the assortment and prices of offered items. Users can choose between solvers like Gurobi [@Gurobi:2023], which is popular in the research community with free licensing, or OR-Tools [ORTools:2024], which is open source.
+
+
+# Experiments and examples
+
+## Memory usage: a case study
+
+We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*). Each row of the dataset refers to one of the locations. In \ref{fig:xps} (a), we compare the memory usage for different dataset sizes and \*n_locations* set to 10 and 100. We find that `Choice-Learn` can save several orders of magnitude in memory usage.
+
+We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, often used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Following the preprocessing of the dataset as described by [@Aouad:2023], four features are represented as one-hot values. The results, obtained by varying the sample size, are reported in \ref{fig:xps} (b).
+
+Finally, we observe similar performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in over 600 retail Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which of the 63 products were available, their prices, as well as a one-hot representation of the store. The numerical results are presented in \ref{fig:xps} (c) and (d).
+
+
+\begin{figure}
+\centering
+\label{fig:xps}
+\begin{tabular}{cc}
+  \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_storage.png} &   \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_expedia_2.png} \\
+(a) Choice-Learn memory usage for different & (b) Memory usage for the Expedia dataset \\[6pt]
+values of (n\_locations, n\_locations) & with different dataset sizes \\
+    \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_fng_1.png} &   \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_fng_2.png} \\
+(c) Memory usage of our own retail dataset   & (d) Memory usage of our own retail dataset \\[6pt]
+for different dataset sizes & for different number of stores \\
+\end{tabular}
+\caption{Memory usage experiments \VA{Illustrations to be completed and colors to be aligned!} \Alicomment{Nice. Why not include Torch choice?} \VA{will doo}}
+\end{figure}
+
+
+
+## Customized choice models
+We provide an example of the custom model definition with the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
+$$U(i) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
+where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all of which are parameters to be estimated. Additionally, $\sigma$ is the sigmoid activation function.
+When introducing a custom model, one needs to inherit the *ChoiceModel* class, specify the weights to be estimated in the *__init__* method, and determine how to compute the utility in the *compute_batch_utility* method.
+
+
+```python``
     def __init__(self, n_neurons, **kwargs):
         super().__init__(**kwargs)
-        self.n_neurons = n_neurons
 
-        # Items Features Layer
-        self.dense_items = Dense(units=n_neurons, activation="elu")
-
-        # Shared Features Layer
-        self.dense_shared = Dense(units=n_neurons, activation="elu")
-
-        # Third layer: embeddings to utility (dense representation of features > U)
-        self.final_layer = Dense(units=1, activation="linear")
-
-    @property
-    def trainable_weights(self):
-        """Access model's trainable_weights.
-
-        Returns
-        -------
-        list
-            list of trainable_weights
-        """
-        return model.dense_items.trainable_variables\
-              + model.dense_shared.trainable_variables\
-                  + model.final_layer.trainable_variables
+        self.gamma_x = Dense(units=n_neurons, activation="sigmoid")
+        self.gamma_z = Dense(units=n_neurons, activation="sigmoid")
+        self.beta_l = Dense(units=1, activation="linear")
 
     def compute_batch_utility(self,
                               shared_features_by_choice,
                               items_features_by_choice,
-                              available_items_by_choice,
-                              choices):
-        """Compute batch utility from features."""
-        _, _ = available_items_by_choice, choices
-        # We apply the neural network to all items_features_by_choice for all the items
-        # We then concatenate the utilities of each item of shape (n_choices, 1) into
-        # a single one of shape (n_choices, n_items)
-        shared_embeddings = self.dense_shared(shared_features_by_choice[0])
+                              **kwargs):
 
-        # Iterate over items
-        items_features_embeddings = []
-        for i in range(items_features_by_choice[0].shape[1]):
-            # Utility is Dense(embeddings sum)
-            item_embedding = shared_embeddings + self.dense_items(items_features_by_choice[0][:, i])
-            items_features_embeddings.append(self.final_layer(item_embedding))
+        z_embedding = self.gamma_z(shared_features_by_choice)
 
-        # Concatenation to get right shape (n_choices, n_items, )
-        item_utility_by_choice = tf.concat(items_features_embeddings, axis=1)
+        item_utility_by_choice = []
+        for i in range(n_items):
+            embedding = sigmoid(shared_embeddings +\
+            self.gamma_w(items_features_by_choice[:, i]))
+            item_utility_by_choice.append(self.beta_l(item_embedding))
+
+        item_utility_by_choice = tf.concat(item_utility_by_choice, axis=1)
 
         return item_utility_by_choice
 ```
 
-# Acknowledgements
+# Acknowledgments
+We thank Fortenova and particularly Martin Možina for their helpful collaboration and providing of the proprietary dataset.
 
 # References
