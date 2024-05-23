@@ -59,7 +59,7 @@ A summary of the main contributions of Choice-Learn is provided in Table \ref{ta
 | PyLogit      | cells span columns               | cells span columns           |
 +--------------+------------+------------+--------+-------------------+----------+
 | Torch-Choice | cells      | - body              | cells span columns           |
-+--------------+ span rows  | - elements          | cells span columns           |
++--------------+------------+------------+--------+-------------------+----------+
 | Choice-Learn |            | - here              | cells span columns           |
 +==============+============+============+========+===================+==========+
 
