@@ -49,19 +49,19 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 A summary of the main contributions of Choice-Learn is provided in Table \ref{tab:comparison}.
 
-+--------------+-------------+-----------+--------+-------------------+----------+
-| Package      | Data Processing                  | Estimation Method | Header 4 |
-+:============:+:===========:+:=========:+:======:+:=================:+:========:+
-| Biogeme      | Traditional | NeuralNet | Custom | Custom            |   Custom |
-+--------------+------------+------------+--------+-------------------+----------+
-| Biogeme      | cells span columns               | cells span columns           |
-+--------------+------------+------------+--------+-------------------+----------+
-| PyLogit      | cells span columns               | cells span columns           |
-+--------------+------------+------------+--------+-------------------+----------+
-| Torch-Choice | cells      | - body              | cells span columns           |
-+--------------+------------+------------+--------+-------------------+----------+
-| Choice-Learn |            | - here              | cells span columns           |
-+==============+============+============+========+===================+==========+
++--------------+-------------+-----------+-------------+-----------+--------+-------------------+----------+
+| Package      | Data Processing         | Estimation                       | Estimation Method | Header 4 |
++:============:+:===========:+:=========:+:===========:+:=========:+:======:+:=================:+:========:+
+|              | Format      | Batching  | Traditional | NeuralNet | Custom | Custom            |   Custom |
++--------------+-------------+-----------+-------------+-----------+--------+-------------------+----------+
+| Biogeme      | cells span columns      | cells span columns               | cells span columns           |
++--------------+-------------+-----------+-------------+-----------+--------+-------------------+----------+
+| PyLogit      | cells span columns      | cells span columns               | cells span columns           |
++--------------+-------------+-----------+-------------+-----------+--------+-------------------+----------+
+| Torch-Choice | cells span columns      | cells       | - body             | cells span columns           |
++--------------+-------------+-----------+-------------+-----------+--------+-------------------+----------+
+| Choice-Learn | cells span columns      |             | - here             | cells span columns           |
++==============+============+============+============+============+========+===================+==========+
 
 
 # Statement of need
