@@ -101,23 +101,6 @@ We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Ex
 
 Finally, we observe similar performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in over 600 retail Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which of the 63 products were available, their prices, as well as a one-hot representation of the store. The numerical results are presented in \ref{fig:xps} (c) and (d).
 
-
-\begin{figure}
-\centering
-\label{fig:xps}
-\begin{tabular}{cc}
-  \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_storage.png} &   \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_expedia_2.png} \\
-(a) Choice-Learn memory usage for different & (b) Memory usage for the Expedia dataset \\[6pt]
-values of (n\_locations, n\_locations) & with different dataset sizes \\
-    \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_fng_1.png} &   \includegraphics[width=65mm]{illustrations/ram_images/ram_usage_fng_2.png} \\
-(c) Memory usage of our own retail dataset   & (d) Memory usage of our own retail dataset \\[6pt]
-for different dataset sizes & for different number of stores \\
-\end{tabular}
-\caption{Memory usage experiments \VA{Illustrations to be completed and colors to be aligned!} \Alicomment{Nice. Why not include Torch choice?} \VA{will doo}}
-\end{figure}
-
-
-
 ## Customized choice models
 We provide an example of the custom model definition with the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
 $$U(i) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
@@ -125,7 +108,7 @@ where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all of whic
 When introducing a custom model, one needs to inherit the *ChoiceModel* class, specify the weights to be estimated in the *__init__* method, and determine how to compute the utility in the *compute_batch_utility* method.
 
 
-```python``
+```python
     def __init__(self, n_neurons, **kwargs):
         super().__init__(**kwargs)
 
