@@ -37,7 +37,7 @@ output: paper_pdf
 
 Discrete choice models aim at predicting choice decisions made by individuals from a menu of alternatives, which is known as an assortment. Well-known use cases include predicting a commuter's choice of transportation mode or a customer's in-store or online purchases. A key capability of choice models is their ability to handle assortment variations, such as predicting choices when some alternatives become unavailable or when their features change in different operational contexts. This adaptability to different scenarios allows these models to be used as inputs for optimization problems, such as assortment planning or pricing.
 
-Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced customization. This structure is inspired by Keras [@Chollet:2015], which is an overlay of TensorFlow [@Abadi:2015] endpoints, enabling a user-friendly modeling interface. Choice-Learn was designed with the following objectives:
+Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced customization. This structure is inspired by Keras [@Chollet:2015], which is an overlay of TensorFlow [@Abadi:2015] endpoints, enabling a user-friendly modeling interface. Choice-Learn was designed with the following objectives:
 
 - **Streamlined:** The code signature is kept simple for fast integration of datasets and estimation of standard models. The higher-level API can be used with minimal code.
 - **Scalable:** Optimized processes are implemented, allowing the use of large datasets and large models.
@@ -48,6 +48,21 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 ![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_high_level.png)
 
 A summary of the main contributions of Choice-Learn is provided in Table \ref{tab:comparison}.
+
++--------------+-------------+-----------+--------+-------------------+----------+
+| Package      | Data Processing                  | Estimation Method | Header 4 |
++:============:+:===========:+:=========:+:======:+:=================:+:========:+
+| Biogeme      | Traditional | NeuralNet | Custom | Custom            |   Custom |
++--------------+------------+------------+--------+-------------------+----------+
+| Biogeme      | cells span columns               | cells span columns           |
++--------------+------------+------------+--------+-------------------+----------+
+| PyLogit      | cells span columns               | cells span columns           |
++--------------+------------+------------+--------+-------------------+----------+
+| Torch-Choice | cells      | - body              | cells span columns           |
++--------------+ span rows  | - elements          | cells span columns           |
+| Choice-Learn |            | - here              | cells span columns           |
++==============+============+============+========+===================+==========+
+
 
 # Statement of need
 
@@ -64,7 +79,7 @@ The signatures for data usage in model estimation and evaluation are designed to
 
 Choice modeling is a standard tool for brick-and-mortar retailers and online marketplaces to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale and more reliable choice datasets are leveraged to manage customer-facing operations.
 
-`Choice-Learn`'s data structure relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of the same item or customer features and defers the instantiation of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object allows feature values to be referenced in the dataset only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, suppose that we have access to store features such as surface, position, or number of employees. These features are often stationary: they do not change over time when predicting customer choices. Thus, they can be stored in an auxiliary data structure and it suffices to reference in the main dataset in which specific store the choice observation is recorded. Figure~\ref{fig:fbi} illustrates this approach.
+`Choice-Learn`'s data structure relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of the same item or customer features and defers the instantiation of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object allows feature values to be referenced in the dataset only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, suppose that we have access to store features such as surface, position, or number of employees. These features are often stationary: they do not change over time when predicting customer choices. Thus, they can be stored in an auxiliary data structure and it suffices to reference in the main dataset in which specific store the choice observation is recorded. Figure \ref{fig:fbi} illustrates this approach.
 
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, such as within an assortment recommendation software. Many state-of-the-art tools are provided for deployment and serving, such as TFLite and TFServing.
@@ -95,11 +110,11 @@ Choice-Learn proposes a unified estimation tool based on  TensorFlow's automatic
 
 ## Memory usage: a case study
 
-We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*). Each row of the dataset refers to one of the locations. In \ref{fig:xps} (a), we compare the memory usage for different dataset sizes and \*n_locations* set to 10 and 100. We find that `Choice-Learn` can save several orders of magnitude in memory usage.
+We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*). Each row of the dataset refers to one of the locations. In Figure \ref{fig:xps} (a), we compare the memory usage for different dataset sizes and \*n_locations* set to 10 and 100. We find that `Choice-Learn` can save several orders of magnitude in memory usage.
 
-We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, often used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Following the preprocessing of the dataset as described by [@Aouad:2023], four features are represented as one-hot values. The results, obtained by varying the sample size, are reported in \ref{fig:xps} (b).
+We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, often used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Following the preprocessing of the dataset as described by [@Aouad:2023], four features are represented as one-hot values. The results, obtained by varying the sample size, are reported in Figure \ref{fig:xps} (b).
 
-Finally, we observe similar performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in over 600 retail Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which of the 63 products were available, their prices, as well as a one-hot representation of the store. The numerical results are presented in \ref{fig:xps} (c) and (d).
+Finally, we observe similar performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in over 600 retail Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which of the 63 products were available, their prices, as well as a one-hot representation of the store. The numerical results are presented in Figure \ref{fig:xps} (c) and (d).
 
 ## Customized choice models
 We provide an example of the custom model definition with the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
