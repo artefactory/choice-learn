@@ -48,20 +48,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 ![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_high_level.png)
 
 A summary of the main contributions of Choice-Learn is provided in Table \ref{tab:comparison}.
-
-+--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| Package      | Data Processing                  | Estimation                                  | Models                            | Downstream Operations  |
-+--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-|              | Format      | Batching           | Non-stochastic | Stochastic| Regularization | Traditional | NeuralNet |  Custom |  Assortment|  Pricing  |
-+:============:+:===========:+:==================:+:==============:+:=========:+:==============:+:===========:+:=========:+:=======:+:==========:+:=========:+
-| Biogeme      | wide        |     X              | Newton BFGS    |           |                | cells span columns      | cells  span columns  | columns   |
-+--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| PyLogit      | format      |     X              | BFGS           |           |                | cells span columns      | cells  span columns  | columns   |
-+--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| Torch-Choice |             | :white_check_mark: | L-BFGS         | - body    |                | cells span columns      | cells  span columns  | columns   |
-+--------------+-------------+--------------------+----------------+-----------+----------------+-------------+-----------+---------+------------+-----------+
-| Choice-Learn |             | :white_check_mark: | L-BFGS         | - here    |                | cells span columns      | cells  span columns  | columns   |
-+==============+=============+====================+================+===========+================+=============+===========+=========+============+===========+
+![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison}](../illustrations/table.png)
 
 
 # Statement of need
