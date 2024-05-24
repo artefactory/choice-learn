@@ -1,8 +1,6 @@
 ---
 title: '`Choice-Learn`: Large-scale choice modeling for operational contexts through the lens of machine learning'
 
-# Idea to introduce: ML&Classical, toolbox
-# A Python Toolbox for generic and custom choice modelling ?
 tags:
   - Python
   - choice
@@ -97,7 +95,7 @@ Choice-Learn proposes a unified estimation tool based on  TensorFlow's automatic
 
 ## Memory usage: a case study
 
-We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*). Each row of the dataset refers to one of the locations. In Figure \ref{fig:xps} (a), we compare the memory usage for different dataset sizes and \*n_locations* set to 10 and 100. We find that `Choice-Learn` can save several orders of magnitude in memory usage.
+We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*). Each row of the dataset refers to one of the locations. In Figure \ref{fig:xps} (a), we compare the memory usage for different dataset sizes and *n_locations* set to 10 and 100. We find that `Choice-Learn` can save several orders of magnitude in memory usage.
 
 We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, often used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Following the preprocessing of the dataset as described by [@Aouad:2023], four features are represented as one-hot values. The results, obtained by varying the sample size, are reported in Figure \ref{fig:xps} (b).
 
