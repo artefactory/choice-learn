@@ -10,12 +10,12 @@ authors:
     corresponding: true
     orcid: 0000-0000-0000-0000
     affiliation: "1, 2"
-  - name: Emmanuel Malherbe
-    affiliation: 2
   - name: Ali Aouad
     affiliation: 3
   - name: Antoine Désir
     affiliation: 4
+  - name: Emmanuel Malherbe
+    affiliation: 2
 affiliations:
  - name: CentraleSupélec, Université Paris-Saclay, France
    index: 1
@@ -45,14 +45,15 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 ![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
-A summary of the main contributions of Choice-Learn is provided in Table \ref{fig:comparison}.
+A summary of the main contributions of Choice-Learn is provided in Table \autoref{fig:comparison}.
+
 ![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{fig:comparison}](../illustrations/table.png)
 
 
 # Statement of need
 
 ## Streamlined signatures
-`Choice-Learn` proposes short signatures for a fast implementation. For example, the *ChoiceDataset* object, which handles the dataset, takes only 4 inputs: 'items_features' describing each available alternative, 'shared_features' describing the context of the choice, 'available_items' indicating the subset of alternatives offered in the assortment, and finally 'choices', the index of the chosen option. Choice-Learn also provides methods to seamlessly integrate popular data formats, such as long and wide format dataframes [@Helveston:2023].
+`Choice-Learn` proposes short signatures for a fast implementation. For example, the *ChoiceDataset* object, which handles the dataset, takes only 4 inputs: 'items_features' describing each available alternative, 'shared_features' describing the context of the choice, 'available_items' indicating the subset of alternatives offered in the assortment, and finally 'choices', the index of the chosen option. `Choice-Learn` also provides methods to seamlessly integrate popular data formats, such as long and wide format dataframes [@Helveston:2023].
 
 ```python
 dataset = ChoiceDataset(choices, shared_features, items_features, available_items)
@@ -77,7 +78,7 @@ Choice models following the *Random Utility Maximization* principle [@McFadden:2
 
 $$\mathbb{P}(i|\mathcal{A}) = \frac{e^{U(i)}}{\sum_{j \in \mathcal{A}} e^{U(j)}}$$
 
-The choice-modeller's job is to formulate an appropriate utility function depending on the context. In Choice-Learn, the user can parametrize predefined models such as the Conditional Logit or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class. This allows for tailoring choice models to different use cases.
+The choice-modeller's job is to formulate an appropriate utility function depending on the context. In `Choice-Learn`, the user can parametrize predefined models such as the Conditional Logit or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class. This allows for tailoring choice models to different use cases.
 
 ## Unifying  traditional random utility models and machine learning-based models
 
@@ -107,7 +108,7 @@ Finally, we observe similar performance gains in terms of memory management on a
 We provide an example of the custom model definition with the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
 $$U(i) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
 where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all of which are parameters to be estimated. Additionally, $\sigma$ is the sigmoid activation function.
-When introducing a custom model, one needs to inherit the *ChoiceModel* class, specify the weights to be estimated in the *__init__* method, and determine how to compute the utility in the *compute_batch_utility* method.
+When introducing a custom model, one needs to inherit the *ChoiceModel* class, specify the weights to be estimated in the `__init__` method, and determine how to compute the utility in the `compute_batch_utility` method.
 
 
 ```python
