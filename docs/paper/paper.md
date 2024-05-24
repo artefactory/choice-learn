@@ -33,15 +33,15 @@ output: paper_pdf
 
 # Introduction
 
-Discrete choice models aim at predicting choice decisions made by individuals from a menu of alternatives, which is known as an assortment. Well-known use cases include predicting a commuter's choice of transportation mode or a customer's in-store or online purchases. A key capability of choice models is their ability to handle assortment variations, such as predicting choices when some alternatives become unavailable or when their features change in different operational contexts. This adaptability to different scenarios allows these models to be used as inputs for optimization problems, such as assortment planning or pricing.
+Discrete choice models aim at predicting choice decisions made by individuals from a menu of alternatives, which is known as an assortment. Well-known use cases include predicting a commuter's choice of transportation mode or a customer's purchases. A key capability of choice models is their ability to handle assortment variations, such as predicting choices when some alternatives become unavailable or when their features change in different operational contexts. This adaptability to different scenarios allows these models to be used as inputs for optimization problems, including assortment planning or pricing.
 
-Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced customization. This structure is inspired by Keras [@Chollet:2015] with its different endpoints, enabling a user-friendly modeling interface. Choice-Learn was designed with the following objectives:
+Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced parameterizations. This structure is inspired by Keras [@Chollet:2015] with its different endpoints, enabling a user-friendly modeling interface. Choice-Learn was designed with the following objectives:
 
-- **Streamlined:** The code signature is kept simple for fast integration of datasets and estimation of standard models. The higher-level API can be used with minimal code.
+- **Streamlined:** The code signature is kept simple for smooth integration of datasets and estimation of standard models.
 - **Scalable:** Optimized processes are implemented, allowing the use of large datasets and large models.
-- **Flexible:** The codebase is designed to be customized in order to fit different use cases. The lower-level API offers more control over the possible parameterizations.
+- **Flexible:** The codebase is designed to be customized in order to fit different use cases.
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
-- **Downstream operations:** Post-processing tools  that leverage choice models for assortment optimization and pricing are integrated into the library.
+- **Downstream operations:** Post-processing tools that leverage choice models for assortment optimization and pricing are integrated into the library.
 
 ![General Organization of the package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
@@ -64,7 +64,7 @@ Finally, data usage, model estimation and evaluation are designed to be consiste
 
 Choice modeling is widely used in retail and e-commerce sectors to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale choice datasets are available and instrumental to manage customer-facing operations.
 
-`Choice-Learn`'s data structure relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, store features including surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and only the ID of the store where the choice is recorded is referenced in the main dataset.
+`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, store features including surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and only the ID of the store where the choice is recorded is referenced in the main dataset.
 
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, such as within an assortment recommendation software through deployment and serving tools, such as TFLite and TFServing.
@@ -73,11 +73,11 @@ Finally, the TensorFlow backbone ensures an efficient usage in a production envi
 
 ## Flexible usage: from linear utility to customized specification
 
-Choice models following the *Random Utility Maximization* principle [@McFadden:2000] define the utility of an option $i \in \mathcal{A}$ as the sum of a deterministic part $U(i)$ and a random error $\epsilon_i$. If the terms $(\epsilon_i)_{i \in \mathcal{A}}$ are assumed to be independent and Gumbel-distributed, the probability to choose option $i$ can be written as the softmax normalization over the available alternatives $j\in \mathcal{A}$:
+Choice models following the *Random Utility Maximization* principle [@McFadden:2000] define the utility of an alternative $i \in \mathcal{A}$ as the sum of a deterministic part $U(i)$ and a random error $\epsilon_i$. If the terms $(\epsilon_i)_{i \in \mathcal{A}}$ are assumed to be independent and Gumbel-distributed, the probability to choose alternative $i$ can be written as the softmax normalization over the available alternatives $j\in \mathcal{A}$:
 
 $$\mathbb{P}(i|\mathcal{A}) = \frac{e^{U(i)}}{\sum_{j \in \mathcal{A}} e^{U(j)}}$$
 
-The choice-modeller's job is to formulate an appropriate utility function $U(.)$ depending on the context. In `Choice-Learn`, the user can parametrize predefined models such as the Conditional Logit or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class.
+The choice-modeler's job is to formulate an appropriate utility function $U(.)$ depending on the context. In `Choice-Learn`, the user can parametrize predefined models or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class.
 
 ## Library of traditional random utility models and machine learning-based models
 
@@ -85,7 +85,7 @@ Traditional parametric choice models, including the Conditional Logit [@Train:19
 The availability of detailed customer choice data, paired with advances in machine learning, enables the estimation of more complex models, with neural networks approaches [@Han:2022; @Aouad:2023] and tree-based models [@Salvadé:2024; @AouadMarket:2023]. Chile existing choice libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches, `Choice-Learn` proposes a collection including both types of models.
 
 ## Downstream operations: Assortment and pricing optimization
-`Choice-Learn` also offers additional tools for downstream operations, which are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014] for assortment optimization and pricing, with the option to choose the solver between Gurobi [@Gurobi:2023] and OR-Tools [@ORTools:2024].
+`Choice-Learn` also offers additional tools for downstream operations, that are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014], with the option to choose the solver between Gurobi [@Gurobi:2023] and OR-Tools [@ORTools:2024].
 
 
 # Experiments and examples
