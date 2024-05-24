@@ -136,5 +136,6 @@ To define a custom model, one needs to inherit the *ChoiceModel* class and overw
 # Acknowledgments
 We thank Fortenova[^1] and Martin Možina for their helpful collaboration and providing of the proprietary dataset.
 
-[^1]: https://fortenova.hr/en/home/
 # References
+
+[^1]: https://fortenova.hr/en/home/
