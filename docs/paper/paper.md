@@ -45,7 +45,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 ![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
-A summary of the main contributions of Choice-Learn is provided in Table \autoref{fig:comparison}.
+A summary of the main contributions of Choice-Learn is provided in Table \ref{fig:comparison}.
 
 ![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{fig:comparison}](../illustrations/table.png)
 
