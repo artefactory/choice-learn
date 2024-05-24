@@ -47,7 +47,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
-![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison}](../illustrations/table.png)
+![\captionof{table}{Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. }\label{tab:comparison}](../illustrations/table.png)
 
 # Statement of need
 
