@@ -47,7 +47,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
-![\captionof{table}{Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. }\label{tab:comparison}](../illustrations/table.png)
+![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison}](../illustrations/table.png)
 
 # Statement of need
 
@@ -64,10 +64,10 @@ Finally, data usage, model estimation and evaluation are designed to be consiste
 
 Choice modeling is widely used in retail and e-commerce sectors to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale choice datasets are available and instrumental to manage customer-facing operations.
 
-`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, store features including surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and only the ID of the store where the choice is recorded is referenced in the main dataset.
+`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and only the ID of the store where the choice is recorded is referenced in the main dataset.
 
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
-Finally, the TensorFlow backbone ensures an efficient usage in a production environment, such as within an assortment recommendation software through deployment and serving tools, such as TFLite and TFServing.
+Finally, the TensorFlow backbone ensures an efficient usage in a production environment, for instance within an assortment recommendation software, through deployment and serving tools, such as TFLite and TFServing.
 
 ![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/choice_learn_features_storage.png)
 
@@ -82,7 +82,7 @@ The choice-modeler's job is to formulate an appropriate utility function $U(.)$ 
 ## Library of traditional random utility models and machine learning-based models
 
 Traditional parametric choice models, including the Conditional Logit [@Train:1987], often specify the utility function as a linear form. This provides interpretable coefficients, such as price  elasticities, but also limits the predictive power of the model.
-The availability of detailed customer choice data, paired with advances in machine learning, enables the estimation of more complex models, with neural networks approaches [@Han:2022; @Aouad:2023] and tree-based models [@Salvadé:2024; @AouadMarket:2023]. Chile existing choice libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches, `Choice-Learn` proposes a collection including both types of models.
+The availability of detailed customer choice data, paired with advances in machine learning, enables the estimation of more complex models, with neural networks approaches [@Han:2022; @Aouad:2023] and tree-based models [@Salvadé:2024; @AouadMarket:2023]. While existing choice libraries [@Bierlaire:2023; @Brathwaite:2018; @Du:2023] are often not designed to integrate such machine learning-based approaches, `Choice-Learn` proposes a collection including both types of models.
 
 ## Downstream operations: Assortment and pricing optimization
 `Choice-Learn` also offers additional tools for downstream operations, that are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014], with the option to choose the solver between Gurobi [@Gurobi:2023] and OR-Tools [@ORTools:2024].
@@ -96,12 +96,12 @@ We provide numerical examples of memory usage to showcase the efficiency of the 
 
 We conduct a similar comparison on the ICDM 2013 Expedia dataset [@Expedia:2013] with four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, both used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Figure \ref{fig:xps} (b) shows the results for various sample sizes.
 
-Finally, in Figure \ref{fig:xps} (c) and (d), we observe performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which products were available, their prices, as well as a one-hot representation of the store.
+Finally, in Figure \ref{fig:xps} (c) and (d), we observe performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which products were available, their prices, as well as a one-hot representation of the supermarket.
 
 ![Memory usage experiments. \label{fig:xps}](../illustrations/full_ram.png)
 
 ## Customized choice models
-We provide an example of the custom model definition with the following formulation of utility $U(i)$ with features $x_i$ and customer features $z$:
+We provide an example of the custom model definition with the following formulation of utility $U(i)$ with alternative features $x_i$ and customer features $z$:
 $$U(i) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
 where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all three to be estimated and $\sigma$ being the sigmoid activation function.
 To define a custom model, one needs to inherit the *ChoiceModel* class and overwrite the `compute_batch_utility` method.
