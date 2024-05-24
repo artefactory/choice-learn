@@ -45,7 +45,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
 - **Downstream operations:** Post-processing tools  that leverage choice models for assortment optimization and pricing are also integrated into the library.
 
-![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_high_level.png)
+![General Organization of Choice-Learn package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
 A summary of the main contributions of Choice-Learn is provided in Table \ref{tab:comparison}.
 ![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison}](../illustrations/table.png)
@@ -90,7 +90,7 @@ Choice-Learn proposes a unified estimation tool based on  TensorFlow's automatic
 
 
 ## Downstream operations: Assortment and pricing optimization
-`Choice-Learn` also offers additional tools for downstream operations, which are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014]. It currently supports the optimization of the assortment and prices of offered items. Users can choose between solvers like Gurobi [@Gurobi:2023], which is popular in the research community with free licensing, or OR-Tools [ORTools:2024], which is open source.
+`Choice-Learn` also offers additional tools for downstream operations, which are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model in order to determine the optimal subset of alternatives to offer customers in order to maximize a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide a generic implementation based on the mixed-integer programming formulation described in [@MendezDiaz:2014]. It currently supports the optimization of the assortment and prices of offered items. Users can choose between solvers like Gurobi [@Gurobi:2023], which is popular in the research community with free licensing, or OR-Tools [@ORTools:2024], which is open source.
 
 
 # Experiments and examples
@@ -102,6 +102,8 @@ We provide numerical examples of memory usage to showcase the efficiency of the 
 We conduct a similar experiment experiment on the ICDM 2013 Expedia dataset [@Expedia:2013]. We compare four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, often used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Following the preprocessing of the dataset as described by [@Aouad:2023], four features are represented as one-hot values. The results, obtained by varying the sample size, are reported in Figure \ref{fig:xps} (b).
 
 Finally, we observe similar performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing. It consists of the aggregation of more than 4 million purchases over 5 years in over 600 retail Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which of the 63 products were available, their prices, as well as a one-hot representation of the store. The numerical results are presented in Figure \ref{fig:xps} (c) and (d).
+
+![Memory usage experiments. \label{fig:xps}](../illustrations/full_ram.png)
 
 ## Customized choice models
 We provide an example of the custom model definition with the following formulation of utility for an alternative $i$ with features $x_i$ considered by a customer with features $z$:
