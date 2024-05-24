@@ -34,9 +34,9 @@ class MNLAssortmentOptimizer(object):
                 outside_option_given=outside_option_given,
             )
         if solver.lower() == "or-tools" or solver.lower() == "ortools":
-            from .or_tools_opt import ORToolsAssortmentOptimizer
+            from .or_tools_opt import ORToolsMNLAssortmentOptimizer
 
-            return ORToolsAssortmentOptimizer(
+            return ORToolsMNLAssortmentOptimizer(
                 utilities=utilities,
                 itemwise_values=itemwise_values,
                 assortment_size=assortment_size,
@@ -100,9 +100,9 @@ class LatentClassAssortmentOptimizer(object):
                 outside_option_given=outside_option_given,
             )
         if solver.lower() == "or-tools" or solver.lower() == "ortools":
-            from .or_tools_opt import ORToolsAssortmentOptimizer
+            from .or_tools_opt import ORToolsLatentClassAssortmentOptimizer
 
-            return ORToolsAssortmentOptimizer(
+            return ORToolsLatentClassAssortmentOptimizer(
                 class_weights=class_weights,
                 class_utilities=class_utilities,
                 itemwise_values=itemwise_values,
@@ -167,9 +167,9 @@ class LatentClassPricingOptimizer(object):
                 outside_option_given=outside_option_given,
             )
         if solver.lower() == "or-tools" or solver.lower() == "ortools":
-            from .or_tools_opt import ORLatentClassPricingOptimizer
+            from .or_tools_opt import ORToolsLatentClassPricingOptimizer
 
-            return ORLatentClassPricingOptimizer(
+            return ORToolsLatentClassPricingOptimizer(
                 class_weights=class_weights,
                 class_utilities=class_utilities,
                 itemwise_values=itemwise_values,

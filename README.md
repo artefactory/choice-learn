@@ -1,13 +1,12 @@
 <div align="center">
 
 
-<img src="docs/illustrations/logos/choice_learn_official_logo.png" width="512">
+<img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
 
-*Design custom choice models for large dataset*
+*Large-scale choice modeling through the lens of machine learning*
 
 [![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
-
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn-private/blob/main/.pre-commit-config.yaml)
@@ -59,7 +58,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
 ## Getting Started
 
@@ -97,13 +96,36 @@ For modelling you need:
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
-Finally, an optional requirement used for coefficients analysis and L-BFGS optimization is:
+An optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
+
+Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
+- gurobipy (>=11.0.0)
+- ortools (>=9.6.2534)
 
 Once you have created your conda/pip python==3.9 environment, you can install requirements by:
 ```bash
 pip install choice-learn
 ```
+<p align="center">
+  <a href="https://numpy.org/">
+    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+  </a>
+  <a href="https://pandas.pydata.org/">
+    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+  </a>
+  <a href="https://www.tensorflow.org">
+    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+  </a>
+  <a href="https://www.gurobi.com/">
+    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+  </a>
+  <a href="https://developers.google.com/optimization?hl=fr">
+    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+  </a>
+</p>
+
+
 ## Usage
 Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
 
