@@ -1,4 +1,4 @@
-name: Launching CI on main
+name: Build
 on:
   push:
     branches:

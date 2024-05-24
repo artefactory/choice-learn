@@ -151,7 +151,8 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
 
 ## Contributing
 You are welcome to contribute to the project ! You can help in various ways:
