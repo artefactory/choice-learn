@@ -111,15 +111,23 @@ pip install choice-learn
   <a href="https://numpy.org/">
     <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://pandas.pydata.org/">
     <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://www.tensorflow.org">
     <img src="docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://www.gurobi.com/">
     <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://developers.google.com/optimization?hl=fr">
     <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
   </a>
