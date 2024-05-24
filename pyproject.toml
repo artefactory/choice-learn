@@ -50,14 +50,14 @@ exclude_dirs = ["tests/"]
 
 [tool.poetry]
 name = "choice-learn"
-version = "0.1.0"
+version = "0.0.1"
 description = "Choice-Learn is a Python package to help you specify, estimate and use discrete choice models with ease."
 authors = [
   "artefactory <vincent.auriau@artefact.com>",
-  "VincentAuriau <vincent.auriau@artefact.com>"
+  "VincentAuriau <vincent.auriau.dev@gmail.com>"
   ]
-homepage = "https://github.com/artefactory/choice-learn-private"
-documentation = "https://artefactory.github.io/choice-learn-private"
+homepage = "https://github.com/artefactory/choice-learn"
+documentation = "https://artefactory.github.io/choice-learn"
 license = "MIT"
 readme = "README.md"
 keywords = ["discrete", "choice", "model", "machine", "learning", "assortment", "pricing", "retail", "supermarket"]
@@ -70,6 +70,8 @@ pandas = "^1.5.3"
 tensorflow = "^2.11.0"
 tensorflow-probability = "^0.20.1"
 tqdm = "^4.0.0"
+ortools = { version = "^9.6", optional = true }
+gurobipy = { version = "^11.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.2"

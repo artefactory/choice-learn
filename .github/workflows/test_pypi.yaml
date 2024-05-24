@@ -1,0 +1,18 @@
+name: Build and publish python package
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  publish-service-client-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish PyPi package
+        uses: code-specialist/pypi-poetry-publish@v1
+        with:
+          PACKAGE_DIRECTORY: "./choice_learn/"
+          PYTHON_VERSION: "3.8"
+          PUBLISH_REGISTRY_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+          PUBLISH_REGISTRY_USER: ${{ secrets.TEST_PYPI_USERNAME }}
+          PUBLISH_REGISTRY: "https://test.pypi.org/legacy/"
