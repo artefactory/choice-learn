@@ -14,16 +14,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build draft PDF
-        run:
-          using: docker
-          image: 'docker://openjournals/inara:latest'
-          env:
-            GIT_SHA: $GITHUB_SHA
-            JOURNAL: joss
-          args:
-            - -p
-            - -o pdf
-            - docs/paper/paper.md
+        uses: ./actions/build_draft
+        with:
+          journal: joss
+          # This should be the path to the paper within your repo.
+          paper-path: docs/paper/paper.md
 
       - name: Upload
         uses: actions/upload-artifact@v4

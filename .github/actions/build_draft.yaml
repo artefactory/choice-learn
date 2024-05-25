@@ -1,0 +1,26 @@
+name: Open Journals PDF Generator
+description: Create a draft PDF for an Open Journals paper
+inputs:
+  journal:
+    description: Target journal, must be either "joss" or "jose"
+    required: false
+    default: joss
+  paper-path:
+    description: >-
+        Path to the main paper Markdown file, relative to the
+        project's root directory.
+    required: false
+    default: 'paper.md'
+runs:
+  using: docker
+  image: 'docker://openjournals/inara:latest'
+  env:
+    GIT_SHA: $GITHUB_SHA
+    JOURNAL: ${{ inputs.journal }}
+  args:
+    - -o pdf
+    - p
+    - ${{ inputs.paper-path }}
+branding:
+  icon: file-text
+  color: blue
