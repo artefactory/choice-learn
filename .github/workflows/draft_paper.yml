@@ -24,9 +24,6 @@ jobs:
             - p
             - -o pdf
             - docs/paper/paper.md
-        branding:
-          icon: file-text
-          color: blue
 
       - name: Upload
         uses: actions/upload-artifact@v4
