@@ -21,7 +21,7 @@ jobs:
             GIT_SHA: $GITHUB_SHA
             JOURNAL: joss
           args:
-            - p
+            - -p
             - -o pdf
             - docs/paper/paper.md
 
