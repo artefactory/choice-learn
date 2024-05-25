@@ -16,7 +16,8 @@ jobs:
       - name: test
         run: |
           echo "Hello, World!"
-          lss
+          ls
+          ls choice-learn/
 
       - name: Build draft PDF
         uses: ./.github/actions/build-draft
