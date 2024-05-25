@@ -19,10 +19,10 @@ jobs:
           ls
           ls choice_learn/
           ls .github/
-          ls .github/actions/
+          ls ./.github/actions/
 
       - name: Build draft PDF
-        uses: .github/actions/build-draft
+        uses: ./.github/actions/build-draft
         with:
           journal: joss
           paper-path: docs/paper/paper.md
