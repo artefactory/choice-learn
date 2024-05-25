@@ -13,11 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build draft PDF
+      - build_draft:
+        name: Build draft PDF
         uses: ./../.github/actions/build_draft.yaml
         with:
           journal: joss
-          # This should be the path to the paper within your repo.
           paper-path: docs/paper/paper.md
 
       - name: Upload

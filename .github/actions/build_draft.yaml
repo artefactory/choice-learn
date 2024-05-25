@@ -21,6 +21,3 @@ runs:
     - -o pdf
     - p
     - ${{ inputs.paper-path }}
-branding:
-  icon: file-text
-  color: blue
