@@ -19,4 +19,5 @@ runs:
     JOURNAL: ${{ inputs.journal }}
   args:
     - -o pdf
+    - -p
     - ${{ inputs.paper-path }}
