@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Copy files
+        working-directory: ${{ env.WORK_DIR }}/local_checkout
+        run: cp -r .github "$GITHUB_WORKSPACE/"  
 
       - name: Build draft PDF
         uses: ./.github/actions/build-draft
