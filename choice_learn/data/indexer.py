@@ -453,8 +453,19 @@ class ChoiceDatasetIndexer(Indexer):
         np.ndarray
             all choices
         """
-        shared_features_by_choice = [feat for feat in self.choice_dataset.shared_features_by_choice]
-        items_features_by_choice = [feat for feat in self.choice_dataset.items_features_by_choice]
+        if self.choice_dataset.shared_features_by_choice is not None:
+            shared_features_by_choice = [
+                feat for feat in self.choice_dataset.shared_features_by_choice
+            ]
+        else:
+            shared_features_by_choice = None
+
+        if self.choice_dataset.items_features_by_choice is not None:
+            items_features_by_choice = [
+                feat for feat in self.choice_dataset.items_features_by_choice
+            ]
+        else:
+            items_features_by_choice = None
 
         if self.choice_dataset.available_items_by_choice is None:
             available_items_by_choice = np.ones(
