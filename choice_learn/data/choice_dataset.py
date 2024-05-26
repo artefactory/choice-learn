@@ -26,25 +26,25 @@ class ChoiceDataset(object):
     def __init__(
         self,
         choices,  # Should not have None as default value ?
-        shared_features_by_choice=None,  # as many context as choices.  values or ids (look at key)
+        shared_features_by_choice=None,  # as many as choices.  values or ids (look at key)
         items_features_by_choice=None,
         available_items_by_choice=None,
         features_by_ids=[],  # list of (name, FeaturesStorage)
         shared_features_by_choice_names=None,
         items_features_by_choice_names=None,
     ):
-        """Builds the ChoiceDataset.
+        """Build the ChoiceDataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices: list or np.ndarray
             list of chosen items indexes
         shared_features_by_choice : tuple of (array_like, )
-            matrix of shape (num_choices, num_contexts_features) containing the features of the
-            different contexts that are common to all items (e.g. store features,
+            matrix of shape (num_choices, num_shared_features) containing the features of the
+            different choices that are common to all items (e.g. store features,
             customer features, etc...)
         items_features_by_choice : tuple of (array_like, ), default is None
-            matrix of shape (num_choices, num_items, num_contexts_items_features)
+            matrix of shape (num_choices, num_items, num_items_features)
             containing the features
             of the items that change over time (e.g. price, promotion, etc...), default is None
         available_items_by_choice : array_like
@@ -52,12 +52,14 @@ class ChoiceDataset(object):
             over the different choices, default is None
         features_by_ids : list of (name, FeaturesStorage)
             List of Storage objects. Their name must correspond to a feature name
-            among shared_items, contexts,
-            contexts_items and their ids must match to those features values. Default is []
+            among shared_features_by_choice or items_features_by_choice
+            and their ids must match to those features values. Default is []
         shared_features_by_choice_names : tuple of (array_like, )
-            list of names of the contexts_features, default is None
+            list of names of the shared_features_by_choice, default is None
+            Shapes must match with shared_features_by_choice
         items_features_by_choice_names : tuple of (array_like, )
-            list of names of the contexts_items_features, default is None
+            list of names of the items_features_by_choice, default is None
+            Shapes must match with items_features_by_choice
         """
         if choices is None:
             # Done to keep a logical order of arguments, and has logic: choices have to be specified
@@ -135,7 +137,23 @@ class ChoiceDataset(object):
             for sub_k, (sub_features, sub_names) in enumerate(
                 zip(items_features_by_choice, items_features_by_choice_names)
             ):
-                if len(sub_features[0][0]) != len(sub_names):
+                # Split if feature is full FeaturesStorage
+                if np.array(sub_features).ndim == 1:
+                    # check features_by_ids
+                    logging.info(
+                        "feature of dimension 1 detected -  a FeatureByIDs MUst be provided"
+                    )
+                    for fbid in features_by_ids:
+                        if fbid.name == sub_names[0]:
+                            logging.info("FeatureByIDs found")
+                            break
+                    else:
+                        raise ValueError(
+                            """FeatureByIDs must be provided when items_features\
+                                of shape (n_choices, 1) is given."""
+                        )
+
+                elif len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
                         f"""{sub_k}-th given items_features_by_choice and
                         items_features_by_choice_names shapes do not match"""
@@ -160,13 +178,13 @@ class ChoiceDataset(object):
         # Basically it transforms them to be internally stocked as np.ndarray and keep columns
         # names as features names
 
-        # Handling context features
+        # Handling shared features
         if shared_features_by_choice is not None:
             for i, feature in enumerate(shared_features_by_choice):
                 if isinstance(feature, pd.DataFrame):
                     # Ordering choices by id ?
-                    if "context_id" in feature.columns:
-                        feature = feature.set_index("context_id")
+                    if "choice_id" in feature.columns:
+                        feature = feature.set_index("choice_id")
                     shared_features_by_choice = (
                         shared_features_by_choice[:i]
                         + (shared_features_by_choice[i].loc[np.sort(feature.index)].to_numpy(),)
@@ -245,7 +263,7 @@ class ChoiceDataset(object):
                                 )
                                 available_items_by_choice = np.array(temp_availabilities)
                         else:
-                            feature = feature.set_index("context_id")
+                            feature = feature.set_index("choice_id")
                             items_features_by_choice = (
                                 items_features_by_choice[:i]
                                 + (feature.loc[np.sort(feature.index)].to_numpy(),)
@@ -284,9 +302,9 @@ class ChoiceDataset(object):
                 if "choice_id" in available_items_by_choice.columns:
                     if "item_id" in available_items_by_choice.columns:
                         av_array = []
-                        for sess in np.sort(available_items_by_choice.context_id):
+                        for sess in np.sort(available_items_by_choice.choice_id):
                             sess_df = available_items_by_choice.loc[
-                                available_items_by_choice.context_id == sess
+                                available_items_by_choice.choice_id == sess
                             ]
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
@@ -351,24 +369,37 @@ class ChoiceDataset(object):
         self.indexer = ChoiceDatasetIndexer(self)
 
     def _build_features_by_ids(self):
-        """Builds mapping function.
+        """Build mapping function.
 
         Those mapping functions are so that at indexing,
         the features are rebuilt with the features by id.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
-            indexes and features_by_id of contexts_features
+            indexes and features_by_id of shared_features_by_choice
         tuple
-            indexes and features_by_id of contexts_items_features
+            indexes and features_by_id of items_features_by_choice
         """
         if len(self.features_by_ids) == 0:
             return {}, {}
 
+        found_av_fid = False
+        for fid in self.features_by_ids:
+            if fid.name == "available_items_by_choice":
+                logging.warning("FeaturesStorage for available_items_by_choice detected.")
+                if self.available_items_by_choice is None:
+                    raise ValueError(
+                        """Cannot provide availabilities_by_choice as\
+                        features_by_ids without indexes."""
+                    )
+                self.available_items_by_choice = (fid, self.available_items_by_choice)
+                found_av_fid = True
+
         if (
             self.shared_features_by_choice_names is None
             and self.items_features_by_choice_names is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -380,6 +411,7 @@ class ChoiceDataset(object):
             and self.shared_features_by_choice_names[0] is None
             and isinstance(self.items_features_by_choice_names, tuple)
             and self.items_features_by_choice_names[0] is None
+            and not found_av_fid
         ):
             raise ValueError(
                 """"Features names are needed to match id columns with features_by_id,
@@ -424,11 +456,15 @@ class ChoiceDataset(object):
                                 index_dict[k] = feature_by_id
                                 items_features_map[i] = index_dict
                                 logging.info(
-                                    f"""Feature by ID found for shared_features_by_choice:
+                                    f"""Feature by ID found for items_features_by_choice:
                                     {feature_by_id.name}"""
                                 )
-
-                                unique_values = np.unique(self.items_features_by_choice[i][:, :, k])
+                                if self.items_features_by_choice[i].ndim == 1:
+                                    unique_values = np.unique(self.items_features_by_choice[i])
+                                else:
+                                    unique_values = np.unique(
+                                        self.items_features_by_choice[i][:, :, k]
+                                    )
                                 try:
                                     for val in unique_values:
                                         feature_by_id.batch[unique_values]
@@ -442,13 +478,13 @@ class ChoiceDataset(object):
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
         num_if_maps = sum([len(val) for val in items_features_map.values()])
 
-        if num_ff_maps + num_if_maps != len(self.features_by_ids):
+        if num_ff_maps + num_if_maps != len(self.features_by_ids) - found_av_fid:
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return shared_features_map, items_features_map
 
     def _check_dataset(self):
-        """Verifies that the shapes of the different features are consistent.
+        """Verify that the shapes of the different features are consistent.
 
         Particularly:
             - Over number of items
@@ -460,7 +496,7 @@ class ChoiceDataset(object):
         self._check_choices_coherence()
 
     def _check_num_items_shapes(self):
-        """Verifies that the shapes of the different features are consistent over number of items.
+        """Verify that the shapes of the different features are consistent over number of items.
 
         Particularly:
             - items_features_by_choice
@@ -470,7 +506,12 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
-            base_num_items = self.available_items_by_choice.shape[1]
+            if isinstance(self.available_items_by_choice, tuple):
+                base_num_items = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                base_num_items = self.available_items_by_choice.shape[1]
         else:
             logging.warning(
                 "No items features or items availabilities are defined. Using max value of choices"
@@ -481,21 +522,37 @@ class ChoiceDataset(object):
 
         if self.items_features_by_choice is not None:
             for k, items_feature in enumerate(self.items_features_by_choice):
-                if items_feature.shape[1] != base_num_items:
-                    raise ValueError(
-                        f"""{k}-th 'items_features_by_choice' shape does not match the
-                        detected number of items: ({items_feature.shape[1]} and {base_num_items})"""
-                    )
+                if items_feature.ndim == 1:
+                    batch = self.items_features_by_choice_map[k][0].batch[[0, 1]]
+                    if batch.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
+                else:
+                    if items_feature.shape[1] != base_num_items:
+                        raise ValueError(
+                            f"""{k}-th 'items_features_by_choice' shape does not match the
+                            detected number of items:
+                            ({items_feature.shape[1]} and {base_num_items})"""
+                        )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[1] != base_num_items:
+            if isinstance(self.available_items_by_choice, tuple):
+                extract = self.available_items_by_choice[0].batch[
+                    self.available_items_by_choice[1][0]
+                ]
+            else:
+                extract = self.available_items_by_choice[0]
+            if len(extract) != base_num_items:
                 raise ValueError(
                     f"""'available_items_by_choice' shape does not match the
-                        detected number of items: ({self.available_items_by_choice.shape[1]}
+                        detected number of items: ({len(extract)}
                         and {base_num_items})"""
                 )
 
     def _check_num_sessions_shapes(self):
-        """Verifies that the shapes of the different features are consistent over nb of sessions.
+        """Verify that the shapes of the different features are consistent over nb of sessions.
 
         Particularly:
             - shared_features_by_choice
@@ -522,15 +579,24 @@ class ChoiceDataset(object):
                          {self.n_choices})"""
                     )
         if self.available_items_by_choice is not None:
-            if self.available_items_by_choice.shape[0] != self.n_choices:
-                raise ValueError(
-                    f"""Given 'available_items_by_choice' shape does not match
-                        the number of choices detected: ({self.available_items_by_choice.shape[0]}
+            if isinstance(self.available_items_by_choice, tuple):
+                if len(self.available_items_by_choice[1]) != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                        the number of choices detected: ({len(self.available_items_by_choice[1])}
                         and {self.n_choices})"""
-                )
+                    )
+            else:
+                if self.available_items_by_choice.shape[0] != self.n_choices:
+                    raise ValueError(
+                        f"""Given 'available_items_by_choice' shape does not match
+                            the number of choices detected:
+                            ({self.available_items_by_choice.shape[0]}
+                            and {self.n_choices})"""
+                    )
 
     def _check_choices_coherence(self):
-        """Verifies that the choices are coherent with the nb of items present in other features.
+        """Verify that the choices are coherent with the nb of items present in other features.
 
         Particularly:
             - There is no choice index higher than detected number of items
@@ -548,7 +614,7 @@ class ChoiceDataset(object):
             logging.warning(f"Some choices never happen in the dataset: {missing_choices}")
 
     def _check_types(self):
-        """Checks types of elements and store it in order to return right types.
+        """Check types of elements and store it in order to return right types.
 
         Particularly:
             - Either int32 or float32 consistently for features.
@@ -587,7 +653,7 @@ class ChoiceDataset(object):
         return return_types
 
     def _check_names(self):
-        """Verifies that names and features shapes are consistent with each other."""
+        """Verify that names and features shapes are consistent with each other."""
         if self.shared_features_by_choice_names is not None:
             for k, (name, features) in enumerate(
                 zip(self.shared_features_by_choice_names, self.shared_features_by_choice)
@@ -606,17 +672,23 @@ class ChoiceDataset(object):
                 features,
             ) in enumerate(zip(self.items_features_by_choice_names, self.items_features_by_choice)):
                 if name is not None:
-                    if len(name) != features.shape[2]:
+                    if features.ndim > 1:
+                        if len(name) != features.shape[2]:
+                            raise ValueError(
+                                f"Specified {k}th\
+                            items_features_by_choice_names has length {len(name)} while \
+                            items_features_by_choice has {features.shape[2]} elements."
+                            )
+                    elif len(name) != 1:
                         raise ValueError(
-                            f"Specified {k}th\
-                        items_features_by_choice_names has length {len(name)} while \
-                        items_features_by_choice has {features.shape[2]} elements."
+                            f"Specified {k}th items_features_by_choice_names has length {len(name)}\
+                            while items_features_by_choice has 1 element."
                         )
 
     def __len__(self):
-        """Returns length of the dataset e.g. total number of choices.
+        """Return length of the dataset e.g. total number of choices.
 
-        Returns:
+        Returns
         -------
         int
             total number of choices
@@ -624,10 +696,10 @@ class ChoiceDataset(object):
         return len(self.choices)
 
     def __str__(self):
-        """Returns short representation of ChoiceDataset.
+        """Return short representation of ChoiceDataset.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             short representation of ChoiceDataset
         """
@@ -639,9 +711,9 @@ class ChoiceDataset(object):
         )
 
     def get_n_items(self):
-        """Method to access the total number of different items.
+        """Access the total number of different items.
 
-        Returns:
+        Returns
         -------
         int
             total number of different items
@@ -649,11 +721,11 @@ class ChoiceDataset(object):
         return self.base_num_items
 
     def get_n_choices(self):
-        """Method to access the total number of different choices.
+        """Access the total number of different choices.
 
         Redundant with __len__ method.
 
-        Returns:
+        Returns
         -------
         int
             total number of different choices
@@ -670,10 +742,10 @@ class ChoiceDataset(object):
         items_index=None,
         choices_index=None,
     ):
-        """Builds contexts_items_features and contexts_items_availabilities from dataframe.
+        """Build items_features_by_choice and available_items_by_choice from dataframe.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             Dataframe containing all the features for each item and sessions
         items_index : list
@@ -687,10 +759,10 @@ class ChoiceDataset(object):
         choices_id_column: str, optional
             Name of the column containing the choices ids, default is "choice_id"
 
-        Returns:
+        Returns
         -------
         np.ndarray of shape (n_choices, n_items, n_features)
-            Corresponding contexts_items_features
+            Corresponding items_features_by_choice
         np.ndarray of shape (n_choices, n_items)
             Corresponding availabilities
         """
@@ -759,10 +831,10 @@ class ChoiceDataset(object):
         choices_column="choice",
         choice_format="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe in wide format.
+        """Build numpy arrays for ChoiceDataset from a single dataframe in wide format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             dataframe in Wide format
         items_id : list
@@ -787,10 +859,10 @@ class ChoiceDataset(object):
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
         choice_format: str, optional
-            How choice is indicated in df, either "items_name" or "items_index",
+            How choice is indicated in df, either "items_id" or "items_index",
             default is "items_id"
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             corresponding ChoiceDataset
@@ -802,16 +874,18 @@ class ChoiceDataset(object):
             )
         if available_items_prefix is not None and available_items_suffix is not None:
             raise ValueError(
-                "You cannot give both contexts_items_availabilities_prefix and\
-                    contexts_items_availabilities_suffix."
+                "You cannot give both available_items_prefix and\
+                    available_items_suffix."
             )
-        if choice_format not in ["items_index", "items_name"]:
+        if choice_format not in ["items_index", "items_id"]:
             logging.warning("choice_format not undersood, defaulting to 'items_index'")
 
         if shared_features_columns is not None:
-            shared_features_by_choice = df[shared_features_columns]
+            shared_features_by_choice = df[shared_features_columns].to_numpy()
+            shared_features_by_choice_names = shared_features_columns
         else:
             shared_features_by_choice = None
+            shared_features_by_choice_names = None
 
         if items_features_suffixes is not None:
             items_features_names = items_features_suffixes
@@ -879,13 +953,13 @@ class ChoiceDataset(object):
             if items_id is None:
                 raise ValueError("items_id must be given to use choice_format='items_id'")
             items_id = np.array(items_id)
-
             choices = np.squeeze([np.where(items_id == c)[0] for c in choices])
-            if choices.shape[0] == 0:
+            if choices.size == 0:
                 raise ValueError("No choice found in the items_id list")
 
         return ChoiceDataset(
             shared_features_by_choice=shared_features_by_choice,
+            shared_features_by_choice_names=shared_features_by_choice_names,
             items_features_by_choice=items_features_by_choice,
             items_features_by_choice_names=items_features_names,
             available_items_by_choice=available_items_by_choice,
@@ -903,10 +977,10 @@ class ChoiceDataset(object):
         items_features_columns=None,
         choice_format="items_id",
     ):
-        """Builds numpy arrays for ChoiceDataset from a single dataframe in long format.
+        """Build numpy arrays for ChoiceDataset from a single dataframe in long format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         df : pandas.DataFrame
             dataframe in Long format
         choices_column: str, optional
@@ -924,7 +998,7 @@ class ChoiceDataset(object):
             How choice is indicated in df, either "items_name" or "one_zero",
             default is "items_id"
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             corresponding ChoiceDataset
@@ -988,11 +1062,11 @@ class ChoiceDataset(object):
         )
 
     def save(self):
-        """Method to save the dataset."""
+        """Save the dataset."""
         raise NotImplementedError
 
     def summary(self):
-        """Method to display a summary of the dataset."""
+        """Display a summary of the dataset."""
         print("%=====================================================================%")
         print("%%% Summary of the dataset:")
         print("%=====================================================================%")
@@ -1028,17 +1102,17 @@ class ChoiceDataset(object):
         return ""
 
     def get_choices_batch(self, choices_indexes, features=None):
-        """Method to access a chunk of data within the ChoiceDataset from choice indexes.
+        """Access a chunk of data within the ChoiceDataset from choice indexes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices_indexes : int or list of int or slice
             indexes of the choices (that will be mapped to choice & session indexes) to return
         features : list of str, optional
             list of features to return. None returns all of them, default is None.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple of (array_like, )
             tuple of arrays containing a batch of shared_features_by_choice
         tuple of (array_like, )
@@ -1050,6 +1124,11 @@ class ChoiceDataset(object):
         """
         _ = features
         if isinstance(choices_indexes, list):
+            if np.array(choices_indexes).ndim > 1:
+                raise ValueError(
+                    """ChoiceDataset unidimensional can only be batched along choices
+                                 dimension received a list with several axis of indexing."""
+                )
             if self.shared_features_by_choice is None:
                 shared_features_by_choice = None
             else:
@@ -1065,58 +1144,81 @@ class ChoiceDataset(object):
                 items_features_by_choice = list(
                     items_features_by_choice[choices_indexes]
                     # .astype(self._return_types[2][i])
-                    for i, items_features_by_choice in enumerate(self.items_features_by_choice)
+                    for _, items_features_by_choice in enumerate(self.items_features_by_choice)
                 )
-
             if self.available_items_by_choice is None:
                 available_items_by_choice = np.ones(
                     (len(choices_indexes), self.base_num_items)
                 ).astype("float32")
             else:
-                available_items_by_choice = self.available_items_by_choice[choices_indexes]
+                if isinstance(self.available_items_by_choice, tuple):
+                    available_items_by_choice = self.available_items_by_choice[0].batch[
+                        self.available_items_by_choice[1][choices_indexes]
+                    ]
+                else:
+                    available_items_by_choice = self.available_items_by_choice[choices_indexes]
                 # .astype(self._return_types[3])
 
-            choices = self.choices[choices_indexes].astype(self._return_types[4])
+            choices = self.choices[choices_indexes].astype(self._return_types[3])
 
             if len(self.shared_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.shared_features_by_choice_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.shared_features_by_choice_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            shared_features_by_choice[tuple_index][:, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.shared_features_by_choice_map[tuple_index][feature_index].batch[
-                                shared_features_by_choice[tuple_index][:, feature_index]
-                            ]
-                        )
-                        feat_ind_min = feature_index + 1
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+                for tuple_index in range(len(shared_features_by_choice)):
+                    if tuple_index in self.shared_features_by_choice_map.keys():
+                        feat_ind_min = 0
+                        unstacked_feat = []
+                        for feature_index in np.sort(
+                            list(self.shared_features_by_choice_map[tuple_index].keys())
+                        ):
+                            unstacked_feat.append(
+                                shared_features_by_choice[tuple_index][
+                                    :, feat_ind_min:feature_index
+                                ]
+                            )
+                            unstacked_feat.append(
+                                self.shared_features_by_choice_map[tuple_index][
+                                    feature_index
+                                ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
+                            )
+                            feat_ind_min = feature_index + 1
+                        mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+                    else:
+                        mapped_features.append(shared_features_by_choice[tuple_index])
 
                 shared_features_by_choice = mapped_features
 
             if len(self.items_features_by_choice_map) > 0:
                 mapped_features = []
-                for tuple_index in np.sort(list(self.items_features_by_choice_map.keys())):
-                    feat_ind_min = 0
-                    unstacked_feat = []
-                    for feature_index in np.sort(
-                        list(self.items_features_by_choice_map[tuple_index].keys())
-                    ):
-                        unstacked_feat.append(
-                            items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
-                        )
-                        unstacked_feat.append(
-                            self.items_features_by_choice_map[tuple_index][feature_index].batch[
-                                items_features_by_choice[tuple_index][:, :, feature_index]
-                            ]
-                        )
-                        feat_ind_min = feature_index + 1
-                    mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                for tuple_index in range(len(items_features_by_choice)):
+                    if tuple_index in self.items_features_by_choice_map.keys():
+                        if items_features_by_choice[tuple_index].ndim == 1:
+                            mapped_features.append(
+                                self.items_features_by_choice_map[tuple_index][0].batch[
+                                    items_features_by_choice[tuple_index]
+                                ]
+                            )
+                        else:
+                            feat_ind_min = 0
+                            unstacked_feat = []
+                            for feature_index in np.sort(
+                                list(self.items_features_by_choice_map[tuple_index].keys())
+                            ):
+                                unstacked_feat.append(
+                                    items_features_by_choice[tuple_index][
+                                        :, :, feat_ind_min:feature_index
+                                    ]
+                                )
+                                unstacked_feat.append(
+                                    self.items_features_by_choice_map[tuple_index][
+                                        feature_index
+                                    ].batch[
+                                        items_features_by_choice[tuple_index][:, :, feature_index]
+                                    ]
+                                )
+                                feat_ind_min = feature_index + 1
+                            mapped_features.append(np.concatenate(unstacked_feat, axis=2))
+                    else:
+                        mapped_features.append(items_features_by_choice[tuple_index])
 
                 items_features_by_choice = mapped_features
 
@@ -1150,34 +1252,44 @@ class ChoiceDataset(object):
             )
 
         if isinstance(choices_indexes, slice):
-            return self.get_choice_batch(
+            return self.get_choices_batch(
                 list(range(*choices_indexes.indices(self.choices.shape[0])))
             )
 
-        ### Attemps at simplifying the code
         choices_indexes = [choices_indexes]
         (
-            shared_items_features_by_choices,
+            shared_features_by_choices,
             items_features_by_choice,
             available_items_by_choice,
             choice,
-        ) = self._get_choices_batch(choices_indexes)
+        ) = self.get_choices_batch(choices_indexes)
+        if shared_features_by_choices is not None:
+            if isinstance(shared_features_by_choices, tuple):
+                shared_features_by_choices = tuple(feat[0] for feat in shared_features_by_choices)
+            else:
+                shared_features_by_choices = shared_features_by_choices[0]
+        if items_features_by_choice is not None:
+            if isinstance(items_features_by_choice, tuple):
+                items_features_by_choice = tuple(feat[0] for feat in items_features_by_choice)
+            else:
+                items_features_by_choice = items_features_by_choice[0]
+
         return (
-            shared_items_features_by_choices[0],
-            items_features_by_choice[0],
+            shared_features_by_choices,
+            items_features_by_choice,
             available_items_by_choice[0],
             choice[0],
         )
 
     def __getitem__(self, choices_indexes):
-        """Method to create a sub-ChoiceDataset with only a subset of choices, from their indexes.
+        """Create a sub-ChoiceDataset with only a subset of choices, from their indexes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choices_indexes : np.ndarray
-            indexes of the contexts / choices to keep, shape should be (num_choices,)
+            indexes of the choices to keep, shape should be (num_choices,)
 
-        Returns:
+        Returns
         -------
         ChoiceDataset
             ChoiceDataset with only the sessions indexed by indexes
@@ -1195,6 +1307,8 @@ class ChoiceDataset(object):
                     self.shared_features_by_choice[i][choices_indexes]
                     for i in range(len(self.shared_features_by_choice))
                 )
+                if not self._return_shared_features_by_choice_tuple:
+                    shared_features_by_choice = shared_features_by_choice[0]
         except TypeError:
             shared_features_by_choice = None
 
@@ -1206,6 +1320,8 @@ class ChoiceDataset(object):
                     self.items_features_by_choice[i][choices_indexes]
                     for i in range(len(self.items_features_by_choice))
                 )
+                if not self._return_items_features_by_choice_tuple:
+                    items_features_by_choice = items_features_by_choice[0]
         except TypeError:
             items_features_by_choice = None
 
@@ -1214,6 +1330,8 @@ class ChoiceDataset(object):
                 shared_features_by_choice_names = None
             else:
                 shared_features_by_choice_names = self.shared_features_by_choice_names
+                if not self._return_shared_features_by_choice_tuple:
+                    shared_features_by_choice_names = shared_features_by_choice_names[0]
         except TypeError:
             shared_features_by_choice_names = None
         try:
@@ -1221,11 +1339,16 @@ class ChoiceDataset(object):
                 items_features_by_choice_names = None
             else:
                 items_features_by_choice_names = self.items_features_by_choice_names
+                if not self._return_items_features_by_choice_tuple:
+                    items_features_by_choice_names = items_features_by_choice_names[0]
         except TypeError:
             items_features_by_choice_names = None
 
         try:
-            available_items_by_choice = self.available_items_by_choice[choices_indexes]
+            if isinstance(self.available_items_by_choice, tuple):
+                available_items_by_choice = self.available_items_by_choice[1]
+            else:
+                available_items_by_choice = self.available_items_by_choice[choices_indexes]
         except TypeError:
             available_items_by_choice = None
 
@@ -1245,12 +1368,12 @@ class ChoiceDataset(object):
         return self.indexer
 
     def iter_batch(self, batch_size, shuffle=False, sample_weight=None):
-        """Iterates over dataset return batches of length batch_size.
+        """Iterate over dataset return batches of length batch_size.
 
         Newer version.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         batch_size : int
             batch size to set
         shuffle: bool
@@ -1258,47 +1381,46 @@ class ChoiceDataset(object):
         sample_weight : Iterable
             list of weights to be returned with the right indexing during the shuffling
         """
-        if batch_size == -1:
-            batch_size = len(self)
-        # Get indexes for each choice
-        num_choices = len(self)
-        indexes = np.arange(num_choices)
-        # Shuffle indexes
-        if shuffle and not batch_size == -1:
-            indexes = np.random.permutation(indexes)
+        if batch_size == -1 or batch_size == len(self):
+            yield self.indexer.get_full_dataset()
+        else:
+            # Get indexes for each choice
+            num_choices = len(self)
+            indexes = np.arange(num_choices)
 
-        yielded_size = 0
-        while yielded_size < num_choices:
-            # Return sample_weight if not None, for index matching
-            if sample_weight is not None:
-                yield (
-                    self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()],
-                    sample_weight[indexes[yielded_size : yielded_size + batch_size].tolist()],
-                )
-            else:
-                yield self.batch[indexes[yielded_size : yielded_size + batch_size].tolist()]
-            yielded_size += batch_size
+            # Shuffle indexes
+            if shuffle and not batch_size == -1:
+                indexes = np.random.permutation(indexes)
 
-            # Special exit strategy for batch_size = -1
-            if batch_size == -1:
-                yielded_size += 2 * num_choices
+            yielded_size = 0
+            while yielded_size < num_choices:
+                # Return sample_weight if not None, for index matching
+                batch_indexes = indexes[yielded_size : yielded_size + batch_size].tolist()
+                if sample_weight is not None:
+                    yield (
+                        self.batch[batch_indexes],
+                        sample_weight[batch_indexes],
+                    )
+                else:
+                    yield self.batch[batch_indexes]
+                yielded_size += batch_size
 
     def filter(self, bool_list):
         """Filter over sessions indexes following bool.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         bool_list : list of boolean
-            list of booleans of length self.get_n_contexts() to filter contexts.
+            list of booleans of length self.get_n_choices() to filter choices.
             True to keep, False to discard.
         """
         indexes = [i for i, keep in enumerate(bool_list) if keep]
         return self[indexes]
 
     def get_n_shared_features(self):
-        """Method to access the number of contexts features.
+        """Access the number of shared features.
 
-        Returns:
+        Returns
         -------
         int
             number of shared items features
@@ -1311,9 +1433,9 @@ class ChoiceDataset(object):
         return 0
 
     def get_n_items_features(self):
-        """Method to access the number of context items features.
+        """Access the number of items features.
 
-        Returns:
+        Returns
         -------
         int
             number of items features

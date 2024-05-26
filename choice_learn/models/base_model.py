@@ -26,11 +26,13 @@ class ChoiceModel(object):
         lr=0.001,
         epochs=1000,
         batch_size=32,
+        regularization=None,
+        regularization_strength=0.0,
     ):
-        """Instantiates the ChoiceModel.
+        """Instantiate the ChoiceModel.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         label_smoothing : float, optional
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing,
         during training, by default 0.0
@@ -51,6 +53,11 @@ class ChoiceModel(object):
         batch_size: int, optional
             Batch size in the case of stochastic gradient descent optimizer.
             Not used in the case of L-BFGS optimizer, by default 32
+        regularization: str
+            Type of regularization to apply: "l1", "l2" or "l1l2", by default None
+        regularization_strength: float or list
+            weight of regularization in loss computation. If "l1l2" is chosen as regularization,
+            can be given as list or tuple: [l1_strength, l2_strength], by default 0.
         """
         self.is_fitted = False
         self.add_exit_choice = add_exit_choice
@@ -61,6 +68,15 @@ class ChoiceModel(object):
         # with smoothing and normalization options
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
+        )
+        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False,
+            label_smoothing=0.0,
+            sparse=False,
+            axis=-1,
+            epsilon=1e-35,
+            name="exact_categorical_crossentropy",
+            reduction=tf.keras.losses.Reduction.AUTO,
         )
         self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)
@@ -84,6 +100,30 @@ class ChoiceModel(object):
         self.batch_size = batch_size
         self.tolerance = tolerance
 
+        if regularization is not None:
+            if regularization.lower() == "l1":
+                self.regularizer = tf.keras.regularizers.L1(l1=regularization_strength)
+            elif regularization.lower() == "l2":
+                self.regularizer = tf.keras.regularizers.L2(l2=regularization_strength)
+            elif regularization.lower() == "l1l2":
+                if isinstance(regularization_strength, (list, tuple)):
+                    self.regularizer = tf.keras.regularizers.L1L2(
+                        l1=regularization_strength[0], l2=regularization_strength[1]
+                    )
+                else:
+                    self.regularizer = tf.keras.regularizers.L1L2(
+                        l1=regularization_strength, l2=regularization_strength
+                    )
+            else:
+                raise ValueError(
+                    "Regularization type not recognized, choose among l1, l2 and l1l2."
+                )
+            self.regularization = regularization
+            self.regularization_strength = regularization_strength
+        else:
+            self.regularization_strength = 0.0
+            self.regularization = None
+
     @abstractmethod
     def compute_batch_utility(
         self,
@@ -92,13 +132,13 @@ class ChoiceModel(object):
         available_items_by_choice,
         choices,
     ):
-        """Method that defines how the model computes the utility of a product.
+        """Define how the model computes the utility of a product.
 
         MUST be implemented in children classe !
         For simpler use-cases this is the only method to be user-defined.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -112,8 +152,8 @@ class ChoiceModel(object):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Utility of each product for each choice.
             Shape must be (n_choices, n_items)
@@ -131,10 +171,10 @@ class ChoiceModel(object):
         choices,
         sample_weight=None,
     ):
-        """Function that represents one training step (= one gradient descent step) of the model.
+        """Represent one training step (= one gradient descent step) of the model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -151,8 +191,8 @@ class ChoiceModel(object):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Value of NegativeLogLikelihood loss for the batch
         """
@@ -176,6 +216,11 @@ class ChoiceModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
+            if self.regularization is not None:
+                regularization = tf.reduce_sum(
+                    [self.regularizer(w) for w in self.trainable_weights]
+                )
+                neg_loglikelihood += regularization
 
         grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -188,10 +233,10 @@ class ChoiceModel(object):
         val_dataset=None,
         verbose=0,
     ):
-        """Method to train the model with a ChoiceDataset.
+        """Train the model with a ChoiceDataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Input data in the form of a ChoiceDataset
         sample_weight : np.ndarray, optional
@@ -205,8 +250,8 @@ class ChoiceModel(object):
         batch_size : int, optional
             Batch size, default is None, meaning we use self.batch_size
 
-        Returns:
-        --------
+        Returns
+        -------
         dict:
             Different metrics values over epochs.
         """
@@ -376,10 +421,10 @@ class ChoiceModel(object):
         choices,
         sample_weight=None,
     ):
-        """Function that represents one prediction (Probas + Loss) for one batch of a ChoiceDataset.
+        """Represent one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -396,8 +441,8 @@ class ChoiceModel(object):
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor (1, )
             Value of NegativeLogLikelihood loss for the batch
         tf.Tensor (batch_size, n_items)
@@ -426,7 +471,12 @@ class ChoiceModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            # "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            #     y_pred=probabilities,
+            #     y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+            #     sample_weight=sample_weight,
+            # ),
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
@@ -435,10 +485,10 @@ class ChoiceModel(object):
         return batch_loss, probabilities
 
     def save_model(self, path):
-        """Method to save the different models on disk.
+        """Save the different models on disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         path : str
             path to the folder where to save the model
         """
@@ -456,15 +506,15 @@ class ChoiceModel(object):
 
     @classmethod
     def load_model(cls, path):
-        """Method to load a ChoiceModel previously saved with save_model().
+        """Load a ChoiceModel previously saved with save_model().
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         path : str
             path to the folder where the saved model files are
 
-        Returns:
-        --------
+        Returns
+        -------
         ChoiceModel
             Loaded ChoiceModel
         """
@@ -488,15 +538,15 @@ class ChoiceModel(object):
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
         batch_size : int, optional
             Batch size to use for the prediction, by default -1
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray (n_choices, n_items)
             Choice probabilties for each choice and each product
         """
@@ -518,18 +568,18 @@ class ChoiceModel(object):
         return tf.concat(stacked_probabilities, axis=0)
 
     def evaluate(self, choice_dataset, sample_weight=None, batch_size=-1, mode="eval"):
-        """Evaluates the model for each choice and each product of a ChoiceDataset.
+        """Evaluate the model for each choice and each product of a ChoiceDataset.
 
         Predicts the probabilities according to the model and computes the Negative-Log-Likelihood
         loss from the actual choices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Dataset on which to apply to prediction
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray (n_choices, n_items)
             Choice probabilties for each choice and each product
         """
@@ -548,7 +598,7 @@ class ChoiceModel(object):
                 sample_weight=sample_weight,
             )
             if mode == "eval":
-                batch_losses.append(loss["NegativeLogLikelihood"])
+                batch_losses.append(loss["Exact-NegativeLogLikelihood"])
             elif mode == "optim":
                 batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
@@ -563,17 +613,17 @@ class ChoiceModel(object):
         return batch_loss
 
     def _lbfgs_train_step(self, dataset, sample_weight=None):
-        """A factory to create a function required by tfp.optimizer.lbfgs_minimize.
+        """Create a function required by tfp.optimizer.lbfgs_minimize.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
 
-        Returns:
-        --------
+        Returns
+        -------
         function
             with the signature:
                 loss_value, gradients = f(model_parameters).
@@ -598,7 +648,7 @@ class ChoiceModel(object):
 
         @tf.function
         def assign_new_model_parameters(params_1d):
-            """A function updating the model's parameters with a 1D tf.Tensor.
+            """Update the model's parameters with a 1D tf.Tensor.
 
             Pararmeters
             -----------
@@ -612,7 +662,7 @@ class ChoiceModel(object):
         # now create a function that will be returned by this factory
         @tf.function
         def f(params_1d):
-            """A function that can be used by tfp.optimizer.lbfgs_minimize.
+            """Can be used by tfp.optimizer.lbfgs_minimize.
 
             This function is created by function_factory.
 
@@ -621,8 +671,8 @@ class ChoiceModel(object):
             params_1d: tf.Tensor
                 a 1D tf.Tensor.
 
-            Returns:
-            --------
+            Returns
+            -------
             tf.Tensor
                 A scalar loss and the gradients w.r.t. the `params_1d`.
             tf.Tensor
@@ -634,13 +684,17 @@ class ChoiceModel(object):
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
                 loss_value = self.evaluate(
-                    dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
+                    dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
                 )
+                if self.regularization is not None:
+                    regularization = tf.reduce_sum(
+                        [self.regularizer(w) for w in self.trainable_weights]
+                    )
+                    loss_value += regularization
 
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.trainable_weights)
             grads = tf.dynamic_stitch(idx, grads)
-
             # print out iteration & loss
             f.iter.assign_add(1)
 
@@ -663,8 +717,8 @@ class ChoiceModel(object):
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
@@ -674,8 +728,8 @@ class ChoiceModel(object):
         verbose : int, optional
             print level, for debugging, by default 0
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Fit history
         """
@@ -688,7 +742,6 @@ class ChoiceModel(object):
 
         # convert initial model parameters to a 1D tf.Tensor
         init_params = tf.dynamic_stitch(func.idx, self.trainable_weights)
-
         # train the model with L-BFGS solver
         results = tfp.optimizer.lbfgs_minimize(
             value_and_gradients_function=func,

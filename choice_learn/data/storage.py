@@ -11,10 +11,10 @@ class Storage(ABC):
     """Parent Class to have OneHotStorage and FeaturesStorage with same parent."""
 
     def __init__(self, features_to_store):
-        """Instantiation.
+        """Instantiate the storage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         features_to_store : object
             Object to store
         """
@@ -22,10 +22,10 @@ class Storage(ABC):
 
     @abstractmethod
     def __getitem__(self, keys):
-        """Base function to access an element. To be implemented in children classes.
+        """Access an element. To be implemented in children classes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         keys : float, int, str or list of
             values among indexes of the stiage
         """
@@ -33,7 +33,7 @@ class Storage(ABC):
 
     @abstractmethod
     def __len__(self):
-        """Returns the length of the sequence of apparition of the features."""
+        """Return the length of the sequence of apparition of the features."""
         pass
 
     @property
@@ -42,10 +42,10 @@ class Storage(ABC):
         pass
 
     def __str__(self):
-        """String representation method.
+        """Return string representation method.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Description of the storage.
         """
@@ -56,10 +56,10 @@ class FeaturesStorage(Storage):
     """Function to store features with ids."""
 
     def __init__(self, ids=None, values=None, values_names=None, name=None, indexer=StorageIndexer):
-        """Builds the store.
+        """Build the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         ids : array_like or None
             list of ids of features to store. If None is given, ids are created from
             apparition order of values
@@ -115,13 +115,13 @@ class FeaturesStorage(Storage):
         Returns the features stored at index index. Compared to __getitem__, it does take
         the index-th element of sequence but the index-th element of the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         index : (int, list, slice)
             index argument of the feature
 
-        Returns:
-        --------
+        Returns
+        -------
         array_like
             features corresponding to the index index in self.store
         """
@@ -131,19 +131,19 @@ class FeaturesStorage(Storage):
         return self.batch[keys]
 
     def __len__(self):
-        """Returns the length of the sequence of apparition of the features."""
+        """Return the length of the sequence of apparition of the features."""
         return len(self.storage)
 
     def __getitem__(self, id_keys):
         """Subset FeaturesStorage, keeping only features which id is in keys.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         id_keys : Iterable
             List of ids to keep.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeaturesStorage
             Subset of the FeaturesStorage, with only the features whose id is in id_keys
         """
@@ -155,8 +155,8 @@ class FeaturesStorage(Storage):
     def get_storage_type(self):
         """Functions to access stored elements dtypes.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             tuple of dtypes of the stored elements, as returned by np.dtype
         """
@@ -183,10 +183,10 @@ class OneHotStorage(Storage):
     def __init__(
         self, ids=None, values=None, name=None, dtype=np.uint8, indexer=OneHotStorageIndexer
     ):
-        """Builds the store.
+        """Build the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         ids : array_like or None
             list of ids of features to store. If None is given, ids are created from
             apparition order of values
@@ -235,19 +235,19 @@ class OneHotStorage(Storage):
         self.indexer = indexer(self)
 
     def __len__(self):
-        """Returns the length of the sequence of apparition of the features."""
+        """Return the length of the sequence of apparition of the features."""
         return len(self.storage)
 
     def __getitem__(self, id_keys):
         """Subset FeaturesStorage, keeping only features which id is in keys.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         id_keys : Iterable
             List of ids to keep.
 
-        Returns:
-        --------
+        Returns
+        -------
         OneHotStorage
             Subset of the OneHotStorage, with only the features whose id is in id_keys
         """
@@ -258,10 +258,10 @@ class OneHotStorage(Storage):
         return OneHotStorage(values=sub_storage, name=self.name, dtype=self.dtype)
 
     def astype(self, dtype):
-        """Method to change (mainly int or float) type of returned OneHot features vectors.
+        """Change (mainly int or float) type of returned OneHot features vectors.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dtype : type
             Type to set the features as
         """
@@ -273,13 +273,13 @@ class OneHotStorage(Storage):
         Returns the features stored at index index. Compared to __getitem__, it does take
         the index-th element of sequence but the index-th element of the store.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         index : (int, list, slice)
             index argument of the feature
 
-        Returns:
-        --------
+        Returns
+        -------
         array_like
             features corresponding to the index index in self.store
         """
@@ -289,8 +289,8 @@ class OneHotStorage(Storage):
     def get_storage_type(self):
         """Functions to access stored elements dtypes.
 
-        Returns:
-        --------
+        Returns
+        -------
         type
             tuple of dtypes of the stored elements, as returned by np.dtype
         """

@@ -16,8 +16,8 @@ CACHE_MODULE = "choice_learn.datasets.cache"
 def load_expedia(as_frame=False, preprocessing="rumnet"):
     """Load the Expedia dataset.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     as_frame : bool, optional
         Whether to return the original file as pd.DF, by default False
     preprocessing : str, optional
@@ -42,8 +42,10 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
         logging.info("rumnet preprocessing selected, starting preprocessing...")
         try:
             expedia_df = pd.read_csv(
-                get_path("preprocessed_expedia_rumnet.csv", module=DATA_MODULE), engine="pyarrow"
+                get_path("preprocessed_expedia_rumnet.csv", module=CACHE_MODULE), engine="pyarrow"
             )
+            logging.info("Loaded cached preprocessed data.")
+
         except FileNotFoundError:
             expedia_df.date_time = pd.to_datetime(expedia_df.date_time, format="%Y-%m-%d %H:%M:%S")
             expedia_df.loc[:, "day_of_week"] = expedia_df.loc[:, "date_time"].dt.dayofweek
@@ -159,7 +161,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
             logging.info("Sorting the data frame")
             expedia_df = expedia_df.sort_values("srch_id")
             expedia_df.to_csv(
-                get_path("preprocessed_expedia_rumnet.csv", module=DATA_MODULE), index=False
+                get_path("preprocessed_expedia_rumnet.csv", module=CACHE_MODULE), index=False
             )
 
         choices = expedia_df.groupby("srch_id").apply(lambda x: x.booking_bool.argmax())

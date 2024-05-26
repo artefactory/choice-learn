@@ -21,10 +21,10 @@ class SimpleMNL(ChoiceModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization of Simple-MNL.
+        """Initialize of Simple-MNL.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         add_exit_choice : bool, optional
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
@@ -41,9 +41,7 @@ class SimpleMNL(ChoiceModel):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
-        --------
-        Parameters:
-        -----------
+        ----------
         n_items : int
             Number of items/aternatives to consider.
         n_shared_features : int
@@ -51,8 +49,8 @@ class SimpleMNL(ChoiceModel):
         n_items_features : int
             Number of contexts items features
 
-        Returns:
-        --------
+        Returns
+        -------
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
@@ -63,7 +61,7 @@ class SimpleMNL(ChoiceModel):
             ["shared_features", "items_features"],
         ):
             if n_feat > 0:
-                weights = [
+                weights += [
                     tf.Variable(
                         tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
                         name=f"Weights_{feat_name}",
@@ -110,10 +108,10 @@ class SimpleMNL(ChoiceModel):
         available_items_by_choice,
         choices,
     ):
-        """Main method to compute the utility of the model. Selects the right method to compute.
+        """Compute the utility of the model. Selects the right method to compute.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
@@ -127,8 +125,8 @@ class SimpleMNL(ChoiceModel):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Computed utilities of shape (n_choices, n_items).
         """
@@ -173,17 +171,17 @@ class SimpleMNL(ChoiceModel):
         return shared_features_utilities + items_features_utilities + intercept
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
-        """Main fit function to estimate the paramters.
+        """Fit to estimate the paramters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """
@@ -203,8 +201,8 @@ class SimpleMNL(ChoiceModel):
     def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
         """Specific fit function to estimate the paramters with LBFGS.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
         n_epochs : int
@@ -214,8 +212,8 @@ class SimpleMNL(ChoiceModel):
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """
@@ -233,16 +231,16 @@ class SimpleMNL(ChoiceModel):
         return fit
 
     def compute_report(self, dataset):
-        """Computes a report of the estimated weights.
+        """Compute a report of the estimated weights.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
-        Returns:
-        --------
+        Returns
+        -------
         pandas.DataFrame
             A DF with estimation, Std Err, z_value and p_value for each coefficient.
         """
@@ -258,9 +256,12 @@ class SimpleMNL(ChoiceModel):
         i = 0
         for weight in self.trainable_weights:
             for j in range(weight.shape[0]):
-                names.append(f"{weight.name}_{j}")
-                estimations.append(weight.numpy()[j])
-                z_values.append(weight.numpy()[j] / weights_std[i].numpy())
+                if weight.shape[0] > 1:
+                    names.append(f"{weight.name[:-2]}_{j}")
+                else:
+                    names.append(f"{weight.name[:-2]}")
+                estimations.append(weight.numpy()[0][j])
+                z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
                 p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
                 i += 1
 
@@ -277,14 +278,14 @@ class SimpleMNL(ChoiceModel):
     def get_weights_std(self, dataset):
         """Approximates Std Err with Hessian matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
-        Returns:
-        --------
+        Returns
+        -------
         tf.Tensor
             Estimation of the Std Err for the weights.
         """
@@ -316,7 +317,7 @@ class SimpleMNL(ChoiceModel):
         return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
     def clone(self):
-        """Returns a clone of the model."""
+        """Return a clone of the model."""
         clone = SimpleMNL(
             add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
