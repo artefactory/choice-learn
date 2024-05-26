@@ -197,9 +197,7 @@ We recommend to open an [issue](https://github.com/artefactory/choice-learn/issu
 
 ## Citation
 
-If you consider this package and any of its feature useful for your research, please cite our paper:
-
-(WIP - Paper to come)
+If you consider this package and any of its feature useful for your research, please cite us.
 
 ### License
 

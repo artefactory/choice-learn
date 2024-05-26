@@ -294,7 +294,7 @@ class ConditionalLogit(ChoiceModel):
         if self.coefficients is None:
             self.coefficients = MNLCoefficients()
         elif not isinstance(self.coefficients, MNLCoefficients):
-            raise ValueError("Cannot add shared coefficient on top of a dict instantiation.")
+            raise ValueError("Cannot add coefficient on top of a dict instantiation.")
 
         coefficient_name = coefficient_name if coefficient_name else "beta_%s" % feature_name
         add_method = self.coefficients.add_shared if shared else self.coefficients.add
