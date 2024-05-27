@@ -66,20 +66,6 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 | Choice-Learn |             | :white_check_mark: | L-BFGS         | - here    |                |
 +==============+=============+====================+================+===========+================+
 
-+--------------+-------------+--------------------+----------------+-----------+----------------+
-| Package      | Models                                            | Downstream Operations      |
-|              +:===========:+:==================:+:==============:+:=========:+:==============:+
-|              | Traditional |          NeuralNet |         Custom | Assortment|       Pricing  |
-+:============:+:===========:+:==================:+:==============:+:=========:+:==============:+
-| Biogeme      | cells span columns               | cells        span columns  |      columns   |
-+--------------+-------------+--------------------+----------------+-----------+----------------+
-| PyLogit      | cells span columns               | cells        span columns  | columns        |
-+--------------+-------------+--------------------+----------------+-----------+----------------+
-| Torch-Choice | cells span columns               | cells        span columns  |      columns   |
-+--------------+-------------+--------------------+----------------+-----------+----------------+
-| Choice-Learn | cells span columns               | cells  span       columns  | columns        |
-+==============+=============+====================+================+===========+================+
-
 
 # Statement of need
 
