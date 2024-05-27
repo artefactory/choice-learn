@@ -53,9 +53,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 : Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
 
 +--------------+------------------+--------------------+----------------+--------------+----------------+
-| Package      | Data Processing                       | Estimation                                     |
-|--------------+------------------+--------------------+----------------+--------------+----------------+
-|              | Format           | Batching           | Non-stochastic | Stochastic   | Regularization |
+| Package      | Data Processing                       | Estimation                                     |s
 +:============:+:================:+:==================:+:==============:+:============:+:==============:+
 | Biogeme      | wide             |     X              | Newton BFGS    |     X        |        X       |
 +--------------+------------------+--------------------+----------------+--------------+----------------+
