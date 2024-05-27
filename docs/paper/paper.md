@@ -47,7 +47,37 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
-![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison}](../illustrations/table.png)
+![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{fig:comparison}](../illustrations/table.png)
+
+
+
+: Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| Package      | Data Processing                  | Estimation                                  |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+|              | Format      | Batching           | Non-stochastic | Stochastic| Regularization |
++:============:+:===========:+:==================:+:==============:+:=========:+:==============:+
+| Biogeme      | wide        |     X              | Newton BFGS    |           |                |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| PyLogit      | format      |     X              | BFGS           |           |                |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| Torch-Choice |             | :white_check_mark: | L-BFGS         | - body    |                |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| Choice-Learn |             | :white_check_mark: | L-BFGS         | - here    |                |
++==============+=============+====================+================+===========+================+
+| Package      | Models                                            | Downstream Operations      |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+|              | Traditional |          NeuralNet |         Custom | Assortment|       Pricing  |
++:============:+:===========:+:==================:+:==============:+:=========:+:==============:+
+| Biogeme      | cells span columns               | cells        span columns  |      columns   |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| PyLogit      | cells span columns               | cells        span columns  | columns        |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| Torch-Choice | cells span columns               | cells        span columns  |      columns   |
++--------------+-------------+--------------------+----------------+-----------+----------------+
+| Choice-Learn | cells span columns               | cells  span       columns  | columns        |
++==============+=============+====================+================+===========+================+
+
 
 # Statement of need
 
@@ -69,7 +99,7 @@ Choice modeling is widely used in retail and e-commerce sectors to better unders
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, for instance within an assortment recommendation software, through deployment and serving tools, such as TFLite and TFServing.
 
-![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/features_storage.png)
+![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/features_storage_2.png)
 
 ## Flexible usage: from linear utility to customized specification
 
