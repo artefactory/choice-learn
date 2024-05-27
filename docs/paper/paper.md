@@ -53,11 +53,15 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 : Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
 
 +--------------+------------------+--------------------+----------------+--------------+----------------+
-| Package      | Data Processing                       | Estimation                                     |s
+| Package      | Data Processing                       | Estimation                                     |
 +:============:+:================:+:==================:+:==============:+:============:+:==============:+
 | Biogeme      | wide             |     X              | Newton BFGS    |     X        |        X       |
 +--------------+------------------+--------------------+----------------+--------------+----------------+
 | PyLogit      | format           |     X              | BFGS           |     X        |       X        |
++--------------+------------------+--------------------+----------------+--------------+----------------+
+| Torch-Choice | Multi Index      | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
++--------------+------------------+--------------------+----------------+--------------+----------------+
+| Choice-Learn | Features Storage | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +==============+==================+====================+================+==============+================+
 
 
