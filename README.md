@@ -1,78 +1,72 @@
 <div align="center">
 
-# choice-learn-private
 
-[![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
+<img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
+
+*Large-scale choice modeling through the lens of machine learning*
+
+[![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
-
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn-private/blob/main/.pre-commit-config.yaml)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 
 </div>
 
-<img src="docs/choice_learn_official_logo.png" width="256">
 
-Choice-Learn is a Python package designed to help you build discrete choice models.
-The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you want to customize any model or create your own from scratch. In particular you will find efficient data handling to limit RAM usage and structure commons to any choice model.
+Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
+The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
-This repository contains a private version of the package.
-
 ## Table of Contents
-
-- [choice-learn-private](#choice-learn-private)
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
-  - [Table of Contents](#table-of-contents)
   - [What's in there ?](#whats-in-there)
-  - [Getting Started](#getting-started---fast-track)
+  - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Documentation](#documentation)
+  - [Contributing](#contributing)
   - [Citation](#citation)
 
 ## Introduction - Discrete Choice Modelling
 
-Discrete choice models aim at explaining or predicting a choice from a set of alternatives. Well known use-cases include analyzing people choice of mean of transport or products purchases in stores.
+Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
 If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 
 ## What's in there ?
 
 ### Data
-- Generic dataset handling with the ChoiceDataset class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_data.ipynb)
+- Generic dataset handling with the ChoiceDataset class [[Example]](notebooks/introduction/2_data_handling.ipynb)
 - Ready-To-Use datasets:
   - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#citation)
   - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#citation)
-  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) [[5]](#citation)
-  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset [[5]](#citation)
+  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz), [HC](./choice_learn/datasets/data/HC.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html), [here](https://cran.r-project.org/web/packages/mlogit/vignettes/e2nlogit.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
+  - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#citation)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
   - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
 
-### Models
+### Model estimation
 - Ready-to-use models:
-  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/choice_learn_introduction_clogit.ipynb)
-  - Latent Class MultiNomialLogit [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/latent_class_model.ipynb)
-  - RUMnet [[1]](#citation)[[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/rumnet_example.ipynb)
-  - TasteNet [[7]](#citation)[[Example]](notebooks/tastenet_example.ipynb)
-- (WIP) - Ready-to-use models to be implemented:
-  - Nested MultiNomialLogit
-  - [SHOPPER](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-1/SHOPPER--A-probabilistic-model-of-consumer-choice-with-substitutes/10.1214/19-AOAS1265.full)
-  - Others ...
-- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/custom_model.ipynb)
+  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
+  - Nested Logit [[10]](#citation) [[Example]](notebooks/models/nested_logit.ipynb)
+  - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
+  - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
+  - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
+- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
-### Different tools
-- Assortment optimization from model [[Example]](https://github.com/artefactory/choice-learn-private/blob/main/notebooks/assortment_example.ipynb)
-- (WIP) Standardization of evaluation protocols
-- (WIP) Interfaces
+### Auxiliary tools
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
-## Getting Started - Fast Track
+## Getting Started
 
-You can find the following notebooks to help you getting started with the package:
-- [Introduction to data management](notebooks/choice_learn_introduction_data.ipynb)
-- [Introduction to modelling with the conditional logit model on ModeCanada dataset](notebooks/choice_learn_introduction_clogit.ipynb)
-- [Introduction to custom modelling with the ModeCanada dataset](notebooks/custom_model.ipynb)
+You can find the following tutorials to help you getting started with the package:
+- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
+- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
+- Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
 ## Installation
 
@@ -87,7 +81,7 @@ pip install choice-learn
 
 In the mean time you can clone the repository:
 ```bash
-git clone git@github.com:artefactory/choice-learn-private.git
+git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
@@ -99,17 +93,53 @@ Choice-Learn requires the following:
 For modelling you need:
 - TensorFlow (>=2.13)
 
-Finally, an optional requirement used for report and LBFG-S optimization is:
+> :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
+> In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
+
+An optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
+
+Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
+- gurobipy (>=11.0.0)
+- ortools (>=9.6.2534)
 
 Once you have created your conda/pip python==3.9 environment, you can install requirements by:
 ```bash
 pip install choice-learn
 ```
+<p align="center">
+  <a href="https://numpy.org/">
+    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://pandas.pydata.org/">
+    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://www.tensorflow.org">
+    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://www.gurobi.com/">
+    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://developers.google.com/optimization?hl=fr">
+    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+  </a>
+</p>
+
+
 ## Usage
+Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+
 ```python
 from choice_learn.data import ChoiceDataset
-from choice_learn.models import ConditionalMNL, RUMnet
+from choice_learn.models import ConditionalLogit, RUMnet
 
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
 # Onl need to specify how the file is encoded:
@@ -122,7 +152,7 @@ dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             choice_format="item_id")
 
 # Initialization of the model
-model = ConditionalMNL()
+model = ConditionalLogit()
 
 # Creation of the different weights:
 
@@ -151,20 +181,39 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/)
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
+
+## Contributing
+You are welcome to contribute to the project ! You can help in various ways:
+- raise issues
+- resolve issues already opened
+- develop new features
+- provide additional examples of use
+- fix typos, improve code quality
+- develop new tests
+
+We recommend to open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
-If you consider this package and any of its feature useful for your research, please cite our paper:
-
-(WIP - Paper to come)
+If you consider this package and any of its feature useful for your research, please cite us.
 
 ### License
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
 ### Contributors
+
 ### Special Thanks
+
+### Affiliations
+
+Choice-Learn has been developed through a collaboration between the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
+
+[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)  |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
+:-------------------------:|:-------------------------:|:-------------------------:
+
 
 ## References
 
@@ -175,11 +224,17 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [4][The Demand for Local Telephone Service: A Fully Discrete Model of Residential Calling Patterns and Service Choices](https://www.jstor.org/stable/2555538), Train K., E.; McFadden, D., L.; Moshe, B. (1987)\
 [5] [Estimation of Travel Choice Models with Randomly Distributed Values of Time](https://ideas.repec.org/p/fth/lavaen/9303.html), Ben-Akiva, M.; Bolduc, D.; Bradley, M. (1993)\
 [6] [Personalize Expedia Hotel Searches - ICDM 2013](https://www.kaggle.com/c/expedia-personalized-sort), Ben Hamner, A.; Friedman, D.; SSA_Expedia. (2013)\
-[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)
+[7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)\
+[8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)\
+[9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
+[10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)
 
 ### Code and Repositories
-- [1][RUMnet](https://github.com/antoinedesir/rumnet)
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
+
+[1] [RUMnet](https://github.com/antoinedesir/rumnet)\
+[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
+
+[PyLogit](https://github.com/timothyb0912/pylogit)\
+[Torch Choice](https://gsbdbi.github.io/torch-choice)\
+[BioGeme](https://github.com/michelbierlaire/biogeme)\
+[mlogit](https://github.com/cran/mlogit)

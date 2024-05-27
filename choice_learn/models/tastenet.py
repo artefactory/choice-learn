@@ -7,7 +7,7 @@ from choice_learn.models.base_model import ChoiceModel
 
 
 def get_feed_forward_net(input_width, output_width, layers_width, activation):
-    """Base function to get a feed-forward neural network."""
+    """Get a feed-forward neural network."""
     net_input = tf.keras.layers.Input(shape=(input_width,))
     net_output = net_input
     for n_units in layers_width:
@@ -31,7 +31,7 @@ class TasteNet(ChoiceModel):
         exp_paramater_mu=1.0,
         **kwargs,
     ):
-        """Initialization of the model.
+        """Initialize of the model.
 
         Parameters
         ----------
@@ -74,15 +74,15 @@ class TasteNet(ChoiceModel):
         self.instantiated = False
 
     def get_activation_function(self, name):
-        """Function to get a normalization function from its str name.
+        """Get a normalization function from its str name.
 
         Parameters
         ----------
         name : str
             Name of the function to apply.
 
-        Returns:
-        --------
+        Returns
+        -------
         function
             Tensorflow function to apply.
         """
@@ -103,7 +103,7 @@ class TasteNet(ChoiceModel):
         raise ValueError(f"Activation function {name} not supported.")
 
     def instantiate(self, n_shared_features):
-        """Instantiates the model.
+        """Instantiate the model.
 
         Parameters
         ----------
@@ -131,8 +131,8 @@ class TasteNet(ChoiceModel):
     def trainable_weights(self):
         """Argument to access the future trainable_weights throught the taste net.
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of trainable weights.
         """
@@ -147,7 +147,7 @@ class TasteNet(ChoiceModel):
         available_items_by_choice,
         choices,
     ):
-        """Method that defines how the model computes the utility of a product.
+        """Define how the model computes the utility of a product.
 
         MUST be implemented in children classe !
         For simpler use-cases this is the only method to be user-defined.
@@ -167,20 +167,27 @@ class TasteNet(ChoiceModel):
             Choices
             Shape must be (n_choices, )
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Utility of each product for each choice.
             Shape must be (n_choices, n_items)
         """
         _ = available_items_by_choice
-        ### Restacking of the item features
+        # Restacking and dtyping of the item features
         if isinstance(shared_features_by_choice, tuple):
-            shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=-1)
+            shared_features_by_choice = tf.concat(
+                [
+                    tf.cast(shared_feature, tf.float32)
+                    for shared_feature in shared_features_by_choice
+                ],
+                axis=-1,
+            )
         if isinstance(items_features_by_choice, tuple):
-            items_features_by_choice = tf.concat([*items_features_by_choice], axis=-1)
-        shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
-        items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
+            items_features_by_choice = tf.concat(
+                [tf.cast(items_feature, tf.float32) for items_feature in items_features_by_choice],
+                axis=-1,
+            )
 
         taste_weights = self.taste_params_module(shared_features_by_choice)
         item_utility_by_choice = []
@@ -206,8 +213,8 @@ class TasteNet(ChoiceModel):
         shared_features_by_choice : np.ndarray
             Shared Features by choice.
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Taste of each product for each choice.
             Shape is (n_choices, n_taste_parameters)
@@ -215,15 +222,15 @@ class TasteNet(ChoiceModel):
         return self.taste_params_module(shared_features_by_choice)
 
     def fit(self, choice_dataset, **kwargs):
-        """Main fit function to estimate the paramters.
+        """Fit to estimate the paramters.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """
@@ -257,8 +264,8 @@ class TasteNet(ChoiceModel):
         sample_weight: Iterable, optional
             list of each sample weight, by default None meaning that all samples have weight 1.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dict with fit history.
         """

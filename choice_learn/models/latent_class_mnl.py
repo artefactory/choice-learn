@@ -3,7 +3,7 @@ import copy
 
 import tensorflow as tf
 
-from .conditional_mnl import ConditionalMNL, ModelSpecification
+from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import SimpleMNL
 
@@ -23,10 +23,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization.
+        """Initialize model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
@@ -47,7 +47,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         """
         self.n_latent_classes = n_latent_classes
         self.intercept = intercept
-        model_params = {
+        model_coefficients = {
             "add_exit_choice": add_exit_choice,
             "intercept": intercept,
             "optimizer": optimizer,
@@ -58,7 +58,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
 
         super().__init__(
             model_class=SimpleMNL,
-            model_parameters=model_params,
+            model_parameters=model_coefficients,
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
             epochs=epochs,
@@ -70,10 +70,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         )
 
     def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
-        """Instantiation of the Latent Models that are SimpleMNLs.
+        """Instantiate the Latent Models that are SimpleMNLs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_items : int
             Number of items/aternatives to consider.
         n_shared_features : int
@@ -88,7 +88,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             model.instantiated = True
 
     def instantiate(self, n_items, n_shared_features, n_items_features):
-        """Instantiation of the Latent Class MNL model."""
+        """Instantiate the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
@@ -105,8 +105,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
@@ -119,14 +119,14 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         return super().fit(dataset, **kwargs)
 
 
-class LatentClassConditionalMNL(BaseLatentClassModel):
-    """Latent Class for ConditionalMNL."""
+class LatentClassConditionalLogit(BaseLatentClassModel):
+    """Latent Class for ConditionalLogit."""
 
     def __init__(
         self,
         n_latent_classes,
         fit_method,
-        parameters=None,
+        coefficients=None,
         epochs=1,
         add_exit_choice=False,
         tolerance=1e-6,
@@ -134,15 +134,15 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialization.
+        """Initialize model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_latent_classes : int
             Number of latent classes.
         fit_method : str
             Method to be used to estimate the model.
-        parameters : dict or ModelSpecification
+        coefficients : dict or MNLCoefficients
             Dictionnary containing the parametrization of the model.
             The dictionnary must have the following structure:
             {feature_name_1: mode_1, feature_name_2: mode_2, ...}
@@ -161,15 +161,15 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         """
         self.n_latent_classes = n_latent_classes
         self.fit_method = fit_method
-        self.params = parameters
+        self.coefficients = coefficients
         self.epochs = epochs
         self.add_exit_choice = add_exit_choice
         self.tolerance = tolerance
         self.optimizer = optimizer
         self.lr = lr
 
-        model_params = {
-            "parameters": self.params,
+        model_coefficients = {
+            "coefficients": self.coefficients,
             "add_exit_choice": self.add_exit_choice,
             "optimizer": self.optimizer,
             "tolerance": self.tolerance,
@@ -178,8 +178,8 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
         }
 
         super().__init__(
-            model_class=ConditionalMNL,
-            model_parameters=model_params,
+            model_class=ConditionalLogit,
+            model_parameters=model_coefficients,
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
             epochs=epochs,
@@ -190,47 +190,20 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(
-        self,
-        n_items,
-        shared_features_names,
-        items_features_names,
-    ):
-        """Instantiation of the Latent Models that are SimpleMNLs.
+    def instantiate_latent_models(self, choice_dataset):
+        """Instantiate of the Latent Models that are SimpleMNLs.
 
-        Parameters:
-        -----------
-        n_items : int
-            Number of items/aternatives to consider.
-        shared_features_names : list of str
-            Names of the shared features in the dataset.
-        items_features_names : list of str
-            Names of the items features in the dataset.
+        Parameters
+        ----------
+        choice_dataset: ChoiceDataset
+            Used to match the features names with the model coefficients.
         """
-        if isinstance(self.params, ModelSpecification):
-            for model in self.models:
-                model.params = copy.deepcopy(self.params)
-                model.weights = model.instantiate_from_specifications()
+        for model in self.models:
+            model.coefficients = copy.deepcopy(self.coefficients)
+            model.instantiate(choice_dataset)
 
-                model._shared_features_by_choice_names = shared_features_names
-                model._items_features_by_choice_names = items_features_names
-        else:
-            for model in self.models:
-                model.params = self.params
-                model.indexes, model.weights = model.instantiate(
-                    num_items=n_items,
-                    shared_features_names=shared_features_names,
-                    items_features_names=items_features_names,
-                )
-        model.instantiated = True
-
-    def instantiate(
-        self,
-        n_items,
-        shared_features_names,
-        items_features_names,
-    ):
-        """Instantiation of the Latent Class MNL model."""
+    def instantiate(self, choice_dataset):
+        """Instantiate of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
@@ -238,19 +211,15 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
 
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
-        self.instantiate_latent_models(
-            n_items=n_items,
-            shared_features_names=shared_features_names,
-            items_features_names=items_features_names,
-        )
+        self.instantiate_latent_models(choice_dataset)
 
     def add_coefficients(
         self, coefficient_name, feature_name, items_indexes=None, items_names=None
     ):
-        """Adds a coefficient to the model throught the specification of the utility.
+        """Add a coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -264,16 +233,16 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             list of items names (in the ChoiceDataset) for which we need to add a coefficient,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
-        if self.params is None:
-            self.params = ModelSpecification()
-        elif not isinstance(self.params, ModelSpecification):
+        if self.coefficients is None:
+            self.coefficients = MNLCoefficients()
+        elif not isinstance(self.coefficients, MNLCoefficients):
             raise ValueError("Cannot add coefficient on top of a dict instantiation.")
-        self.params.add_coefficients(
+        self.coefficients.add(
             coefficient_name=coefficient_name,
             feature_name=feature_name,
             items_indexes=items_indexes,
@@ -283,10 +252,10 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     def add_shared_coefficient(
         self, coefficient_name, feature_name, items_indexes=None, items_names=None
     ):
-        """Adds a single, shared coefficient to the model throught the specification of the utility.
+        """Add a single, shared coefficient to the model throught the specification of the utility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coefficient_name : str
             Name given to the coefficient.
         feature_name : str
@@ -300,16 +269,16 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
             list of items names (in the ChoiceDataset) for which the coefficient will be used,
             by default None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             When names or indexes are both not specified.
         """
-        if self.params is None:
-            self.params = ModelSpecification()
-        elif not isinstance(self.params, ModelSpecification):
+        if self.coefficients is None:
+            self.coefficients = MNLCoefficients()
+        elif not isinstance(self.coefficients, MNLCoefficients):
             raise ValueError("Cannot add shared coefficient on top of a dict instantiation.")
-        self.params.add_shared_coefficient(
+        self.coefficients.add_shared(
             coefficient_name=coefficient_name,
             feature_name=feature_name,
             items_indexes=items_indexes,
@@ -319,15 +288,11 @@ class LatentClassConditionalMNL(BaseLatentClassModel):
     def fit(self, dataset, **kwargs):
         """Fit the model to the dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
-            self.instantiate(
-                n_items=dataset.get_n_items(),
-                shared_features_names=dataset.shared_features_by_choice_names,
-                items_features_names=dataset.items_features_by_choice_names,
-            )
+            self.instantiate(choice_dataset=dataset)
         return super().fit(dataset, **kwargs)
