@@ -52,7 +52,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
 : Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
 
-|--------------+------------------+--------------------+----------------+--------------+----------------+
++--------------+------------------+--------------------+----------------+--------------+----------------+
 | Package      | Format           |  Batching          | Non-Stochastic |  Stochastic  | Regularization |
 +:============:+:================:+:==================:+:==============:+:============:+:==============:+
 | Biogeme      | wide             | $\times$           | Newton BFGS    |   $\times$   |   $\times$     |
@@ -63,6 +63,19 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 +--------------+------------------+--------------------+----------------+--------------+----------------+
 | Choice-Learn | Features Storage | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +==============+==================+====================+================+==============+================+
+
+
++--------------+---------------------------------+--------------------+----------------+--------------+----------------+
+|   Package    | Traditional                     |          NeuralNet |         Custom | Assortment   |     Pricing    |
++:============:+:===============================:+:==================:+:==============:+:============:+:==============:+
+| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   |   $\times$   |   $\times$     |
++--------------+---------------------------------+--------------------+----------------+--------------+----------------+
+| PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       |   $\times$   |   $\times$     |
++--------------+---------------------------------+--------------------+----------------+--------------+----------------+
+| Torch-Choice | CondL, NestL                    | $\times$           | $\times$       |  $\times$    |   $\times$     |
++--------------+---------------------------------+--------------------+----------------+--------------+----------------+
+| Choice-Learn | CondL, NestL, LatC              | $\checkmark$       | $\checkmark$   | $\checkmark$ | $\checkmark$   |
++==============+=================================+====================+================+==============+================+
 
 
 
