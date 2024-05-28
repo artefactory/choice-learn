@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Print
+        run: ls /home/runner/work/choice-learn/choice-learn
       - name: Publish choice-learn on TestPyPI
         uses: code-specialist/pypi-poetry-publish@v1
         with:
