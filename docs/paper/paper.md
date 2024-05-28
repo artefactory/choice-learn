@@ -73,10 +73,6 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 |![](../illustrations/table.png)  |
 +---------------------------------+
 
-: Comparison of .\label{tab:tab2}
-
---------------------------------
-![](../illustrations/table.png)
 
 # Statement of need
 
