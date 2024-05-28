@@ -52,8 +52,6 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
 : Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
 
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| Package      | Data Processing                       | Estimation                                     |
 |--------------+------------------+--------------------+----------------+--------------+----------------+
 | Package      | Format           |  Batching          | Non-Stochastic |  Stochastic  | Regularization |
 +:============:+:================:+:==================:+:==============:+:============:+:==============:+
@@ -65,6 +63,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 +--------------+------------------+--------------------+----------------+--------------+----------------+
 | Choice-Learn | Features Storage | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +==============+==================+====================+================+==============+================+
+
 
 
 # Statement of need
@@ -87,7 +86,7 @@ Choice modeling is widely used in retail and e-commerce sectors to better unders
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, for instance within an assortment recommendation software, through deployment and serving tools, such as TFLite and TFServing.
 
-![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/features_storage_2.png)
+![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/features_storage_3.png)
 
 ## Flexible usage: from linear utility to customized specification
 
