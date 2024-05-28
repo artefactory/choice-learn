@@ -23,8 +23,8 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
-  logo: choice_learn_official_logo.png
-  favicon: choice_learn_official_logo.png
+  logo: log_choice_learn.png
+  favicon: log_choice_learn.png
 
 markdown_extensions:
   - pymdownx.highlight:

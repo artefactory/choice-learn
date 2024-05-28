@@ -5,11 +5,11 @@
 
 *Large-scale choice modeling through the lens of machine learning*
 
-[![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
+[![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn-private/blob/main/.pre-commit-config.yaml)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 
 </div>
 
@@ -81,7 +81,7 @@ pip install choice-learn
 
 In the mean time you can clone the repository:
 ```bash
-git clone git@github.com:artefactory/choice-learn-private.git
+git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
@@ -111,15 +111,23 @@ pip install choice-learn
   <a href="https://numpy.org/">
     <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://pandas.pydata.org/">
     <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://www.tensorflow.org">
     <img src="docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://www.gurobi.com/">
     <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
   </a>
+  &nbsp;
+  &nbsp;
   <a href="https://developers.google.com/optimization?hl=fr">
     <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
   </a>
@@ -173,7 +181,8 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
 
 ## Contributing
 You are welcome to contribute to the project ! You can help in various ways:
@@ -184,13 +193,11 @@ You are welcome to contribute to the project ! You can help in various ways:
 - fix typos, improve code quality
 - develop new tests
 
-We recommend to open an [issue](https://github.com/artefactory/choice-learn-private/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
+We recommend to open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
-If you consider this package and any of its feature useful for your research, please cite our paper:
-
-(WIP - Paper to come)
+If you consider this package and any of its feature useful for your research, please cite us.
 
 ### License
 
