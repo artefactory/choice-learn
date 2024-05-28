@@ -18,6 +18,7 @@ jobs:
           PUBLISH_REGISTRY: "https://test.pypi.org/simple/"
       - name: Install from TestPyPI & run tests with installed package
         run: |
+          pip uninstall -y -r <(pip freeze)
           python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
           python tests/manual_run.py
       - name: publish to PyPI
