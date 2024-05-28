@@ -187,7 +187,7 @@ class ChoiceDataset(object):
                         feature = feature.set_index("choice_id")
                     shared_features_by_choice = (
                         shared_features_by_choice[:i]
-                        + (shared_features_by_choice[i].loc[np.sort(feature.index)].to_numpy(),)
+                        + (feature.loc[np.sort(feature.index)].to_numpy(),)
                         + shared_features_by_choice[i + 1 :]
                     )
                     if shared_features_by_choice_names[i] is not None:

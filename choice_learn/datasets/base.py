@@ -608,16 +608,16 @@ def load_modecanada(
         if split_features:
             shared_features_by_choice = canada_df[["case"] + shared_features].drop_duplicates()
             shared_features_by_choice = shared_features_by_choice.rename(
-                columns={"case": "context_id"}
+                columns={"case": "choice_id"}
             )
 
             items_features_by_choice = canada_df[["case", "alt"] + items_features]
             items_features_by_choice = items_features_by_choice.rename(
-                columns={"case": "context_id", "alt": "item_id"}
+                columns={"case": "choice_id", "alt": "item_id"}
             )
 
             choices = canada_df.loc[canada_df.choice == 1][["case", "alt"]]
-            choices = choices.rename(columns={"case": "context_id", "alt": "choice"})
+            choices = choices.rename(columns={"case": "choice_id", "alt": "choice"})
 
             return (
                 shared_features_by_choice,
