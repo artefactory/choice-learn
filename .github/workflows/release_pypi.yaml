@@ -9,6 +9,7 @@ jobs:
   publish-service-client-package:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Publish choice-learn on TestPyPI
         uses: code-specialist/pypi-poetry-publish@v1
         with:
