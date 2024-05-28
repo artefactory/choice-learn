@@ -54,18 +54,24 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
 +--------------+------------------+--------------------+----------------+--------------+----------------+
 | Package      | Data Processing                       | Estimation                                     |
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| Package      | Data Processing  |  a                 | Estimation     | a            |  a             |
-+:============:+:================:+:==================:+:==============:+:============:+:==============:+
-| Biogeme      | wide             | $\times$           | Newton BFGS    |     X        |        X       |
 +==============+==================+====================+================+==============+================+
-| PyLogit      | format           |  $\times$          | BFGS           |     X        |       X        |
+| Package      | Format           |  Batching          | Non-Stochastic |  Stochastic  | Regularization |
++:============:+:================:+:==================:+:==============:+:============:+:==============:+
+| Biogeme      | wide             | $\times$           | Newton BFGS    |   $\times$   |   $\times$     |
++==============+==================+====================+================+==============+================+
+| PyLogit      | format           |  $\times$          | BFGS           |   $\times$   |   $\times$     |
 +==============+==================+====================+================+==============+================+
 | Torch-Choice | Multi Index      | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +==============+==================+====================+================+==============+================+
 | Choice-Learn | Features Storage | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +==============+==================+====================+================+==============+================+
 
+
+: Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:tab2}
+
++---------------------------------+
+|[!](../illustrations/table.png)  |
++=================================+
 
 # Statement of need
 
