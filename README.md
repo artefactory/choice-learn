@@ -77,18 +77,18 @@ You can find the following tutorials to help you getting started with the packag
 
 To install the required packages in a virtual environment, run the following command:
 
-** pip-install not possible yet, to come soon**
+The easiest is to pip-install the package:
 ```bash
 pip install choice-learn
 ```
 
-In the mean time you can clone the repository:
+Otherwise you can use the git repository to get the latest version:
 ```bash
 git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
-Choice-Learn requires the following:
+For manual installation, Choice-Learn requires the following:
 - Python (>=3.9)
 - NumPy (>=1.24)
 - pandas (>=1.5)
@@ -106,10 +106,6 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 - gurobipy (>=11.0.0)
 - ortools (>=9.6.2534)
 
-Once you have created your conda/pip python==3.9 environment, you can install requirements by:
-```bash
-pip install choice-learn
-```
 <p align="center">
   <a href="https://numpy.org/">
     <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
