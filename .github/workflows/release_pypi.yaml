@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Wait for publish on TestPyPI
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
@@ -38,3 +37,4 @@ jobs:
           PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
           BRANCH:  release_${{ github.event.release.tag_name }}
+
