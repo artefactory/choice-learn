@@ -8,11 +8,13 @@ tags:
 authors:
   - name: Vincent Auriau
     corresponding: true
-    orcid: 0000-0000-0000-0000
+    orcid: 0009-0002-9640-2639
     affiliation: "1, 2"
   - name: Ali Aouad
+    orcid: 0000-0002-9812-6140
     affiliation: 3
   - name: Antoine Désir
+    orcid: 0000-0001-5654-3301
     affiliation: 4
   - name: Emmanuel Malherbe
     affiliation: 2
@@ -57,7 +59,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 +:============:+:================:+:==================:+:==============:+:============:+:==============:+
 | Biogeme      | wide             | $\times$           | Newton BFGS    |   $\times$   |   $\times$     |
 +--------------+------------------+--------------------+----------------+--------------+----------------+
-| PyLogit      | format           |  $\times$          | BFGS           |   $\times$   |   $\times$     |
+| PyLogit      | long             |  $\times$          | BFGS           |   $\times$   |   $\times$     |
 +--------------+------------------+--------------------+----------------+--------------+----------------+
 | Torch-Choice | Multi Index      | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
 +--------------+------------------+--------------------+----------------+--------------+----------------+
