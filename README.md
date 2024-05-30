@@ -145,7 +145,7 @@ from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
 
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
-# Onl need to specify how the file is encoded:
+# Only need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
                                             choices_id_column="case",
