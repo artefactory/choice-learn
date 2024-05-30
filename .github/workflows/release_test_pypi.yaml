@@ -1,4 +1,4 @@
-name: Build and publish choice-learn
+name: Build and publish choice-learn on TestPyPI
 
 on:
   release:
