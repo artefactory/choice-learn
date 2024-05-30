@@ -32,6 +32,7 @@ jobs:
       - name: publish to PyPI
         uses: ./.github/actions/publish
         with:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_DIRECTORY: "./choice_learn/"
           PYTHON_VERSION: "3.9"
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
