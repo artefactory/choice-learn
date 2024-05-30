@@ -1,5 +1,4 @@
 name: "PyPI Poetry Publish"
-description: "Opinionated GitHub action to fully automate publishing packages to any PyPI registry - using Poetry and GitHub releases. Inspired by code-specialist."
 
 inputs:
   ACCESS_TOKEN:
