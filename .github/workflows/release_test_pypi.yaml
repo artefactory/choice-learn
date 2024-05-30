@@ -19,5 +19,5 @@ jobs:
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
           PUBLISH_REGISTRY_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           PUBLISH_REGISTRY: "https://test.pypi.org/legacy/"
-          UPDATE_CODE_VERSION: TEST_PYPI_USERNAME
+          UPDATE_CODE_VERSION: true
           PUSH_BRANCH: release_${{ github.event.release.tag_name }}

@@ -1,4 +1,5 @@
 name: "PyPI Poetry Publish"
+description: "GitHub action to automate publishing packages to PyPI - from code-specialist."
 
 inputs:
   ACCESS_TOKEN:
