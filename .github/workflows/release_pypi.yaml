@@ -6,26 +6,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish-service-client-package:
+  test-and-publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Publish choice-learn on TestPyPI
-        uses: code-specialist/pypi-poetry-publish@v1
+      - uses: actions/checkout@v4
+      - name: Wait for publish on TestPyPI
+        uses: lewagon/wait-on-check-action@v1.3.4
         with:
-          PACKAGE_DIRECTORY: "./choice_learn/"
-          PYTHON_VERSION: "3.8"
-          PUBLISH_REGISTRY_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-          PUBLISH_REGISTRY_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
-          PUBLISH_REGISTRY: "https://test.pypi.org/simple/"
+          ref: main
+          check-name: 'publish to PyPI'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+
+      - name: Install Python, choice-learn & run tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+          
       - name: Install from TestPyPI & run tests with installed package
         run: |
-          pip uninstall -y -r <(pip freeze)
-          python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
+          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
           python tests/manual_run.py
+
       - name: publish to PyPI
-        uses: code-specialist/pypi-poetry-publish@v1
+        uses: ./.github/actions/publish
         with:
           PACKAGE_DIRECTORY: "./choice_learn/"
-          PYTHON_VERSION: "3.8"
+          PYTHON_VERSION: "3.9"
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
+          UPDATE_CODE_VERSION: false
+          BRANCH:  release_${{ github.event.release.tag_name }}
+

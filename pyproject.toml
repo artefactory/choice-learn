@@ -74,7 +74,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9.0"
 numpy = "^1.24.3"
 pandas = "^1.5.3"
 tensorflow = "^2.11.0"
@@ -100,7 +100,7 @@ mkdocs-nbconvert = "^0.2.1"
 mkdocstrings-python = "^1.7.5"
 python-markdown-math = "^0.8"
 bandit = "^1.7.5"
-nbstripout = "^0.6.1"
+nbstripout = "^0.7"
 
 [build-system]
 requires = ["poetry-core"]

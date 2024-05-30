@@ -6,10 +6,13 @@
 *Large-scale choice modeling through the lens of machine learning*
 
 [![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
-[![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
+
+
+[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)]()
+![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
 
 </div>
 
@@ -74,19 +77,19 @@ You can find the following tutorials to help you getting started with the packag
 
 To install the required packages in a virtual environment, run the following command:
 
-** pip-install not possible yet, to come soon**
+The easiest is to pip-install the package:
 ```bash
 pip install choice-learn
 ```
 
-In the mean time you can clone the repository:
+Otherwise you can use the git repository to get the latest version:
 ```bash
 git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
-Choice-Learn requires the following:
-- Python (>=3.8)
+For manual installation, Choice-Learn requires the following:
+- Python (>=3.9)
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
@@ -103,10 +106,6 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 - gurobipy (>=11.0.0)
 - ortools (>=9.6.2534)
 
-Once you have created your conda/pip python==3.9 environment, you can install requirements by:
-```bash
-pip install choice-learn
-```
 <p align="center">
   <a href="https://numpy.org/">
     <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
