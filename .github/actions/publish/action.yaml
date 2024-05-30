@@ -1,9 +1,5 @@
 name: "PyPI Poetry Publish"
-:# from https://github.com/code-specialist/pypi-poetry-publish/blob/main/action.yaml
-description: "Opinionated GitHub action to fully automate publishing packages to any PyPI registry - using Poetry and GitHub releases"
-branding:
-  icon: "package"
-  color: "blue"
+description: "Opinionated GitHub action to fully automate publishing packages to any PyPI registry - using Poetry and GitHub releases. Inspired by code-specialist."
 
 inputs:
   ACCESS_TOKEN:
