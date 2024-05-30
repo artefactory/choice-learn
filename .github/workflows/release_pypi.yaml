@@ -1,8 +1,10 @@
 name: Build and publish choice-learn on PyPI
 
 on:
-  release:
-    types: [ published ]
+  workflow_run:
+    workflows: [Build and publish choice-learn on TestPyPI]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -11,14 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for publish on TestPyPI
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: main
-          check-name: 'publish to TestPyPI'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 20
-
       - name: Install Python, choice-learn & run tests
         uses: actions/setup-python@v5
         with:
@@ -26,6 +20,7 @@ jobs:
           
       - name: Install from TestPyPI & run tests with installed package
         run: |
+          echo release_${{ github.event.release.tag_name }}
           python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
           python tests/manual_run.py
 
