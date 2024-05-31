@@ -20,7 +20,6 @@ jobs:
           
       - name: Install from TestPyPI & run tests with installed package
         run: |
-          echo release_${{ github.event.release.tag_name }}
           python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
           python tests/manual_run.py
 
@@ -34,3 +33,4 @@ jobs:
           PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
           BRANCH:  release_${{ github.event.release.tag_name }}
+
