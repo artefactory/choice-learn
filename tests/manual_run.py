@@ -1,7 +1,5 @@
 """Runs manually all test_* functions."""
 import importlib
-import os
-import sys
 from pathlib import Path
 
 
