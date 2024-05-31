@@ -106,7 +106,7 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
             Reduction function - here to follow tf.keras.losses.Loss signature
         """
         print("Reduction", reduction)
-        super().__init__(reduction=reduction, name=name)
+        super().__init__(reduction="sum_over_batch_size", name=name)
         self.label_smoothing = label_smoothing
         self.from_logits = from_logits
         self.sparse = sparse
