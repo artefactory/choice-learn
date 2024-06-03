@@ -1,16 +1,18 @@
 <div align="center">
 
 
-<img src="docs/illustrations/logos/choice_learn_official_logo.png" width="512">
+<img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
 
-*Design custom choice models for large dataset*
+*Large-scale choice modeling through the lens of machine learning*
 
-[![CI status](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn-private/actions/workflows/ci.yaml?query=branch%3Amain)
-[![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)]()
-
+[![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn-private/blob/main/.pre-commit-config.yaml)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
+
+
+[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)]()
+![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
 
 </div>
 
@@ -59,7 +61,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 - Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
 ## Getting Started
 
@@ -75,19 +77,19 @@ You can find the following tutorials to help you getting started with the packag
 
 To install the required packages in a virtual environment, run the following command:
 
-** pip-install not possible yet, to come soon**
+The easiest is to pip-install the package:
 ```bash
 pip install choice-learn
 ```
 
-In the mean time you can clone the repository:
+Otherwise you can use the git repository to get the latest version:
 ```bash
-git clone git@github.com:artefactory/choice-learn-private.git
+git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
-Choice-Learn requires the following:
-- Python (>=3.8)
+For manual installation, Choice-Learn requires the following:
+- Python (>=3.9)
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
@@ -97,13 +99,40 @@ For modelling you need:
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
-Finally, an optional requirement used for coefficients analysis and L-BFGS optimization is:
+An optional requirement used for coefficients analysis and L-BFGS optimization is:
 - TensorFlow Probability (>=0.20.1)
 
-Once you have created your conda/pip python==3.9 environment, you can install requirements by:
-```bash
-pip install choice-learn
-```
+Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
+- gurobipy (>=11.0.0)
+- ortools (>=9.6.2534)
+
+<p align="center">
+  <a href="https://numpy.org/">
+    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://pandas.pydata.org/">
+    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://www.tensorflow.org">
+    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://www.gurobi.com/">
+    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+  </a>
+  &nbsp;
+  &nbsp;
+  <a href="https://developers.google.com/optimization?hl=fr">
+    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+  </a>
+</p>
+
+
 ## Usage
 Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
 
@@ -151,7 +180,8 @@ print(model.report)
 
 ## Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn-private/).
+A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
 
 ## Contributing
 You are welcome to contribute to the project ! You can help in various ways:
@@ -162,13 +192,11 @@ You are welcome to contribute to the project ! You can help in various ways:
 - fix typos, improve code quality
 - develop new tests
 
-We recommend to open an [issue](https://github.com/artefactory/choice-learn-private/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
+We recommend to open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
-If you consider this package and any of its feature useful for your research, please cite our paper:
-
-(WIP - Paper to come)
+If you consider this package and any of its feature useful for your research, please cite us.
 
 ### License
 
