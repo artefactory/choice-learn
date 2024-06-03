@@ -4,7 +4,8 @@ title: '`Choice-Learn`: Large-scale choice modeling for operational contexts thr
 tags:
   - Python
   - choice
-  - decision
+  - operations
+  - machine learning
 authors:
   - name: Vincent Auriau
     corresponding: true
@@ -40,7 +41,7 @@ Discrete choice models aim at predicting choice decisions made by individuals fr
 Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced parameterizations. This structure is inspired by Keras' different endpoints [@Chollet:2015], which enables a user-friendly modeling interface. Choice-Learn is designed with the following objectives:
 
 - **Streamlined:** The processing of datasets and the estimation of standard choice models are facilitated by a simple code signature.
-- **Scalable:** Optimized processes are implemented for features storage and models estimation, allowing the use of large datasets and models with a large number of parameters.
+- **Scalable:** Optimized processes are implemented for data storage and models estimation, allowing the use of large datasets and models with a large number of parameters.
 - **Flexible:** The codebase can be customized to fit different use cases.
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
 - **Downstream operations:** Post-processing tools that leverage choice models for assortment planning and pricing are integrated into the library.
@@ -68,10 +69,10 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 : Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models.\label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-|   Package    | Traditional                     | Neural Network     | Custom         | Non-Stochastic |  Gradient    |
-|              | Models                          | Models             | Models         | Optimizer      |  Descent     |
+|   Package    | Traditional                     | Neural Network     | Custom         | Non-Stochastic |  Stochastic  |
+|              | Models                          | Models             | Models         | Optimizer      |  Optimizer   |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
+| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    | $  \times  $ |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 | PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       | BFGS           |   $\times$   |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
@@ -95,7 +96,7 @@ Finally, data usage, model estimation and evaluation are designed to be consiste
 
 Choice modeling is widely used in retail and e-commerce sectors to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale choice datasets are often available and important to manage customer-facing operations.
 
-`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These features value are  substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and only the ID of the store where the choice is recorded is referenced in the main dataset.
+`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These feature values are substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and in the main dataset, the store where the choice is recorded is only referenced with its ID.
 
 The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, for instance within an assortment recommendation software, through deployment and serving tools, such as TFLite and TFServing.
