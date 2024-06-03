@@ -46,6 +46,8 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
 - **Downstream operations:** Post-processing tools that leverage choice models for assortment planning and pricing are integrated into the library.
 
+A summary of the main contributions is provided in Table \ref{tab:comparison1} and \ref{tab:comparison2}.
+
 ![General Organization of the package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
 : Comparison of the different packages for data handling and downstream opereations.\label{tab:comparison1}
@@ -85,8 +87,6 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 | Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$         |
 |              | LatC                            |                    |                |                |                      |
 +==============+=================================+====================+================+================+======================+
-
-A summary of the main contributions is provided in Table \label{tab:comparison1} and \label{tab:comparison2}.
 
 # Statement of need
 
