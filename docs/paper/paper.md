@@ -47,7 +47,7 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 ![General Organization of the package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
-A summary of the main contributions is provided in Table \ref{tab:comparison}.
+A summary of the main contributions is provided in Table  \label{tab:comparison1} and  \label{tab:comparison2}.
 
 ![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{fig:comparison}](../illustrations/table.png)
 
@@ -68,7 +68,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 
 
 +--------------+---------------------------------+--------------------+----------------+--------------+----------------+
-|   Package    | Traditional                     |          NeuralNet |         Custom | Assortment   |     Pricing    |
+|   Package    | Traditional                     | NeuralNet          | Custom         | Assortment   | Pricing        |
 +:============:+:===============================:+:==================:+:==============:+:============:+:==============:+
 | Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   |   $\times$   |   $\times$     |
 +--------------+---------------------------------+--------------------+----------------+--------------+----------------+
@@ -80,6 +80,37 @@ A summary of the main contributions is provided in Table \ref{tab:comparison}.
 +==============+=================================+====================+================+==============+================+
 
 
+
+: Comparison of the different packages for data handling and downstream opereations. \label{tab:comparison1}
+
++--------------+------------------+--------------------+--------------+----------------+
+|              | Data             |  Data              |              |                |
+| Package      | Format           |  Batching          | Assortment   | Pricing        |
++:============:+:================:+:==================:+:============:+:==============:+
+| Biogeme      | wide             | $\times$           |   $\times$   |   $\times$     |
++--------------+------------------+--------------------+--------------+----------------+
+| PyLogit      | long             |  $\times$          |   $\times$   |   $\times$     |
++--------------+------------------+--------------------+--------------+----------------+
+| Torch-Choice | Multi Index      | $\checkmark$       |   $\times$   |   $\times$     |
++--------------+------------------+--------------------+--------------+----------------+
+| Choice-Learn | Features Storage | $\checkmark$       | $\checkmark$ | $\checkmark$   |
++==============+==================+====================+==============+================+
+
+
+: Comparison of the different packages for modelization. \label{tab:comparison2}
+
++--------------+---------------------------------+--------------------+----------------+----------------+--------------+----------------+
+|   Package    | Traditional                     | NeuralNet          | Custom         | Non-Stochastic |  Stochastic  | Regularization |
+|              | Models                          | Models             | Models         | Estimation     |  Estimation  |                |
++:============:+:===============================:+:==================:+:==============:+:==============:+:============:+:==============:+
+| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |   $\times$     |
++--------------+---------------------------------+--------------------+----------------+----------------+--------------+----------------+
+| PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       | BFGS           |   $\times$   |   $\times$     |
++--------------+---------------------------------+--------------------+----------------+----------------+--------------+----------------+
+| Torch-Choice | CondL, NestL                    | $\times$           | $\times$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
++--------------+---------------------------------+--------------------+----------------+----------------+--------------+----------------+
+| Choice-Learn | CondL, NestL, LatC              | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$ | $\checkmark$   |
++==============+=================================+====================+================+================+==============+================+
 
 # Statement of need
 
