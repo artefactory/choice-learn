@@ -69,10 +69,10 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 : Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models.\label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-|   Package    | Traditional                     | Neural Network     | Custom         | Non-Stochastic |  Stochastic  |
+|   Package    | Traditional                     | Neural Net         | Custom         | Non-Stochastic |  Stochastic  |
 |              | Models                          | Models             | Models         | Optimizer      |  Optimizer   |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    | $  \times  $ |
+| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 | PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       | BFGS           |   $\times$   |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
@@ -94,7 +94,7 @@ Finally, data usage, model estimation and evaluation are designed to be consiste
 
 ## Data and model scalability
 
-Choice modeling is widely used in retail and e-commerce sectors to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale choice datasets are often available and important to manage customer-facing operations.
+Choice modeling is widely used in retail and e-commerce sectors to better understand customer behavior and optimize product offerings. With the continuous development of firms' data architectures, larger-scale choice datasets are often available and valuable for managing customer-facing operations.
 
 `Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These feature values are substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface, position, or number of employees are often stationary. Thus, they can be stored in an auxiliary data structure and in the main dataset, the store where the choice is recorded is only referenced with its ID.
 
@@ -124,7 +124,7 @@ The availability of detailed customer choice data, paired with advances in machi
 
 ## Memory usage: a case study
 
-We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*n_locations, n_locations*) where each row refers to one location. In Figure \ref{fig:xps} (a), we compare the memory usage for different dataset sizes.
+We provide numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. Consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*#locations, #locations*) where each row refers to one location. In Figure \ref{fig:xps} (a), we compare the memory usage for different dataset sizes.
 
 We conduct a similar comparison on the ICDM 2013 Expedia dataset [@Expedia:2013] with four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, both used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Figure \ref{fig:xps} (b) shows the results for various sample sizes.
 
