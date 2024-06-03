@@ -68,7 +68,7 @@ A summary of the main contributions is provided in Table  \label{tab:comparison1
 : Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-|   Package    | Traditional                     | Neuralnet          | Custom         | Non-Stochastic |  Stochastic  |
+|   Package    | Traditional                     | Neural Network     | Custom         | Non-Stochastic |  Stochastic  |
 |              | Models                          | Models             | Models         | Optimizer      |  Optimizer   |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
 | Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
