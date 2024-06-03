@@ -72,11 +72,13 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 |   Package    | Traditional                     | Neural Net         | Custom         | Non-Stochastic |  Stochastic  |
 |              | Models                          | Models             | Models         | Optimizer      |  Optimizer   |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL,                   | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
-|              | MixL, LatC                      |                    |                |                |              |
-|              |            & more               |                    |                |                |              |
+| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
+|              | MixL, LatC\                     |                    |                |                |              |
+|              | & more                          |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       | BFGS           |   $\times$   |
+| PyLogit      | CondL, NestL,\MixL,             |  $\times$          | $\times$       | BFGS           |   $\times$   |
+| PyLogit      | MixL,\                          |                    |                |                |              |
+| PyLogit      | Asymmetric                      |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 | Torch-Choice | CondL, NestL                    | $\times$           | $\times$       | L-BFGS         | $\checkmark$ |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
