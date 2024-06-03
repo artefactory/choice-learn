@@ -73,7 +73,7 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 |              | Models                          | Net\               | Models         | Optimizer      |  Optimizer   |
 |              |                                 | Models             |                |                |              |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
+| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |  $ \times $  |
 |              | MixL, LatC\                     |                    |                |                |              |
 |              | & more                          |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
