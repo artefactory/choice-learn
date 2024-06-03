@@ -49,38 +49,6 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 A summary of the main contributions is provided in Table  \label{tab:comparison1} and  \label{tab:comparison2}.
 
-![Summary comparison with other discrete choice modeling packages. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{fig:comparison}](../illustrations/table.png)
-
-
-: Comparison of implemented sequence aggregation methods (average word error rate is used).\label{tab:comparison}
-
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| Package      | Format           |  Batching          | Non-Stochastic |  Stochastic  | Regularization |
-+:============:+:================:+:==================:+:==============:+:============:+:==============:+
-| Biogeme      | wide             | $\times$           | Newton BFGS    |   $\times$   |   $\times$     |
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| PyLogit      | long             |  $\times$          | BFGS           |   $\times$   |   $\times$     |
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| Torch-Choice | Multi Index      | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
-+--------------+------------------+--------------------+----------------+--------------+----------------+
-| Choice-Learn | Features Storage | $\checkmark$       | L-BFGS         | $\checkmark$ | $\checkmark$   |
-+==============+==================+====================+================+==============+================+
-
-
-+--------------+---------------------------------+--------------------+----------------+--------------+----------------+
-|   Package    | Traditional                     | NeuralNet          | Custom         | Assortment   | Pricing        |
-+:============:+:===============================:+:==================:+:==============:+:============:+:==============:+
-| Biogeme      | CondL, NestL, MixL, LatC & more | $\times$           | $\checkmark$   |   $\times$   |   $\times$     |
-+--------------+---------------------------------+--------------------+----------------+--------------+----------------+
-| PyLogit      | CondL, NestL, MixL, Asymmetric  |  $\times$          | $\times$       |   $\times$   |   $\times$     |
-+--------------+---------------------------------+--------------------+----------------+--------------+----------------+
-| Torch-Choice | CondL, NestL                    | $\times$           | $\times$       |  $\times$    |   $\times$     |
-+--------------+---------------------------------+--------------------+----------------+--------------+----------------+
-| Choice-Learn | CondL, NestL, LatC              | $\checkmark$       | $\checkmark$   | $\checkmark$ | $\checkmark$   |
-+==============+=================================+====================+================+==============+================+
-
-
-
 : Comparison of the different packages for data handling and downstream opereations. \label{tab:comparison1}
 
 +--------------+------------------+--------------------+--------------+----------------+
@@ -97,7 +65,7 @@ A summary of the main contributions is provided in Table  \label{tab:comparison1
 +==============+==================+====================+==============+================+
 
 
-: Comparison of the different packages for modelization. \label{tab:comparison2}
+: Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+----------------+
 |   Package    | Traditional                     | NeuralNet          | Custom         | Non-Stochastic |  Stochastic  | Regularization |
