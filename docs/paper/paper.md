@@ -18,6 +18,7 @@ authors:
     orcid: 0000-0001-5654-3301
     affiliation: 4
   - name: Emmanuel Malherbe
+    orcid: 0009-0006-0898-6873
     affiliation: 2
 affiliations:
  - name: CentraleSupélec, Université Paris-Saclay, France
