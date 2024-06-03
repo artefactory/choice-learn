@@ -48,8 +48,6 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 ![General Organization of the package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
-A summary of the main contributions is provided in Table \label{tab:comparison1} and \label{tab:comparison2}.
-
 : Comparison of the different packages for data handling and downstream opereations.\label{tab:comparison1}
 
 +--------------+------------------+--------------------+--------------+----------------+
@@ -87,6 +85,8 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 | Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$         |
 |              | LatC                            |                    |                |                |                      |
 +==============+=================================+====================+================+================+======================+
+
+A summary of the main contributions is provided in Table \label{tab:comparison1} and \label{tab:comparison2}.
 
 # Statement of need
 
