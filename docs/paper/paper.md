@@ -47,9 +47,9 @@ Choice-Learn provides a modular suite of choice modeling tools for practitioners
 
 ![General Organization of the package. \label{fig:gen_org}](../illustrations/choice_learn_levels.png)
 
-A summary of the main contributions is provided in Table  \label{tab:comparison1} and  \label{tab:comparison2}.
+A summary of the main contributions is provided in Table \label{tab:comparison1} and \label{tab:comparison2}.
 
-: Comparison of the different packages for data handling and downstream opereations. \label{tab:comparison1}
+: Comparison of the different packages for data handling and downstream opereations.\label{tab:comparison1}
 
 +--------------+------------------+--------------------+--------------+----------------+
 |              | Data             |  Data              |              |                |
@@ -65,7 +65,7 @@ A summary of the main contributions is provided in Table  \label{tab:comparison1
 +==============+==================+====================+==============+================+
 
 
-: Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models. \label{tab:comparison2}
+: Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models.\label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 |   Package    | Traditional                     | Neural Network     | Custom         | Non-Stochastic |  Gradient    |
