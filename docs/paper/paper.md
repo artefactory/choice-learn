@@ -76,7 +76,7 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 |              | MixL, LatC\                     |                    |                |                |              |
 |              | & more                          |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| PyLogit      | CondL, NestL,\MixL,             |  $\times$          | $\times$       | BFGS           |   $\times$   |
+| PyLogit      | CondL, NestL,\                  |  $\times$          | $\times$       | BFGS           |   $\times$   |
 | PyLogit      | MixL,\                          |                    |                |                |              |
 | PyLogit      | Asymmetric                      |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
