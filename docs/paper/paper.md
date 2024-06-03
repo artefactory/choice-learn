@@ -73,17 +73,17 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 |              | Model                           | Net\               | Model          | Optimizer      |  Optimizer   |
 |              |                                 | Model              |                |                |              |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |  $\times$    |
+| Biogeme      | ConL, NesL,\                    | $\times$           | $\checkmark$   | Newton BFGS    |  $\times$    |
 |              | MixL, LatC\                     |                    |                |                |              |
 |              | & more                          |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| PyLogit      | CondL, NestL,\                  |  $\times$          | $\times$       | BFGS           |   $\times$   |
+| PyLogit      | ConL, NesL,\                    |  $\times$          | $\times$       | BFGS           |   $\times$   |
 |              | MixL,\                          |                    |                |                |              |
 |              | Asymmetric                      |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| Torch-Choice | CondL, NestL                    | $\times$           | $\times$       | L-BFGS         | $\checkmark$ |
+| Torch-Choice | ConL, NesL                      | $\times$           | $\times$       | L-BFGS         | $\checkmark$ |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$ |
+| Choice-Learn | ConL, NesL,\                    | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$ |
 |              | LatC                            |                    |                |                |              |
 +==============+=================================+====================+================+================+==============+
 
