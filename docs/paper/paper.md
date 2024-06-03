@@ -70,10 +70,10 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 |   Package    | Traditional\                    | Neural\            | Custom         | Non-Stochastic |  Stochastic  |
-|              | Models                          | Net\               | Models         | Optimizer      |  Optimizer   |
-|              |                                 | Models             |                |                |              |
+|              | Model                           | Net\               | Model          | Optimizer      |  Optimizer   |
+|              |                                 | Model              |                |                |              |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
-| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |  $ \times $  |
+| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |  $\times$    |
 |              | MixL, LatC\                     |                    |                |                |              |
 |              | & more                          |                    |                |                |              |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
