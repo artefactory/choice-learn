@@ -69,7 +69,7 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 : Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models.\label{tab:comparison2}
 
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-|   Package    | Traditional                     | Neural Net         | Custom         | Non-Stochastic |  Stochastic  |
+|   Package    | Traditional\                    | Neural Net         | Custom         | Non-Stochastic |  Stochastic  |
 |              | Models                          | Models             | Models         | Optimizer      |  Optimizer   |
 +:============:+:===============================:+:==================:+:==============:+:==============:+:============:+
 | Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    |   $\times$   |
@@ -82,7 +82,8 @@ A summary of the main contributions is provided in Table \label{tab:comparison1}
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
 | Torch-Choice | CondL, NestL                    | $\times$           | $\times$       | L-BFGS         | $\checkmark$ |
 +--------------+---------------------------------+--------------------+----------------+----------------+--------------+
-| Choice-Learn | CondL, NestL, LatC              | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$ |
+| Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$ |
+| Choice-Learn | LatC                            |                    |                |                |              |
 +==============+=================================+====================+================+================+==============+
 
 # Statement of need
