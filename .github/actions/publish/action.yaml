@@ -64,6 +64,10 @@ inputs:
 
 runs:
   using: composite
+    - name: display inputs
+      run: |
+        echo ${{ inputs.BRANCH }}
+      shell: bash
   steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
