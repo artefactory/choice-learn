@@ -31,7 +31,9 @@ jobs:
           python choice-learn/tests/manual_run.py
           cd choice-learn
           echo "b"
-          BRANCH=$(git branch --list "release_*" | tr '*' ' ')
+          git fetch --all
+          BRANCH=$(git branch --list -r "release_*" | tr '*' ' ')
+          BRANCH="${BRANCH:9}"
           echo $BRANCH
 
       - name: publish to PyPI
