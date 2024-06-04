@@ -24,7 +24,12 @@ jobs:
           pip list
           ls -l
           cd ../
+          ls -l
+          echo "a"
+          ls -l choice_learn
           echo ${{ github.event.release.tag_name }}
+          BRANCH=$(git branch --list "release_*" | tr '*' ' ')
+          echo $BRANCH
           python choice_learn/tests/manual_run.py
           cd choice_learn
 
@@ -37,5 +42,5 @@ jobs:
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
-          BRANCH:  release_${{ github.event.release.tag_name }}
+          BRANCH: $BRANCH
 
