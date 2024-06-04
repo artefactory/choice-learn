@@ -85,8 +85,8 @@ runs:
     - name: Set GitHub Tag as Package Version
       run: |
         vname="${github.event.release.tag_name:1}"
-        sed -i -r 's/__version__ *= *".*"/__version__ = "${{ vname }}"/g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
-        sed -i '0,/version =.*/s//version = "'"${{ vname }}"'"/' ./pyproject.toml
+        sed -i -r 's/__version__ *= *".*"/__version__ = "${{ $vname }}"/g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
+        sed -i '0,/version =.*/s//version = "'"${{ $vname }}"'"/' ./pyproject.toml
       shell: bash
 
     - name: Add and Commit Version
