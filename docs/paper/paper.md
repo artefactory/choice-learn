@@ -85,7 +85,7 @@ A summary of the main contributions is provided in Table \ref{tab:comparison1} a
 |              |                                 |                    |                |                |                      |
 +--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
 | Torch-       | CondL, NestL\                   | $\times$           | $\times$       | L-BFGS         | $\checkmark$         |
-|Choice\       |                                 |                    |                |                |                      |
+| Choice\      |                                 |                    |                |                |                      |
 |              |                                 |                    |                |                |                      |
 +--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
 | Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$         |
