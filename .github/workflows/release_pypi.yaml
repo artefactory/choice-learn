@@ -32,6 +32,7 @@ jobs:
           echo $BRANCH
           BRANCH="${BRANCH:9}"
           echo $BRANCH
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: publish to PyPI
         uses: ./.github/actions/publish

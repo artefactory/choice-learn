@@ -100,7 +100,7 @@ runs:
           vname="${{ github.event.release.tag_name }}"
           vname=${vname:1}
           echo $vname
-          sed -i -r 's/__version__ *= *".*"/__version__ = "$vname" /g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
+          sed -i -r 's/__version__ *= *".*"/__version__ = "'"$vname"'" /g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
           sed -i '0,/version =.*/s//version = "'"$vname"'"/' ./pyproject.toml
         fi
       shell: bash
