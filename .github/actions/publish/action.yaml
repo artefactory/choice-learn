@@ -71,6 +71,12 @@ runs:
         ref: ${{ inputs.BRANCH }}
         token: ${{ inputs.ACCESS_TOKEN }}
 
+    - name: check install
+      run: |
+        git status
+        git branch
+      shell: bash
+
     - name: Install poetry
       run: pip install poetry${{ inputs.POETRY_VERSION != '' && format('=={0}', inputs.POETRY_VERSION) || '' }} poetry-core${{ inputs.POETRY_CORE_VERSION != '' && format('=={0}', inputs.POETRY_CORE_VERSION) || '' }}
       shell: bash
