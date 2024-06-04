@@ -28,10 +28,11 @@ jobs:
           echo "a"
           ls -l choice-learn
           echo ${{ github.event.release.tag_name }}
-          BRANCH=$(git branch --list "release_*" | tr '*' ' ')
-          echo $BRANCH
           python choice-learn/tests/manual_run.py
           cd choice-learn
+          echo "b"
+          BRANCH=$(git branch --list "release_*" | tr '*' ' ')
+          echo $BRANCH
 
       - name: publish to PyPI
         uses: ./.github/actions/publish
