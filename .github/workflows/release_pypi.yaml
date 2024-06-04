@@ -32,7 +32,8 @@ jobs:
           cd choice-learn
           echo "b"
           git fetch --all
-          BRANCH=$(git branch --list -r "release_*" | tr '*' ' ')
+          BRANCH=$(git branch --list -r "origin/release_*" | tr '*' ' ')
+          echo $BRANCH
           BRANCH="${BRANCH:9}"
           echo $BRANCH
 
