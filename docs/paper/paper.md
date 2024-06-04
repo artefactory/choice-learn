@@ -76,7 +76,8 @@ A summary of the main contributions is provided in Table \ref{tab:comparison1} a
 +:============:+:===============================:+:==================:+:==============:+:==============:+:====================:+
 | Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    | $\quad \times \quad$ |
 |              | MixL, LatC\                     |                    |                |                |                      |
-|              | & more-[6,,,,draw=none]         |                    |                |                |                      |
+|              | & more                          |                    |                |                |                      |
+|              | \_                              |                    |                |                |                      |
 +--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
 | PyLogit      | CondL, NestL,\                  |  $\times$          | $\times$       | BFGS           |   $\times$           |
 |              | MixL,\                          |                    |                |                |                      |
