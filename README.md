@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="docs/illustrations/logos/logo_choice_learn.png" width="300">
+<img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
 
 *Large-scale choice modeling through the lens of machine learning*
 
