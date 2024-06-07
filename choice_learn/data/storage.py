@@ -85,12 +85,14 @@ class FeaturesStorage(object):
         if as_one_hot:
             return OneHotStorage(ids=ids, values=values, name=name)
 
-        if ids is None and (isinstance(values, dict) or isinstance(values, list)):
+        if ids is None and (isinstance(values, np.ndarray) or isinstance(values, list)):
             return ArrayStorage(values=values, values_names=values_names, name=name)
 
-        if np.unique(ids) == np.arange(len(ids)).all():
-            values = [values[np.where(np.array(ids) == i)[0][0]] for i in np.arange(len(ids))]
-            return ArrayStorage(values=values, values_names=values_names, name=name)
+        if ids is not None:
+            if (np.unique(ids) == np.arange(len(ids))).all():
+                values = [values[np.where(np.array(ids) == i)[0][0]] for i in np.arange(len(ids))]
+                return ArrayStorage(values=values, values_names=values_names, name=name)
+
         return DictStorage(
             ids=ids, values=values, values_names=values_names, name=name, indexer=StorageIndexer
         )
@@ -121,6 +123,7 @@ class DictStorage(Storage):
         name: string, optional
             name of the features store
         """
+        print("DictStorage")
         if isinstance(values, dict):
             storage = values
             lengths = []
@@ -238,7 +241,7 @@ class ArrayStorage(Storage):
         if isinstance(values, list):
             storage = np.array(values)
         elif not isinstance(values, np.ndarray):
-            raise ValueError("ArrayStorage Values must a list or a numpy array")
+            raise ValueError("ArrayStorage Values must be a list or a numpy array")
 
         # self.storage = storage
         self.values_names = values_names
@@ -284,8 +287,9 @@ class ArrayStorage(Storage):
         """
         if not isinstance(id_keys, list):
             id_keys = [id_keys]
-        sub_storage = {k: self.storage[k] for k in id_keys}
-        return FeaturesStorage(values=sub_storage, values_names=self.values_names, name=self.name)
+        return ArrayStorage(
+            values=self.batch[id_keys], values_names=self.values_names, name=self.name
+        )
 
     def get_storage_type(self):
         """Functions to access stored elements dtypes.

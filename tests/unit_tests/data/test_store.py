@@ -85,10 +85,43 @@ def test_featuresstore_instantiation_from_list():
     )
     storage.batch[[0, 2, 0, 2]]
     assert storage.shape == (3, 3)
-    for k, v in storage.storage.items():
-        assert (
-            v == {0: np.array([1, 2, 3]), 1: np.array([4, 5, 6]), 2: np.array([7, 8, 9])}[k]
-        ).all()
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
+
+
+def test_array_store_with_ids():
+    """Test the instantiation of FeaturesStore."""
+    features = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+    storage = FeaturesStorage(
+        ids=[0, 1, 2],
+        values=features,
+        values_names=["age", "income", "children_nb"],
+        name="customers",
+    )
+    storage.batch[[0, 2, 0, 2]]
+    assert storage.shape == (3, 3)
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
+
+
+def test_array_store_with_mixed_ids():
+    """Test the instantiation of FeaturesStore."""
+    features = [[1, 2, 3], [7, 8, 9], [4, 5, 6]]
+
+    storage = FeaturesStorage(
+        ids=[0, 2, 1],
+        values=features,
+        values_names=["age", "income", "children_nb"],
+        name="customers",
+    )
+    storage.batch[[0, 2, 0, 2]]
+    assert storage.shape == (3, 3)
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
 
 
 def test_featuresstore_instantiation_fromdict():
