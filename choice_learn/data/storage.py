@@ -67,20 +67,21 @@ class FeaturesStorage(object):
 
         Parameters
         ----------
-        ids : _type_, optional
-            _description_, by default None
-        values : _type_, optional
-            _description_, by default None
-        values_names : _type_, optional
-            _description_, by default None
-        name : _type_, optional
-            _description_, by default None
+        ids : Iterable, optional
+            IDs to references features with, by default None
+        values : Iterable, optional
+            Features to be stored, by default None
+        values_names : list, optional
+            List of names for the features to be stored, by default None
+        name : str, optional
+            Name of the FeaturesStorage, to be matched in ChoiceDataset, by default None
         as_one_hot: bool
+            Whether features are OneHot representations or not.
 
         Returns
         -------
-        _type_
-            _description_
+        FeaturesStorage
+            One of ArrayStorage, DictStorage or OneHotStorage
         """
         if as_one_hot:
             return OneHotStorage(ids=ids, values=values, name=name)
