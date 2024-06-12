@@ -17,13 +17,13 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
 ### Data
 - [Custom data handling](./reference/data/references_choice_dataset.md) for choice datasets with possible memory usage optimizations
 - Some Open-Source ready-to use datasets are included within the datasets:
-  - [SwissMetro](./references/dataset/references_base.md)
-  - [ModeCanada](./references/dataset/references_base.md)
-  - The [Train](./references/dataset/references_base.md) dataset
-  - The [Heating](./references/dataset/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
-  - [Stated car preferences](./references/dataset/references_base.md)
-  - The [TaFeng](./references/dataset/references_tafeng.md) dataset from Kaggle
-  - The ICDM-2013 [Expedia](./references/dataset/references_expedia.md) dataset from Kaggle
+    - [SwissMetro](./references/dataset/references_base.md)
+    - [ModeCanada](./references/dataset/references_base.md)
+    - The [Train](./references/dataset/references_base.md) dataset
+    - The [Heating](./references/dataset/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
+    - [Stated car preferences](./references/dataset/references_base.md)
+    - The [TaFeng](./references/dataset/references_tafeng.md) dataset from Kaggle
+    - The ICDM-2013 [Expedia](./references/dataset/references_expedia.md) dataset from Kaggle
 
 ### Models
 - [Custom modelling](./notebooks/introduction/4_model_customization.md)
@@ -32,6 +32,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [Multinomial Logit](./references/models/references_simple_mnl.md)
         - [Conditional Logit](./references/models/references_clogit.md)
         - [Latent class MNL](./references/models/references_latent_class_mnl.md)
+        - [Nested Logit](./references/models/references_nested_logit.md)
     - *Non-Linear Models:*
         - [RUMnet](./references/models/references_rumnet.md)
         - [TasteNet](./references/models/references_tastenet.md)
@@ -56,14 +57,13 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
-** pip-install not possible yet, to come soon**
 ```bash
 pip install choice-learn
 ```
 
-In the mean time you can clone the repository:
+Otherwise, you can clone the repository:
 ```bash
-git clone git@github.com:artefactory/choice-learn-private.git
+git clone git@github.com:artefactory/choice-learn.git
 ```
 
 ### Dependencies
