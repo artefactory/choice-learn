@@ -192,7 +192,7 @@ You are welcome to contribute to the project ! You can help in various ways:
 - fix typos, improve code quality
 - develop new tests
 
-We recommend to open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
+We recommend to first open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
