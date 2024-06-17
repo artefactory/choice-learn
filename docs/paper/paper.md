@@ -139,9 +139,9 @@ We provide numerical examples of memory usage to showcase the efficiency of the 
 
 We conduct a similar comparison on the ICDM 2013 Expedia dataset [@Expedia:2013] with four data handling methods: pandas.DataFrames [@pandas:2020] in long and wide format, both used in choice modeling packages, as well as Torch-Choice and `Choice-Learn`. Figure \ref{fig:xps} (b) shows the results for various sample sizes.
 
-Finally, in Figure \ref{fig:xps} (c) and (d), we observe performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing consisting of the aggregation of more than 4 million purchases over 5 years in Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which products were available, their prices, as well as a one-hot representation of the supermarket.
+Finally, in Figure \ref{fig:xps} (c) and (d), we observe performance gains in terms of memory management on a proprietary dataset in brick-and-mortar retailing consisting of the aggregation of more than 4 billion purchases in Konzum supermarkets in Croatia. Focusing  on the *coffee* subcategory, the dataset specifies, for each purchase, which products were available, their prices, as well as a one-hot representation of the supermarket.
 
-![Memory usage experiments. \label{fig:xps}](../illustrations/full_ram.png)
+![Memory usage experiments. \label{fig:xps}](../illustrations/ram_usage_comparison.png)
 
 ## Customized choice models
 We provide an example of the custom model definition with the following formulation of utility $U(i)$ with alternative features $x_i$ and customer features $z$:
