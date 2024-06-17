@@ -18,7 +18,7 @@
 
 
 Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models, e.g., for assortment planning.
-The package provides ready-to-use datasets and models studied in the academic literature. It also provides a lower level use if you wish to customize the specification of the choice model or formulate your own model from scratch. Choice-Learn efficiently handles large-scale choice data by limiting RAM usage. 
+The package provides ready-to-use datasets and models studied in the academic literature. It also provides a lower level use if you wish to customize the specification of the choice model or formulate your own model from scratch. Choice-Learn efficiently handles large-scale choice data by limiting RAM usage.
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
