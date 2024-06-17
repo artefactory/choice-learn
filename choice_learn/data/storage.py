@@ -52,10 +52,67 @@ class Storage(ABC):
         return f"FeatureStorage with name {self.name}"
 
 
-class FeaturesStorage(Storage):
+class FeaturesStorage(object):
+    """Base FeaturesStorage class that redirects toward the right one."""
+
+    def __new__(
+        cls,
+        ids=None,
+        values=None,
+        values_names=None,
+        name=None,
+        as_one_hot=False,
+    ):
+        """Redirects toward the right object.
+
+        Parameters
+        ----------
+        ids : Iterable, optional
+            IDs to references features with, by default None
+        values : Iterable, optional
+            Features to be stored, by default None
+        values_names : list, optional
+            List of names for the features to be stored, by default None
+        name : str, optional
+            Name of the FeaturesStorage, to be matched in ChoiceDataset, by default None
+        as_one_hot: bool
+            Whether features are OneHot representations or not.
+
+        Returns
+        -------
+        FeaturesStorage
+            One of ArrayStorage, DictStorage or OneHotStorage
+        """
+        if as_one_hot:
+            return OneHotStorage(ids=ids, values=values, name=name)
+
+        if ids is None and (isinstance(values, np.ndarray) or isinstance(values, list)):
+            return ArrayStorage(values=values, values_names=values_names, name=name)
+
+        if ids is not None:
+            check_ids = np.unique(ids) == np.arange(len(ids))
+            if isinstance(check_ids, np.ndarray):
+                check_ids = check_ids.all()
+            if check_ids:
+                values = [values[np.where(np.array(ids) == i)[0][0]] for i in np.arange(len(ids))]
+                return ArrayStorage(values=values, values_names=values_names, name=name)
+
+        return DictStorage(
+            ids=ids, values=values, values_names=values_names, name=name, indexer=StorageIndexer
+        )
+
+
+class DictStorage(Storage):
     """Function to store features with ids."""
 
-    def __init__(self, ids=None, values=None, values_names=None, name=None, indexer=StorageIndexer):
+    def __init__(
+        self,
+        ids=None,
+        values=None,
+        values_names=None,
+        name=None,
+        indexer=StorageIndexer,
+    ):
         """Build the store.
 
         Parameters
@@ -70,6 +127,7 @@ class FeaturesStorage(Storage):
         name: string, optional
             name of the features store
         """
+        print("DictStorage")
         if isinstance(values, dict):
             storage = values
             lengths = []
@@ -151,6 +209,91 @@ class FeaturesStorage(Storage):
             id_keys = [id_keys]
         sub_storage = {k: self.storage[k] for k in id_keys}
         return FeaturesStorage(values=sub_storage, values_names=self.values_names, name=self.name)
+
+    def get_storage_type(self):
+        """Functions to access stored elements dtypes.
+
+        Returns
+        -------
+        tuple
+            tuple of dtypes of the stored elements, as returned by np.dtype
+        """
+        element = self.get_element_from_index(0)
+        return element.dtype
+
+    @property
+    def batch(self):
+        """Indexing attribute."""
+        return self.indexer
+
+
+class ArrayStorage(Storage):
+    """Function to store features with ids as NumPy Array."""
+
+    def __init__(self, values=None, values_names=None, name=None):
+        """Build the store.
+
+        Parameters
+        ----------
+        values : array_like
+            list of values of features to store
+        values_names : array_like
+            Iterable of str indicating the name of the features. Must be same length as values.
+        name: string, optional
+            name of the features store
+        """
+        if isinstance(values, list):
+            storage = np.array(values)
+        elif not isinstance(values, np.ndarray):
+            raise ValueError("ArrayStorage Values must be a list or a numpy array")
+
+        # self.storage = storage
+        self.values_names = values_names
+        self.name = name
+
+        self.shape = storage.shape
+        self.indexer = storage
+
+    def get_element_from_index(self, index):
+        """Getter method over self.sequence.
+
+        Returns the features stored at index index. Compared to __getitem__, it does take
+        the index-th element of sequence but the index-th element of the store.
+
+        Parameters
+        ----------
+        index : (int, list, slice)
+            index argument of the feature
+
+        Returns
+        -------
+        array_like
+            features corresponding to the index index in self.store
+        """
+        return self.batch[index]
+
+    def __len__(self):
+        """Return the length of the sequence of apparition of the features."""
+        return self.shape[0]
+
+    def __getitem__(self, id_keys):
+        """Subset FeaturesStorage, keeping only features which id is in keys.
+
+        Parameters
+        ----------
+        id_keys : Iterable
+            List of ids to keep.
+
+        Returns
+        -------
+        FeaturesStorage
+            Subset of the FeaturesStorage, with only the features whose id is in id_keys
+        """
+        if not isinstance(id_keys, list):
+            id_keys = [id_keys]
+        return ArrayStorage(
+            values=self.batch[id_keys], values_names=self.values_names, name=self.name
+        )
 
     def get_storage_type(self):
         """Functions to access stored elements dtypes.

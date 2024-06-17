@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from choice_learn.data.storage import FeaturesStorage, OneHotStorage
+from choice_learn.data.storage import FeaturesStorage
 
 
 def test_len_store():
@@ -85,10 +85,43 @@ def test_featuresstore_instantiation_from_list():
     )
     storage.batch[[0, 2, 0, 2]]
     assert storage.shape == (3, 3)
-    for k, v in storage.storage.items():
-        assert (
-            v == {0: np.array([1, 2, 3]), 1: np.array([4, 5, 6]), 2: np.array([7, 8, 9])}[k]
-        ).all()
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
+
+
+def test_array_store_with_ids():
+    """Test the instantiation of FeaturesStore."""
+    features = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+    storage = FeaturesStorage(
+        ids=[0, 1, 2],
+        values=features,
+        values_names=["age", "income", "children_nb"],
+        name="customers",
+    )
+    storage.batch[[0, 2, 0, 2]]
+    assert storage.shape == (3, 3)
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
+
+
+def test_array_store_with_mixed_ids():
+    """Test the instantiation of FeaturesStore."""
+    features = [[1, 2, 3], [7, 8, 9], [4, 5, 6]]
+
+    storage = FeaturesStorage(
+        ids=[0, 2, 1],
+        values=features,
+        values_names=["age", "income", "children_nb"],
+        name="customers",
+    )
+    storage.batch[[0, 2, 0, 2]]
+    assert storage.shape == (3, 3)
+    assert (
+        storage.batch[[0, 2, 0, 2]] == np.array([[1, 2, 3], [7, 8, 9], [1, 2, 3], [7, 8, 9]])
+    ).all()
 
 
 def test_featuresstore_instantiation_fromdict():
@@ -147,7 +180,7 @@ def test_onehotstore_instantiation():
     """Test the instantiation of OneHotStore."""
     ids = [0, 1, 2, 3, 4]
     values = [4, 3, 2, 1, 0]
-    storage = OneHotStorage(ids=ids, values=values, name="OneHotTest")
+    storage = FeaturesStorage(ids=ids, values=values, as_one_hot=True, name="OneHotTest")
     assert storage.shape == (5, 5)
     assert storage.storage == {0: 4, 1: 3, 2: 2, 3: 1, 4: 0}
 
@@ -155,7 +188,7 @@ def test_onehotstore_instantiation():
 def test_onehotstore_instantiation_from_sequence():
     """Test the instantiation; from_sequence of OneHotStore."""
     values = [4, 3, 2, 1, 0]
-    storage = OneHotStorage(values=values, name="OneHotTest")
+    storage = FeaturesStorage(values=values, as_one_hot=True, name="OneHotTest")
     assert (
         storage.batch[[0, 2, 4]] == np.array([[0, 0, 0, 0, 1], [0, 0, 1, 0, 0], [1, 0, 0, 0, 0]])
     ).all()
@@ -165,7 +198,7 @@ def test_onehotstore_instantiation_from_sequence():
 def test_onehotstore_instantiation_from_ids():
     """Test the instantiation; from_sequence of OneHotStore."""
     ids = [0, 1, 2, 3, 4]
-    storage = OneHotStorage(ids=ids, name="OneHotTest")
+    storage = FeaturesStorage(ids=ids, as_one_hot=True, name="OneHotTest")
     assert (
         storage.batch[[0, 2, 4]] == np.array([[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 1]])
     ).all()
@@ -177,7 +210,7 @@ def test_onehotstore_instantiation_from_dict():
     ids = [0, 1, 2, 3, 4]
     values = [4, 3, 2, 1, 0]
     values_dict = {k: v for k, v in zip(ids, values)}
-    storage = OneHotStorage(values=values_dict, name="OneHotTest")
+    storage = FeaturesStorage(values=values_dict, as_one_hot=True, name="OneHotTest")
     assert (
         storage.batch[[0, 2, 4]] == np.array([[0, 0, 0, 0, 1], [0, 0, 1, 0, 0], [1, 0, 0, 0, 0]])
     ).all()
@@ -188,7 +221,7 @@ def test_onehotstore_getitem():
     """Test the getitem of OneHotStore."""
     ids = [0, 1, 2, 3, 4]
     values = [4, 3, 2, 1, 0]
-    storage = OneHotStorage(ids=ids, values=values, name="OneHotTest")
+    storage = FeaturesStorage(ids=ids, values=values, as_one_hot=True, name="OneHotTest")
     assert (
         storage.batch[[0, 2, 4]] == np.array([[0, 0, 0, 0, 1], [0, 0, 1, 0, 0], [1, 0, 0, 0, 0]])
     ).all()
@@ -198,7 +231,7 @@ def test_onehotstore_getitem():
 def test_fail_instantiation():
     """Testing failed instantiation."""
     try:
-        _ = OneHotStorage(name="OneHotTest")
+        _ = FeaturesStorage(name="OneHotTest", as_one_hot=True)
         assert False
     except ValueError:
         assert True
