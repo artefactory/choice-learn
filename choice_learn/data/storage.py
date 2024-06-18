@@ -243,7 +243,7 @@ class ArrayStorage(Storage):
             name of the features store
         """
         if isinstance(values, list):
-            storage = np.array(values)
+            values = np.array(values)
         elif not isinstance(values, np.ndarray):
             raise ValueError("ArrayStorage Values must be a list or a numpy array")
 
@@ -251,8 +251,8 @@ class ArrayStorage(Storage):
         self.values_names = values_names
         self.name = name
 
-        self.shape = storage.shape
-        self.indexer = storage
+        self.shape = values.shape
+        self.indexer = values
 
     def get_element_from_index(self, index):
         """Getter method over self.sequence.
