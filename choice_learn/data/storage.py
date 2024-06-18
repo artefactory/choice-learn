@@ -127,7 +127,6 @@ class DictStorage(Storage):
         name: string, optional
             name of the features store
         """
-        print("DictStorage")
         if isinstance(values, dict):
             storage = values
             lengths = []
