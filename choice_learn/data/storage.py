@@ -32,6 +32,24 @@ class Storage(ABC):
         pass
 
     @abstractmethod
+    def get_element_from_index(self, index):
+        """Getter method with index (int).
+
+        Returns the features stored witg the index-th ID.
+
+        Parameters
+        ----------
+        index : (int, list, slice)
+            index argument of the feature
+
+        Returns
+        -------
+        array_like
+            features corresponding to the index index in self.storage
+        """
+        pass
+
+    @abstractmethod
     def __len__(self):
         """Return the length of the sequence of apparition of the features."""
         pass
@@ -167,10 +185,9 @@ class DictStorage(Storage):
         self.indexer = indexer(self)
 
     def get_element_from_index(self, index):
-        """Getter method over self.sequence.
+        """Getter method with index (int).
 
-        Returns the features stored at index index. Compared to __getitem__, it does take
-        the index-th element of sequence but the index-th element of the store.
+        Returns the features stored witg the index-th ID.
 
         Parameters
         ----------
@@ -180,7 +197,7 @@ class DictStorage(Storage):
         Returns
         -------
         array_like
-            features corresponding to the index index in self.store
+            features corresponding to the index index in self.storage
         """
         if isinstance(index, int):
             index = [index]
@@ -254,10 +271,9 @@ class ArrayStorage(Storage):
         self.indexer = values
 
     def get_element_from_index(self, index):
-        """Getter method over self.sequence.
+        """Getter method with index (int).
 
-        Returns the features stored at index index. Compared to __getitem__, it does take
-        the index-th element of sequence but the index-th element of the store.
+        Returns the features stored witg the index-th ID.
 
         Parameters
         ----------
@@ -267,7 +283,7 @@ class ArrayStorage(Storage):
         Returns
         -------
         array_like
-            features corresponding to the index index in self.store
+            features corresponding to the index index in self.storage
         """
         return self.batch[index]
 
@@ -410,10 +426,9 @@ class OneHotStorage(Storage):
         self.dtype = dtype
 
     def get_element_from_index(self, index):
-        """Getter method over self.sequence.
+        """Getter method with index (int).
 
-        Returns the features stored at index index. Compared to __getitem__, it does take
-        the index-th element of sequence but the index-th element of the store.
+        Returns the features stored witg the index-th ID.
 
         Parameters
         ----------
@@ -423,7 +438,7 @@ class OneHotStorage(Storage):
         Returns
         -------
         array_like
-            features corresponding to the index index in self.store
+            features corresponding to the index index in self.storage
         """
         keys = list(self.storage.keys())[index]
         return self.storage[keys]

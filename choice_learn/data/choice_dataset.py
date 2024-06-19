@@ -99,7 +99,8 @@ class ChoiceDataset(object):
                         if len(sub_features[0]) != len(sub_names):
                             raise ValueError(
                                 f"""{sub_k}-th given shared_features_by_choice and
-                                shared_features_by_choice_names shapes do not match"""
+                                shared_features_by_choice_names shapes do not match:
+                                {len(sub_features[0])} and {len(sub_names)}."""
                             )
                 # In this case names are missing, still transform it as a tuple
                 else:
@@ -155,8 +156,10 @@ class ChoiceDataset(object):
 
                 elif len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
-                        f"""{sub_k}-th given items_features_by_choice and
-                        items_features_by_choice_names shapes do not match"""
+                        f"""{sub_k}-th given items_features_by_choice with names
+                        {sub_names} and
+                        items_features_by_choice_names shapes do not match:
+                        {len(sub_features[0][0])} and {len(sub_names)}."""
                     )
             self._return_items_features_by_choice_tuple = True
 
@@ -504,12 +507,18 @@ class ChoiceDataset(object):
         > Sets the argument base_num_items.
         """
         if self.items_features_by_choice is not None:
-            base_num_items = self.items_features_by_choice[0].shape[1]
+            if self.items_features_by_choice[0].ndim == 1:
+                # items_features_by_choice fully integrated into a FeaturesStorage
+                base_num_items = (
+                    next(iter(next(iter(self.items_features_by_choice_map.values())).values()))
+                    .get_element_from_index(0)
+                    .shape[0]
+                )
+            else:
+                base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
             if isinstance(self.available_items_by_choice, tuple):
-                base_num_items = self.available_items_by_choice[0].batch[
-                    self.available_items_by_choice[1][0]
-                ]
+                base_num_items = self.available_items_by_choice[0].get_element_by_index(0).shape[0]
             else:
                 base_num_items = self.available_items_by_choice.shape[1]
         else:
@@ -517,6 +526,7 @@ class ChoiceDataset(object):
                 "No items features or items availabilities are defined. Using max value of choices"
             )
             base_num_items = len(np.unique(self.choices))
+
         logging.info(f"Number of detected items is {base_num_items}")
         self.base_num_items = base_num_items
 
@@ -1088,14 +1098,15 @@ class ChoiceDataset(object):
         print("\n")
 
         if self.items_features_by_choice is not None:
-            print(" Items Features by Choice:")
-            print(
-                f""" {sum([f.shape[2] for f in self.items_features_by_choice])
-                     } items features """
-            )
-            if self.items_features_by_choice_names is not None:
-                if self.items_features_by_choice_names[0] is not None:
-                    print(f" with names: {self.items_features_by_choice_names}")
+            if self.items_features_by_choice[0] is not None:
+                print(" Items Features by Choice:")
+                print(
+                    f""" {sum([f.shape[2] if f.ndim == 3 else 1 for f in self.items_features_by_choice])
+                        } items features """
+                )
+                if self.items_features_by_choice_names is not None:
+                    if self.items_features_by_choice_names[0] is not None:
+                        print(f" with names: {self.items_features_by_choice_names}")
         else:
             print(" No Items Features by Choice registered")
         print("%=====================================================================%")
