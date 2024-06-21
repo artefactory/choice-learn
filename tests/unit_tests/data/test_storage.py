@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from choice_learn.data.storage import FeaturesStorage, DictStorage, ArrayStorage, OneHotStorage
+from choice_learn.data.storage import ArrayStorage, DictStorage, FeaturesStorage, OneHotStorage
 
 
 def test_len_storage():

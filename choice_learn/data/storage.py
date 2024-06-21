@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from choice_learn.data.indexer import OneHotStorageIndexer, StorageIndexer, ArrayStorageIndexer
+from choice_learn.data.indexer import ArrayStorageIndexer, OneHotStorageIndexer, StorageIndexer
 
 
 class Storage(ABC):
