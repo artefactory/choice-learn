@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from choice_learn.data.storage import FeaturesStorage
+from choice_learn.data.storage import FeaturesStorage, DictStorage, ArrayStorage, OneHotStorage
 
 
 def test_len_storage():
@@ -234,4 +234,48 @@ def test_fail_instantiation():
         _ = FeaturesStorage(name="OneHotTest", as_one_hot=True)
         assert False
     except ValueError:
+        assert True
+
+
+def test_key_error():
+    """Verify that the key error is raised."""
+    # DictStorage
+    ids = ["a", "b", "c"]
+    values = [[0, 1], [2, 3], [4, 5]]
+
+    dict_storage = FeaturesStorage(ids=ids, values=values, name="test")
+    assert isinstance(dict_storage, DictStorage)
+    try:
+        _ = dict_storage["d"]
+        assert False
+    except KeyError:
+        assert True
+
+    # ArrayStorage
+    ids = [0, 1, 2]
+    values = [[0, 1], [2, 3], [4, 5]]
+
+    array_storage = FeaturesStorage(ids=ids, values=values, name="test")
+    assert isinstance(array_storage, ArrayStorage)
+    try:
+        _ = array_storage[4]
+        assert False
+    except KeyError:
+        assert True
+    try:
+        _ = array_storage["d"]
+        assert False
+    except KeyError:
+        assert True
+
+    # OneHotStorage
+    ids = [0, 1, 2]
+    values = [0, 1, 2]
+
+    oh_storage = FeaturesStorage(ids=ids, values=values, name="test", as_one_hot=True)
+    assert isinstance(oh_storage, OneHotStorage)
+    try:
+        _ = oh_storage[4]
+        assert False
+    except KeyError:
         assert True
