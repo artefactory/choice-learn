@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from choice_learn.data.indexer import OneHotStorageIndexer, StorageIndexer
+from choice_learn.data.indexer import OneHotStorageIndexer, StorageIndexer, ArrayStorageIndexer
 
 
 class Storage(ABC):
@@ -268,7 +268,8 @@ class ArrayStorage(Storage):
         self.name = name
 
         self.shape = values.shape
-        self.indexer = values
+        self.storage = values
+        self.indexer = ArrayStorageIndexer(self)
 
     def get_element_from_index(self, index):
         """Getter method with index (int).
