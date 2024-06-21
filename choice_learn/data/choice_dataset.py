@@ -367,7 +367,6 @@ class ChoiceDataset(object):
         self._check_dataset()  # Should handle alone if np.arrays are squeezed
         self._return_types = self._check_types()
         self._check_names()
-
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
 
@@ -439,10 +438,13 @@ class ChoiceDataset(object):
                                     {feature_by_id.name}"""
                                 )
 
-                                unique_values = np.unique(self.shared_features_by_choice[i][:, j])
+                                # We test a subset of IDs
+                                test_values = self.shared_features_by_choice[i][:, j][
+                                    np.arange(0, len(self.choices), 10)
+                                ]
                                 try:
-                                    for val in unique_values:
-                                        feature_by_id.batch[unique_values]
+                                    for val in test_values:
+                                        feature_by_id.batch[val]
                                 except KeyError:
                                     raise ValueError(
                                         f"""Key {val} in Shared Feature {column_name}
@@ -462,29 +464,65 @@ class ChoiceDataset(object):
                                     f"""Feature by ID found for items_features_by_choice:
                                     {feature_by_id.name}"""
                                 )
+
+                                # We test a subset of the IDs
                                 if self.items_features_by_choice[i].ndim == 1:
-                                    unique_values = np.unique(self.items_features_by_choice[i])
+                                    test_values = self.items_features_by_choice[i][
+                                        np.arange(0, len(self.choices), 10)
+                                    ]
                                 else:
-                                    unique_values = np.unique(
-                                        self.items_features_by_choice[i][:, :, k]
-                                    )
+                                    test_values = self.items_features_by_choice[i][:, :, k][
+                                        np.arange(0, len(self.choices), 10)
+                                    ]
                                 try:
-                                    for val in unique_values:
-                                        feature_by_id.batch[unique_values]
+                                    for val in test_values:
+                                        feature_by_id.batch[val]
                                 except KeyError:
                                     raise ValueError(
                                         f"""Key {val} in Items Feature {column_name}
                                                      not found in {feature_by_id.name}"""
                                     )
-
         # Checking number of found features_by_id
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
         num_if_maps = sum([len(val) for val in items_features_map.values()])
-
         if num_ff_maps + num_if_maps != len(self.features_by_ids) - found_av_fid:
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return shared_features_map, items_features_map
+
+    def check_features_by_ids(self, batch_size=128):
+        """Verify that all IDs given in features exist in the corresponding FeaturesStorage.
+
+        Parameters
+        ----------
+        batch_size : int, optional
+            batch size used to sample the FeaturesStorage, by default 128
+
+        Returns
+        -------
+        bool
+            Whether the check was successful or not
+        """
+        for index_1 in self.shared_features_by_choice_map:
+            for index_2 in self.shared_features_by_choice_map[index_1]:
+                all_values = np.unique(self.shared_features_by_choice[index_1][:, index_2])
+                for i in range(len(all_values) // batch_size + 1):
+                    self.shared_features_by_choice_map[index_1][index_2].batch[
+                        all_values[i * batch_size : (i + 1) * batch_size]
+                    ]
+
+        for index_1 in self.items_features_by_choice_map:
+            for index_2 in self.items_features_by_choice_map[index_1]:
+                if self.items_features_by_choice[index_1].ndim == 1:
+                    all_values = np.unique(self.items_features_by_choice[index_1])
+                else:
+                    all_values = np.unique(self.shared_features_by_choice[index_1][:, :, index_2])
+                for i in range(len(all_values) // batch_size + 1):
+                    self.items_features_by_choice_map[index_1][index_2].batch[
+                        all_values[i * batch_size : (i + 1) * batch_size]
+                    ]
+        logging.info("Features by ID checked: all IDs have values")
+        return True
 
     def _check_dataset(self):
         """Verify that the shapes of the different features are consistent.
@@ -1101,7 +1139,8 @@ class ChoiceDataset(object):
             if self.items_features_by_choice[0] is not None:
                 print(" Items Features by Choice:")
                 print(
-                    f""" {sum([f.shape[2] if f.ndim == 3 else 1 for f in self.items_features_by_choice])
+                    f"""{sum([f.shape[2] if f.ndim == 3 else 1
+                              for f in self.items_features_by_choice])
                         } items features """
                 )
                 if self.items_features_by_choice_names is not None:
