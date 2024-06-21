@@ -128,7 +128,7 @@ class ArrayStorageIndexer(StorageIndexer):
         except IndexError as error:
             print("You are using an ID that is not in the storage:")
             print(error)
-            raise
+            raise KeyError
 
 
 class OneHotStorageIndexer(Indexer):
