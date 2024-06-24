@@ -13,13 +13,12 @@
 <center>
 
 | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="40"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, check it out first [here](https://github.com/artefactory/choice-learn)! |
-|--|-|
+|-|-|
 
 </center>
 
 <br>
 <br>
-
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
 The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
@@ -75,7 +74,11 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
+<<<<<<< HEAD
 The easiest is to pip-install the package:
+=======
+The easiest is to pip-install the package:b7fc2d1f6e2ff5a5a94a896344592542
+>>>>>>> main
 ```bash
 pip install choice-learn
 ```
