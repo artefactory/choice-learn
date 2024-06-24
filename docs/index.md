@@ -2,17 +2,22 @@
 
 <div align="center">
 
-<img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
+<img src="illustrations/logos/logo_choice_learn.png" width="300">
 
 *Large-scale choice modeling through the lens of machine learning*
 
+</div>
+
+<center>
 
 | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="40"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, check it out first [here](https://github.com/artefactory/choice-learn)! |
 |---|---|
 
-</div>
+</center>
+
 <br>
 <br>
+
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
 The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
