@@ -74,11 +74,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
-<<<<<<< HEAD
 The easiest is to pip-install the package:
-=======
-The easiest is to pip-install the package:b7fc2d1f6e2ff5a5a94a896344592542
->>>>>>> main
 ```bash
 pip install choice-learn
 ```
