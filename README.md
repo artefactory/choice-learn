@@ -3,7 +3,7 @@
 
 <img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
 
-*Large-scale choice modelling through the lens of machine learning*
+*Large-scale choice modeling through the lens of machine learning*
 
 [![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -192,7 +192,7 @@ You are welcome to contribute to the project ! You can help in various ways:
 - fix typos, improve code quality
 - develop new tests
 
-We recommend to open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
+We recommend to first open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
 ## Citation
 
