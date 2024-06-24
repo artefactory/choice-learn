@@ -1,17 +1,19 @@
 # Welcome to the choice-learn documentation!
 
-<div align="center">
-
+<center>
 <img src="illustrations/logos/logo_choice_learn.png" width="300">
+</center>
+
+<center>
 
 *Large-scale choice modeling through the lens of machine learning*
 
-</div>
+</center>
 
 <center>
 
 | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="40"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, check it out first [here](https://github.com/artefactory/choice-learn)! |
-|---|---|
+|-|-|
 
 </center>
 
