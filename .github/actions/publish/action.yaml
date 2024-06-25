@@ -1,9 +1,6 @@
 name: "PyPI Poetry Publish"
-: # from https://github.com/code-specialist/pypi-poetry-publish/blob/main/action.yaml
-description: "Opinionated GitHub action to fully automate publishing packages to any PyPI registry - using Poetry and GitHub releases"
-branding:
-  icon: "package"
-  color: "blue"
+description: "GitHub action to automate publishing packages to PyPI - from code-specialist."
+
 
 inputs:
   ACCESS_TOKEN:
@@ -68,11 +65,22 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: display inputs
+      run: |
+        echo ${{ inputs.BRANCH }}
+      shell: bash
+      
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
         ref: ${{ inputs.BRANCH }}
         token: ${{ inputs.ACCESS_TOKEN }}
+
+    - name: check install
+      run: |
+        git status
+        git branch
+      shell: bash
 
     - name: Install poetry
       run: pip install poetry${{ inputs.POETRY_VERSION != '' && format('=={0}', inputs.POETRY_VERSION) || '' }} poetry-core${{ inputs.POETRY_CORE_VERSION != '' && format('=={0}', inputs.POETRY_CORE_VERSION) || '' }}
@@ -87,8 +95,14 @@ runs:
 
     - name: Set GitHub Tag as Package Version
       run: |
-        sed -i -r 's/__version__ *= *".*"/__version__ = "${{ github.event.release.tag_name }}"/g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
-        sed -i '0,/version =.*/s//version = "'"${{ github.event.release.tag_name }}"'"/' ./pyproject.toml
+        if ${{ inputs.UPDATE_CODE_VERSION }}
+        then
+          vname="${{ github.event.release.tag_name }}"
+          vname=${vname:1}
+          echo $vname
+          sed -i -r 's/__version__ *= *".*"/__version__ = "'"$vname"'" /g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
+          sed -i '0,/version =.*/s//version = "'"$vname"'"/' ./pyproject.toml
+        fi
       shell: bash
 
     - name: Add and Commit Version

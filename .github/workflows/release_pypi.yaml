@@ -1,8 +1,10 @@
-name: Build and publish choice-learn
+name: Build and publish choice-learn on PyPI
 
 on:
-  release:
-    types: [ published ]
+  workflow_run:
+    workflows: [Build and publish choice-learn on TestPyPI]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -10,13 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Wait for publish on TestPyPI
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: main
-          check-name: 'publish to PyPI'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 20
 
       - name: Install Python, choice-learn & run tests
         uses: actions/setup-python@v5
@@ -24,17 +19,29 @@ jobs:
           python-version: '3.10' 
           
       - name: Install from TestPyPI & run tests with installed package
+        id: install
         run: |
           python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ choice-learn
-          python tests/manual_run.py
+          cd ../
+          echo ${{ github.event.release.tag_name }}
+          python choice-learn/tests/manual_run.py
+          cd choice-learn
+          echo "b"
+          git fetch --all
+          BRANCH=$(git branch --list -r "origin/release_*" | tr '*' ' ')
+          echo $BRANCH
+          BRANCH="${BRANCH:9}"
+          echo $BRANCH
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: publish to PyPI
         uses: ./.github/actions/publish
         with:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_DIRECTORY: "./choice_learn/"
           PYTHON_VERSION: "3.9"
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
-          BRANCH:  release_${{ github.event.release.tag_name }}
+          BRANCH: ${{ steps.install.outputs.BRANCH }}
 

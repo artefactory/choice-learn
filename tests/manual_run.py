@@ -11,14 +11,17 @@ def run_module(file):
     file : str
         .py file
     """
-    sub_file = file.replace(".py", "")
-    module = importlib.import_module(sub_file, package="__name__")
+    sub_file = str(file).replace(".py", "").replace("/", ".")[6:]
+    __import__(sub_file)
+    module = importlib.import_module(sub_file, package="./")
     for i in dir(module):
         item = getattr(module, i)
-        if callable(item) and item.startswith("test_"):
+        if callable(item) and item.__name__.startswith("test_"):
             item()
 
 
 if __name__ == "__main__":
-    for file in Path.glob("./**/*.py"):
-        run_module(file)
+    directory = Path("./tests/")
+    for file in directory.glob("./**/*.py"):
+        if "manual_run" not in str(file):
+            run_module(file)

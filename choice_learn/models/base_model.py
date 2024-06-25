@@ -76,7 +76,7 @@ class ChoiceModel(object):
             axis=-1,
             epsilon=1e-35,
             name="exact_categorical_crossentropy",
-            reduction=tf.keras.losses.Reduction.AUTO,
+            reduction="sum_over_batch_size",
         )
         self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)

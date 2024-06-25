@@ -71,7 +71,7 @@ def test_rumnet_instantiation():
     assert True
 
 
-def test_tastenet_intstantiation():
+def test_tastenet_instantiation():
     """Tests TasteNet instantiation."""
     taste_net_layers = []
     taste_net_activation = "relu"
