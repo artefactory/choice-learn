@@ -142,7 +142,7 @@ class ChoiceDataset(object):
                 if np.array(sub_features).ndim == 1:
                     # check features_by_ids
                     logging.info(
-                        "feature of dimension 1 detected -  a FeatureByIDs MUst be provided"
+                        "feature of dimension 1 detected -  a FeatureByIDs MUST be provided"
                     )
                     for fbid in features_by_ids:
                         if fbid.name == sub_names[0]:
@@ -360,6 +360,7 @@ class ChoiceDataset(object):
             self.shared_features_by_choice_map,
             self.items_features_by_choice_map,
         ) = self._build_features_by_ids()
+        self.check_features_by_ids()
 
         # self.n_choices = len(self.choices)
 
