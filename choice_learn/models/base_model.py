@@ -1,4 +1,5 @@
 """Base class for choice models."""
+
 import json
 import logging
 import os
@@ -123,6 +124,16 @@ class ChoiceModel(object):
         else:
             self.regularization_strength = 0.0
             self.regularization = None
+
+    @property
+    @abstractmethod
+    def trainable_weights(self):
+        """Trainable weights need to be specified in children classes.
+
+        Basically it determines which weights need to be optimized during training.
+        MUST be a list
+        """
+        return
 
     @abstractmethod
     def compute_batch_utility(
