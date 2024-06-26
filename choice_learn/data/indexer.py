@@ -1,7 +1,7 @@
 """Indexer classes for data classes."""
+
 import logging
 from abc import abstractmethod
-
 import numpy as np
 
 

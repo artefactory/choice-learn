@@ -1,4 +1,5 @@
 """Different classes to optimize RAM usage with repeated features over time."""
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -103,7 +104,6 @@ class FeaturesStorage(object):
         """
         if as_one_hot:
             return OneHotStorage(ids=ids, values=values, name=name)
-
         if ids is None and (isinstance(values, np.ndarray) or isinstance(values, list)):
             return ArrayStorage(values=values, values_names=values_names, name=name)
 
@@ -112,7 +112,7 @@ class FeaturesStorage(object):
             if isinstance(check_ids, np.ndarray):
                 check_ids = check_ids.all()
             if check_ids:
-                values = [values[np.where(np.array(ids) == i)[0][0]] for i in np.arange(len(ids))]
+                values = np.array(values)[np.argsort(ids)]
                 return ArrayStorage(values=values, values_names=values_names, name=name)
 
         return DictStorage(
@@ -262,7 +262,6 @@ class ArrayStorage(Storage):
             values = np.array(values)
         elif not isinstance(values, np.ndarray):
             raise ValueError("ArrayStorage Values must be a list or a numpy array")
-
         # self.storage = storage
         self.values_names = values_names
         self.name = name
