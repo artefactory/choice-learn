@@ -230,10 +230,14 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 ### Code and Repositories
 
+*Official models implementations:*
+
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
 
-[PyLogit](https://github.com/timothyb0912/pylogit)\
-[Torch Choice](https://gsbdbi.github.io/torch-choice)\
-[BioGeme](https://github.com/michelbierlaire/biogeme)\
-[mlogit](https://github.com/cran/mlogit)
+*Other choice modeling packages:*
+
+- [PyLogit](https://github.com/timothyb0912/pylogit)
+- [Torch Choice](https://gsbdbi.github.io/torch-choice)
+- [BioGeme](https://github.com/michelbierlaire/biogeme)
+- [mlogit](https://github.com/cran/mlogit)
