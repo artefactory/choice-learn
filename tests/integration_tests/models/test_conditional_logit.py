@@ -2,8 +2,8 @@
 
 import tensorflow as tf
 
-from choice_learn.datasets import load_modecanada
-from choice_learn.models import ConditionalLogit
+from choice_learn.datasets import load_modecanada, load_swissmetro
+from choice_learn.models import ConditionalLogit, SimpleMNL
 
 
 def test_mode_canada_gt():
@@ -37,3 +37,12 @@ def test_mode_canada_gt():
         canada_dataset
     ) * len(canada_dataset)
     assert (gt_model.evaluate(canada_dataset) * len(canada_dataset)) >= 1874.1
+
+
+def test_simple_mnl_fit():
+    """Tests that SimpleMNL can fit."""
+    dataset = load_swissmetro()
+    model = SimpleMNL()
+    model.fit(dataset)
+    model.evaluate(dataset)
+    assert model.evaluate(dataset) < 1.0
