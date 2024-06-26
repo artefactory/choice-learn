@@ -1,4 +1,5 @@
 """Main classes to handle assortment data."""
+
 import logging
 
 import numpy as np
@@ -517,7 +518,7 @@ class ChoiceDataset(object):
                 if self.items_features_by_choice[index_1].ndim == 1:
                     all_values = np.unique(self.items_features_by_choice[index_1])
                 else:
-                    all_values = np.unique(self.shared_features_by_choice[index_1][:, :, index_2])
+                    all_values = np.unique(self.items_features_by_choice[index_1][:, :, index_2])
                 for i in range(len(all_values) // batch_size + 1):
                     self.items_features_by_choice_map[index_1][index_2].batch[
                         all_values[i * batch_size : (i + 1) * batch_size]
