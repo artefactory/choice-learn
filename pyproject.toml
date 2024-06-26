@@ -80,7 +80,7 @@ python = "^3.9.0"
 numpy = "^1.24.3"
 pandas = "^1.5.3"
 tensorflow = "^2.11.0"
-tensorflow-probability = "^0.20.1"
+tensorflow-probability = "^0.22.1"
 tqdm = "^4.0.0"
 ortools = { version = "^9.6", optional = true }
 gurobipy = { version = "^11.0", optional = true }
