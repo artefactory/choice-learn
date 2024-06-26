@@ -108,9 +108,7 @@ class FeaturesStorage(object):
             return ArrayStorage(values=values, values_names=values_names, name=name)
 
         if ids is not None:
-            check_ids = np.unique(ids) == np.arange(len(ids))
-            if isinstance(check_ids, np.ndarray):
-                check_ids = check_ids.all()
+            check_ids = np.in1d(ids, np.arange(len(ids))).all()
             if check_ids:
                 values = np.array(values)[np.argsort(ids)]
                 return ArrayStorage(values=values, values_names=values_names, name=name)
