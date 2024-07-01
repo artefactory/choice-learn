@@ -1,4 +1,5 @@
 """Main classes to handle assortment data."""
+
 import logging
 
 import numpy as np
@@ -99,7 +100,8 @@ class ChoiceDataset(object):
                         if len(sub_features[0]) != len(sub_names):
                             raise ValueError(
                                 f"""{sub_k}-th given shared_features_by_choice and
-                                shared_features_by_choice_names shapes do not match"""
+                                shared_features_by_choice_names shapes do not match:
+                                {len(sub_features[0])} and {len(sub_names)}."""
                             )
                 # In this case names are missing, still transform it as a tuple
                 else:
@@ -141,7 +143,7 @@ class ChoiceDataset(object):
                 if np.array(sub_features).ndim == 1:
                     # check features_by_ids
                     logging.info(
-                        "feature of dimension 1 detected -  a FeatureByIDs MUst be provided"
+                        "feature of dimension 1 detected -  a FeatureByIDs MUST be provided"
                     )
                     for fbid in features_by_ids:
                         if fbid.name == sub_names[0]:
@@ -155,8 +157,10 @@ class ChoiceDataset(object):
 
                 elif len(sub_features[0][0]) != len(sub_names):
                     raise ValueError(
-                        f"""{sub_k}-th given items_features_by_choice and
-                        items_features_by_choice_names shapes do not match"""
+                        f"""{sub_k}-th given items_features_by_choice with names
+                        {sub_names} and
+                        items_features_by_choice_names shapes do not match:
+                        {len(sub_features[0][0])} and {len(sub_names)}."""
                     )
             self._return_items_features_by_choice_tuple = True
 
@@ -357,6 +361,7 @@ class ChoiceDataset(object):
             self.shared_features_by_choice_map,
             self.items_features_by_choice_map,
         ) = self._build_features_by_ids()
+        self.check_features_by_ids()
 
         # self.n_choices = len(self.choices)
 
@@ -364,7 +369,6 @@ class ChoiceDataset(object):
         self._check_dataset()  # Should handle alone if np.arrays are squeezed
         self._return_types = self._check_types()
         self._check_names()
-
         # Build .iloc method
         self.indexer = ChoiceDatasetIndexer(self)
 
@@ -436,10 +440,13 @@ class ChoiceDataset(object):
                                     {feature_by_id.name}"""
                                 )
 
-                                unique_values = np.unique(self.shared_features_by_choice[i][:, j])
+                                # We test a subset of IDs
+                                test_values = self.shared_features_by_choice[i][:, j][
+                                    np.arange(0, len(self.choices), 10)
+                                ]
                                 try:
-                                    for val in unique_values:
-                                        feature_by_id.batch[unique_values]
+                                    for val in test_values:
+                                        feature_by_id.batch[val]
                                 except KeyError:
                                     raise ValueError(
                                         f"""Key {val} in Shared Feature {column_name}
@@ -459,29 +466,65 @@ class ChoiceDataset(object):
                                     f"""Feature by ID found for items_features_by_choice:
                                     {feature_by_id.name}"""
                                 )
+
+                                # We test a subset of the IDs
                                 if self.items_features_by_choice[i].ndim == 1:
-                                    unique_values = np.unique(self.items_features_by_choice[i])
+                                    test_values = self.items_features_by_choice[i][
+                                        np.arange(0, len(self.choices), 10)
+                                    ]
                                 else:
-                                    unique_values = np.unique(
-                                        self.items_features_by_choice[i][:, :, k]
-                                    )
+                                    test_values = self.items_features_by_choice[i][:, :, k][
+                                        np.arange(0, len(self.choices), 10)
+                                    ]
                                 try:
-                                    for val in unique_values:
-                                        feature_by_id.batch[unique_values]
+                                    for val in test_values:
+                                        feature_by_id.batch[val]
                                 except KeyError:
                                     raise ValueError(
                                         f"""Key {val} in Items Feature {column_name}
                                                      not found in {feature_by_id.name}"""
                                     )
-
         # Checking number of found features_by_id
         num_ff_maps = sum([len(val) for val in shared_features_map.values()])
         num_if_maps = sum([len(val) for val in items_features_map.values()])
-
         if num_ff_maps + num_if_maps != len(self.features_by_ids) - found_av_fid:
             raise ValueError("Some features_by_ids were not matched with features_names.")
 
         return shared_features_map, items_features_map
+
+    def check_features_by_ids(self, batch_size=128):
+        """Verify that all IDs given in features exist in the corresponding FeaturesStorage.
+
+        Parameters
+        ----------
+        batch_size : int, optional
+            batch size used to sample the FeaturesStorage, by default 128
+
+        Returns
+        -------
+        bool
+            Whether the check was successful or not
+        """
+        for index_1 in self.shared_features_by_choice_map:
+            for index_2 in self.shared_features_by_choice_map[index_1]:
+                all_values = np.unique(self.shared_features_by_choice[index_1][:, index_2])
+                for i in range(len(all_values) // batch_size + 1):
+                    self.shared_features_by_choice_map[index_1][index_2].batch[
+                        all_values[i * batch_size : (i + 1) * batch_size]
+                    ]
+
+        for index_1 in self.items_features_by_choice_map:
+            for index_2 in self.items_features_by_choice_map[index_1]:
+                if self.items_features_by_choice[index_1].ndim == 1:
+                    all_values = np.unique(self.items_features_by_choice[index_1])
+                else:
+                    all_values = np.unique(self.items_features_by_choice[index_1][:, :, index_2])
+                for i in range(len(all_values) // batch_size + 1):
+                    self.items_features_by_choice_map[index_1][index_2].batch[
+                        all_values[i * batch_size : (i + 1) * batch_size]
+                    ]
+        logging.info("Features by ID checked: all IDs have values")
+        return True
 
     def _check_dataset(self):
         """Verify that the shapes of the different features are consistent.
@@ -504,12 +547,18 @@ class ChoiceDataset(object):
         > Sets the argument base_num_items.
         """
         if self.items_features_by_choice is not None:
-            base_num_items = self.items_features_by_choice[0].shape[1]
+            if self.items_features_by_choice[0].ndim == 1:
+                # items_features_by_choice fully integrated into a FeaturesStorage
+                base_num_items = (
+                    next(iter(next(iter(self.items_features_by_choice_map.values())).values()))
+                    .get_element_from_index(0)
+                    .shape[0]
+                )
+            else:
+                base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
             if isinstance(self.available_items_by_choice, tuple):
-                base_num_items = self.available_items_by_choice[0].batch[
-                    self.available_items_by_choice[1][0]
-                ]
+                base_num_items = self.available_items_by_choice[0].get_element_by_index(0).shape[0]
             else:
                 base_num_items = self.available_items_by_choice.shape[1]
         else:
@@ -517,6 +566,7 @@ class ChoiceDataset(object):
                 "No items features or items availabilities are defined. Using max value of choices"
             )
             base_num_items = len(np.unique(self.choices))
+
         logging.info(f"Number of detected items is {base_num_items}")
         self.base_num_items = base_num_items
 
@@ -1088,14 +1138,16 @@ class ChoiceDataset(object):
         print("\n")
 
         if self.items_features_by_choice is not None:
-            print(" Items Features by Choice:")
-            print(
-                f""" {sum([f.shape[2] for f in self.items_features_by_choice])
-                     } items features """
-            )
-            if self.items_features_by_choice_names is not None:
-                if self.items_features_by_choice_names[0] is not None:
-                    print(f" with names: {self.items_features_by_choice_names}")
+            if self.items_features_by_choice[0] is not None:
+                print(" Items Features by Choice:")
+                print(
+                    f"""{sum([f.shape[2] if f.ndim == 3 else 1
+                              for f in self.items_features_by_choice])
+                        } items features """
+                )
+                if self.items_features_by_choice_names is not None:
+                    if self.items_features_by_choice_names[0] is not None:
+                        print(f" with names: {self.items_features_by_choice_names}")
         else:
             print(" No Items Features by Choice registered")
         print("%=====================================================================%")
