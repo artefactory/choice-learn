@@ -1,5 +1,4 @@
-site_name: choice-learn-private
-
+site_name: Choice-Learn
 theme:
   name: "material"
   palette:

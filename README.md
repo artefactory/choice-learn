@@ -210,8 +210,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)  |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
-:-------------------------:|:-------------------------:|:-------------------------:
+[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) | [![](./docs/illustrations/logos/artefact_logo.png)](https://www.artefact.com/) |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
 
 
 ## References
@@ -230,10 +230,14 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 ### Code and Repositories
 
+*Official models implementations:*
+
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
 
-[PyLogit](https://github.com/timothyb0912/pylogit)\
-[Torch Choice](https://gsbdbi.github.io/torch-choice)\
-[BioGeme](https://github.com/michelbierlaire/biogeme)\
-[mlogit](https://github.com/cran/mlogit)
+*Other choice modeling packages:*
+
+- [PyLogit](https://github.com/timothyb0912/pylogit)
+- [Torch Choice](https://gsbdbi.github.io/torch-choice)
+- [BioGeme](https://github.com/michelbierlaire/biogeme)
+- [mlogit](https://github.com/cran/mlogit)
