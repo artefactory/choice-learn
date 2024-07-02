@@ -1398,7 +1398,7 @@ class ChoiceDataset(object):
 
         try:
             if isinstance(self.available_items_by_choice, tuple):
-                available_items_by_choice = self.available_items_by_choice[1]
+                available_items_by_choice = self.available_items_by_choice[1][choices_indexes]
             else:
                 available_items_by_choice = self.available_items_by_choice[choices_indexes]
         except TypeError:
