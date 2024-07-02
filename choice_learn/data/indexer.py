@@ -1,4 +1,5 @@
 """Indexer classes for data classes."""
+
 import logging
 from abc import abstractmethod
 
@@ -92,14 +93,43 @@ class StorageIndexer(Indexer):
         array_like
             features corresponding to the sequence_keys
         """
-        if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
-            if len(np.array(sequence_keys).shape) > 1:
-                return np.stack([self.storage.batch[key] for key in sequence_keys], axis=0)
-            return np.array([self.storage.storage[key] for key in sequence_keys])
+        try:
+            if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
+                if len(np.array(sequence_keys).shape) > 1:
+                    return np.stack([self.storage.batch[key] for key in sequence_keys], axis=0)
+                return np.array([self.storage.storage[key] for key in sequence_keys])
 
-        if isinstance(sequence_keys, slice):
-            raise ValueError("Slicing is not supported for storage")
-        return np.array(self.storage.storage[sequence_keys])
+            if isinstance(sequence_keys, slice):
+                raise ValueError("Slicing is not supported for storage")
+            return np.array(self.storage.storage[sequence_keys])
+        except KeyError as error:
+            print("You are using an ID that is not in the storage:")
+            print(error)
+            raise
+
+
+class ArrayStorageIndexer(StorageIndexer):
+    """Class for Ilocing/Batching ArrayFeaturesStorage."""
+
+    def __getitem__(self, sequence_keys):
+        """Return the features appearing at the sequence_index-th position of sequence.
+
+        Parameters
+        ----------
+        sequence_keys : (int, list, slice)
+            keys of values to be retrieved
+
+        Returns
+        -------
+        array_like
+            features corresponding to the sequence_keys
+        """
+        try:
+            return self.storage.storage[sequence_keys]
+        except IndexError as error:
+            print("You are using an ID that is not in the storage:")
+            print(error)
+            raise KeyError
 
 
 class OneHotStorageIndexer(Indexer):
@@ -140,7 +170,13 @@ class OneHotStorageIndexer(Indexer):
             return self[list(range(*sequence_keys.indices(len(self.shape[0]))))]
         # else:
         one_hot = np.zeros(self.shape[1])
-        one_hot[self.storage.storage[sequence_keys]] = 1
+        try:
+            one_hot[self.storage.storage[sequence_keys]] = 1
+        except KeyError as error:
+            print("You are using an ID that is not in the storage:")
+            print(error)
+            raise
+
         return one_hot.astype(self.dtype)
 
 
