@@ -210,9 +210,20 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) | [![](./docs/illustrations/logos/artefact_logo.png)](https://www.artefact.com/) |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
-:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+<center>
+<p float="center">
+  <img src="./docs/illustrations/logos/logo_arc.png" height="40" />
+  <img src="./docs/illustrations/logos/logo_artefact_png.png" height="40" />
+</p>
 
+<p float="center">
+  <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="30" />
+  <img src="./docs/illustrations/logos/logo_CS.png" height="40" />
+  <img src="./docs/illustrations/logos/logo_lbs.jpeg" height="40" />
+  <img src="./docs/illustrations/logos/logo_insead.png" height="40" />
+</p>
+
+</center>
 
 ## References
 
