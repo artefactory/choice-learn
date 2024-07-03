@@ -1222,11 +1222,12 @@ class ChoiceDataset(object):
                         for feature_index in np.sort(
                             list(self.shared_features_by_choice_map[tuple_index].keys())
                         ):
-                            unstacked_feat.append(
-                                shared_features_by_choice[tuple_index][
-                                    :, feat_ind_min:feature_index
-                                ]
-                            )
+                            if feat_ind_min != feature_index:
+                                unstacked_feat.append(
+                                    shared_features_by_choice[tuple_index][
+                                        :, feat_ind_min:feature_index
+                                    ]
+                                )
                             unstacked_feat.append(
                                 self.shared_features_by_choice_map[tuple_index][
                                     feature_index
@@ -1259,11 +1260,12 @@ class ChoiceDataset(object):
                             for feature_index in np.sort(
                                 list(self.items_features_by_choice_map[tuple_index].keys())
                             ):
-                                unstacked_feat.append(
-                                    items_features_by_choice[tuple_index][
-                                        :, :, feat_ind_min:feature_index
-                                    ]
-                                )
+                                if feat_ind_min != feature_index:
+                                    unstacked_feat.append(
+                                        items_features_by_choice[tuple_index][
+                                            :, :, feat_ind_min:feature_index
+                                        ]
+                                    )
                                 unstacked_feat.append(
                                     self.items_features_by_choice_map[tuple_index][
                                         feature_index
