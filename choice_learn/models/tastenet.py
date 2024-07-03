@@ -1,4 +1,5 @@
 """TasteNet model unofficial implementation."""
+
 import logging
 
 import tensorflow as tf

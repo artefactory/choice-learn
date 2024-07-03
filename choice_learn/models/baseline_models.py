@@ -1,4 +1,5 @@
 """Models to be used as baselines for choice modeling. Nothing smart here."""
+
 import numpy as np
 import tensorflow as tf
 
@@ -47,6 +48,11 @@ class RandomChoiceModel(ChoiceModel):
             np.random.uniform(shape=(available_items_by_choice.shape), minval=0, maxval=1)
         )
 
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return []
+
     def fit(**kwargs):
         """Make sure that nothing happens during .fit."""
         _ = kwargs
@@ -63,6 +69,11 @@ class DistribMimickingModel(ChoiceModel):
         """Initialize of the model."""
         super().__init__(**kwargs)
         self.weights = []
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return [self.weights]
 
     def fit(self, choice_dataset, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities."""

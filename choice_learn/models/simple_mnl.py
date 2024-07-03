@@ -2,6 +2,7 @@
 
 It is a multi output logistic regression.
 """
+
 import logging
 
 import pandas as pd
@@ -98,8 +99,13 @@ class SimpleMNL(ChoiceModel):
 
         self.instantiated = True
         self.indexes = indexes
-        self.trainable_weights = weights
+        self.weights = weights
         return indexes, weights
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return self.weights
 
     def compute_batch_utility(
         self,
@@ -187,7 +193,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.trainable_weights = self.instantiate(
+            self.indexes, self.weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
@@ -219,7 +225,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.trainable_weights = self.instantiate(
+            self.indexes, self.weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
@@ -301,7 +307,7 @@ class SimpleMNL(ChoiceModel):
                 for _w in self.trainable_weights:
                     mw.append(w[index : index + _w.shape[0]])
                     index += _w.shape[0]
-                model.trainable_weights = mw
+                model.weights = mw
                 for batch in dataset.iter_batch(batch_size=-1):
                     utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
@@ -333,7 +339,7 @@ class SimpleMNL(ChoiceModel):
         if hasattr(self, "report"):
             clone.report = self.report
         if hasattr(self, "trainable_weights"):
-            clone.trainable_weights = self.trainable_weights
+            clone.weights = self.trainable_weights
         if hasattr(self, "indexes"):
             clone.indexes = self.indexes
         if hasattr(self, "intercept"):
