@@ -217,7 +217,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
   &nbsp;
   &nbsp;
   <a href="https://www.artefact.com/">
-    <img src="docs/illustrations/logos/logo_artefact_png.png" height="60" />
+    <img src="docs/illustrations/logos/logo_atf.png" height="65" />
   </a>
 </p>
 
