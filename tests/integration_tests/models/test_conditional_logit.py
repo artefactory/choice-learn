@@ -32,7 +32,7 @@ def test_mode_canada_gt():
     gt_model = ConditionalLogit(coefficients=coefficients)
     gt_model.instantiate(canada_dataset)
 
-    gt_model.trainable_weights = gt_weights
+    gt_model.weights = gt_weights
     total_nll = gt_model.evaluate(canada_dataset) * len(canada_dataset)
     assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
     assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
