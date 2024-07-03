@@ -222,22 +222,22 @@ Choice-Learn has been developed through a collaboration between researchers at t
 </p>
 
 <p align="center">
-  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
+  <a href="https://www.universite-paris-saclay.fr/">
     <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
   </a>
   &nbsp;
   &nbsp;
-  <a href="https://www.artefact.com/">
+  <a href="https://mics.centralesupelec.fr/">
     <img src="docs/illustrations/logos/logo_CS.png" height="60" />
   </a>
   &nbsp;
   &nbsp;
-  <a href="https://www.artefact.com/">
+  <a href="https://www.london.edu/">
     <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
   </a>
   &nbsp;
   &nbsp;
-  <a href="https://www.artefact.com/">
+  <a href="https://www.insead.edu/">
     <img src="docs/illustrations/logos/logo_insead.png" height="60" />
   </a>
 </p>
