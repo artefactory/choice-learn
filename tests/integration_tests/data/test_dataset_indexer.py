@@ -143,6 +143,7 @@ def test_batch_2():
     )
 
     batch = dataset.get_choices_batch(0)
+    print(batch)
     assert (batch[0][0] == np.array([2, 40, 1])).all()
     assert (batch[0][1] == np.array([1, 0, 0, 0])).all()
 

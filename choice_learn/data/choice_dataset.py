@@ -1228,11 +1228,6 @@ class ChoiceDataset(object):
                                         :, feat_ind_min:feature_index
                                     ]
                                 )
-                                unstacked_feat.append(
-                                    shared_features_by_choice[tuple_index][
-                                        :, feat_ind_min:feature_index
-                                    ]
-                                )
                             unstacked_feat.append(
                                 self.shared_features_by_choice_map[tuple_index][
                                     feature_index
@@ -1266,11 +1261,6 @@ class ChoiceDataset(object):
                                 list(self.items_features_by_choice_map[tuple_index].keys())
                             ):
                                 if feat_ind_min != feature_index:
-                                    unstacked_feat.append(
-                                        shared_features_by_choice[tuple_index][
-                                            :, feat_ind_min:feature_index
-                                        ]
-                                    )
                                     unstacked_feat.append(
                                         items_features_by_choice[tuple_index][
                                             :, :, feat_ind_min:feature_index

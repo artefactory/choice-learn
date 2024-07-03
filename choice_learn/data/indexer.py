@@ -407,11 +407,6 @@ class ChoiceDatasetIndexer(Indexer):
                             ):
                                 if feat_ind_min != feature_index:
                                     unstacked_feat.append(
-                                        shared_features_by_choice[tuple_index][
-                                            :, feat_ind_min:feature_index
-                                        ]
-                                    )
-                                    unstacked_feat.append(
                                         items_features_by_choice[tuple_index][
                                             :, :, feat_ind_min:feature_index
                                         ]
