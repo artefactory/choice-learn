@@ -214,8 +214,8 @@ Choice-Learn has been developed through a collaboration between researchers at t
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
     <img src="./docs/illustrations/logos/logo_arc.png" height="60" />
   </a>
-  &nbsp;
-  &nbsp;
+  &emsp;
+  &emsp;
   <a href="https://www.artefact.com/">
     <img src="docs/illustrations/logos/logo_atf.png" height="65" />
   </a>
@@ -225,18 +225,18 @@ Choice-Learn has been developed through a collaboration between researchers at t
   <a href="https://www.universite-paris-saclay.fr/">
     <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
   </a>
-  &nbsp;
-  &nbsp;
+  &emsp;
+  &emsp;
   <a href="https://mics.centralesupelec.fr/">
     <img src="docs/illustrations/logos/logo_CS.png" height="60" />
   </a>
-  &nbsp;
-  &nbsp;
+  &emsp;
+  &emsp;
   <a href="https://www.london.edu/">
     <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
   </a>
-  &nbsp;
-  &nbsp;
+  &emsp;
+  &emsp;
   <a href="https://www.insead.edu/">
     <img src="docs/illustrations/logos/logo_insead.png" height="60" />
   </a>
