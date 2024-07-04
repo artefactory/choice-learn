@@ -202,7 +202,7 @@ If you consider this package and any of its feature useful for your research, pl
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
-### Contributors
+### Authors
 
 ### Special Thanks
 
@@ -210,9 +210,37 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) | [![](./docs/illustrations/logos/artefact_logo.png)](https://www.artefact.com/) |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
-:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+<p align="center">
+  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
+    <img src="./docs/illustrations/logos/logo_arc.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.artefact.com/">
+    <img src="docs/illustrations/logos/logo_atf.png" height="65" />
+  </a>
+</p>
 
+<p align="center">
+  <a href="https://www.universite-paris-saclay.fr/">
+    <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://mics.centralesupelec.fr/">
+    <img src="docs/illustrations/logos/logo_CS.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.london.edu/">
+    <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.insead.edu/">
+    <img src="docs/illustrations/logos/logo_insead.png" height="60" />
+  </a>
+</p>
 
 ## References
 
