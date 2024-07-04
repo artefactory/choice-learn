@@ -22,9 +22,9 @@ The package provides ready-to-use datasets and models studied in the academic li
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
-## Table of Contents
+## :trident: Table of Contents
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
-  - [What's in there ?](#whats-in-there)
+  - [What's in there ?](#whats-in-there-)
   - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -32,13 +32,13 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
   - [Contributing](#contributing)
   - [Citation](#citation)
 
-## Introduction - Discrete Choice Modelling
+## :trident: Introduction - Discrete Choice Modelling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
 If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 
-## What's in there ?
+## :trident: What's in there ?
 
 ### Data
 - Generic dataset handling with the ChoiceDataset class [[Example]](notebooks/introduction/2_data_handling.ipynb)
@@ -63,7 +63,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Auxiliary tools
 - Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
-## Getting Started
+## :trident: Getting Started
 
 You can find the following tutorials to help you getting started with the package:
 - Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
@@ -71,7 +71,7 @@ You can find the following tutorials to help you getting started with the packag
 - A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
 - Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
-## Installation
+## :trident: Installation
 
 ### User installation
 
@@ -132,8 +132,9 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
   </a>
 </p>
 
+> :bulb: **Tip:** You can use the poetry.lock or requirements-complete.txt files with poetry or pip to install a fully predetermined and working environment.
 
-## Usage
+## :trident: Usage
 Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
 
 ```python
@@ -178,12 +179,12 @@ print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
 print(model.report)
 ```
 
-## Documentation
+## :trident: Documentation
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
 TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
 
-## Contributing
+## :trident: Contributing
 You are welcome to contribute to the project ! You can help in various ways:
 - raise issues
 - resolve issues already opened
@@ -194,7 +195,7 @@ You are welcome to contribute to the project ! You can help in various ways:
 
 We recommend to first open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
-## Citation
+## :trident: Citation
 
 If you consider this package and any of its feature useful for your research, please cite us.
 
@@ -242,7 +243,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
   </a>
 </p>
 
-## References
+## :trident: References
 
 ### Papers
 [1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad, A.; Désir, A. (2022)\
