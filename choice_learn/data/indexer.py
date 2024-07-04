@@ -162,6 +162,15 @@ class OneHotStorageIndexer(Indexer):
         """
         if isinstance(sequence_keys, list) or isinstance(sequence_keys, np.ndarray):
             # Construction of the OneHot vector from the index of the 1 value
+
+            if np.array(sequence_keys).ndim == 1:
+                one_hot = []
+                for j in sequence_keys:
+                    # one_hot.append(self[j])
+                    one_hot.append(self.storage.storage[j])
+                matrix = np.zeros((len(one_hot), self.shape[1]))
+                matrix[np.arange(len(one_hot)), one_hot] = 1
+                return matrix.astype(self.dtype)
             one_hot = []
             for j in sequence_keys:
                 one_hot.append(self[j])
@@ -256,9 +265,10 @@ class ChoiceDatasetIndexer(Indexer):
                 if hasattr(shared_feature, "batch"):
                     shared_features_by_choice.append(shared_feature.batch[choices_indexes])
                 else:
-                    shared_features_by_choice.append(
-                        np.stack(shared_feature[choices_indexes], axis=0)
-                    )
+                    # shared_features_by_choice.append(
+                    #     np.stack(shared_feature[choices_indexes], axis=0)
+                    # )
+                    shared_features_by_choice.append(shared_feature[choices_indexes])
         return shared_features_by_choice
 
     def _get_items_features_by_choice(self, choices_indexes):
@@ -281,7 +291,8 @@ class ChoiceDatasetIndexer(Indexer):
             if hasattr(items_feature, "batch"):
                 items_features_by_choice.append(items_feature.batch[choices_indexes])
             else:
-                items_features_by_choice.append(np.stack(items_feature[choices_indexes], axis=0))
+                # items_features_by_choice.append(np.stack(items_feature[choices_indexes], axis=0))
+                items_features_by_choice.append(items_feature[choices_indexes])
         return items_features_by_choice
 
     def __getitem__(self, choices_indexes):
@@ -352,18 +363,23 @@ class ChoiceDatasetIndexer(Indexer):
                                 ].keys()
                             )
                         ):
-                            unstacked_feat.append(
-                                shared_features_by_choice[tuple_index][
-                                    :, feat_ind_min:feature_index
-                                ]
-                            )
+                            if feat_ind_min != feature_index:
+                                unstacked_feat.append(
+                                    shared_features_by_choice[tuple_index][
+                                        :, feat_ind_min:feature_index
+                                    ]
+                                )
                             unstacked_feat.append(
                                 self.choice_dataset.shared_features_by_choice_map[tuple_index][
                                     feature_index
                                 ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
                             )
                             feat_ind_min = feature_index + 1
-                        mapped_features.append(np.concatenate(unstacked_feat, axis=1))
+                        if feat_ind_min != shared_features_by_choice[tuple_index].shape[1]:
+                            unstacked_feat.append(
+                                shared_features_by_choice[tuple_index][:, feat_ind_min:]
+                            )
+                        mapped_features.append(np.hstack(unstacked_feat))
                     else:
                         mapped_features.append(shared_features_by_choice[tuple_index])
 
@@ -389,11 +405,12 @@ class ChoiceDatasetIndexer(Indexer):
                                     ].keys()
                                 )
                             ):
-                                unstacked_feat.append(
-                                    items_features_by_choice[tuple_index][
-                                        :, :, feat_ind_min:feature_index
-                                    ]
-                                )
+                                if feat_ind_min != feature_index:
+                                    unstacked_feat.append(
+                                        items_features_by_choice[tuple_index][
+                                            :, :, feat_ind_min:feature_index
+                                        ]
+                                    )
                                 unstacked_feat.append(
                                     self.choice_dataset.items_features_by_choice_map[tuple_index][
                                         feature_index
@@ -402,6 +419,10 @@ class ChoiceDatasetIndexer(Indexer):
                                     ]
                                 )
                                 feat_ind_min = feature_index + 1
+                            if feat_ind_min != items_features_by_choice[tuple_index].shape[2]:
+                                unstacked_feat.append(
+                                    shared_features_by_choice[tuple_index][:, :, feat_ind_min:]
+                                )
                             mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
                         mapped_features.append(items_features_by_choice[tuple_index])
@@ -429,7 +450,6 @@ class ChoiceDatasetIndexer(Indexer):
                     items_features_by_choice = items_features_by_choice[0]
                 else:
                     items_features_by_choice = tuple(items_features_by_choice)
-
             return (
                 shared_features_by_choice,
                 items_features_by_choice,
