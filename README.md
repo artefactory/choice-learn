@@ -135,13 +135,14 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 > :bulb: **Tip:** You can use the poetry.lock or requirements-complete.txt files with poetry or pip to install a fully predetermined and working environment.
 
 ## :trident: Usage
-Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+Here is a short example of model parametrization to estimate a Conditional Logit on the ModeCanada dataset.
 
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
+from choice_learn.datasets import load_modecanada
 
-# Instantiation of a ChoiceDataset from a pandas.DataFrame
+transport_df = load_modecanada(as_frame=True)
 # Only need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
@@ -149,7 +150,7 @@ dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             choices_column="choice",
                                             shared_features_columns=["income"],
                                             items_features_columns=["cost", "freq", "ovt", "ivt"],
-                                            choice_format="item_id")
+                                            choice_format="one_zero")
 
 # Initialization of the model
 model = ConditionalLogit()
