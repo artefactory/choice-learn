@@ -143,7 +143,7 @@ from choice_learn.models import ConditionalLogit, RUMnet
 from choice_learn.datasets import load_modecanada
 
 transport_df = load_modecanada(as_frame=True)
-# Only need to specify how the file is encoded:
+# Instantiation of a ChoiceDataset from a pandas.DataFrame
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
                                             choices_id_column="case",
@@ -166,7 +166,7 @@ model.add_coefficients(feature_name="income",
 model.add_coefficients(feature_name="ivt",
                        items_indexes=[0, 1, 2, 3])
 
-# shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
+# add_shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
 model.add_shared_coefficient(feature_name="cost",
                              items_indexes=[0, 1, 2, 3])
@@ -203,10 +203,6 @@ If you consider this package and any of its feature useful for your research, pl
 ### License
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
-
-### Authors
-
-### Special Thanks
 
 ### Affiliations
 
