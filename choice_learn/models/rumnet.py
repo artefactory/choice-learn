@@ -811,7 +811,7 @@ class PaperRUMnet(ChoiceModel):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "Exact-NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
@@ -1196,7 +1196,7 @@ class GPURUMnet(PaperRUMnet):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "Exact-NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            "Exact-NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
