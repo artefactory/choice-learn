@@ -1,4 +1,5 @@
 """Implementation of RUMnet for easy use."""
+
 import tensorflow as tf
 
 import choice_learn.tf_ops as tf_ops
@@ -740,7 +741,7 @@ class PaperRUMnet(ChoiceModel):
                 sample_weight=sample_weight,
             )
 
-            if self.regularization_type is not None:
+            if self.regularization is not None:
                 regularization = tf.reduce_sum(
                     [self.regularizer(w) for w in self.trainable_weights]
                 )
@@ -810,7 +811,7 @@ class PaperRUMnet(ChoiceModel):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            "Exact-NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
@@ -1195,7 +1196,7 @@ class GPURUMnet(PaperRUMnet):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            "Exact-NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
