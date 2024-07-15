@@ -1,5 +1,5 @@
 ---
-title: '`Choice-Learn`: Large-scale choice modeling for operational contexts through the lens of machine learning'
+title: 'Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning'
 
 tags:
   - Python
