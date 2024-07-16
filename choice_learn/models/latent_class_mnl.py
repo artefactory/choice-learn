@@ -1,4 +1,5 @@
 """Latent Class MNL models."""
+
 import copy
 
 import tensorflow as tf
@@ -15,7 +16,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         self,
         n_latent_classes,
         fit_method,
-        epochs,
+        epochs=100,
         add_exit_choice=False,
         tolerance=1e-6,
         intercept=None,
@@ -127,7 +128,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         n_latent_classes,
         fit_method,
         coefficients=None,
-        epochs=1,
+        epochs=100,
         add_exit_choice=False,
         tolerance=1e-6,
         optimizer="Adam",
