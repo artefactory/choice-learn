@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
+<img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
 
 *Large-scale choice modeling through the lens of machine learning*
 
@@ -108,27 +108,27 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 
 <p align="center">
   <a href="https://numpy.org/">
-    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/numpy_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://pandas.pydata.org/">
-    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/pandas_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.tensorflow.org">
-    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.gurobi.com/">
-    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/gurobi_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://developers.google.com/optimization?hl=fr">
-    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/or_tools_logo.png" width="70" />
   </a>
 </p>
 
@@ -210,33 +210,33 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 <p align="center">
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
-    <img src="./docs/illustrations/logos/logo_arc.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.artefact.com/">
-    <img src="docs/illustrations/logos/logo_atf.png" height="65" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" height="65" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://www.universite-paris-saclay.fr/">
-    <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://mics.centralesupelec.fr/">
-    <img src="docs/illustrations/logos/logo_CS.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.london.edu/">
-    <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.insead.edu/">
-    <img src="docs/illustrations/logos/logo_insead.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" height="60" />
   </a>
 </p>
 
