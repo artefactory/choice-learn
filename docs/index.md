@@ -74,7 +74,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
-The easiest is to pip-install the package:b7fc2d1f6e2ff5a5a94a896344592542
+The easiest is to pip-install the package:
 ```bash
 pip install choice-learn
 ```
@@ -123,14 +123,39 @@ If you consider this package and any of its feature useful for your research, pl
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
-### Contributors
-
-### Special Thanks
-
 ### Affiliations
 
 This package has been developped within the [Artefact Research Center](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) in collaboration with CentraleSupélec, université Paris-Saclay.
 
 
-[![](./illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) | [![](./illustrations/logos/artefact_logo.png)](https://www.artefact.com/) |  [![](./illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
-:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+<p align="center">
+  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
+    <img src="./docs/illustrations/logos/logo_arc.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.artefact.com/">
+    <img src="docs/illustrations/logos/logo_atf.png" height="65" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.universite-paris-saclay.fr/">
+    <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://mics.centralesupelec.fr/">
+    <img src="docs/illustrations/logos/logo_CS.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.london.edu/">
+    <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.insead.edu/">
+    <img src="docs/illustrations/logos/logo_insead.png" height="60" />
+  </a>
+</p>
