@@ -1,4 +1,5 @@
 """Base class for choice models."""
+
 import json
 import logging
 import os
@@ -315,6 +316,11 @@ class ChoiceModel(object):
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
 
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
             # In this case we do not need to batch the sample_weights
             else:
                 if verbose > 0:
@@ -346,6 +352,11 @@ class ChoiceModel(object):
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
 
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
             # Take into account last batch that may have a differnt length into account for
             # the computation of the epoch loss.
             if batch_size != -1:
@@ -358,13 +369,13 @@ class ChoiceModel(object):
             else:
                 epoch_loss = tf.reduce_mean(epoch_losses)
             losses_history["train_loss"].append(epoch_loss)
-            desc = f"Epoch {epoch_nb} Train Loss {losses_history['train_loss'][-1].numpy()}"
+            print_loss = losses_history["train_loss"][-1].numpy()
+            desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
             if verbose > 1:
                 print(
-                    f"Loop {epoch_nb} Time",
-                    time.time() - t_start,
-                    "Loss:",
-                    tf.reduce_sum(epoch_losses).numpy(),
+                    f"Loop {epoch_nb} Time:",
+                    f"{time.time() - t_start:.4f}",
+                    f"Loss: {print_loss:.4f}",
                 )
 
             # Test on val_dataset if provided
@@ -393,7 +404,7 @@ class ChoiceModel(object):
                 test_loss = tf.reduce_mean(test_losses)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", test_loss.numpy())
-                    desc += f", Test Loss {test_loss.numpy()}"
+                    desc += f", Test Loss {np.round(test_loss.numpy(), 4)}"
                 losses_history["test_loss"] = losses_history.get("test_loss", []) + [
                     test_loss.numpy()
                 ]
@@ -404,9 +415,8 @@ class ChoiceModel(object):
             if self.stop_training:
                 print("Early Stopping taking effect")
                 break
-            if verbose > 0:
-                t_range.set_description(desc)
-                t_range.refresh()
+            t_range.set_description(desc)
+            t_range.refresh()
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
