@@ -135,6 +135,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
   &emsp;
   <a href="https://www.artefact.com/">
     <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" height="65" />
+
   </a>
 </p>
 

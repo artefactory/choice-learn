@@ -11,8 +11,10 @@
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 
 
-[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)]()
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/choice-learn?logo=python)
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
+![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
+
 
 </div>
 
