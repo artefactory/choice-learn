@@ -622,12 +622,12 @@ class ChoiceModel(object):
             batch_loss = tf.reduce_mean(batch_losses)
         return batch_loss
 
-    def _lbfgs_train_step(self, dataset, sample_weight=None):
+    def _lbfgs_train_step(self, choice_dataset, sample_weight=None):
         """Create a function required by tfp.optimizer.lbfgs_minimize.
 
         Parameters
         ----------
-        dataset: ChoiceDataset
+        choice_dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
@@ -694,7 +694,7 @@ class ChoiceModel(object):
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
                 loss_value = self.evaluate(
-                    dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
+                    choice_dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
                 )
                 if self.regularization is not None:
                     regularization = tf.reduce_sum(
@@ -722,14 +722,14 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, sample_weight=None, verbose=0):
+    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
             Maximum number of epochs allowed to reach minimum
@@ -748,7 +748,7 @@ class ChoiceModel(object):
         import tensorflow_probability as tfp
 
         epochs = self.epochs
-        func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
+        func = self._lbfgs_train_step(choice_dataset=choice_dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
         init_params = tf.dynamic_stitch(func.idx, self.trainable_weights)
