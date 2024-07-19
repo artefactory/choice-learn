@@ -103,21 +103,21 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_items_features=n_items_features,
         )
 
-    def fit(self, dataset, **kwargs):
-        """Fit the model to the dataset.
+    def fit(self, choice_dataset, **kwargs):
+        """Fit the model to the choice_dataset.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
             self.instantiate(
-                n_items=dataset.get_n_items(),
-                n_shared_features=dataset.get_n_shared_features(),
-                n_items_features=dataset.get_n_items_features(),
+                n_items=choice_dataset.get_n_items(),
+                n_shared_features=choice_dataset.get_n_shared_features(),
+                n_items_features=choice_dataset.get_n_items_features(),
             )
-        return super().fit(dataset, **kwargs)
+        return super().fit(choice_dataset, **kwargs)
 
 
 class LatentClassConditionalLogit(BaseLatentClassModel):
@@ -286,14 +286,14 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             items_names=items_names,
         )
 
-    def fit(self, dataset, **kwargs):
-        """Fit the model to the dataset.
+    def fit(self, choice_dataset, **kwargs):
+        """Fit the model to the choice_dataset.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
-            self.instantiate(choice_dataset=dataset)
-        return super().fit(dataset, **kwargs)
+            self.instantiate(choice_dataset=choice_dataset)
+        return super().fit(choice_dataset, **kwargs)
