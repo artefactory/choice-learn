@@ -53,14 +53,16 @@ class RandomChoiceModel(ChoiceModel):
             np.random.uniform(size=(available_items_by_choice.shape), low=0.0, high=1.0)
         ).astype(np.float32)
 
-    def fit(**kwargs):
+    def fit(self, *args, **kwargs):
         """Make sure that nothing happens during .fit."""
         _ = kwargs
+        _ = args
         return {}
 
-    def _fit_with_lbfgs(**kwargs):
+    def _fit_with_lbfgs(self, *args, **kwargs):
         """Make sure that nothing happens during .fit."""
         _ = kwargs
+        _ = args
         return {}
 
 
@@ -80,17 +82,31 @@ class DistribMimickingModel(ChoiceModel):
         """Return the weights."""
         return self.weigths
 
-    def fit(self, choice_dataset, **kwargs):
-        """Compute the choice frequency of each product and defines it as choice probabilities."""
+    def fit(self, choice_dataset, *args, **kwargs):
+        """Compute the choice frequency of each product and defines it as choice probabilities.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset to be used for fitting
+        """
         _ = kwargs
+        _ = args
         choices = choice_dataset.choices
         for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
         self.weights = tf.stack(self.weights) / len(choices)
 
-    def _fit_with_lbfgs(self, choice_dataset, **kwargs):
-        """Compute the choice frequency of each product and defines it as choice probabilities."""
+    def _fit_with_lbfgs(self, choice_dataset, *args, **kwargs):
+        """Compute the choice frequency of each product and defines it as choice probabilities.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset to be used for fitting
+        """
         _ = kwargs
+        _ = args
         choices = choice_dataset.choices
         for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
