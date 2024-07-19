@@ -1,4 +1,5 @@
 """Models to be used as baselines for choice modeling. Nothing smart here."""
+
 import numpy as np
 import tensorflow as tf
 
@@ -11,6 +12,11 @@ class RandomChoiceModel(ChoiceModel):
     def __init__(self, **kwargs):
         """Initialize of the model."""
         super().__init__(**kwargs)
+
+    @property
+    def trainable_weights(self):
+        """Return an empty list."""
+        return []
 
     def compute_batch_utility(
         self,
@@ -44,10 +50,15 @@ class RandomChoiceModel(ChoiceModel):
         # In order to avoid unused arguments warnings
         _ = shared_features_by_choice, items_features_by_choice, choices
         return np.squeeze(
-            np.random.uniform(shape=(available_items_by_choice.shape), minval=0, maxval=1)
-        )
+            np.random.uniform(size=(available_items_by_choice.shape), low=0.0, high=1.0)
+        ).astype(np.float32)
 
     def fit(**kwargs):
+        """Make sure that nothing happens during .fit."""
+        _ = kwargs
+        return {}
+
+    def _fit_with_lbfgs(**kwargs):
         """Make sure that nothing happens during .fit."""
         _ = kwargs
         return {}
@@ -64,11 +75,24 @@ class DistribMimickingModel(ChoiceModel):
         super().__init__(**kwargs)
         self.weights = []
 
+    @property
+    def trainable_weights(self):
+        """Return the weights."""
+        return self.weigths
+
     def fit(self, choice_dataset, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities."""
         _ = kwargs
         choices = choice_dataset.choices
-        for i in range(choice_dataset.get_num_items()):
+        for i in range(choice_dataset.get_n_items()):
+            self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
+        self.weights = tf.stack(self.weights) / len(choices)
+
+    def _fit_with_lbfgs(self, choice_dataset, **kwargs):
+        """Compute the choice frequency of each product and defines it as choice probabilities."""
+        _ = kwargs
+        choices = choice_dataset.choices
+        for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
         self.weights = tf.stack(self.weights) / len(choices)
 
