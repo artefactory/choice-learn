@@ -76,11 +76,12 @@ class DistribMimickingModel(ChoiceModel):
         """Initialize of the model."""
         super().__init__(**kwargs)
         self.weights = []
+        self.is_fitted = False
 
     @property
     def trainable_weights(self):
         """Return the weights."""
-        return self.weigths
+        return self.weights
 
     def fit(self, choice_dataset, *args, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities.
@@ -96,6 +97,7 @@ class DistribMimickingModel(ChoiceModel):
         for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
         self.weights = tf.stack(self.weights) / len(choices)
+        self.is_fitted = True
 
     def _fit_with_lbfgs(self, choice_dataset, *args, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities.
@@ -111,6 +113,7 @@ class DistribMimickingModel(ChoiceModel):
         for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
         self.weights = tf.stack(self.weights) / len(choices)
+        self.is_fitted = True
 
     def compute_batch_utility(
         self,
@@ -148,6 +151,6 @@ class DistribMimickingModel(ChoiceModel):
         """
         # In order to avoid unused arguments warnings
         _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
-        if self.weights is None:
+        if not self.is_fitted:
             raise ValueError("Model not fitted")
-        return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
+        return np.stack([np.log(self.trainable_weights.numpy())] * len(choices), axis=0)

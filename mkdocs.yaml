@@ -1,6 +1,7 @@
 site_name: Choice-Learn
 theme:
   name: "material"
+  custom_dir: docs/.overrides
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: default
