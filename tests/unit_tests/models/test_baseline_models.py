@@ -119,3 +119,11 @@ def test_catch_not_fitted_issue():
     model = DistribMimickingModel()
     with pytest.raises(ValueError):
         model.predict_probas(dataset)
+
+    with pytest.raises(ValueError):
+        model.compute_batch_utility(
+            shared_features_by_choice=dataset.shared_features_by_choice,
+            items_features_by_choice=dataset.items_features_by_choice,
+            available_items_by_choice=np.ones((4, 3)),
+            choices=dataset.choices,
+        )
