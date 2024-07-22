@@ -48,13 +48,29 @@ def test_random_choice_model():
     assert utility.shape == (4, 3)
 
 
+def test_random_choice_model_with_sgd():
+    """Test basic stuff about the RandomChoiceModel with SGD optimizer."""
+    global dataset
+
+    model = RandomChoiceModel(optimizer="SGD")
+    _ = model.fit(choice_dataset=dataset)
+
+    y_pred = model.predict_probas(dataset)
+    assert y_pred.shape == (4, 3)
+    assert (np.sum(y_pred, axis=1) < 1.01).all()
+    assert (np.sum(y_pred, axis=1) > 0.99).all()
+    assert (y_pred >= 0).numpy().all()
+    assert (y_pred <= 1.0).numpy().all()
+
+    assert model.trainable_weights == []
+
+
 def test_mimicking_choice_model():
     """Test basic stuff about the DistribMimickingModel."""
     global dataset
 
     model = DistribMimickingModel()
     _ = model.fit(choice_dataset=dataset)
-    print(model.is_fitted)
     y_pred = model.predict_probas(dataset)
     assert y_pred.shape == (4, 3)
     assert (np.sum(y_pred, axis=1) < 1.01).all()
@@ -65,6 +81,35 @@ def test_mimicking_choice_model():
     assert (np.abs(y_pred[:, 0] - 0.5) < 0.01).all()
     assert (np.abs(y_pred[:, 1] - 0.25) < 0.01).all()
     assert (np.abs(y_pred[:, 2] - 0.25) < 0.01).all()
+
+    utility = model.compute_batch_utility(
+        shared_features_by_choice=dataset.shared_features_by_choice,
+        items_features_by_choice=dataset.items_features_by_choice,
+        available_items_by_choice=np.ones((4, 3)),
+        choices=dataset.choices,
+    )
+    assert utility.shape == (4, 3)
+    assert (np.abs(utility[0] - utility[3]) < 0.01).all()
+
+
+def test_mimicking_choice_model_with_sgd():
+    """Test basic stuff about the DistribMimickingModel with SGD optimizer."""
+    global dataset
+
+    model = DistribMimickingModel(optimizer="SGD")
+    _ = model.fit(choice_dataset=dataset)
+    y_pred = model.predict_probas(dataset)
+    assert y_pred.shape == (4, 3)
+    assert (np.sum(y_pred, axis=1) < 1.01).all()
+    assert (np.sum(y_pred, axis=1) > 0.99).all()
+    assert (y_pred >= 0).numpy().all()
+    assert (y_pred <= 1.0).numpy().all()
+
+    assert (np.abs(y_pred[:, 0] - 0.5) < 0.01).all()
+    assert (np.abs(y_pred[:, 1] - 0.25) < 0.01).all()
+    assert (np.abs(y_pred[:, 2] - 0.25) < 0.01).all()
+
+    assert (model.trainable_weights.numpy() == np.array([0.5, 0.25, 0.25])).all()
 
 
 def test_catch_not_fitted_issue():

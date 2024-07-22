@@ -81,7 +81,7 @@ class DistribMimickingModel(ChoiceModel):
     @property
     def trainable_weights(self):
         """Return the weights."""
-        return self.weigths
+        return self.weights
 
     def fit(self, choice_dataset, *args, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities.
@@ -153,4 +153,4 @@ class DistribMimickingModel(ChoiceModel):
         _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
         if not self.is_fitted:
             raise ValueError("Model not fitted")
-        return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
+        return np.stack([np.log(self.trainable_weights.numpy())] * len(choices), axis=0)
