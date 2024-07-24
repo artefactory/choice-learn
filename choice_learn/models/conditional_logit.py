@@ -316,7 +316,7 @@ class ConditionalLogit(ChoiceModel):
         if not self.instantiated:
             if not isinstance(self.coefficients, MNLCoefficients):
                 self._build_coefficients_from_dict(n_items=choice_dataset.get_n_items())
-            self.weights = self._instantiate_tf_weights()
+            self._trainable_weights = self._instantiate_tf_weights()
 
             # Checking that no weight has been attributed to non existing feature in dataset
             dataset_stacked_features_names = []
@@ -360,14 +360,14 @@ class ConditionalLogit(ChoiceModel):
             weights.append(weight)
             self.coefficients._add_tf_weight(weight_name, weight_nb)
 
-        self.weights = weights
+        self._trainable_weights = weights
 
         return weights
 
     @property
     def trainable_weights(self):
         """Trainable weights of the model."""
-        return self.weights
+        return self._trainable_weights
 
     def _build_coefficients_from_dict(self, n_items):
         """Build coefficients when they are given as a dictionnay.

@@ -99,13 +99,13 @@ class SimpleMNL(ChoiceModel):
 
         self.instantiated = True
         self.indexes = indexes
-        self.weights = weights
+        self._trainable_weights = weights
         return indexes, weights
 
     @property
     def trainable_weights(self):
         """Trainable weights of the model."""
-        return self.weights
+        return self._trainable_weights
 
     def compute_batch_utility(
         self,
@@ -193,7 +193,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.weights = self.instantiate(
+            self.indexes, self._trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
@@ -225,7 +225,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.weights = self.instantiate(
+            self.indexes, self._trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
