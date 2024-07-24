@@ -16,7 +16,7 @@ select = [
   "PTH",
   "PD",
 ] # See: https://beta.ruff.rs/docs/rules/
-ignore = ["D203", "D213", "ANN101", "ANN102", "ANN204", "ANN001", "ANN202", "ANN201", "ANN206", "ANN003", "PTH100", "PTH118", "PTH123"]
+ignore = ["D203", "D213", "ANN101", "ANN102", "ANN204", "ANN001", "ANN002", "ANN202", "ANN201", "ANN206", "ANN003", "PTH100", "PTH118", "PTH123"]
 line-length = 100
 exclude = [
   ".bzr",
@@ -55,7 +55,7 @@ pythonpath = ["./"]
 
 [tool.poetry]
 name = "choice-learn"
-version = "0.0.4"
+version = "0.0.5"
 description = "Large-scale choice modeling through the lens of machine learning."
 authors = [
   "artefactory <vincent.auriau@artefact.com>",

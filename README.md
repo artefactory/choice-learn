@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
+<img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
 
 *Large-scale choice modeling through the lens of machine learning*
 
@@ -11,8 +11,10 @@
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 
 
-[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)]()
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/choice-learn?logo=python)
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
+![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
+
 
 </div>
 
@@ -22,9 +24,9 @@ The package provides ready-to-use datasets and models studied in the academic li
 
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
-## Table of Contents
+## :trident: Table of Contents
   - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
-  - [What's in there ?](#whats-in-there)
+  - [What's in there ?](#whats-in-there-)
   - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -32,13 +34,13 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
   - [Contributing](#contributing)
   - [Citation](#citation)
 
-## Introduction - Discrete Choice Modelling
+## :trident: Introduction - Discrete Choice Modelling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
 If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
 
-## What's in there ?
+## :trident: What's in there ?
 
 ### Data
 - Generic dataset handling with the ChoiceDataset class [[Example]](notebooks/introduction/2_data_handling.ipynb)
@@ -63,7 +65,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 ### Auxiliary tools
 - Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
 
-## Getting Started
+## :trident: Getting Started
 
 You can find the following tutorials to help you getting started with the package:
 - Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
@@ -71,7 +73,7 @@ You can find the following tutorials to help you getting started with the packag
 - A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
 - Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
-## Installation
+## :trident: Installation
 
 ### User installation
 
@@ -108,47 +110,49 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 
 <p align="center">
   <a href="https://numpy.org/">
-    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/numpy_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://pandas.pydata.org/">
-    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/pandas_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.tensorflow.org">
-    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.gurobi.com/">
-    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/gurobi_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://developers.google.com/optimization?hl=fr">
-    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/or_tools_logo.png" width="70" />
   </a>
 </p>
 
+> :bulb: **Tip:** You can use the poetry.lock or requirements-complete.txt files with poetry or pip to install a fully predetermined and working environment.
 
-## Usage
-Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+## :trident: Usage
+Here is a short example of model parametrization to estimate a Conditional Logit on the ModeCanada dataset.
 
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
+from choice_learn.datasets import load_modecanada
 
+transport_df = load_modecanada(as_frame=True)
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
-# Only need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
                                             choices_id_column="case",
                                             choices_column="choice",
                                             shared_features_columns=["income"],
                                             items_features_columns=["cost", "freq", "ovt", "ivt"],
-                                            choice_format="item_id")
+                                            choice_format="one_zero")
 
 # Initialization of the model
 model = ConditionalLogit()
@@ -164,7 +168,7 @@ model.add_coefficients(feature_name="income",
 model.add_coefficients(feature_name="ivt",
                        items_indexes=[0, 1, 2, 3])
 
-# shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
+# add_shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
 model.add_shared_coefficient(feature_name="cost",
                              items_indexes=[0, 1, 2, 3])
@@ -178,12 +182,12 @@ print("The average neg-loglikelihood is:", model.evaluate(dataset).numpy())
 print(model.report)
 ```
 
-## Documentation
+## :trident: Documentation
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
 TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
 
-## Contributing
+## :trident: Contributing
 You are welcome to contribute to the project ! You can help in various ways:
 - raise issues
 - resolve issues already opened
@@ -194,7 +198,7 @@ You are welcome to contribute to the project ! You can help in various ways:
 
 We recommend to first open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
-## Citation
+## :trident: Citation
 
 If you consider this package and any of its feature useful for your research, please cite us.
 
@@ -202,19 +206,43 @@ If you consider this package and any of its feature useful for your research, pl
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
-### Contributors
-
-### Special Thanks
-
 ### Affiliations
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-[![](./docs/illustrations/logos/logo_arc.png)](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) | [![](./docs/illustrations/logos/artefact_logo.png)](https://www.artefact.com/) |  [![](./docs/illustrations/logos/logo_CS.png)](https://mics.centralesupelec.fr/) |  [![](./docs/illustrations/logos/logo_paris_saclay.png)](https://www.universite-paris-saclay.fr/)
-:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+<p align="center">
+  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.artefact.com/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" height="65" />
+  </a>
+</p>
 
+<p align="center">
+  <a href="https://www.universite-paris-saclay.fr/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://mics.centralesupelec.fr/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.london.edu/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg" height="60" />
+  </a>
+  &emsp;
+  &emsp;
+  <a href="https://www.insead.edu/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" height="60" />
+  </a>
+</p>
 
-## References
+## :trident: References
 
 ### Papers
 [1][Representing Random Utility Choice Models with Neural Networks](https://arxiv.org/abs/2207.12877), Aouad, A.; Désir, A. (2022)\

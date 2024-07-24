@@ -13,6 +13,11 @@ class RandomChoiceModel(ChoiceModel):
         """Initialize of the model."""
         super().__init__(**kwargs)
 
+    @property
+    def trainable_weights(self):
+        """Return an empty list - there isno trainable weight."""
+        return []
+
     def compute_batch_utility(
         self,
         shared_features_by_choice,
@@ -45,17 +50,19 @@ class RandomChoiceModel(ChoiceModel):
         # In order to avoid unused arguments warnings
         _ = shared_features_by_choice, items_features_by_choice, choices
         return np.squeeze(
-            np.random.uniform(shape=(available_items_by_choice.shape), minval=0, maxval=1)
-        )
+            np.random.uniform(size=(available_items_by_choice.shape), low=0.0, high=1.0)
+        ).astype(np.float32)
 
-    @property
-    def trainable_weights(self):
-        """Trainable weights of the model."""
-        return []
-
-    def fit(**kwargs):
+    def fit(self, *args, **kwargs):
         """Make sure that nothing happens during .fit."""
         _ = kwargs
+        _ = args
+        return {}
+
+    def _fit_with_lbfgs(self, *args, **kwargs):
+        """Make sure that nothing happens during .fit."""
+        _ = kwargs
+        _ = args
         return {}
 
 
@@ -69,19 +76,44 @@ class DistribMimickingModel(ChoiceModel):
         """Initialize of the model."""
         super().__init__(**kwargs)
         self.weights = []
+        self.is_fitted = False
 
     @property
     def trainable_weights(self):
         """Trainable weights of the model."""
         return [self.weights]
 
-    def fit(self, choice_dataset, **kwargs):
-        """Compute the choice frequency of each product and defines it as choice probabilities."""
+    def fit(self, choice_dataset, *args, **kwargs):
+        """Compute the choice frequency of each product and defines it as choice probabilities.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset to be used for fitting
+        """
         _ = kwargs
+        _ = args
         choices = choice_dataset.choices
-        for i in range(choice_dataset.get_num_items()):
+        for i in range(choice_dataset.get_n_items()):
             self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
         self.weights = tf.stack(self.weights) / len(choices)
+        self.is_fitted = True
+
+    def _fit_with_lbfgs(self, choice_dataset, *args, **kwargs):
+        """Compute the choice frequency of each product and defines it as choice probabilities.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset to be used for fitting
+        """
+        _ = kwargs
+        _ = args
+        choices = choice_dataset.choices
+        for i in range(choice_dataset.get_n_items()):
+            self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
+        self.weights = tf.stack(self.weights) / len(choices)
+        self.is_fitted = True
 
     def compute_batch_utility(
         self,
@@ -119,6 +151,6 @@ class DistribMimickingModel(ChoiceModel):
         """
         # In order to avoid unused arguments warnings
         _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
-        if self.weights is None:
+        if not self.is_fitted:
             raise ValueError("Model not fitted")
-        return np.stack([np.log(self.weights.numpy())] * len(choices), axis=0)
+        return np.stack([np.log(self.trainable_weights.numpy())] * len(choices), axis=0)

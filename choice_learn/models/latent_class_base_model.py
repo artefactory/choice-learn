@@ -1,4 +1,5 @@
 """Base class for latent class choice models."""
+
 import numpy as np
 import tensorflow as tf
 import tqdm
@@ -201,12 +202,12 @@ class BaseLatentClassModel(object):
             utilities.append(model_utilities)
         return utilities
 
-    def fit(self, dataset, sample_weight=None, verbose=0):
+    def fit(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit the model on a ChoiceDataset.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         sample_weight : np.ndarray, optional
             sample weights to apply, by default None
@@ -221,15 +222,19 @@ class BaseLatentClassModel(object):
         if self.fit_method.lower() == "em":
             self.minf = np.log(1e-3)
             print("Expectation-Maximization estimation algorithm not well implemented yet.")
-            return self._em_fit(dataset=dataset, sample_weight=sample_weight, verbose=verbose)
+            return self._em_fit(
+                choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
+            )
 
         if self.fit_method.lower() == "mle":
             if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
                 return self._fit_with_lbfgs(
-                    dataset=dataset, sample_weight=sample_weight, verbose=verbose
+                    choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
                 )
 
-            return self._fit_normal(dataset=dataset, sample_weight=sample_weight, verbose=verbose)
+            return self._fit_normal(
+                choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
+            )
 
         raise ValueError(f"Fit method not implemented: {self.fit_method}")
 
@@ -278,12 +283,12 @@ class BaseLatentClassModel(object):
             batch_loss = tf.reduce_mean(batch_losses)
         return batch_loss
 
-    def _lbfgs_train_step(self, dataset, sample_weight=None):
+    def _lbfgs_train_step(self, choice_dataset, sample_weight=None):
         """Create a function required by tfp.optimizer.lbfgs_minimize.
 
         Parameters
         ----------
-        dataset: ChoiceDataset
+        choice_dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
@@ -366,7 +371,7 @@ class BaseLatentClassModel(object):
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
                 loss_value = self.evaluate(
-                    dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
+                    choice_dataset, sample_weight=sample_weight, batch_size=-1, mode="optim"
                 )
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, trainable_weights)
@@ -389,14 +394,14 @@ class BaseLatentClassModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, sample_weight=None, verbose=0):
+    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
             Maximum number of epochs allowed to reach minimum
@@ -415,7 +420,7 @@ class BaseLatentClassModel(object):
         import tensorflow_probability as tfp
 
         epochs = self.epochs
-        func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
+        func = self._lbfgs_train_step(choice_dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
         init = []
@@ -446,7 +451,7 @@ class BaseLatentClassModel(object):
             print("Algorithm converged before reaching max iterations:", results[0].numpy())
         return func.history
 
-    def _gd_train_step(self, dataset, sample_weight=None):
+    def _gd_train_step(self, choice_dataset, sample_weight=None):
         pass
 
     def _nothing(self, inputs):
@@ -488,15 +493,17 @@ class BaseLatentClassModel(object):
         proba_final = tf.keras.layers.Concatenate(axis=2)(proba_list)
         return tf.math.reduce_sum(proba_final, axis=2, keepdims=False)
 
-    def _expectation(self, dataset):
-        predicted_probas = [model.predict_probas(dataset) for model in self.models]
+    def _expectation(self, choice_dataset):
+        predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
         if np.sum(np.isnan(predicted_probas)) > 0:
             print("Nan in probas")
         predicted_probas = [
             latent
             * tf.gather_nd(
                 params=proba,
-                indices=tf.stack([tf.range(0, len(dataset), 1), dataset.choices], axis=1),
+                indices=tf.stack(
+                    [tf.range(0, len(choice_dataset), 1), choice_dataset.choices], axis=1
+                ),
             )
             for latent, proba in zip(self.latent_logits, predicted_probas)
         ]
@@ -508,12 +515,12 @@ class BaseLatentClassModel(object):
 
         return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), loss
 
-    def _maximization(self, dataset, verbose=0):
+    def _maximization(self, choice_dataset, verbose=0):
         """Maximize step.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             dataset to be fitted
         verbose : int, optional
             print level, for debugging, by default 0
@@ -526,19 +533,19 @@ class BaseLatentClassModel(object):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
-            self.models[q].fit(dataset, sample_weight=self.weights[:, q], verbose=verbose)
+            self.models[q].fit(choice_dataset, sample_weight=self.weights[:, q], verbose=verbose)
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
 
         return latent_probas / np.sum(latent_probas)
 
-    def _em_fit(self, dataset, verbose=0):
+    def _em_fit(self, choice_dataset, verbose=0):
         """Fit with Expectation-Maximization Algorithm.
 
         Parameters
         ----------
-        dataset: ChoiceDataset
+        choice_dataset: ChoiceDataset
             Dataset to be used for coefficients estimations
         verbose : int, optional
             print level, for debugging, by default 0
@@ -556,10 +563,12 @@ class BaseLatentClassModel(object):
         # Initialization
         for model in self.models:
             # model.instantiate()
-            model.fit(dataset, sample_weight=np.random.rand(len(dataset)), verbose=verbose)
+            model.fit(
+                choice_dataset, sample_weight=np.random.rand(len(choice_dataset)), verbose=verbose
+            )
         for i in tqdm.trange(self.epochs):
-            self.weights, loss = self._expectation(dataset)
-            self.latent_logits = self._maximization(dataset, verbose=verbose)
+            self.weights, loss = self._expectation(choice_dataset)
+            self.latent_logits = self._maximization(choice_dataset, verbose=verbose)
             hist_logits.append(self.latent_logits)
             hist_loss.append(loss)
             if np.sum(np.isnan(self.latent_logits)) > 0:

@@ -287,5 +287,5 @@ class TasteNet(ChoiceModel):
             )
             self.instantiated = True
         return super()._fit_with_lbfgs(
-            dataset=choice_dataset, sample_weight=sample_weight, **kwargs
+            choice_dataset=choice_dataset, sample_weight=sample_weight, **kwargs
         )

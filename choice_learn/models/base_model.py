@@ -326,6 +326,11 @@ class ChoiceModel(object):
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
 
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
             # In this case we do not need to batch the sample_weights
             else:
                 if verbose > 0:
@@ -357,6 +362,11 @@ class ChoiceModel(object):
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
 
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
             # Take into account last batch that may have a differnt length into account for
             # the computation of the epoch loss.
             if batch_size != -1:
@@ -369,13 +379,13 @@ class ChoiceModel(object):
             else:
                 epoch_loss = tf.reduce_mean(epoch_losses)
             losses_history["train_loss"].append(epoch_loss)
-            desc = f"Epoch {epoch_nb} Train Loss {losses_history['train_loss'][-1].numpy()}"
+            print_loss = losses_history["train_loss"][-1].numpy()
+            desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
             if verbose > 1:
                 print(
-                    f"Loop {epoch_nb} Time",
-                    time.time() - t_start,
-                    "Loss:",
-                    tf.reduce_sum(epoch_losses).numpy(),
+                    f"Loop {epoch_nb} Time:",
+                    f"{time.time() - t_start:.4f}",
+                    f"Loss: {print_loss:.4f}",
                 )
 
             # Test on val_dataset if provided
@@ -404,7 +414,7 @@ class ChoiceModel(object):
                 test_loss = tf.reduce_mean(test_losses)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", test_loss.numpy())
-                    desc += f", Test Loss {test_loss.numpy()}"
+                    desc += f", Test Loss {np.round(test_loss.numpy(), 4)}"
                 losses_history["test_loss"] = losses_history.get("test_loss", []) + [
                     test_loss.numpy()
                 ]
@@ -415,9 +425,8 @@ class ChoiceModel(object):
             if self.stop_training:
                 print("Early Stopping taking effect")
                 break
-            if verbose > 0:
-                t_range.set_description(desc)
-                t_range.refresh()
+            t_range.set_description(desc)
+            t_range.refresh()
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
@@ -623,12 +632,12 @@ class ChoiceModel(object):
             batch_loss = tf.reduce_mean(batch_losses)
         return batch_loss
 
-    def _lbfgs_train_step(self, dataset, sample_weight=None):
+    def _lbfgs_train_step(self, choice_dataset, sample_weight=None):
         """Create a function required by tfp.optimizer.lbfgs_minimize.
 
         Parameters
         ----------
-        dataset: ChoiceDataset
+        choice_dataset: ChoiceDataset
             Dataset on which to estimate the paramters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
@@ -695,7 +704,7 @@ class ChoiceModel(object):
                 assign_new_model_parameters(params_1d)
                 # calculate the loss
                 loss_value = self.evaluate(
-                    dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
+                    choice_dataset, sample_weight=sample_weight, batch_size=-1, mode="eval"
                 )
                 if self.regularization is not None:
                     regularization = tf.reduce_sum(
@@ -723,14 +732,14 @@ class ChoiceModel(object):
         f.history = []
         return f
 
-    def _fit_with_lbfgs(self, dataset, sample_weight=None, verbose=0):
+    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit function for L-BFGS optimizer.
 
         Replaces the .fit method when the optimizer is set to L-BFGS.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to be used for coefficients estimations
         epochs : int
             Maximum number of epochs allowed to reach minimum
@@ -749,7 +758,7 @@ class ChoiceModel(object):
         import tensorflow_probability as tfp
 
         epochs = self.epochs
-        func = self._lbfgs_train_step(dataset, sample_weight=sample_weight)
+        func = self._lbfgs_train_step(choice_dataset=choice_dataset, sample_weight=sample_weight)
 
         # convert initial model parameters to a 1D tf.Tensor
         init_params = tf.dynamic_stitch(func.idx, self.trainable_weights)

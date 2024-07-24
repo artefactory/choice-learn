@@ -392,7 +392,7 @@ class ConditionalLogit(ChoiceModel):
 
         self.coefficients = coefficients
 
-    def _store_dataset_features_names(self, dataset):
+    def _store_dataset_features_names(self, choice_dataset):
         """Register the name of the features in the dataset. For later use in utility computation.
 
         Parameters
@@ -400,8 +400,8 @@ class ConditionalLogit(ChoiceModel):
         dataset : ChoiceDataset
             ChoiceDataset used to fit the model.
         """
-        self._shared_features_by_choice_names = dataset.shared_features_by_choice_names
-        self._items_features_by_choice_names = dataset.items_features_by_choice_names
+        self._shared_features_by_choice_names = choice_dataset.shared_features_by_choice_names
+        self._items_features_by_choice_names = choice_dataset.items_features_by_choice_names
 
     def compute_batch_utility(
         self,
@@ -625,7 +625,7 @@ class ConditionalLogit(ChoiceModel):
         self.instantiate(choice_dataset)
 
         fit = super()._fit_with_lbfgs(
-            dataset=choice_dataset,
+            choice_dataset=choice_dataset,
             sample_weight=sample_weight,
             **kwargs,
         )
@@ -633,12 +633,12 @@ class ConditionalLogit(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def compute_report(self, dataset):
+    def compute_report(self, choice_dataset):
         """Compute a report of the estimated weights.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
@@ -649,7 +649,7 @@ class ConditionalLogit(ChoiceModel):
         """
         import tensorflow_probability as tfp
 
-        weights_std = self.get_weights_std(dataset)
+        weights_std = self.get_weights_std(choice_dataset)
         dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
         names = []
@@ -678,12 +678,12 @@ class ConditionalLogit(ChoiceModel):
             },
         )
 
-    def get_weights_std(self, dataset):
+    def get_weights_std(self, choice_dataset):
         """Approximates Std Err with Hessian matrix.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
@@ -705,12 +705,12 @@ class ConditionalLogit(ChoiceModel):
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
                 model.trainable_weights = mw
-                batch = next(dataset.iter_batch(batch_size=-1))
+                batch = next(choice_dataset.iter_batch(batch_size=-1))
                 utilities = model.compute_batch_utility(*batch)
                 probabilities = tf.nn.softmax(utilities, axis=-1)
                 loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                     y_pred=probabilities,
-                    y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[1]),
+                    y_true=tf.one_hot(choice_dataset.choices, depth=probabilities.shape[1]),
                 )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
