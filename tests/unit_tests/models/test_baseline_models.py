@@ -109,7 +109,7 @@ def test_mimicking_choice_model_with_sgd():
     assert (np.abs(y_pred[:, 1] - 0.25) < 0.01).all()
     assert (np.abs(y_pred[:, 2] - 0.25) < 0.01).all()
 
-    assert (model.trainable_weights.numpy() == np.array([0.5, 0.25, 0.25])).all()
+    assert (model.trainable_weights[0].numpy() == np.array([0.5, 0.25, 0.25])).all()
 
 
 def test_catch_not_fitted_issue():

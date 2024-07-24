@@ -153,4 +153,4 @@ class DistribMimickingModel(ChoiceModel):
         _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
         if not self.is_fitted:
             raise ValueError("Model not fitted")
-        return np.stack([np.log(self.trainable_weights.numpy())] * len(choices), axis=0)
+        return tf.stack([tf.math.log(self.trainable_weights[0])] * len(choices), axis=0)
