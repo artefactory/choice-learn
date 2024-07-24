@@ -127,12 +127,8 @@ def recreate_official_nets(
 
         z_embeddings.append(z_embedding)
 
-    x_net = tf.keras.Model(
-        inputs=products_input, outputs=x_embeddings, name="X_embedding"
-    )
-    z_net = tf.keras.Model(
-        inputs=customer_input, outputs=z_embeddings, name="Z_embedding"
-    )
+    x_net = tf.keras.Model(inputs=products_input, outputs=x_embeddings, name="X_embedding")
+    z_net = tf.keras.Model(inputs=customer_input, outputs=z_embeddings, name="Z_embedding")
 
     # Utility network
     u_net = create_ff_network(
@@ -596,9 +592,7 @@ class PaperRUMnet(ChoiceModel):
         )
 
         # Storing weights for back-propagation
-        self.trainable_weights = (
-            self.x_model.weights + self.z_model.weights + self.u_model.weights
-        )
+        self.trainable_weights = self.x_model.weights + self.z_model.weights + self.u_model.weights
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=self.label_smoothing,
@@ -651,10 +645,7 @@ class PaperRUMnet(ChoiceModel):
             )
         if isinstance(items_features_by_choice, tuple):
             items_features_by_choice = tf.concat(
-                [
-                    tf.cast(items_feature, tf.float32)
-                    for items_feature in items_features_by_choice
-                ],
+                [tf.cast(items_feature, tf.float32) for items_feature in items_features_by_choice],
                 axis=-1,
             )
 
@@ -748,9 +739,7 @@ class PaperRUMnet(ChoiceModel):
                 tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5,
             )
             if self.tol > 0:
-                probabilities = (
-                    1 - self.tol
-                ) * probabilities + self.tol * tf.ones_like(
+                probabilities = (1 - self.tol) * probabilities + self.tol * tf.ones_like(
                     probabilities
                 ) / probabilities.shape[-1]
 
@@ -905,10 +894,7 @@ class CPURUMnet(PaperRUMnet):
             )
         if isinstance(items_features_by_choice, tuple):
             items_features_by_choice = tf.concat(
-                [
-                    tf.cast(items_feature, tf.float32)
-                    for items_feature in items_features_by_choice
-                ],
+                [tf.cast(items_feature, tf.float32) for items_feature in items_features_by_choice],
                 axis=-1,
             )
 
@@ -1050,10 +1036,7 @@ class GPURUMnet(PaperRUMnet):
             )
         if isinstance(items_features_by_choice, tuple):
             items_features_by_choice = tf.concat(
-                [
-                    tf.cast(items_feature, tf.float32)
-                    for items_feature in items_features_by_choice
-                ],
+                [tf.cast(items_feature, tf.float32) for items_feature in items_features_by_choice],
                 axis=-1,
             )
 
@@ -1085,13 +1068,9 @@ class GPURUMnet(PaperRUMnet):
                 repeats=self.heterogeneity_x * self.heterogeneity_z,
                 axis=2,
             )
-            big_x = tf.repeat(
-                x_embeddings[:, item_i], repeats=self.heterogeneity_z, axis=2
-            )
+            big_x = tf.repeat(x_embeddings[:, item_i], repeats=self.heterogeneity_z, axis=2)
 
-            item_utility_by_choice.append(
-                tf.concat([big_z, x_fixed_features, big_x], axis=1)
-            )
+            item_utility_by_choice.append(tf.concat([big_z, x_fixed_features, big_x], axis=1))
 
         # Computing resulting utilitiies
         utilities = self.u_model(tf.stack(item_utility_by_choice, axis=1))
@@ -1156,9 +1135,7 @@ class GPURUMnet(PaperRUMnet):
                 tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5,
             )
             if self.tol > 0:
-                probabilities = (
-                    1 - self.tol
-                ) * probabilities + self.tol * tf.ones_like(
+                probabilities = (1 - self.tol) * probabilities + self.tol * tf.ones_like(
                     probabilities
                 ) / probabilities.shape[-1]
 
