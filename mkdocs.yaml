@@ -66,7 +66,7 @@ nav:
       - Intoduction to data handling: notebooks/introduction/2_data_handling.md
       - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
       - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
-    - Modelling:
+    - Modeling:
       - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
       - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
       - Nested Logit Usage: notebooks/models/nested_logit.md
@@ -96,5 +96,5 @@ nav:
       - Latent Class BaseModel: reference/models/references_latent_class_base_model.md
       - Latent Class MNL: references/models/references_latent_class_mnl.md
     - Toolbox:
-        - Assortment Optimizer: references/toolbox/references_assortment_optimizer.md
+        - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
   - explanations.md

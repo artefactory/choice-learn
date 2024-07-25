@@ -316,7 +316,7 @@ class ConditionalLogit(ChoiceModel):
         if not self.instantiated:
             if not isinstance(self.coefficients, MNLCoefficients):
                 self._build_coefficients_from_dict(n_items=choice_dataset.get_n_items())
-            self.trainable_weights = self._instantiate_tf_weights()
+            self._trainable_weights = self._instantiate_tf_weights()
 
             # Checking that no weight has been attributed to non existing feature in dataset
             dataset_stacked_features_names = []
@@ -360,9 +360,14 @@ class ConditionalLogit(ChoiceModel):
             weights.append(weight)
             self.coefficients._add_tf_weight(weight_name, weight_nb)
 
-        self.trainable_weights = weights
+        self._trainable_weights = weights
 
         return weights
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return self._trainable_weights
 
     def _build_coefficients_from_dict(self, n_items):
         """Build coefficients when they are given as a dictionnay.
@@ -699,7 +704,7 @@ class ConditionalLogit(ChoiceModel):
                 for _w in self.trainable_weights:
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
-                model.trainable_weights = mw
+                model._trainable_weights = mw
                 batch = next(choice_dataset.iter_batch(batch_size=-1))
                 utilities = model.compute_batch_utility(*batch)
                 probabilities = tf.nn.softmax(utilities, axis=-1)
@@ -732,7 +737,7 @@ class ConditionalLogit(ChoiceModel):
         if hasattr(self, "report"):
             clone.report = self.report
         if hasattr(self, "trainable_weights"):
-            clone.trainable_weights = self.trainable_weights
+            clone._trainable_weights = self.trainable_weights
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_shared_features_by_choice_names"):

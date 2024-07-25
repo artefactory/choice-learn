@@ -15,7 +15,7 @@ class RandomChoiceModel(ChoiceModel):
 
     @property
     def trainable_weights(self):
-        """Return an empty list."""
+        """Return an empty list - there is no trainable weight."""
         return []
 
     def compute_batch_utility(
@@ -75,13 +75,13 @@ class DistribMimickingModel(ChoiceModel):
     def __init__(self, **kwargs):
         """Initialize of the model."""
         super().__init__(**kwargs)
-        self.weights = []
+        self._trainable_weights = []
         self.is_fitted = False
 
     @property
     def trainable_weights(self):
-        """Return the weights."""
-        return self.weights
+        """Trainable weights of the model."""
+        return [self._trainable_weights]
 
     def fit(self, choice_dataset, *args, **kwargs):
         """Compute the choice frequency of each product and defines it as choice probabilities.
@@ -95,8 +95,8 @@ class DistribMimickingModel(ChoiceModel):
         _ = args
         choices = choice_dataset.choices
         for i in range(choice_dataset.get_n_items()):
-            self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
-        self.weights = tf.stack(self.weights) / len(choices)
+            self._trainable_weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
+        self._trainable_weights = tf.stack(self._trainable_weights) / len(choices)
         self.is_fitted = True
 
     def _fit_with_lbfgs(self, choice_dataset, *args, **kwargs):
@@ -111,8 +111,8 @@ class DistribMimickingModel(ChoiceModel):
         _ = args
         choices = choice_dataset.choices
         for i in range(choice_dataset.get_n_items()):
-            self.weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
-        self.weights = tf.stack(self.weights) / len(choices)
+            self._trainable_weights.append(tf.reduce_sum(tf.cast(choices == i, tf.float32)))
+        self._trainable_weights = tf.stack(self._trainable_weights) / len(choices)
         self.is_fitted = True
 
     def compute_batch_utility(
@@ -153,4 +153,4 @@ class DistribMimickingModel(ChoiceModel):
         _ = items_features_by_choice, shared_features_by_choice, available_items_by_choice
         if not self.is_fitted:
             raise ValueError("Model not fitted")
-        return np.stack([np.log(self.trainable_weights.numpy())] * len(choices), axis=0)
+        return tf.stack([tf.math.log(self.trainable_weights[0])] * len(choices), axis=0)
