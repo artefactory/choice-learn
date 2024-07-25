@@ -34,4 +34,6 @@ jobs:
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
-          issue-number: 101
+          issue-number: '101'
+          unique-id-for-comment: ${{ matrix.python-version }}
+          title: 'Coverage Report for Python ${{ matrix.python-version }}'

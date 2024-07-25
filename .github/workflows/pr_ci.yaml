@@ -35,3 +35,5 @@ jobs:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
           report-only-changed-files: true
+          unique-id-for-comment: ${{ matrix.python-version }}
+          title: 'Coverage Report for Python ${{ matrix.python-version }}'
