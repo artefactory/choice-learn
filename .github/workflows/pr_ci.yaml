@@ -38,9 +38,8 @@ jobs:
           unique-id-for-comment: ${{ matrix.python-version }}
           title: 'Coverage Report for Python ${{ matrix.python-version }}'
       
-      name: Test & echo
-      run: |
-        echo ${{ matrix.python-version }}
-        echo "Test"
-        echo ${{ steps.pr_number.outputs.content }}
-
+      - name: Test & echo
+        run: |
+          echo ${{ matrix.python-version }}
+          echo "Test"
+          echo ${{ steps.pr_number.outputs.content }}
