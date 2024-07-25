@@ -260,6 +260,11 @@ class ArrayStorage(Storage):
             values = np.array(values)
         elif not isinstance(values, np.ndarray):
             raise ValueError("ArrayStorage Values must be a list or a numpy array")
+
+        # Checking that FeaturesStorage increases dimensions
+        # key -> features of ndim >= 1
+        if not values.ndim > 1:
+            raise ValueError("ArrayStorage Values must be a list or a numpy array of ndim >= 1")
         # self.storage = storage
         self.values_names = values_names
         self.name = name

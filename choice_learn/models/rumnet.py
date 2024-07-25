@@ -591,14 +591,17 @@ class PaperRUMnet(ChoiceModel):
             l2_regularization_coeff=self.l2_regularization_coef,
         )
 
-        # Storing weights for back-propagation
-        self.trainable_weights = self.x_model.weights + self.z_model.weights + self.u_model.weights
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=self.label_smoothing,
             epsilon=self.logmin,
         )
         self.instantiated = True
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return self.x_model.weights + self.z_model.weights + self.u_model.weights
 
     def compute_batch_utility(
         self,
@@ -978,17 +981,20 @@ class GPURUMnet(PaperRUMnet):
             width=self.width_u, depth=self.depth_u, add_last=True
         )
 
-        # Storing weights for back-propagation
-        self.trainable_weights = (
-            self.x_model.trainable_variables
-            + self.z_model.trainable_variables
-            + self.u_model.trainable_variables
-        )
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
         self.time_dict = {}
         self.instantiated = True
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return (
+            self.x_model.trainable_variables
+            + self.z_model.trainable_variables
+            + self.u_model.trainable_variables
+        )
 
     def compute_batch_utility(
         self,

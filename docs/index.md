@@ -128,8 +128,10 @@ The use of this software is under the MIT license, with no limitation of usage, 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
 <figure markdown>
-  ![Elements](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:83px"}
-  ![Dandi](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:83px"}
+
+  ![Elements](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:60px"}
+
+  ![Dandi](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:60px"}
 </figure>
 
 <p align="center">

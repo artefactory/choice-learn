@@ -125,6 +125,19 @@ class ChoiceModel(object):
             self.regularization_strength = 0.0
             self.regularization = None
 
+    @property
+    def trainable_weights(self):
+        """Trainable weights need to be specified in children classes.
+
+        Basically it determines which weights need to be optimized during training.
+        MUST be a list
+        """
+        raise NotImplementedError(
+            """Trainable_weights must be specified in children classes,
+              when you inherit from ChoiceModel.
+            See custom models documentation for more details and examples."""
+        )
+
     @abstractmethod
     def compute_batch_utility(
         self,

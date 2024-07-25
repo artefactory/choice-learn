@@ -41,7 +41,7 @@ jobs:
           PACKAGE_DIRECTORY: "./choice_learn/"
           PYTHON_VERSION: "3.9"
           PUBLISH_REGISTRY_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-          PUBLISH_REGISTRY_USER: ${{ secrets.PYPI_USERNAME }}
+          PUBLISH_REGISTRY_USERNAME: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
           BRANCH: ${{ steps.install.outputs.BRANCH }}
 
