@@ -7,7 +7,12 @@ from choice_learn.models.base_model import ChoiceModel
 
 
 def create_ff_network(
-    input_shape, depth, width, activation="elu", add_last=False, l2_regularization_coeff=0.0
+    input_shape,
+    depth,
+    width,
+    activation="elu",
+    add_last=False,
+    l2_regularization_coeff=0.0,
 ):
     """Create a simple fully connected (Dense) network.
 
@@ -96,15 +101,15 @@ def recreate_official_nets(
         Features and encoding to utility computation network
     """
     # Products and Customers embeddings nets, quiet symmetrical
-    products_input = tf.keras.layers.Input(shape=(num_products_features))
-    customer_input = tf.keras.layers.Input(shape=(num_customer_features))
+    products_input = tf.keras.layers.Input(shape=(num_products_features,))
+    customer_input = tf.keras.layers.Input(shape=(num_customer_features,))
     x_embeddings = []
     z_embeddings = []
 
     # Creating independant nets for each heterogeneity
     for _ in range(x_eps):
         x_embedding = create_ff_network(
-            input_shape=num_products_features,
+            input_shape=(num_products_features,),
             depth=x_depth,
             width=x_width,
             l2_regularization_coeff=l2_regularization_coeff,
@@ -114,7 +119,7 @@ def recreate_official_nets(
     # Creating independant nets for each heterogeneity
     for _ in range(z_eps):
         z_embedding = create_ff_network(
-            input_shape=num_customer_features,
+            input_shape=(num_customer_features,),
             depth=z_depth,
             width=z_width,
             l2_regularization_coeff=l2_regularization_coeff,
@@ -128,7 +133,7 @@ def recreate_official_nets(
     # Utility network
     u_net = create_ff_network(
         input_shape=(
-            x_width + z_width + num_products_features + num_customer_features
+            x_width + z_width + num_products_features + num_customer_features,
         ),  # Input shape from previous nets
         width=width_u,
         depth=depth_u,
@@ -662,7 +667,12 @@ class PaperRUMnet(ChoiceModel):
             for _x in x_embeddings:
                 for _z in z_embeddings:
                     _u = tf.keras.layers.Concatenate()(
-                        [items_features_by_choice[:, item_i, :], _x, shared_features_by_choice, _z]
+                        [
+                            items_features_by_choice[:, item_i, :],
+                            _x,
+                            shared_features_by_choice,
+                            _z,
+                        ]
                     )
                     utilities[-1].append(self.u_model(_u))
 
@@ -725,7 +735,8 @@ class PaperRUMnet(ChoiceModel):
             # It is not in the paper, but let's normalize with availabilities
             probabilities = tf.multiply(probabilities, available_items_by_choice)
             probabilities = tf.divide(
-                probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
+                probabilities,
+                tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5,
             )
             if self.tol > 0:
                 probabilities = (1 - self.tol) * probabilities + self.tol * tf.ones_like(
@@ -905,7 +916,12 @@ class CPURUMnet(PaperRUMnet):
             for _x in x_embeddings:
                 for _z in z_embeddings:
                     full_embedding = tf.keras.layers.Concatenate()(
-                        [items_features_by_choice[:, item_i, :], _x, shared_features_by_choice, _z]
+                        [
+                            items_features_by_choice[:, item_i, :],
+                            _x,
+                            shared_features_by_choice,
+                            _z,
+                        ]
                     )
                     stacked_heterogeneities.append(full_embedding)
             item_utilities = self.u_model(tf.concat(stacked_heterogeneities, axis=0))
@@ -949,10 +965,14 @@ class GPURUMnet(PaperRUMnet):
         """
         # Instatiation of the different nets
         self.x_model = AssortmentParallelDense(
-            width=self.width_eps_x, depth=self.depth_eps_x, heterogeneity=self.heterogeneity_x
+            width=self.width_eps_x,
+            depth=self.depth_eps_x,
+            heterogeneity=self.heterogeneity_x,
         )
         self.z_model = ParallelDense(
-            width=self.width_eps_z, depth=self.depth_eps_z, heterogeneity=self.heterogeneity_z
+            width=self.width_eps_z,
+            depth=self.depth_eps_z,
+            heterogeneity=self.heterogeneity_z,
         )
         self.u_model = AssortmentUtilityDenseNetwork(
             width=self.width_u, depth=self.depth_u, add_last=True
@@ -1031,7 +1051,9 @@ class GPURUMnet(PaperRUMnet):
             multiples=[1, 1, self.heterogeneity_z],
         )
         big_z = tf.repeat(
-            tf.concat([big_z, z_embeddings], axis=1), repeats=self.heterogeneity_x, axis=2
+            tf.concat([big_z, z_embeddings], axis=1),
+            repeats=self.heterogeneity_x,
+            axis=2,
         )
 
         # Iterate over items in assortment
@@ -1109,7 +1131,8 @@ class GPURUMnet(PaperRUMnet):
             # Availability normalization
             probabilities = tf.multiply(probabilities, available_items_by_choice)
             probabilities = tf.divide(
-                probabilities, tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5
+                probabilities,
+                tf.reduce_sum(probabilities, axis=1, keepdims=True) + 1e-5,
             )
             if self.tol > 0:
                 probabilities = (1 - self.tol) * probabilities + self.tol * tf.ones_like(
