@@ -704,7 +704,7 @@ class ConditionalLogit(ChoiceModel):
                 for _w in self.trainable_weights:
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
-                model.trainable_weights = mw
+                model._trainable_weights = mw
                 batch = next(choice_dataset.iter_batch(batch_size=-1))
                 utilities = model.compute_batch_utility(*batch)
                 probabilities = tf.nn.softmax(utilities, axis=-1)
@@ -737,7 +737,7 @@ class ConditionalLogit(ChoiceModel):
         if hasattr(self, "report"):
             clone.report = self.report
         if hasattr(self, "trainable_weights"):
-            clone.trainable_weights = self.trainable_weights
+            clone._trainable_weights = self.trainable_weights
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_shared_features_by_choice_names"):
