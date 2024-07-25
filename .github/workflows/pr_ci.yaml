@@ -42,4 +42,5 @@ jobs:
         run: |
           echo ${{ matrix.python-version }}
           echo "Test"
-          echo ${{ steps.pr_number.outputs.content }}
+          echo ${{ github.event.number }}
+          echo "Test"
