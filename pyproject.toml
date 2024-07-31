@@ -75,14 +75,14 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "~3.9"
+python = ">=3.9, <3.13"
 numpy = ">=1.24"
 pandas = ">= 1.5.3"
-tensorflow = "~2.14, <2.17.0"
+tensorflow = ">=2.14, <2.17.0"
 tensorflow-probability = "~0.22"
 tqdm = ">=4.0.0"
-ortools = { version = "~9.6", optional = true }
-gurobipy = { version = "~11.0", optional = true }
+ortools = { version = ">=9.6", optional = true }
+gurobipy = { version = ">=11.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.3.2"
