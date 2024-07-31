@@ -1,7 +1,7 @@
 <div align="center">
 
 
-<img src="https://github.com/artefactory/choice-learn/blob/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
+<img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_choice_learn.png" width="300">
 
 *Large-scale choice modeling through the lens of machine learning*
 
@@ -11,8 +11,10 @@
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 
 
-[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue.svg)]()
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/choice-learn?logo=python)
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
+![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
+
 
 </div>
 
@@ -108,48 +110,49 @@ Finally for pricing or assortment optimization, you need either Gurobi or OR-Too
 
 <p align="center">
   <a href="https://numpy.org/">
-    <img src="docs/illustrations/logos/numpy_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/numpy_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://pandas.pydata.org/">
-    <img src="docs/illustrations/logos/pandas_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/pandas_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.tensorflow.org">
-    <img src="docs/illustrations/logos/tf_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/tf_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://www.gurobi.com/">
-    <img src="docs/illustrations/logos/gurobi_logo.png" width="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/gurobi_logo.png" width="60" />
   </a>
   &nbsp;
   &nbsp;
   <a href="https://developers.google.com/optimization?hl=fr">
-    <img src="docs/illustrations/logos/or_tools_logo.png" width="70" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/or_tools_logo.png" width="70" />
   </a>
 </p>
 
 > :bulb: **Tip:** You can use the poetry.lock or requirements-complete.txt files with poetry or pip to install a fully predetermined and working environment.
 
 ## :trident: Usage
-Here is a short example of model parametrization to estimate a Conditional Logit on the SwissMetro dataset.
+Here is a short example of model parametrization to estimate a Conditional Logit on the ModeCanada dataset.
 
 ```python
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit, RUMnet
+from choice_learn.datasets import load_modecanada
 
+transport_df = load_modecanada(as_frame=True)
 # Instantiation of a ChoiceDataset from a pandas.DataFrame
-# Only need to specify how the file is encoded:
 dataset = ChoiceDataset.from_single_long_df(df=transport_df,
                                             items_id_column="alt",
                                             choices_id_column="case",
                                             choices_column="choice",
                                             shared_features_columns=["income"],
                                             items_features_columns=["cost", "freq", "ovt", "ivt"],
-                                            choice_format="item_id")
+                                            choice_format="one_zero")
 
 # Initialization of the model
 model = ConditionalLogit()
@@ -165,7 +168,7 @@ model.add_coefficients(feature_name="income",
 model.add_coefficients(feature_name="ivt",
                        items_indexes=[0, 1, 2, 3])
 
-# shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
+# add_shared_coefficient add one coefficient that is used for all items specified in the items_indexes:
 # Here, cost, freq and ovt coefficients are shared between all items
 model.add_shared_coefficient(feature_name="cost",
                              items_indexes=[0, 1, 2, 3])
@@ -203,43 +206,39 @@ If you consider this package and any of its feature useful for your research, pl
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
-### Authors
-
-### Special Thanks
-
 ### Affiliations
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
 <p align="center">
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
-    <img src="./docs/illustrations/logos/logo_arc.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.artefact.com/">
-    <img src="docs/illustrations/logos/logo_atf.png" height="65" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" height="65" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://www.universite-paris-saclay.fr/">
-    <img src="./docs/illustrations/logos/logo_paris_saclay.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://mics.centralesupelec.fr/">
-    <img src="docs/illustrations/logos/logo_CS.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.london.edu/">
-    <img src="docs/illustrations/logos/logo_lbs.jpeg" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg" height="60" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.insead.edu/">
-    <img src="docs/illustrations/logos/logo_insead.png" height="60" />
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" height="60" />
   </a>
 </p>
 
