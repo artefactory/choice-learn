@@ -50,18 +50,11 @@ exclude_dirs = ["tests/"]
 
 [tool.pytest.ini_options]
 pythonpath = ["./"]
-testpaths = ["tests"]
-
-[tool.coverage.report]
-exclude_also = [
-    "@abstractmethod",
-    "@abc.abstractmethod",
-    "@(abc\\.)?abstractmethod",
-]
+testpaths = ["tests/"]
 
 [tool.poetry]
 name = "choice-learn"
-version = "0.0.5"
+version = "0.0.6"
 description = "Large-scale choice modeling through the lens of machine learning."
 authors = [
   "artefactory <vincent.auriau@artefact.com>",
