@@ -54,7 +54,7 @@ testpaths = ["tests/"]
 
 [tool.poetry]
 name = "choice-learn"
-version = "0.0.7"
+version = "0.0.8"
 description = "Large-scale choice modeling through the lens of machine learning."
 authors = [
   "artefactory <vincent.auriau@artefact.com>",
