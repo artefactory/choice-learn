@@ -37,19 +37,4 @@ jobs:
           report-only-changed-files: true
           unique-id-for-comment: ${{ matrix.python-version }}
           title: 'Coverage Report for Python ${{ matrix.python-version }}'
-      
-      - name: Test & echo
-        run: |
-          echo ${{ matrix.python-version }}
-          echo "Test"
-          echo ${{ github.event.number }}
-          echo "Test"
 
-      - name: Pytest coverage comment
-        uses: VincentAuriau/pytest-coverage-comment@main
-        with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest.xml
-          issue-number: '101'
-          unique-id-for-comment: ${{ matrix.python-version }}
-          title: 'Coverage Report for Python ${{ matrix.python-version }}'
