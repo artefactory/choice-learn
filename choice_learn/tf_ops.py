@@ -33,16 +33,17 @@ def softmax_with_availabilities(
         Probabilities of each product for each choice computed from Logits
     """
     # Substract max utility to avoid overflow
-    numerator = tf.exp(
-        items_logit_by_choice - tf.reduce_max(items_logit_by_choice, axis=axis, keepdims=True)
-    )
+    normalizer = tf.reduce_max(items_logit_by_choice, axis=axis, keepdims=True)
+    numerator = tf.exp(items_logit_by_choice - normalizer)
+
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)
     # Sum of total available utilities
     denominator = tf.reduce_sum(numerator, axis=axis, keepdims=True)
+
     # Add 1 to the denominator to take into account the exit choice
     if normalize_exit:
-        denominator += 1
+        denominator += tf.exp(-normalizer)
     # Avoir division by 0 when only unavailable items have highest utilities
     elif eps:
         denominator += eps
