@@ -41,7 +41,7 @@ Discrete choice models aim at predicting choice decisions made by individuals fr
 
 Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced parameterizations. This structure, inspired by Keras' different endpoints [@Chollet:2015], enables a user-friendly interface. Choice-Learn is designed with the following objectives:
 
-- **Streamlined:** The processing of datasets and the estimation of standard choice models are facilitated by a simple code signature.
+- **Streamlined:** The processing of datasets and the estimation of standard choice models are facilitated by a simple code signature that are consistent with mainstream machine learning packages such as scikit-learn [@Pedregosa:2011]
 - **Scalable:** Optimized processes are implemented for data storage and models estimation, allowing the use of large datasets and models with a large number of parameters.
 - **Flexible:** The codebase can be customized to fit different use cases.
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
@@ -94,18 +94,11 @@ The main contributions are summarized in Tables \ref{tab:comparison1} and \ref{t
 
 # Statement of need
 
-## Streamlined signatures
-`Choice-Learn` proposes short code signatures that are consistent with mainstream machine learning packages such as scikit-learn [@Pedregosa:2011]. The *ChoiceDataset* object, which handles the data, takes only 4 inputs: 'items_features' describing each available alternative, 'shared_features' describing the context of the choice, 'available_items' indicating the subset of available alternatives, and finally 'choices', the chosen alternative. Methods to seamlessly integrate popular data formats, such as long and wide format dataframes [@Helveston:2023] are also provided.
-
-```python
-dataset = ChoiceDataset(choices, shared_features, items_features, available_items)
-```
-
 ## Data and model scalability
 
-`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. Moreover, the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, allows feature values to be referenced only by their ID. These values are substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface or position are often stationary. Thus, they can be stored in an auxiliary data structure and in the main dataset, the store where the choice is recorded is only referenced with its ID.
+`Choice-Learn`'s data management relies on NumPy [@Harris:2020] with the objective of limiting the memory footprint. It minimizes the repetition of items or customers features and defers the jointure of the full data structure until processing batches of data. The package introduces the *FeaturesStorage* object, illustrated in Figure \ref{fig:fbi}, that allows feature values to be referenced only by their ID. These values are substituted to the ID placeholder on the fly in the batching process. For instance, supermarkets features such as surface or position are often stationary. Thus, they can be stored in an auxiliary data structure and in the main dataset, the store where the choice is recorded is only referenced with its ID.
 
-The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast second-order optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
+The package stands on Tensorflow [@Abadi:2015] for model estimation, offering the possibility to use fast quasi-Newton optimization algorithm such as L-BFGS [@Nocedal:2006] as well as various gradient-descent optimizers [@Tieleman:2012; @Kingma:2017] specialized in handling batches of data. GPU usage is also possible, which can prove to be time-saving.
 Finally, the TensorFlow backbone ensures an efficient usage in a production environment, for instance within an assortment recommendation software, through deployment and serving tools, such as TFLite and TFServing.
 
 ![Functioning of the *FeaturesStorage*. \label{fig:fbi}](../illustrations/features_storage_3.png)
@@ -143,34 +136,7 @@ Finally, in Figure \ref{fig:xps} (c) and (d), we observe memory usage gains on a
 We provide an example of the custom model definition with the following formulation of utility $U(i)$ with alternative features $x_i$ and customer features $z$:
 $$U(x_i, z) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
 where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all three to be estimated and $\sigma$ being the sigmoid activation function.
-To declare a custom model, one needs to inherit the *ChoiceModel* class and overwrite the `compute_batch_utility` method.
-
-
-```python
-    def __init__(self, n_neurons, **kwargs):
-        super().__init__(**kwargs)
-
-        self.gamma_x = Dense(units=n_neurons, activation="sigmoid")
-        self.gamma_z = Dense(units=n_neurons, activation="sigmoid")
-        self.beta_l = Dense(units=1, activation="linear")
-
-    def compute_batch_utility(self,
-                              shared_features_by_choice,
-                              items_features_by_choice,
-                              **kwargs):
-
-        z_embedding = self.gamma_z(shared_features_by_choice)
-
-        item_utility_by_choice = []
-        for i in range(n_items):
-            embedding = sigmoid(shared_embeddings +\
-            self.gamma_w(items_features_by_choice[:, i]))
-            item_utility_by_choice.append(self.beta_l(item_embedding))
-
-        item_utility_by_choice = tf.concat(item_utility_by_choice, axis=1)
-
-        return item_utility_by_choice
-```
+To declare a custom model, one needs to inherit the *ChoiceModel* class and overwrite the `compute_batch_utility` method as shown in the [documentation](https://artefactory.github.io/choice-learn/).
 
 # Acknowledgments
 The authors thank Fortenova[^1] and Martin Možina for their helpful collaboration and providing of the proprietary dataset.
