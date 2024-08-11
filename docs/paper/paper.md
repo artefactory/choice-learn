@@ -109,7 +109,8 @@ Choice models following the *Random Utility Maximization* principle [@McFadden:2
 
 $$\mathbb{P}(i|\mathcal{A}) = \frac{e^{U(i)}}{\sum_{j \in \mathcal{A}} e^{U(j)}}$$
 
-The choice-modeler's job is to formulate an adequate utility function $U(.)$ depending on the context. In `Choice-Learn`, the user can parametrize predefined models or freely specify a custom utility function by overriding the *compute_batch_utility* method from the *ChoiceModel* class.
+The choice-modeler's job is to formulate an adequate utility function $U(.)$ depending on the context. In `Choice-Learn`, the user can parametrize predefined models or freely specify a custom utility function.
+To declare a custom model, one needs to inherit the *ChoiceModel* class and overwrite the `compute_batch_utility` method as shown in the [documentation](https://artefactory.github.io/choice-learn/).
 
 ## Library of traditional random utility models and machine learning-based models
 
@@ -120,9 +121,7 @@ Recent works propose the estimation of more complex models, with neural networks
 `Choice-Learn` offers additional tools for downstream operations, that are not usually integrated in choice modeling libraries. In particular, assortment optimization is a common use case that leverages a choice model to determine the optimal subset of alternatives to offer customers maximizing a certain objective, such as the expected revenue, conversion rate, or social welfare. This framework captures a variety of applications such as assortment planning, display location optimization, and pricing. We provide implementations based on the mixed-integer programming formulation described in [@MendezDiaz:2014], with the option to choose the solver between Gurobi [@Gurobi:2023] and OR-Tools [@ORTools:2024].
 
 
-# Experiments and examples
-
-## Memory usage: a case study
+# Memory usage: a case study
 
 We provide in Figure \ref{fig:xps} (a) numerical examples of memory usage to showcase the efficiency of the *FeaturesStorage*. We consider a feature repeated in a dataset, such as a one-hot encoding for locations, represented by a matrix of shape (*#locations, #locations*) where each row refers to one location.
 
@@ -131,12 +130,6 @@ We compare four data handling methods on the Expedia dataset [@Expedia:2013]: pa
 Finally, in Figure \ref{fig:xps} (c) and (d), we observe memory usage gains on a proprietary dataset in brick-and-mortar retailing consisting of the aggregation of more than 4 billion purchases in Konzum supermarkets in Croatia. Focusing on the *coffee* subcategory, the dataset specifies, for each purchase, which products were available, their prices, as well as a one-hot representation of the supermarket.
 
 ![Memory usage experiments. \label{fig:xps}](../illustrations/ram_usage_comparison.png)
-
-## Customized choice models
-We provide an example of the custom model definition with the following formulation of utility $U(i)$ with alternative features $x_i$ and customer features $z$:
-$$U(x_i, z) = \beta_l \cdot \sigma(\sigma(\Gamma_x \cdot x_i) + \sigma(\Gamma_z \cdot z)) + \epsilon_i,$$
-where $\Gamma_x$, $\Gamma_z$ are matrices and $\beta_l$ is a vector, all three to be estimated and $\sigma$ being the sigmoid activation function.
-To declare a custom model, one needs to inherit the *ChoiceModel* class and overwrite the `compute_batch_utility` method as shown in the [documentation](https://artefactory.github.io/choice-learn/).
 
 # Acknowledgments
 The authors thank Fortenova[^1] and Martin Možina for their helpful collaboration and providing of the proprietary dataset.
