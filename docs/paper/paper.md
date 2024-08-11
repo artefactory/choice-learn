@@ -41,7 +41,7 @@ Discrete choice models aim at predicting choice decisions made by individuals fr
 
 Choice-Learn provides a modular suite of choice modeling tools for practitioners and academic researchers to process choice data, and then formulate, estimate and operationalize choice models. The library is structured into two levels of usage, as illustrated in Figure \ref{fig:gen_org}. The higher-level is designed for fast and easy implementation and the lower-level enables more advanced parameterizations. This structure, inspired by Keras' different endpoints [@Chollet:2015], enables a user-friendly interface. Choice-Learn is designed with the following objectives:
 
-- **Streamlined:** The processing of datasets and the estimation of standard choice models are facilitated by a simple code signature that are consistent with mainstream machine learning packages such as scikit-learn [@Pedregosa:2011]
+- **Streamlined:** The processing of datasets and the estimation of standard choice models are facilitated by a simple code signature that are consistent with mainstream machine learning packages such as scikit-learn [@Pedregosa:2011].
 - **Scalable:** Optimized processes are implemented for data storage and models estimation, allowing the use of large datasets and models with a large number of parameters.
 - **Flexible:** The codebase can be customized to fit different use cases.
 - **Models Library:** The same package provides implementations of both standard choice models and machine learning-based methods, including neural networks.
