@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from choice_learn.data import FeaturesStorage
+from choice_learn.data import FeaturesStorage, OneHotStorage
 
 indexed_array = np.array([[0.0, 1.0, 2.0], [2.0, 1.0, 0.0], [3.0, 4.0, 5.0], [5.0, 4.0, 3.0]])
 indexed_dict = {0: [0.0, 1.0, 2.0], 1: [2.0, 1.0, 0.0], 2: [3.0, 4.0, 5.0], 3: [5.0, 4.0, 3.0]}
@@ -24,3 +24,10 @@ def test_storage_iloc():
         storage.batch[0:4]
     with pytest.raises(KeyError):
         storage.batch[4]
+
+
+def test_onehot_storage_iloc():
+    """Test __getitem__ with various inputs."""
+    storage = OneHotStorage(ids=[0, 1, 2, 3], name="id")
+
+    assert (storage.batch[0:4] == storage.batch[[0, 1, 2, 3]]).all()

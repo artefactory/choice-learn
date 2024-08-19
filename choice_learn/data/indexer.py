@@ -176,7 +176,7 @@ class OneHotStorageIndexer(Indexer):
                 one_hot.append(self[j])
             return np.stack(one_hot).astype(self.dtype)
         if isinstance(sequence_keys, slice):
-            return self[list(range(*sequence_keys.indices(len(self.shape[0]))))]
+            return self[list(range(*sequence_keys.indices(self.shape[0])))]
         # else:
         one_hot = np.zeros(self.shape[1])
         try:
