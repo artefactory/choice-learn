@@ -41,9 +41,12 @@ def test_softmax_exit():
     assert (np.abs(softmax_probabilities - probabilities) < 0.01).all()
 
 
-def test_softmax_smoothing():
+def test_crossentropy_smoothing():
     """Test label smoothing of softmax."""
-    pass
+    smoothed_loss = CustomCategoricalCrossEntropy(label_smoothing=0.1)
+    exact_loss = CustomCategoricalCrossEntropy()
+
+    assert exact_loss([[0.05, 0.95]], [[0.9, 0.1]]) == smoothed_loss([[0.0, 1.0]], [[0.9, 0.1]])
 
 
 def test_custom_categorical_crossentropy():
