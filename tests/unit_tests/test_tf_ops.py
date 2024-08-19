@@ -2,7 +2,11 @@
 
 import numpy as np
 
-from choice_learn.tf_ops import CustomCategoricalCrossEntropy, ExactCategoricalCrossEntropy, softmax_with_availabilities
+from choice_learn.tf_ops import (
+    CustomCategoricalCrossEntropy,
+    ExactCategoricalCrossEntropy,
+    softmax_with_availabilities,
+)
 
 
 def test_softmax():

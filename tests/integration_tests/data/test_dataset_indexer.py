@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from choice_learn.data import ChoiceDataset, FeaturesStorage, OneHotStorage 
+from choice_learn.data import ChoiceDataset, FeaturesStorage, OneHotStorage
 
 
 def test_batch():
