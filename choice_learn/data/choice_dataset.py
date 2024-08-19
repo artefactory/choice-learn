@@ -549,11 +549,7 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             if self.items_features_by_choice[0].ndim == 1:
                 # items_features_by_choice fully integrated into a FeaturesStorage
-                base_num_items = (
-                    next(iter(next(iter(self.items_features_by_choice_map.values())).values()))
-                    .get_element_from_index(0)
-                    .shape[0]
-                )
+                base_num_items = self.items_features_by_choice_map[0][0].shape[1]
             else:
                 base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
@@ -573,8 +569,8 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             for k, items_feature in enumerate(self.items_features_by_choice):
                 if items_feature.ndim == 1:
-                    batch = self.items_features_by_choice_map[k][0].batch[[0, 1]]
-                    if batch.shape[1] != base_num_items:
+                    features_shape = self.items_features_by_choice_map[k][0].shape
+                    if features_shape[1] != base_num_items:
                         raise ValueError(
                             f"""{k}-th 'items_features_by_choice' shape does not match the
                             detected number of items:

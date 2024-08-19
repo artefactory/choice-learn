@@ -5,6 +5,83 @@ import numpy as np
 from choice_learn.data import ChoiceDataset, FeaturesStorage, OneHotStorage
 
 
+def test_cd_indexer():
+    """Various indexations of a choice dataset."""
+    shared_features = np.array([[0.0, 1.0], [2.0, 4.0]])
+    items_features = np.array([[[0.5, 0.4], [0.2, 0.3]], [[0.4, 0.5], [0.3, 0.2]]])
+    choices = [0, 1]
+
+    # Tests with None as features
+    dataset = ChoiceDataset(
+        shared_features_by_choice=None, items_features_by_choice=items_features, choices=choices
+    )
+    assert dataset.batch[[0, 1]][0] is None
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features, items_features_by_choice=None, choices=choices
+    )
+    assert dataset.batch[[0, 1]][1] is None
+
+    # Test with FeaturesStorage as availabilities
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features,
+        items_features_by_choice=items_features,
+        available_items_by_choice=np.array([0, 1]),
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(ids=[0, 1], values=[[1, 0], [0, 1]], name="available_items_by_choice")
+        ],
+    )
+    assert (dataset.batch[[0, 1]][2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
+
+    # Test 1-D items_features with FeaturesStorage
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features,
+        items_features_by_choice=np.array(["bc", "ab"]),
+        items_features_by_choice_names=["abc"],
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=["ab", "bc"],
+                values=np.array(
+                    [[[3.0, 2.0, 1.0], [1.0, 2.0, 3.0]], [[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]]],
+                    dtype=np.float32,
+                ),
+                name="abc",
+            )
+        ],
+    )
+    assert (
+        dataset.batch[0][1] == np.array([[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]], dtype=np.float32)
+    ).all()
+    assert dataset.batch[[0, 1]][1].shape == (2, 2, 3)
+
+    # Test
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features,
+        items_features_by_choice=[[[0.0, 3.3], [1.0, 3.3]], [[2.0, 2.2], [3.0, 3.3]]],
+        items_features_by_choice_names=["aaa", "abc"],
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[2.2, 3.3],
+                values=np.array([[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]], dtype=np.float32),
+                name="abc",
+            )
+        ],
+    )
+    assert (
+        dataset.batch[[0, 1]][1]
+        == np.array(
+            [
+                [[0.0, 2.2, 1.1, 6.6], [1.0, 2.2, 1.1, 6.6]],
+                [[2.0, 4.4, 3.3, 5.5], [3.0, 2.2, 1.1, 6.6]],
+            ],
+            dtype=np.float32,
+        )
+    ).all()
+
+
 def test_batch():
     """Test specific usecase of batching that was failing."""
     storage = OneHotStorage(ids=[0, 1, 2, 3], name="id")

@@ -31,3 +31,5 @@ def test_onehot_storage_iloc():
     storage = OneHotStorage(ids=[0, 1, 2, 3], name="id")
 
     assert (storage.batch[0:4] == storage.batch[[0, 1, 2, 3]]).all()
+    with pytest.raises(KeyError):
+        storage.batch[4]
