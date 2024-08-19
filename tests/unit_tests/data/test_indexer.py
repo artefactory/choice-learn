@@ -1,6 +1,5 @@
 """Test ChoiceDataset and Storage Indexers."""
 
-
 from choice_learn.data.indexer import Indexer
 
 

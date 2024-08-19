@@ -38,7 +38,8 @@ def test_softmax_exit():
     softmax_probabilities = softmax_with_availabilities(
         items_logit_by_choice=logits, available_items_by_choice=availabilities, normalize_exit=True
     ).numpy()
-    assert (np.abs  (softmax_probabilities - probabilities) < 0.01).all()
+    assert (np.abs(softmax_probabilities - probabilities) < 0.01).all()
+
 
 def test_softmax_smoothing():
     """Test label smoothing of softmax."""

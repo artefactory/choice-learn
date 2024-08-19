@@ -1,4 +1,5 @@
 """ICDM 2013 Expedia dataset."""
+
 import logging
 from pathlib import Path
 
