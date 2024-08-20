@@ -33,17 +33,36 @@ def test_cd_indexer():
 
     # Test with FeaturesStorage as availabilities
     dataset = ChoiceDataset(
-        shared_features_by_choice=(shared_features,),
-        items_features_by_choice=(items_features,),
+        shared_features_by_choice=(shared_features, [[1], [0]]),
+        shared_features_by_choice_names=(["a", "b"], ["c"]),
+        items_features_by_choice=(items_features, [[[0], [1]], [[2], [0]]]),
+        items_features_by_choice_names=(["ab", "bc"], ["cd"]),
         choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[0, 1],
+                values=np.array([[0.1, 0.2], [1.1, 1.2]], dtype=np.float32),
+                name="c",
+            ),
+            FeaturesStorage(
+                ids=[0, 1, 2],
+                values=np.array([[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]], dtype=np.float32),
+                name="cd",
+            ),
+        ],
     )
     full_dataset = dataset.indexer.get_full_dataset()
     assert isinstance(full_dataset[0], tuple)
     assert isinstance(full_dataset[1], tuple)
-    assert len(full_dataset[0]) == 1
-    assert len(full_dataset[1]) == 1
+    assert len(full_dataset[0]) == 2
+    assert len(full_dataset[1]) == 2
     assert (full_dataset[0][0] == shared_features.astype(np.float32)).all()
     assert (full_dataset[1][0] == items_features.astype(np.float32)).all()
+    assert (full_dataset[0][1] == np.array([[1.1, 1.2], [0.1, 0.2]], dtype=np.float32)).all()
+    assert (
+        full_dataset[1][1]
+        == np.array([[[0.1, 0.2], [1.1, 1.2]], [[2.1, 2.2], [0.1, 0.2]]], dtype=np.float32)
+    ).all()
 
     # Test with FeaturesStorage as availabilities
     dataset = ChoiceDataset(

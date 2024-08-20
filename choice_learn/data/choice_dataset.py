@@ -306,13 +306,14 @@ class ChoiceDataset(object):
                 if "choice_id" in available_items_by_choice.columns:
                     if "item_id" in available_items_by_choice.columns:
                         av_array = []
-                        for sess in np.sort(available_items_by_choice.choice_id):
+                        for sess in np.sort(available_items_by_choice.choice_id.unique()):
                             sess_df = available_items_by_choice.loc[
                                 available_items_by_choice.choice_id == sess
                             ]
+                            sess_df = sess_df.drop("choice_id", axis=1)
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
-                        available_items_by_choice = np.array(av_array)
+                        available_items_by_choice = np.squeeze(np.array(av_array))
                     else:
                         feature = feature.set_index("choice_id")
                         available_items_by_choice = available_items_by_choice.loc[
@@ -333,9 +334,9 @@ class ChoiceDataset(object):
             if "choice_id" in choices.columns:
                 choices = choices.set_index("choice_id")
             choices = choices.loc[np.sort(choices.index)]
-            items = np.sort(np.unique(choices.choice))
+            items = np.sort(np.unique(choices.to_numpy()))
             # items is the value (str) of the item
-            choices = [np.where(items == c)[0] for c in choices.choice]
+            choices = [np.where(items == c)[0] for c in np.squeeze(choices.to_numpy())]
             choices = np.squeeze(choices)
         elif isinstance(choices, pd.Series):
             choices = choices.to_numpy()
