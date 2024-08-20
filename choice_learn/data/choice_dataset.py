@@ -267,10 +267,16 @@ class ChoiceDataset(object):
                                 )
                                 available_items_by_choice = np.array(temp_availabilities)
                         else:
-                            feature = feature.set_index("choice_id")
+                            feature_array = []
+                            for sess in np.sort(feature.choice_id.unique()):
+                                sess_df = feature.loc[feature.choice_id == sess]
+                                sess_df = sess_df[sess_df.columns.difference(["choice_id"])]
+                                sess_feature = sess_df.to_numpy()
+                                feature_array.append(sess_feature)
+
                             items_features_by_choice = (
                                 items_features_by_choice[:i]
-                                + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                                + (np.stack(feature_array, axis=0),)
                                 + items_features_by_choice[i + 1 :]
                             )
                             if items_features_by_choice_names[i] is not None:
@@ -281,7 +287,7 @@ class ChoiceDataset(object):
                                 )
                             items_features_by_choice_names = (
                                 items_features_by_choice_names[:i]
-                                + (feature.columns,)
+                                + (feature.columns.difference(["choice_id"]),)
                                 + items_features_by_choice_names[i + 1 :]
                             )
                     else:
@@ -315,10 +321,14 @@ class ChoiceDataset(object):
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
                         available_items_by_choice = np.squeeze(np.array(av_array))
                     else:
-                        feature = feature.set_index("choice_id")
-                        available_items_by_choice = available_items_by_choice.loc[
-                            np.sort(feature.index)
-                        ].to_numpy()
+                        av_array = []
+                        for sess in np.sort(available_items_by_choice.choice_id.unique()):
+                            sess_df = available_items_by_choice.loc[
+                                available_items_by_choice.choice_id == sess
+                            ]
+                            sess_df = sess_df.drop("choice_id", axis=1)
+                            av_array.append(sess_df.to_numpy())
+                        available_items_by_choice = np.squeeze(np.array(av_array))
                 else:
                     logging.info(
                         "No 'choice_id' column found in available_items_by_choice DF, using index"
