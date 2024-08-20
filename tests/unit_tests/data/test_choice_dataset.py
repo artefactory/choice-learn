@@ -1,5 +1,6 @@
 """Unit testing for class ChoiceDataset."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -459,6 +460,124 @@ def test_from_df():
     ).all()
     assert (cd_test.available_items_by_choice == ground_truth_cd.available_items_by_choice).all()
     assert (cd_test.choices == ground_truth_cd.choices).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_long_df(
+            features_df,
+            shared_features_columns=["session_feat_1", "session_feat_2"],
+            items_features_columns=["session_item_feat_1", "session_item_feat_2"],
+            choice_format="items_index",
+            choices_column="choice",
+        )
+
+
+def test_from_wide_df():
+    """Diverse tests when instantiating from a single wide df."""
+    wide_df = {
+        "sh_1": [1.1, 2.2, 3.3],
+        "sh_2": [11.1, 22.2, 33.3],
+        "it_1_1": [0.4, 0.5, 0.6],
+        "it_2_1": [0.7, 0.8, 0.9],
+        "it_1_2": [1.4, 1.5, 1.6],
+        "it_2_2": [1.7, 1.8, 1.9],
+        "it_1_3": [2.4, 2.5, 2.6],
+        "it_2_3": [2.7, 2.8, 2.9],
+        "av_it_1": [1, 1, 1],
+        "av_it_2": [1, 0, 1],
+        "choice": ["it_1", "it_1", "it_2"],
+    }
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_suffix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_suffix=["av_it_1", "av_it_2", "av_it_3"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_prefix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_prefix=["av_it_1", "av_it_2", "av_it_3"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_prefix="av",
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=None,
+            shared_features_columns=["sh_1", "sh_2"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    with pytest.raises(ValueError):
+        wide_df_false = {
+            "sh_1": [1.1, 2.2, 3.3],
+            "sh_2": [11.1, 22.2, 33.3],
+            "it_1_1": [0.4, 0.5, 0.6],
+            "it_2_1": [0.7, 0.8, 0.9],
+            "it_1_2": [1.4, 1.5, 1.6],
+            "it_2_2": [1.7, 1.8, 1.9],
+            "it_1_3": [2.4, 2.5, 2.6],
+            "it_2_3": [2.7, 2.8, 2.9],
+            "av_it_1": [1, 1, 1],
+            "av_it_2": [1, 0, 1],
+            "choice": ["it_3", "it_3", "it_4"],
+        }
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df_false),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_prefix="av",
+            choices_column="choice",
+            choice_format="items_id",
+        )
 
 
 def test_summary():

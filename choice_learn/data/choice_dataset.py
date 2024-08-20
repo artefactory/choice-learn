@@ -984,7 +984,7 @@ class ChoiceDataset(object):
                         "We consider that it is one for each item however lenghts do not match"
                     )
                 logging.info("You have given a list of columns for availabilities.")
-                logging.infog("Each column will be matched to an item, given their order")
+                logging.info("Each column will be matched to an item, given their order")
                 available_items_by_choice = df[available_items_suffix].to_numpy()
             else:
                 columns = [f"{item}{delimiter}{available_items_suffix}" for item in items_id]

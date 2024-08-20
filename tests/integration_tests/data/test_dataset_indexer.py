@@ -78,6 +78,9 @@ def test_cd_indexer():
     full_dataset = dataset.indexer.get_full_dataset()
     assert (full_dataset[2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
 
+    for val_1, val_2 in zip(dataset.batch[[0, 1]], dataset.get_choices_batch([0, 1])):
+        assert (val_1 == val_2).all()
+
     # Test 1-D items_features with FeaturesStorage
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features,
