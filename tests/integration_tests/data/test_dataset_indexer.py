@@ -1,6 +1,7 @@
 """Test Indexer + ChoiceDataset + Storage."""
 
 import numpy as np
+import pytest
 
 from choice_learn.data import ChoiceDataset, FeaturesStorage, OneHotStorage
 
@@ -16,11 +17,33 @@ def test_cd_indexer():
         shared_features_by_choice=None, items_features_by_choice=items_features, choices=choices
     )
     assert dataset.batch[[0, 1]][0] is None
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert full_dataset[0] is None
+    assert (
+        full_dataset[1]
+        == np.array([[[0.5, 0.4], [0.2, 0.3]], [[0.4, 0.5], [0.3, 0.2]]], dtype=np.float32)
+    ).all()
 
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features, items_features_by_choice=None, choices=choices
     )
     assert dataset.batch[[0, 1]][1] is None
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert full_dataset[1] is None
+
+    # Test with FeaturesStorage as availabilities
+    dataset = ChoiceDataset(
+        shared_features_by_choice=(shared_features,),
+        items_features_by_choice=(items_features,),
+        choices=choices,
+    )
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert isinstance(full_dataset[0], tuple)
+    assert isinstance(full_dataset[1], tuple)
+    assert len(full_dataset[0]) == 1
+    assert len(full_dataset[1]) == 1
+    assert (full_dataset[0][0] == shared_features.astype(np.float32)).all()
+    assert (full_dataset[1][0] == items_features.astype(np.float32)).all()
 
     # Test with FeaturesStorage as availabilities
     dataset = ChoiceDataset(
@@ -33,6 +56,8 @@ def test_cd_indexer():
         ],
     )
     assert (dataset.batch[[0, 1]][2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert (full_dataset[2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
 
     # Test 1-D items_features with FeaturesStorage
     dataset = ChoiceDataset(
@@ -56,7 +81,52 @@ def test_cd_indexer():
     ).all()
     assert dataset.batch[[0, 1]][1].shape == (2, 2, 3)
 
-    # Test
+
+def test_cd_indexer_w_fs():
+    """Various indexations of a choice dataset with FeaturesStorage usage."""
+    shared_features = np.array([[0.0, 1.0], [2.0, 4.0]])
+    items_features = np.array([[[0.5, 0.4], [0.2, 0.3]], [[0.4, 0.5], [0.3, 0.2]]])
+    choices = [0, 1]
+    # Test FeaturesStorage & features conjoint use
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features,
+        items_features_by_choice=[
+            [[0.0, 3.3, 99.0], [1.0, 3.3, 100.0]],
+            [[2.0, 2.2, 101.0], [3.0, 3.3, 102.0]],
+        ],
+        items_features_by_choice_names=["aaa", "abc", "ddd"],
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[2.2, 3.3],
+                values=np.array([[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]], dtype=np.float32),
+                name="abc",
+            )
+        ],
+    )
+    assert (
+        dataset.batch[[1, 0]][1]
+        == np.array(
+            [
+                [[2.0, 4.4, 3.3, 5.5, 101.0], [3.0, 2.2, 1.1, 6.6, 102.0]],
+                [[0.0, 2.2, 1.1, 6.6, 99.0], [1.0, 2.2, 1.1, 6.6, 100.0]],
+            ],
+            dtype=np.float32,
+        )
+    ).all()
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert (
+        full_dataset[1]
+        == np.array(
+            [
+                [[0.0, 2.2, 1.1, 6.6, 99.0], [1.0, 2.2, 1.1, 6.6, 100.0]],
+                [[2.0, 4.4, 3.3, 5.5, 101.0], [3.0, 2.2, 1.1, 6.6, 102.0]],
+            ],
+            dtype=np.float32,
+        )
+    ).all()
+
+    # Test FeaturesStorage & features conjoint use
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features,
         items_features_by_choice=[[[0.0, 3.3], [1.0, 3.3]], [[2.0, 2.2], [3.0, 3.3]]],
@@ -79,6 +149,29 @@ def test_cd_indexer():
             ],
             dtype=np.float32,
         )
+    ).all()
+
+    with pytest.raises(NotImplementedError):
+        dataset.batch["abc"]
+
+    # Test FeaturesStorage & features conjoint use
+    dataset = ChoiceDataset(
+        shared_features_by_choice=[[0.0, 3.3, 99.0], [1.0, 2.2, 100.0]],
+        items_features_by_choice=items_features,
+        shared_features_by_choice_names=["aaa", "abc", "ddd"],
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[2.2, 3.3],
+                values=np.array([[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]], dtype=np.float32),
+                name="abc",
+            )
+        ],
+    )
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert (
+        full_dataset[0]
+        == np.array([[0.0, 2.2, 1.1, 6.6, 99.0], [1.0, 4.4, 3.3, 5.5, 100.0]], dtype=np.float32)
     ).all()
 
 
