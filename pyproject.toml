@@ -99,7 +99,7 @@ python-markdown-math = ">=0.8"
 mkdocs = ">=1.5"
 mkdocs-material = {extras = ["pygments"], version = ">=9.5.3"}
 mkdocs-nbconvert = ">=0.2.1"
-mkdocstrings-python = ">=1.7.5"
+mkdocstrings-python = ">=1.10.8"
 python-markdown-math = ">=0.8"
 bandit = ">=1.7.5"
 nbstripout = ">=0.7"

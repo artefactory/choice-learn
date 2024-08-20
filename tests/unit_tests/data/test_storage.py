@@ -2,8 +2,59 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from choice_learn.data.storage import ArrayStorage, DictStorage, FeaturesStorage, OneHotStorage
+from choice_learn.data.storage import (
+    ArrayStorage,
+    DictStorage,
+    FeaturesStorage,
+    OneHotStorage,
+    Storage,
+)
+
+
+def test_base_class():
+    """Dummy tests on base class."""
+    with pytest.raises(TypeError):
+        Storage(list)
+
+
+def test_raised_errors():
+    """Test various errors raised."""
+    # DictStorage
+    with pytest.raises(ValueError):
+        DictStorage(values={"a": [1, 2, 3], "b": 1})
+    with pytest.raises(ValueError):
+        DictStorage(values={"a": [[1], [2], [3]], "b": [1, 2]})
+    with pytest.raises(ValueError):
+        DictStorage(values={"a": [1, 2, 3], "b": [1, 2]})
+    with pytest.raises(ValueError):
+        DictStorage(values=([1, 2, 3], [1, 2, 3]))
+    ds_1 = DictStorage(
+        ids=["c", "d"], values={"a": [1, 2, 3], "b": [1, 2, 3]}, values_names=["v1", "v2", "v3"]
+    )
+    ds_2 = DictStorage(
+        values=pd.DataFrame({"id": ["a", "b"], "v1": [1, 1], "v2": [2, 2], "v3": [3, 3]}),
+        values_names=["c", "d", "e"],
+    )
+    assert (ds_1.values_names == ds_2.values_names).all()
+    np.testing.assert_equal(ds_1.storage, ds_2.storage)
+    ds_3 = DictStorage(values=[[1, 2, 3], [1, 2, 3]])
+    np.testing.assert_equal(ds_3.storage, {0: [1, 2, 3], 1: [1, 2, 3]})
+
+    # ArrayStorage
+    with pytest.raises(ValueError):
+        ArrayStorage(values={"a": [1, 2, 3], "b": 1})
+    with pytest.raises(ValueError):
+        ArrayStorage(values=np.array([1, 2, 3, 4, 5]))
+
+    # OneHotStorage
+    with pytest.raises(ValueError):
+        OneHotStorage(values={"a": [1, 2, 3], "b": [4, 5, 6]})
+    storage = OneHotStorage(values={"a": 0, "b": 1}, ids=[0, 1])
+    np.testing.assert_equal(storage.storage, {"a": 0, "b": 1})
+    with pytest.raises(ValueError):
+        ArrayStorage(values=([1, 2, 3], [4, 5, 6]))
 
 
 def test_len_storage():
@@ -184,6 +235,13 @@ def test_onehotstorage_instantiation():
     storage = FeaturesStorage(ids=ids, values=values, as_one_hot=True, name="OneHotTest")
     assert storage.shape == (5, 5)
     assert storage.storage == {0: 4, 1: 3, 2: 2, 3: 1, 4: 0}
+    sub_storage = storage[1, 2, 3]
+    assert sub_storage.shape == (3, 5)
+    assert sub_storage.storage == {1: 3, 2: 2, 3: 1}
+
+    assert storage.dtype == np.uint8
+    storage.astype(np.float32)
+    assert storage.dtype == np.float32
 
 
 def test_onehotstorage_instantiation_from_sequence():
@@ -258,6 +316,7 @@ def test_key_error():
 
     array_storage = FeaturesStorage(ids=ids, values=values, name="test")
     assert isinstance(array_storage, ArrayStorage)
+    assert len(array_storage) == 3
     try:
         _ = array_storage[4]
         assert False
