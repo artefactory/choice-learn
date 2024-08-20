@@ -596,7 +596,9 @@ def test_getitem():
     """Tests getitem method."""
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features_by_choice,
+        shared_features_by_choice_names=["budget", "age"],
         items_features_by_choice=items_features_by_choice,
+        items_features_by_choice_names=["price", "promotion"],
         available_items_by_choice=available_items_by_choice,
         choices=choices,
     )
@@ -613,6 +615,40 @@ def test_getitem():
     ).all()
     assert (sub_dataset.choices == dataset.choices[[0, 1]]).all()
     assert (sub_dataset.choices == [0, 2]).all()
+
+    sliced_sub_dataset = dataset[:2]
+    assert (
+        sub_dataset.shared_features_by_choice[0] == sliced_sub_dataset.shared_features_by_choice[0]
+    ).all()
+    assert (
+        sub_dataset.items_features_by_choice[0] == sliced_sub_dataset.items_features_by_choice[0]
+    ).all()
+    assert (sub_dataset.choices == sliced_sub_dataset.choices).all()
+
+    sub_dataset = dataset[2]
+    assert (sub_dataset.choices == [1]).all()
+    assert sub_dataset.shared_features_by_choice_names[0] == ["budget", "age"]
+    assert sub_dataset.items_features_by_choice_names[0] == ["price", "promotion"]
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=None,
+        items_features_by_choice=None,
+        available_items_by_choice=np.array([0, 0, 1]),
+        choices=choices,
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[0, 1], values=[[1, 1, 1], [1, 0, 1]], name="available_items_by_choice"
+            )
+        ],
+    )
+    assert dataset.get_n_shared_features() == 0
+    assert dataset.get_n_items_features() == 0
+    sub_dataset = dataset[[0, 1]]
+    assert sub_dataset.shared_features_by_choice is None
+    assert sub_dataset.items_features_by_choice is None
+    assert (
+        sub_dataset.indexer.get_full_dataset()[2] == np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+    ).all()
 
 
 def test_batch():
@@ -657,27 +693,37 @@ def test_iter_batch():
         assert batch[2].shape[1] == 3
         assert batch[3].shape[0] == 2 or batch[3].shape[0] == 1
     assert batch_nb == 1
+    for batch_nb, (batch, weight) in enumerate(
+        dataset.iter_batch(batch_size=2, sample_weight=np.array([1.0, 2.0, 0.8]))
+    ):
+        assert batch[0].shape[1] == 2
+        assert batch[1].shape[1] == 3
+        assert batch[1].shape[2] == 2
+        assert batch[2].shape[1] == 3
+        assert batch[3].shape[0] == 2 or batch[3].shape[0] == 1
+        assert len(weight) == len(batch[3])
+    assert batch_nb == 1
 
-    def test_filter():
-        """Tests the filter method."""
-        dataset = ChoiceDataset(
-            shared_features_by_choice=shared_features_by_choice,
-            items_features_by_choice=items_features_by_choice,
-            available_items_by_choice=available_items_by_choice,
-            choices=choices,
-        )
-        filtered_dataset = dataset.filter([True, False, True])
-        assert len(filtered_dataset) == 2
-        assert (
-            filtered_dataset.shared_features_by_choice[0]
-            == dataset.shared_features_by_choice[0][[0, 2]]
-        ).all()
-        assert (
-            filtered_dataset.items_features_by_choice[0]
-            == dataset.items_features_by_choice[0][[0, 2]]
-        ).all()
-        assert (
-            filtered_dataset.available_items_by_choice == dataset.available_items_by_choice[[0, 2]]
-        ).all()
-        assert (filtered_dataset.choices == dataset.choices[[0, 2]]).all()
-        assert (filtered_dataset.choices == [0, 1]).all()
+
+def test_filter():
+    """Tests the filter method."""
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        items_features_by_choice=items_features_by_choice,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    filtered_dataset = dataset.filter([True, False, True])
+    assert len(filtered_dataset) == 2
+    assert (
+        filtered_dataset.shared_features_by_choice[0]
+        == dataset.shared_features_by_choice[0][[0, 2]]
+    ).all()
+    assert (
+        filtered_dataset.items_features_by_choice[0] == dataset.items_features_by_choice[0][[0, 2]]
+    ).all()
+    assert (
+        filtered_dataset.available_items_by_choice == dataset.available_items_by_choice[[0, 2]]
+    ).all()
+    assert (filtered_dataset.choices == dataset.choices[[0, 2]]).all()
+    assert (filtered_dataset.choices == [0, 1]).all()

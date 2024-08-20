@@ -565,7 +565,9 @@ class ChoiceDataset(object):
                 base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
             if isinstance(self.available_items_by_choice, tuple):
-                base_num_items = self.available_items_by_choice[0].get_element_by_index(0).shape[0]
+                base_num_items = (
+                    self.available_items_by_choice[0].get_element_from_index(0).shape[0]
+                )
             else:
                 base_num_items = self.available_items_by_choice.shape[1]
         else:

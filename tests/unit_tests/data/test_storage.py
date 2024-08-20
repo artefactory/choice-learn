@@ -54,7 +54,7 @@ def test_raised_errors():
     storage = OneHotStorage(values={"a": 0, "b": 1}, ids=[0, 1])
     np.testing.assert_equal(storage.storage, {"a": 0, "b": 1})
     with pytest.raises(ValueError):
-        ArrayStorage(values=([1, 2, 3], [4, 5, 6]))
+        OneHotStorage(values=([1, 2, 3], [4, 5, 6]))
 
 
 def test_len_storage():
