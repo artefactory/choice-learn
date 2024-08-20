@@ -1,12 +1,12 @@
 """Indexer classes for data classes."""
 
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-class Indexer(object):
+class Indexer(ABC):
     """Base class for Indexer."""
 
     def __init__(self, indexed_object):

@@ -68,7 +68,7 @@ class Storage(ABC):
         str
             Description of the storage.
         """
-        return f"FeatureStorage with name {self.name}"
+        return "FeatureStorage with name: ."
 
 
 class FeaturesStorage(object):
@@ -416,7 +416,9 @@ class OneHotStorage(Storage):
             id_keys = [id_keys]
         sub_storage = {k: self.storage[k] for k in id_keys}
 
-        return OneHotStorage(values=sub_storage, name=self.name, dtype=self.dtype)
+        subset = OneHotStorage(values=sub_storage, name=self.name, dtype=self.dtype)
+        subset.shape = (len(subset), self.shape[1])
+        return subset
 
     def astype(self, dtype):
         """Change (mainly int or float) type of returned OneHot features vectors.
