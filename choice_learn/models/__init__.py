@@ -1,4 +1,5 @@
 """Models classes and functions."""
+
 import logging
 
 import tensorflow as tf

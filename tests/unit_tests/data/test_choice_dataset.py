@@ -1,8 +1,11 @@
 """Unit testing for class ChoiceDataset."""
+
+import numpy as np
 import pandas as pd
 import pytest
 
 from choice_learn.data.choice_dataset import ChoiceDataset
+from choice_learn.data.storage import FeaturesStorage
 
 # We have two customers whose features are
 # - Budget
@@ -41,6 +44,187 @@ items_features_by_choice = [
         [180, 1],  # Session 3, Item 2 [price, promotion]
     ],
 ]
+
+
+def test_raise_error():
+    """Test various errors in instantiation."""
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
+            choices=None,
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            shared_features_by_choice_names=["a", "b", "c"],
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=(shared_features_by_choice, shared_features_by_choice),
+            shared_features_by_choice_names=(["a", "b"], ["a", "b", "c"]),
+            items_features_by_choice=items_features_by_choice,
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=items_features_by_choice,
+            items_features_by_choice_names=["ab", "bc", "cd"],
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=(items_features_by_choice, items_features_by_choice),
+            items_features_by_choice_names=(["ab", "bc"], ["ab", "bc", "cd"]),
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=(items_features_by_choice, [0, 1]),
+            items_features_by_choice_names=(["ab", "bc"], ["abc"]),
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+    # Test instantiation with 1D FS for items_features
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        items_features_by_choice=(items_features_by_choice, [0, 1, 0]),
+        items_features_by_choice_names=(["ab", "bc"], ["abc"]),
+        available_items_by_choice=available_items_by_choice,
+        choices=[0, 2, 1],
+        features_by_ids=[
+            FeaturesStorage(
+                ids=[0, 1],
+                values=[[[0.0, 1.0], [1.0, 0], [1.0, 0]], [[2.0, 3.0], [3.0, 2.0], [3.0, 2.0]]],
+                name="abc",
+            )
+        ],
+    )
+    str(dataset)
+    assert True
+
+    # Test DF for items_features without choice_id
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=pd.DataFrame(
+                {
+                    "price": [100, 140, 200, 100, 120, 200, 0, 120, 180],
+                    "promotion": [0, 0, 0, 0, 1, 0, 0, 1, 1],
+                    "item_id": [0, 1, 2, 0, 1, 2, 0, 1, 2],
+                }
+            ),
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+        )
+
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=shared_features_by_choice,
+            items_features_by_choice=(items_features_by_choice, [2, 1, 0]),
+            items_features_by_choice_names=(["ab", "bc"], ["abc"]),
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+            features_by_ids=[
+                FeaturesStorage(
+                    ids=[0, 1],
+                    values=[[[0.0, 1.0], [1.0, 0], [1.0, 0]], [[2.0, 3.0], [3.0, 2.0], [3.0, 2.0]]],
+                    name="abc",
+                )
+            ],
+        )
+    with pytest.raises(ValueError):
+        ChoiceDataset(
+            shared_features_by_choice=(shared_features_by_choice, [[2], [1], [0]]),
+            items_features_by_choice=(items_features_by_choice,),
+            shared_features_by_choice_names=(["a", "b"], ["c"]),
+            available_items_by_choice=available_items_by_choice,
+            choices=[0, 2, 1],
+            features_by_ids=[
+                FeaturesStorage(
+                    ids=[0, 1],
+                    values=[[0.0, 1.0], [2.0, 3.0]],
+                    name="abc",
+                )
+            ],
+        )
+
+
+def test_instant_from_df():
+    """Various tests for CD instantiation with a DF."""
+    dataset = ChoiceDataset(
+        shared_features_by_choice=pd.DataFrame(
+            {"budget": [100, 200, 80], "age": [20, 40, 20], "choice_id": [0, 1, 2]}
+        ),
+        items_features_by_choice=pd.DataFrame(
+            {
+                "price": [100, 140, 200, 100, 120, 200, 0, 120, 180],
+                "promotion": [0, 0, 0, 0, 1, 0, 0, 1, 1],
+                "choice_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
+                "item_id": [0, 1, 2, 0, 1, 2, 0, 1, 2],
+            }
+        ),
+        available_items_by_choice=pd.DataFrame(
+            {
+                "av": [1, 1, 1, 1, 1, 1, 0, 1, 1],
+                "choice_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
+                "item_id": [0, 1, 2, 0, 1, 2, 0, 1, 2],
+            }
+        ),
+        choices=pd.DataFrame({"choice_id": [0, 1, 2], "choices": [0, 2, 1]}),
+    )
+    example_dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        items_features_by_choice=items_features_by_choice,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+
+    assert (dataset.choices == example_dataset.choices).all()
+    for value, ex_value in zip(
+        dataset.shared_features_by_choice, example_dataset.shared_features_by_choice
+    ):
+        assert (value == ex_value).all()
+    for value, ex_value in zip(
+        dataset.items_features_by_choice, example_dataset.items_features_by_choice
+    ):
+        assert (value == ex_value).all()
+    assert (dataset.available_items_by_choice == example_dataset.available_items_by_choice).all()
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=pd.DataFrame(
+            {"budget": [100, 200, 80], "age": [20, 40, 20], "choice_id": [0, 1, 2]}
+        ),
+        items_features_by_choice=pd.DataFrame(
+            {
+                "price": [100, 140, 200, 100, 120, 200, 0, 120, 180],
+                "promotion": [0, 0, 0, 0, 1, 0, 0, 1, 1],
+                "choice_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
+            }
+        ),
+        available_items_by_choice=pd.DataFrame(
+            {
+                "av": [1, 1, 1, 1, 1, 1, 0, 1, 1],
+                "choice_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
+            }
+        ),
+        choices=pd.DataFrame({"choice_id": [0, 1, 2], "choices": [0, 2, 1]}),
+    )
+    for value, ex_value in zip(
+        dataset.items_features_by_choice, example_dataset.items_features_by_choice
+    ):
+        assert (value == ex_value).all()
+    assert (dataset.available_items_by_choice == example_dataset.available_items_by_choice).all()
 
 
 def test_instantiate_len():
@@ -276,6 +460,124 @@ def test_from_df():
     ).all()
     assert (cd_test.available_items_by_choice == ground_truth_cd.available_items_by_choice).all()
     assert (cd_test.choices == ground_truth_cd.choices).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_long_df(
+            features_df,
+            shared_features_columns=["session_feat_1", "session_feat_2"],
+            items_features_columns=["session_item_feat_1", "session_item_feat_2"],
+            choice_format="items_index",
+            choices_column="choice",
+        )
+
+
+def test_from_wide_df():
+    """Diverse tests when instantiating from a single wide df."""
+    wide_df = {
+        "sh_1": [1.1, 2.2, 3.3],
+        "sh_2": [11.1, 22.2, 33.3],
+        "it_1_1": [0.4, 0.5, 0.6],
+        "it_2_1": [0.7, 0.8, 0.9],
+        "it_1_2": [1.4, 1.5, 1.6],
+        "it_2_2": [1.7, 1.8, 1.9],
+        "it_1_3": [2.4, 2.5, 2.6],
+        "it_2_3": [2.7, 2.8, 2.9],
+        "av_it_1": [1, 1, 1],
+        "av_it_2": [1, 0, 1],
+        "choice": ["it_1", "it_1", "it_2"],
+    }
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_suffix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_suffix=["av_it_1", "av_it_2", "av_it_3"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_prefix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_prefix=["av_it_1", "av_it_2", "av_it_3"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2"],
+        available_items_prefix="av",
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert (
+        dataset.available_items_by_choice == np.array([[1.0, 1.0], [1.0, 0.0], [1.0, 1.0]])
+    ).all()
+    assert (dataset.choices == np.array([0, 0, 1])).all()
+
+    with pytest.raises(ValueError):
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df),
+            items_id=None,
+            shared_features_columns=["sh_1", "sh_2"],
+            choices_column="choice",
+            choice_format="items_id",
+        )
+    with pytest.raises(ValueError):
+        wide_df_false = {
+            "sh_1": [1.1, 2.2, 3.3],
+            "sh_2": [11.1, 22.2, 33.3],
+            "it_1_1": [0.4, 0.5, 0.6],
+            "it_2_1": [0.7, 0.8, 0.9],
+            "it_1_2": [1.4, 1.5, 1.6],
+            "it_2_2": [1.7, 1.8, 1.9],
+            "it_1_3": [2.4, 2.5, 2.6],
+            "it_2_3": [2.7, 2.8, 2.9],
+            "av_it_1": [1, 1, 1],
+            "av_it_2": [1, 0, 1],
+            "choice": ["it_3", "it_3", "it_4"],
+        }
+        ChoiceDataset.from_single_wide_df(
+            df=pd.DataFrame(wide_df_false),
+            items_id=["it_1", "it_2"],
+            shared_features_columns=["sh_1", "sh_2"],
+            items_features_suffixes=["1", "2"],
+            available_items_prefix="av",
+            choices_column="choice",
+            choice_format="items_id",
+        )
 
 
 def test_summary():
