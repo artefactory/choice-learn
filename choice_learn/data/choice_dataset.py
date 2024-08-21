@@ -333,7 +333,9 @@ class ChoiceDataset(object):
                     logging.info(
                         "No 'choice_id' column found in available_items_by_choice DF, using index"
                     )
-                    available_items_by_choice = available_items_by_choice.to_numpy()
+                    available_items_by_choice = available_items_by_choice.to_numpy().reshape(
+                        len(choices), -1
+                    )
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
@@ -827,11 +829,11 @@ class ChoiceDataset(object):
         """
         try:
             features.remove("context_id")
-        except ValueError:
+        except (AttributeError, ValueError):
             pass
         try:
             features.remove("item_id")
-        except ValueError:
+        except (AttributeError, ValueError):
             pass
 
         if choices_index is None:
