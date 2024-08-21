@@ -878,7 +878,7 @@ def test_getitem():
     assert (
         sub_dataset.indexer.get_full_dataset()[2] == np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
     ).all()
-    
+
     # wrong nb of indexes in available_items_by_choice
     with pytest.raises(ValueError):
         ChoiceDataset(
@@ -905,6 +905,7 @@ def test_getitem():
                 )
             ],
         )
+
 
 def test_batch():
     """Tests the batch method."""
