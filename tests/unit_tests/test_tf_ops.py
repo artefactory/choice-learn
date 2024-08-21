@@ -2,7 +2,11 @@
 
 import numpy as np
 
-from choice_learn.tf_ops import CustomCategoricalCrossEntropy, softmax_with_availabilities
+from choice_learn.tf_ops import (
+    CustomCategoricalCrossEntropy,
+    ExactCategoricalCrossEntropy,
+    softmax_with_availabilities,
+)
 
 
 def test_softmax():
@@ -11,29 +15,38 @@ def test_softmax():
         [[1, 1, 1, 1], [2, 1, 2, 1], [np.log(0.125), np.log(0.125), np.log(0.25), np.log(0.5)]]
     )
     availabilities = np.array([[1.0, 1.0, 1.0, 1.0], [1.0, 0.0, 1.0, 0.0], [1.0, 1.0, 1.0, 1.0]])
-    """
-    probabilities = np.array([[0.25, 0.25, 0.25, 0.25],
-                              [0.5, 0.0, 0.5, 0.0],
-                              [0.125, 0.125, 0.250, 0.5]])
-    """
+
+    probabilities = np.array(
+        [[0.25, 0.25, 0.25, 0.25], [0.5, 0.0, 0.5, 0.0], [0.125, 0.125, 0.250, 0.5]]
+    )
+
     softmax_probabilities = softmax_with_availabilities(
         items_logit_by_choice=logits, available_items_by_choice=availabilities
     ).numpy()
-    assert (softmax_probabilities[0] < 0.26).all()
-    assert (softmax_probabilities[0] > 0.24).all()
+    assert (np.abs(softmax_probabilities - probabilities) < 0.01).all()
 
-    assert (softmax_probabilities[1][[0, 2]] < 0.51).all()
-    assert (softmax_probabilities[1][[0, 2]] > 0.49).all()
-    assert (softmax_probabilities[1][[1, 3]] < 0.01).all()
 
-    assert (softmax_probabilities[2][0] < 0.126).all()
-    assert (softmax_probabilities[2][0] > 0.124).all()
-    assert (softmax_probabilities[2][1] < 0.126).all()
-    assert (softmax_probabilities[2][1] > 0.124).all()
-    assert (softmax_probabilities[2][2] < 0.251).all()
-    assert (softmax_probabilities[2][2] > 0.249).all()
-    assert (softmax_probabilities[2][3] < 0.501).all()
-    assert (softmax_probabilities[2][3] > 0.499).all()
+def test_softmax_exit():
+    """Test the softmax function with normalized exit."""
+    logits = np.array(
+        [[np.log(1.0), np.log(1.0), np.log(1.0), np.log(1.0)], [np.log(2.0), 1.0, np.log(2.0), 1.0]]
+    )
+    availabilities = np.array([[1.0, 1.0, 1.0, 1.0], [1.0, 0.0, 1.0, 0.0]])
+
+    probabilities = np.array([[0.20, 0.20, 0.20, 0.20], [0.4, 0.0, 0.4, 0.0]])
+
+    softmax_probabilities = softmax_with_availabilities(
+        items_logit_by_choice=logits, available_items_by_choice=availabilities, normalize_exit=True
+    ).numpy()
+    assert (np.abs(softmax_probabilities - probabilities) < 0.01).all()
+
+
+def test_crossentropy_smoothing():
+    """Test label smoothing of softmax."""
+    smoothed_loss = CustomCategoricalCrossEntropy(label_smoothing=0.1)
+    exact_loss = CustomCategoricalCrossEntropy()
+
+    assert exact_loss([[0.05, 0.95]], [[0.9, 0.1]]) == smoothed_loss([[0.0, 1.0]], [[0.9, 0.1]])
 
 
 def test_custom_categorical_crossentropy():
@@ -48,3 +61,22 @@ def test_custom_categorical_crossentropy():
 
     loss = CustomCategoricalCrossEntropy(sparse=True, from_logits=True)
     assert loss([1], [[21.0, 0.0]]) > 20.0
+
+
+def test_exact_categorical_crossentropy():
+    """Test the CustomCategoricalCrossEntropy loss class."""
+    loss = ExactCategoricalCrossEntropy()
+    assert loss([[0.0, 1.0]], [[0.0, 1.0]]) == 0.0
+    assert loss([[0.0, 1.0]], [[1.0, 0.0]]) > 20.0
+
+    loss = ExactCategoricalCrossEntropy(sparse=True)
+    assert loss([1], [[0.0, 1.0]]) == 0.0
+    assert loss([1], [[1.0, 0.0]]) > 20.0
+
+    loss = ExactCategoricalCrossEntropy(sparse=True, from_logits=True)
+    assert loss([0], [[21.0, 0.0]]) < 1e-3
+    assert loss([1], [[21.0, 0.0]]) > 20.0
+    assert loss([1], [[2.0, 4.0]]) > 0.1269
+    assert loss([1], [[2.0, 4.0]]) < 0.1270
+    assert loss([1], [[4.0, 2.0]]) > 2.1269
+    assert loss([1], [[4.0, 2.0]]) < 2.1270

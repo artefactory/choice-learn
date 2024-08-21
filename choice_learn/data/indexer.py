@@ -1,12 +1,12 @@
 """Indexer classes for data classes."""
 
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-class Indexer(object):
+class Indexer(ABC):
     """Base class for Indexer."""
 
     def __init__(self, indexed_object):
@@ -176,8 +176,7 @@ class OneHotStorageIndexer(Indexer):
                 one_hot.append(self[j])
             return np.stack(one_hot).astype(self.dtype)
         if isinstance(sequence_keys, slice):
-            return self[list(range(*sequence_keys.indices(len(self.shape[0]))))]
-        # else:
+            return self[list(range(*sequence_keys.indices(self.shape[0])))]
         one_hot = np.zeros(self.shape[1])
         try:
             one_hot[self.storage.storage[sequence_keys]] = 1
@@ -421,7 +420,7 @@ class ChoiceDatasetIndexer(Indexer):
                                 feat_ind_min = feature_index + 1
                             if feat_ind_min != items_features_by_choice[tuple_index].shape[2]:
                                 unstacked_feat.append(
-                                    shared_features_by_choice[tuple_index][:, :, feat_ind_min:]
+                                    items_features_by_choice[tuple_index][:, :, feat_ind_min:]
                                 )
                             mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                     else:
@@ -560,6 +559,10 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[shared_features_by_choice[tuple_index][:, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    if feat_ind_min != shared_features_by_choice[tuple_index].shape[1]:
+                        unstacked_feat.append(
+                            shared_features_by_choice[tuple_index][:, feat_ind_min:]
+                        )
                     mapped_features.append(np.concatenate(unstacked_feat, axis=1))
                 else:
                     mapped_features.append(shared_features_by_choice[tuple_index])
@@ -584,6 +587,10 @@ class ChoiceDatasetIndexer(Indexer):
                             ].batch[items_features_by_choice[tuple_index][:, :, feature_index]]
                         )
                         feat_ind_min = feature_index + 1
+                    if feat_ind_min != items_features_by_choice[tuple_index].shape[2]:
+                        unstacked_feat.append(
+                            items_features_by_choice[tuple_index][:, :, feat_ind_min:]
+                        )
                     mapped_features.append(np.concatenate(unstacked_feat, axis=2))
                 else:
                     mapped_features.append(items_features_by_choice[tuple_index])

@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
       - uses: actions/checkout@v2
@@ -34,6 +34,6 @@ jobs:
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
-          report-only-changed-files: true
           unique-id-for-comment: ${{ matrix.python-version }}
           title: 'Coverage Report for Python ${{ matrix.python-version }}'
+

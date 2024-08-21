@@ -267,10 +267,16 @@ class ChoiceDataset(object):
                                 )
                                 available_items_by_choice = np.array(temp_availabilities)
                         else:
-                            feature = feature.set_index("choice_id")
+                            feature_array = []
+                            for sess in np.sort(feature.choice_id.unique()):
+                                sess_df = feature.loc[feature.choice_id == sess]
+                                sess_df = sess_df[sess_df.columns.difference(["choice_id"])]
+                                sess_feature = sess_df.to_numpy()
+                                feature_array.append(sess_feature)
+
                             items_features_by_choice = (
                                 items_features_by_choice[:i]
-                                + (feature.loc[np.sort(feature.index)].to_numpy(),)
+                                + (np.stack(feature_array, axis=0),)
                                 + items_features_by_choice[i + 1 :]
                             )
                             if items_features_by_choice_names[i] is not None:
@@ -281,7 +287,7 @@ class ChoiceDataset(object):
                                 )
                             items_features_by_choice_names = (
                                 items_features_by_choice_names[:i]
-                                + (feature.columns,)
+                                + (feature.columns.difference(["choice_id"]),)
                                 + items_features_by_choice_names[i + 1 :]
                             )
                     else:
@@ -306,23 +312,30 @@ class ChoiceDataset(object):
                 if "choice_id" in available_items_by_choice.columns:
                     if "item_id" in available_items_by_choice.columns:
                         av_array = []
-                        for sess in np.sort(available_items_by_choice.choice_id):
+                        for sess in np.sort(available_items_by_choice.choice_id.unique()):
                             sess_df = available_items_by_choice.loc[
                                 available_items_by_choice.choice_id == sess
                             ]
+                            sess_df = sess_df.drop("choice_id", axis=1)
                             sess_df = sess_df.set_index("item_id")
                             av_array.append(sess_df.loc[np.sort(sess_df.index)].to_numpy())
-                        available_items_by_choice = np.array(av_array)
+                        available_items_by_choice = np.squeeze(np.array(av_array))
                     else:
-                        feature = feature.set_index("choice_id")
-                        available_items_by_choice = available_items_by_choice.loc[
-                            np.sort(feature.index)
-                        ].to_numpy()
+                        av_array = []
+                        for sess in np.sort(available_items_by_choice.choice_id.unique()):
+                            sess_df = available_items_by_choice.loc[
+                                available_items_by_choice.choice_id == sess
+                            ]
+                            sess_df = sess_df.drop("choice_id", axis=1)
+                            av_array.append(sess_df.to_numpy())
+                        available_items_by_choice = np.squeeze(np.array(av_array))
                 else:
                     logging.info(
                         "No 'choice_id' column found in available_items_by_choice DF, using index"
                     )
-                    available_items_by_choice = available_items_by_choice.to_numpy()
+                    available_items_by_choice = available_items_by_choice.to_numpy().reshape(
+                        len(choices), -1
+                    )
 
         # Handling choices
         # Choices must then be given as the name of the chosen item
@@ -333,9 +346,9 @@ class ChoiceDataset(object):
             if "choice_id" in choices.columns:
                 choices = choices.set_index("choice_id")
             choices = choices.loc[np.sort(choices.index)]
-            items = np.sort(np.unique(choices.choice))
+            items = np.sort(np.unique(choices.to_numpy()))
             # items is the value (str) of the item
-            choices = [np.where(items == c)[0] for c in choices.choice]
+            choices = [np.where(items == c)[0] for c in np.squeeze(choices.to_numpy())]
             choices = np.squeeze(choices)
         elif isinstance(choices, pd.Series):
             choices = choices.to_numpy()
@@ -549,16 +562,14 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             if self.items_features_by_choice[0].ndim == 1:
                 # items_features_by_choice fully integrated into a FeaturesStorage
-                base_num_items = (
-                    next(iter(next(iter(self.items_features_by_choice_map.values())).values()))
-                    .get_element_from_index(0)
-                    .shape[0]
-                )
+                base_num_items = self.items_features_by_choice_map[0][0].shape[1]
             else:
                 base_num_items = self.items_features_by_choice[0].shape[1]
         elif self.available_items_by_choice is not None:
             if isinstance(self.available_items_by_choice, tuple):
-                base_num_items = self.available_items_by_choice[0].get_element_by_index(0).shape[0]
+                base_num_items = (
+                    self.available_items_by_choice[0].get_element_from_index(0).shape[0]
+                )
             else:
                 base_num_items = self.available_items_by_choice.shape[1]
         else:
@@ -573,8 +584,8 @@ class ChoiceDataset(object):
         if self.items_features_by_choice is not None:
             for k, items_feature in enumerate(self.items_features_by_choice):
                 if items_feature.ndim == 1:
-                    batch = self.items_features_by_choice_map[k][0].batch[[0, 1]]
-                    if batch.shape[1] != base_num_items:
+                    features_shape = self.items_features_by_choice_map[k][0].shape
+                    if features_shape[1] != base_num_items:
                         raise ValueError(
                             f"""{k}-th 'items_features_by_choice' shape does not match the
                             detected number of items:
@@ -818,11 +829,11 @@ class ChoiceDataset(object):
         """
         try:
             features.remove("context_id")
-        except ValueError:
+        except (AttributeError, ValueError):
             pass
         try:
             features.remove("item_id")
-        except ValueError:
+        except (AttributeError, ValueError):
             pass
 
         if choices_index is None:
@@ -977,7 +988,7 @@ class ChoiceDataset(object):
                         "We consider that it is one for each item however lenghts do not match"
                     )
                 logging.info("You have given a list of columns for availabilities.")
-                logging.infog("Each column will be matched to an item, given their order")
+                logging.info("Each column will be matched to an item, given their order")
                 available_items_by_choice = df[available_items_suffix].to_numpy()
             else:
                 columns = [f"{item}{delimiter}{available_items_suffix}" for item in items_id]
