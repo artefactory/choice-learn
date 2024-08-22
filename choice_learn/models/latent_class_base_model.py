@@ -123,10 +123,7 @@ class BaseLatentClassModel(object):
             choices,
         )
 
-        latent_probabilities = tf.concat(
-            [[tf.constant(1.0)], tf.math.exp(self.latent_logits)], axis=0
-        )
-        latent_probabilities = latent_probabilities / tf.reduce_sum(latent_probabilities)
+        latent_probabilities = self.get_latent_classes_weights()
         # Compute probabilities from utilities & availabilties
         probabilities = []
         for i, class_utilities in enumerate(utilities):
@@ -521,10 +518,7 @@ class BaseLatentClassModel(object):
         predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
         """
         print(", ", len(latent_probabilities), len(predicted_probas))
-        latent_model_probas = [
-            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)]
-        print("prelatent probas", len(predicted_probas), len(predicted_probas[0]))
-        latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
+        latent_model_probas = self.get_latent_classes_weights()
         print('lmp', latent_model_probas.shape)
         predicted_probas = [
             latent
@@ -540,7 +534,7 @@ class BaseLatentClassModel(object):
         print("probas shape", predicted_probas.shape)
         loss = self.loss(
             y_pred=latent_model_probas,
-            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
+            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[0]),
         )
 
         return tf.clip_by_value(predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1), loss
