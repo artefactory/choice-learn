@@ -65,7 +65,7 @@ class BaseLatentClassModel(object):
         self.optimizer = optimizer
         self.lr = lr
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0)
+        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0, epsilon=1e-5)
         self.instantiated = False
 
     def instantiate(self, **kwargs):
@@ -495,8 +495,37 @@ class BaseLatentClassModel(object):
 
     def _expectation(self, choice_dataset):
         predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
+        latent_probabilities = tf.concat(
+            [[tf.constant(1.0)], tf.math.exp(self.latent_logits)], axis=0
+        )
+        latent_probabilities = latent_probabilities / tf.reduce_sum(latent_probabilities)
+        print("lp", latent_probabilities)
         if np.sum(np.isnan(predicted_probas)) > 0:
             print("Nan in probas")
+            for m in self.models:
+                print(m.trainable_weights)
+        """predicted_probas = [
+            latent
+            * tf.gather_nd(
+                params=proba,
+                indices=tf.stack(
+                    [tf.range(0, len(choice_dataset), 1), choice_dataset.choices], axis=1
+                ),
+            )
+            for latent, proba in zip(latent_probabilities, predicted_probas)
+        ]
+        
+        print(len(predicted_probas))
+        # E-step
+        ###### FILL THE CODE BELOW TO ESTIMATE THE WEIGHTS (weights = xxx)
+        predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
+        """
+        print(", ", len(latent_probabilities), len(predicted_probas))
+        latent_model_probas = [
+            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)]
+        print("prelatent probas", len(predicted_probas), len(predicted_probas[0]))
+        latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
+        print('lmp', latent_model_probas.shape)
         predicted_probas = [
             latent
             * tf.gather_nd(
@@ -505,15 +534,16 @@ class BaseLatentClassModel(object):
                     [tf.range(0, len(choice_dataset), 1), choice_dataset.choices], axis=1
                 ),
             )
-            for latent, proba in zip(self.latent_logits, predicted_probas)
+            for latent, proba in zip(latent_probabilities, predicted_probas)
         ]
+        predicted_probas = np.stack(predicted_probas, axis=1)
+        print("probas shape", predicted_probas.shape)
+        loss = self.loss(
+            y_pred=latent_model_probas,
+            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
+        )
 
-        # E-step
-        ###### FILL THE CODE BELOW TO ESTIMATE THE WEIGHTS (weights = xxx)
-        predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
-        loss = np.sum(np.log(np.sum(predicted_probas, axis=1)))
-
-        return predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), loss
+        return tf.clip_by_value(predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1), loss
 
     def _maximization(self, choice_dataset, verbose=0):
         """Maximize step.
@@ -534,19 +564,23 @@ class BaseLatentClassModel(object):
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
             self.models[q].fit(choice_dataset, sample_weight=self.weights[:, q], verbose=verbose)
+            print(tf.reduce_min(self.weights[:, q]))
+            print(self.models[q].trainable_weights)
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
+        print("latent probas", latent_probas, len(self.models))
+        return tf.math.log((latent_probas / latent_probas[0])[1:])
 
-        return latent_probas / np.sum(latent_probas)
-
-    def _em_fit(self, choice_dataset, verbose=0):
+    def _em_fit(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit with Expectation-Maximization Algorithm.
 
         Parameters
         ----------
         choice_dataset: ChoiceDataset
             Dataset to be used for coefficients estimations
+        sample_weight : np.ndarray, optional
+            sample weights to apply, by default None
         verbose : int, optional
             print level, for debugging, by default 0
 
@@ -559,12 +593,15 @@ class BaseLatentClassModel(object):
         """
         hist_logits = []
         hist_loss = []
+        _ = sample_weight
 
         # Initialization
-        for model in self.models:
+        init_sample_weight = np.random.rand(self.n_latent_classes, len(choice_dataset))
+        init_sample_weight = init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True)
+        for i, model in enumerate(self.models):
             # model.instantiate()
             model.fit(
-                choice_dataset, sample_weight=np.random.rand(len(choice_dataset)), verbose=verbose
+                choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose
             )
         for i in tqdm.trange(self.epochs):
             self.weights, loss = self._expectation(choice_dataset)
@@ -607,3 +644,16 @@ class BaseLatentClassModel(object):
             stacked_probabilities.append(probabilities)
 
         return tf.concat(stacked_probabilities, axis=0)
+    
+    def get_latent_classes_weights(self):
+        """Returns the latent classes weights / probabilities from logits.
+
+
+        Returns
+        -------
+        np.ndarray (n_latent_classes, )
+            Latent classes weights/probabilities
+        """
+        return tf.nn.softmax(tf.concat(
+            [[tf.constant(0.0)], self.latent_logits], axis=0
+        ))

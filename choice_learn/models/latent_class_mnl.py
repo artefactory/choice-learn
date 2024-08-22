@@ -54,7 +54,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             "optimizer": optimizer,
             "tolerance": tolerance,
             "lr": lr,
-            "epochs": epochs,
+            "epochs": 1000,
         }
 
         super().__init__(
