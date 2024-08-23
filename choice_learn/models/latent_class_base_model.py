@@ -794,32 +794,13 @@ class BaseLatentClassModel(object):
     def _expectation(self, choice_dataset):
         predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
         latent_probabilities = self.get_latent_classes_weights()
-        print("lp", latent_probabilities)
         if np.sum(np.isnan(predicted_probas)) > 0:
-            print("Nan in probas")
-            for m in self.models:
-                print(m.trainable_weights)
-        """predicted_probas = [
-            latent
-            * tf.gather_nd(
-                params=proba,
-                indices=tf.stack(
-                    [tf.range(0, len(choice_dataset), 1), choice_dataset.choices], axis=1
-                ),
-            )
-            for latent, proba in zip(latent_probabilities, predicted_probas)
-        ]
-        
-        print(len(predicted_probas))
-        # E-step
-        predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
-        """
-        print(", ", len(latent_probabilities), len(predicted_probas))
+            print("A NaN values has been found. You should try again to fit with")
+            print("smaller tolerance value (for l-bfgs) and epsilon value (in loss computation)")
+       
         latent_model_probas = [
             latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)]
-        print("prelatent probas", len(predicted_probas), len(predicted_probas[0]))
         latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
-        print('lmp', latent_model_probas.shape)
         predicted_probas = [
             latent
             * tf.gather_nd(
@@ -831,7 +812,6 @@ class BaseLatentClassModel(object):
             for latent, proba in zip(latent_probabilities, predicted_probas)
         ]
         predicted_probas = np.stack(predicted_probas, axis=1)
-        print("probas shape", predicted_probas.shape)
         loss = self.loss(
             y_pred=latent_model_probas,
             y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
@@ -858,12 +838,9 @@ class BaseLatentClassModel(object):
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
             self.models[q].fit(choice_dataset, sample_weight=self.weights[:, q], verbose=verbose)
-            print(tf.reduce_min(self.weights[:, q]))
-            print(self.models[q].trainable_weights)
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
-        print("latent probas", latent_probas, len(self.models))
         return tf.math.log((latent_probas / latent_probas[0])[1:])
 
     def _em_fit(self, choice_dataset, sample_weight=None, verbose=0):
