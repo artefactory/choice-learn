@@ -82,7 +82,7 @@ class BaseLatentClassModel(object):
     def instantiate(self, **kwargs):
         """Instantiate the model."""
         init_logit = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.08, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
         self.latent_logits = init_logit
@@ -240,7 +240,7 @@ class BaseLatentClassModel(object):
                     choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
                 )
 
-            return self._fit_normal(
+            return self._fit_with_gd(
                 choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
             )
 
@@ -457,10 +457,267 @@ class BaseLatentClassModel(object):
             print("---------------------------------------------------------------")
             print("Number of iterations:", results[2].numpy())
             print("Algorithm converged before reaching max iterations:", results[0].numpy())
-        return func.history
+        return func.history, results
 
-    def _gd_train_step(self, choice_dataset, sample_weight=None):
-        pass
+    @tf.function
+    def train_step(
+        self,
+        shared_features_by_choice,
+        items_features_by_choice,
+        available_items_by_choice,
+        choices,
+        sample_weight=None,
+    ):
+        """Represent one training step (= one gradient descent step) of the model.
+
+        Parameters
+        ----------
+        shared_features_by_choice : tuple of np.ndarray (choices_features)
+            a batch of shared features
+            Shape must be (n_choices, n_shared_features)
+        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+            a batch of items features
+            Shape must be (n_choices, n_items_features)
+        available_items_by_choice : np.ndarray
+            A batch of items availabilities
+            Shape must be (n_choices, n_items)
+        choices_batch : np.ndarray
+            Choices
+            Shape must be (n_choices, )
+        sample_weight : np.ndarray, optional
+            List samples weights to apply during the gradient descent to the batch elements,
+            by default None
+
+        Returns
+        -------
+        tf.Tensor
+            Value of NegativeLogLikelihood loss for the batch
+        """
+        with tf.GradientTape() as tape:
+            utilities = self.compute_batch_utility(
+                shared_features_by_choice=shared_features_by_choice,
+                items_features_by_choice=items_features_by_choice,
+                available_items_by_choice=available_items_by_choice,
+                choices=choices,
+            )
+
+            probabilities = tf_ops.softmax_with_availabilities(
+                items_logit_by_choice=utilities,
+                available_items_by_choice=available_items_by_choice,
+                normalize_exit=self.add_exit_choice,
+                axis=-1,
+            )
+            # Negative Log-Likelihood
+            neg_loglikelihood = self.loss(
+                y_pred=probabilities,
+                y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
+                sample_weight=sample_weight,
+            )
+            if self.regularization is not None:
+                regularization = tf.reduce_sum(
+                    [self.regularizer(w) for w in self.trainable_weights]
+                )
+                neg_loglikelihood += regularization
+
+        grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        return neg_loglikelihood
+    
+
+    def _fit_with_gd(
+        self,
+        choice_dataset,
+        sample_weight=None,
+        val_dataset=None,
+        verbose=0,
+    ):
+        """Train the model with a ChoiceDataset.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Input data in the form of a ChoiceDataset
+        sample_weight : np.ndarray, optional
+            Sample weight to apply, by default None
+        val_dataset : ChoiceDataset, optional
+            Test ChoiceDataset to evaluate performances on test at each epoch, by default None
+        verbose : int, optional
+            print level, for debugging, by default 0
+        epochs : int, optional
+            Number of epochs, default is None, meaning we use self.epochs
+        batch_size : int, optional
+            Batch size, default is None, meaning we use self.batch_size
+
+        Returns
+        -------
+        dict:
+            Different metrics values over epochs.
+        """
+        if hasattr(self, "instantiated"):
+            if not self.instantiated:
+                raise ValueError("Model not instantiated. Please call .instantiate() first.")
+        epochs = self.epochs
+        batch_size = self.batch_size
+
+        losses_history = {"train_loss": []}
+        t_range = tqdm.trange(epochs, position=0)
+
+        self.callbacks.on_train_begin()
+
+        # Iterate of epochs
+        for epoch_nb in t_range:
+            self.callbacks.on_epoch_begin(epoch_nb)
+            t_start = time.time()
+            train_logs = {"train_loss": []}
+            val_logs = {"val_loss": []}
+            epoch_losses = []
+
+            if sample_weight is not None:
+                if verbose > 0:
+                    inner_range = tqdm.tqdm(
+                        choice_dataset.iter_batch(
+                            shuffle=True, sample_weight=sample_weight, batch_size=batch_size
+                        ),
+                        total=int(len(choice_dataset) / np.max([1, batch_size])),
+                        position=1,
+                        leave=False,
+                    )
+                else:
+                    inner_range = choice_dataset.iter_batch(
+                        shuffle=True, sample_weight=sample_weight, batch_size=batch_size
+                    )
+
+                for batch_nb, (
+                    (
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
+                        choices_batch,
+                    ),
+                    weight_batch,
+                ) in enumerate(inner_range):
+                    self.callbacks.on_train_batch_begin(batch_nb)
+
+                    neg_loglikelihood = self.train_step(
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
+                        choices_batch,
+                        sample_weight=weight_batch,
+                    )
+
+                    train_logs["train_loss"].append(neg_loglikelihood)
+                    temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                    self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
+
+                    # Optimization Steps
+                    epoch_losses.append(neg_loglikelihood)
+
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
+            # In this case we do not need to batch the sample_weights
+            else:
+                if verbose > 0:
+                    inner_range = tqdm.tqdm(
+                        choice_dataset.iter_batch(shuffle=True, batch_size=batch_size),
+                        total=int(len(choice_dataset) / np.max([batch_size, 1])),
+                        position=1,
+                        leave=False,
+                    )
+                else:
+                    inner_range = choice_dataset.iter_batch(shuffle=True, batch_size=batch_size)
+                for batch_nb, (
+                    shared_features_batch,
+                    items_features_batch,
+                    available_items_batch,
+                    choices_batch,
+                ) in enumerate(inner_range):
+                    self.callbacks.on_train_batch_begin(batch_nb)
+                    neg_loglikelihood = self.train_step(
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
+                        choices_batch,
+                    )
+                    train_logs["train_loss"].append(neg_loglikelihood)
+                    temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                    self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
+
+                    # Optimization Steps
+                    epoch_losses.append(neg_loglikelihood)
+
+                    if verbose > 0:
+                        inner_range.set_description(
+                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                        )
+
+            # Take into account last batch that may have a differnt length into account for
+            # the computation of the epoch loss.
+            if batch_size != -1:
+                last_batch_size = available_items_batch.shape[0]
+                coefficients = tf.concat(
+                    [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+                )
+                epoch_lossses = tf.multiply(epoch_losses, coefficients)
+                epoch_loss = tf.reduce_sum(epoch_lossses) / len(choice_dataset)
+            else:
+                epoch_loss = tf.reduce_mean(epoch_losses)
+            losses_history["train_loss"].append(epoch_loss)
+            print_loss = losses_history["train_loss"][-1].numpy()
+            desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
+            if verbose > 1:
+                print(
+                    f"Loop {epoch_nb} Time:",
+                    f"{time.time() - t_start:.4f}",
+                    f"Loss: {print_loss:.4f}",
+                )
+
+            # Test on val_dataset if provided
+            if val_dataset is not None:
+                test_losses = []
+                for batch_nb, (
+                    shared_features_batch,
+                    items_features_batch,
+                    available_items_batch,
+                    choices_batch,
+                ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
+                    self.callbacks.on_batch_begin(batch_nb)
+                    self.callbacks.on_test_batch_begin(batch_nb)
+                    test_losses.append(
+                        self.batch_predict(
+                            shared_features_batch,
+                            items_features_batch,
+                            available_items_batch,
+                            choices_batch,
+                        )[0]["optimized_loss"]
+                    )
+                    val_logs["val_loss"].append(test_losses[-1])
+                    temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
+                    self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
+
+                test_loss = tf.reduce_mean(test_losses)
+                if verbose > 1:
+                    print("Test Negative-LogLikelihood:", test_loss.numpy())
+                    desc += f", Test Loss {np.round(test_loss.numpy(), 4)}"
+                losses_history["test_loss"] = losses_history.get("test_loss", []) + [
+                    test_loss.numpy()
+                ]
+                train_logs = {**train_logs, **val_logs}
+
+            temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+            self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
+            if self.stop_training:
+                print("Early Stopping taking effect")
+                break
+            t_range.set_description(desc)
+            t_range.refresh()
+
+        temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+        self.callbacks.on_train_end(logs=temps_logs)
+        return losses_history
 
     def _nothing(self, inputs):
         """_summary_.
