@@ -255,15 +255,16 @@ class BaseLatentClassModel(object):
                 return self._fit_with_lbfgs(
                     choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
                 )
-            if self.optimizer.lower() == "adam":
-                self.optimizer = tf.keras.optimizers.Adam(self.lr)
-            elif self.optimizer.lower() == "sgd":
-                self.optimizer = tf.keras.optimizers.SGD(self.lr)
-            elif self.optimizer.lower() == "adamax":
-                self.optimizer = tf.keras.optimizers.Adamax(self.lr)
-            else:
-                print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
-                self.optimizer = tf.keras.optimizers.Adam(self.lr)
+            if isinstance(self.optimizer, str):
+                if self.optimizer.lower() == "adam":
+                    self.optimizer = tf.keras.optimizers.Adam(self.lr)
+                elif self.optimizer.lower() == "sgd":
+                    self.optimizer = tf.keras.optimizers.SGD(self.lr)
+                elif self.optimizer.lower() == "adamax":
+                    self.optimizer = tf.keras.optimizers.Adamax(self.lr)
+                else:
+                    print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
+                    self.optimizer = tf.keras.optimizers.Adam(self.lr)
                 
             return self._fit_with_gd(
                 choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
