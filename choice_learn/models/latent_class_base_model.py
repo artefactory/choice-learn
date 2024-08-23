@@ -2,6 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
+import time
 import tqdm
 
 import choice_learn.tf_ops as tf_ops
@@ -17,6 +18,7 @@ class BaseLatentClassModel(object):
         model_parameters,
         fit_method,
         epochs,
+        batch_size=128,
         optimizer=None,
         add_exit_choice=False,
         tolerance=1e-6,
@@ -64,6 +66,7 @@ class BaseLatentClassModel(object):
         self.tolerance = tolerance
         self.optimizer = optimizer
         self.lr = lr
+        self.batch_size = batch_size
 
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=0.0
@@ -79,6 +82,19 @@ class BaseLatentClassModel(object):
         )
         self.instantiated = False
 
+    @property
+    def trainable_weights(self):
+        """Returns trainable weights.
+
+        Returns
+        -------
+        list
+           list of trainable weights."""
+        weights = [self.latent_logits]
+        for model in self.models:
+            weights += model.trainable_weights
+        return weights
+    
     def instantiate(self, **kwargs):
         """Instantiate the model."""
         init_logit = tf.Variable(
@@ -239,7 +255,16 @@ class BaseLatentClassModel(object):
                 return self._fit_with_lbfgs(
                     choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
                 )
-
+            if self.optimizer.lower() == "adam":
+                self.optimizer = tf.keras.optimizers.Adam(self.lr)
+            elif self.optimizer.lower() == "sgd":
+                self.optimizer = tf.keras.optimizers.SGD(self.lr)
+            elif self.optimizer.lower() == "adamax":
+                self.optimizer = tf.keras.optimizers.Adamax(self.lr)
+            else:
+                print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
+                self.optimizer = tf.keras.optimizers.Adam(self.lr)
+                
             return self._fit_with_gd(
                 choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
             )
@@ -459,7 +484,7 @@ class BaseLatentClassModel(object):
             print("Algorithm converged before reaching max iterations:", results[0].numpy())
         return func.history, results
 
-    @tf.function
+    # @tf.function
     def train_step(
         self,
         shared_features_by_choice,
@@ -501,23 +526,30 @@ class BaseLatentClassModel(object):
                 choices=choices,
             )
 
-            probabilities = tf_ops.softmax_with_availabilities(
-                items_logit_by_choice=utilities,
-                available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.add_exit_choice,
-                axis=-1,
-            )
+            latent_probabilities = self.get_latent_classes_weights()
+            # Compute probabilities from utilities & availabilties
+            probabilities = []
+            for i, class_utilities in enumerate(utilities):
+                class_probabilities = tf_ops.softmax_with_availabilities(
+                    items_logit_by_choice=class_utilities,
+                    available_items_by_choice=available_items_by_choice,
+                    normalize_exit=self.add_exit_choice,
+                    axis=-1,
+                )
+                probabilities.append(class_probabilities * latent_probabilities[i])
+            # Summing over the latent classes
+            probabilities = tf.reduce_sum(probabilities, axis=0)
             # Negative Log-Likelihood
             neg_loglikelihood = self.loss(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
-            if self.regularization is not None:
-                regularization = tf.reduce_sum(
-                    [self.regularizer(w) for w in self.trainable_weights]
-                )
-                neg_loglikelihood += regularization
+            # if self.regularization is not None:
+            #     regularization = tf.reduce_sum(
+            #         [self.regularizer(w) for w in self.trainable_weights]
+            #     )
+            #     neg_loglikelihood += regularization
 
         grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -562,11 +594,11 @@ class BaseLatentClassModel(object):
         losses_history = {"train_loss": []}
         t_range = tqdm.trange(epochs, position=0)
 
-        self.callbacks.on_train_begin()
+        # self.callbacks.on_train_begin()
 
         # Iterate of epochs
         for epoch_nb in t_range:
-            self.callbacks.on_epoch_begin(epoch_nb)
+            # self.callbacks.on_epoch_begin(epoch_nb)
             t_start = time.time()
             train_logs = {"train_loss": []}
             val_logs = {"val_loss": []}
@@ -596,7 +628,7 @@ class BaseLatentClassModel(object):
                     ),
                     weight_batch,
                 ) in enumerate(inner_range):
-                    self.callbacks.on_train_batch_begin(batch_nb)
+                    # self.callbacks.on_train_batch_begin(batch_nb)
 
                     neg_loglikelihood = self.train_step(
                         shared_features_batch,
@@ -608,7 +640,7 @@ class BaseLatentClassModel(object):
 
                     train_logs["train_loss"].append(neg_loglikelihood)
                     temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-                    self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
+                    # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
@@ -635,7 +667,7 @@ class BaseLatentClassModel(object):
                     available_items_batch,
                     choices_batch,
                 ) in enumerate(inner_range):
-                    self.callbacks.on_train_batch_begin(batch_nb)
+                    # self.callbacks.on_train_batch_begin(batch_nb)
                     neg_loglikelihood = self.train_step(
                         shared_features_batch,
                         items_features_batch,
@@ -644,7 +676,7 @@ class BaseLatentClassModel(object):
                     )
                     train_logs["train_loss"].append(neg_loglikelihood)
                     temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-                    self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
+                    # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                     # Optimization Steps
                     epoch_losses.append(neg_loglikelihood)
@@ -684,8 +716,8 @@ class BaseLatentClassModel(object):
                     available_items_batch,
                     choices_batch,
                 ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
-                    self.callbacks.on_batch_begin(batch_nb)
-                    self.callbacks.on_test_batch_begin(batch_nb)
+                    # self.callbacks.on_batch_begin(batch_nb)
+                    # self.callbacks.on_test_batch_begin(batch_nb)
                     test_losses.append(
                         self.batch_predict(
                             shared_features_batch,
@@ -696,7 +728,7 @@ class BaseLatentClassModel(object):
                     )
                     val_logs["val_loss"].append(test_losses[-1])
                     temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
-                    self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
+                    # self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
 
                 test_loss = tf.reduce_mean(test_losses)
                 if verbose > 1:
@@ -708,15 +740,15 @@ class BaseLatentClassModel(object):
                 train_logs = {**train_logs, **val_logs}
 
             temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-            self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
-            if self.stop_training:
-                print("Early Stopping taking effect")
-                break
+            # self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
+            # if self.stop_training:
+            #     print("Early Stopping taking effect")
+            #     break
             t_range.set_description(desc)
             t_range.refresh()
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-        self.callbacks.on_train_end(logs=temps_logs)
+        # self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
     def _nothing(self, inputs):
