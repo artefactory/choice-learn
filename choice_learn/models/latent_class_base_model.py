@@ -65,7 +65,18 @@ class BaseLatentClassModel(object):
         self.optimizer = optimizer
         self.lr = lr
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0, epsilon=1e-5)
+        self.loss = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False, label_smoothing=0.0
+        )
+        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False,
+            label_smoothing=0.0,
+            sparse=False,
+            axis=-1,
+            epsilon=1e-10,
+            name="exact_categorical_crossentropy",
+            reduction="sum_over_batch_size",
+        )
         self.instantiated = False
 
     def instantiate(self, **kwargs):
@@ -145,7 +156,7 @@ class BaseLatentClassModel(object):
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             ),
-            "NegativeLogLikelihood": tf.keras.losses.CategoricalCrossentropy()(
+            "NegativeLogLikelihood": self.exact_nll(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
@@ -492,10 +503,7 @@ class BaseLatentClassModel(object):
 
     def _expectation(self, choice_dataset):
         predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
-        latent_probabilities = tf.concat(
-            [[tf.constant(1.0)], tf.math.exp(self.latent_logits)], axis=0
-        )
-        latent_probabilities = latent_probabilities / tf.reduce_sum(latent_probabilities)
+        latent_probabilities = self.get_latent_classes_weights()
         print("lp", latent_probabilities)
         if np.sum(np.isnan(predicted_probas)) > 0:
             print("Nan in probas")
@@ -514,11 +522,13 @@ class BaseLatentClassModel(object):
         
         print(len(predicted_probas))
         # E-step
-        ###### FILL THE CODE BELOW TO ESTIMATE THE WEIGHTS (weights = xxx)
         predicted_probas = np.stack(predicted_probas, axis=1) + 1e-10
         """
         print(", ", len(latent_probabilities), len(predicted_probas))
-        latent_model_probas = self.get_latent_classes_weights()
+        latent_model_probas = [
+            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)]
+        print("prelatent probas", len(predicted_probas), len(predicted_probas[0]))
+        latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
         print('lmp', latent_model_probas.shape)
         predicted_probas = [
             latent
@@ -534,7 +544,7 @@ class BaseLatentClassModel(object):
         print("probas shape", predicted_probas.shape)
         loss = self.loss(
             y_pred=latent_model_probas,
-            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[0]),
+            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
         )
 
         return tf.clip_by_value(predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1), loss
