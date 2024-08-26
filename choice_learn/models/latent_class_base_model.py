@@ -257,6 +257,7 @@ class BaseLatentClassModel(object):
                     return self._fit_with_lbfgs(
                         choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
                     )
+
                 if self.optimizer.lower() == "adam":
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
                 elif self.optimizer.lower() == "sgd":
@@ -640,6 +641,7 @@ class BaseLatentClassModel(object):
                     )
 
                     train_logs["train_loss"].append(neg_loglikelihood)
+
                     # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
                     # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
