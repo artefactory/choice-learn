@@ -84,7 +84,7 @@ class BaseLatentClassModel(object):
 
     @property
     def trainable_weights(self):
-        """Returns trainable weights.
+        """Return trainable weights.
 
         Returns
         -------
@@ -252,11 +252,12 @@ class BaseLatentClassModel(object):
             )
 
         if self.fit_method.lower() == "mle":
-            if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
-                return self._fit_with_lbfgs(
-                    choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
-                )
             if isinstance(self.optimizer, str):
+                if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
+                    return self._fit_with_lbfgs(
+                        choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
+                    )
+
                 if self.optimizer.lower() == "adam":
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
                 elif self.optimizer.lower() == "sgd":
@@ -640,7 +641,8 @@ class BaseLatentClassModel(object):
                     )
 
                     train_logs["train_loss"].append(neg_loglikelihood)
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+
+                    # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
                     # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                     # Optimization Steps
@@ -676,7 +678,7 @@ class BaseLatentClassModel(object):
                         choices_batch,
                     )
                     train_logs["train_loss"].append(neg_loglikelihood)
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                    # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
                     # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                     # Optimization Steps
@@ -728,7 +730,7 @@ class BaseLatentClassModel(object):
                         )[0]["optimized_loss"]
                     )
                     val_logs["val_loss"].append(test_losses[-1])
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
+                    # temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
                     # self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
 
                 test_loss = tf.reduce_mean(test_losses)
@@ -748,7 +750,7 @@ class BaseLatentClassModel(object):
             t_range.set_description(desc)
             t_range.refresh()
 
-        temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+        # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         # self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
@@ -918,7 +920,7 @@ class BaseLatentClassModel(object):
         return tf.concat(stacked_probabilities, axis=0)
 
     def get_latent_classes_weights(self):
-        """Returns the latent classes weights / probabilities from logits.
+        """Return the latent classes weights / probabilities from logits.
 
         Returns
         -------
