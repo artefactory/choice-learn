@@ -75,7 +75,7 @@ class ChoiceModel(object):
             label_smoothing=0.0,
             sparse=False,
             axis=-1,
-            epsilon=1e-10,
+            epsilon=1e-35,
             name="exact_categorical_crossentropy",
             reduction="sum_over_batch_size",
         )
