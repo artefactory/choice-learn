@@ -1,8 +1,9 @@
 """Base class for latent class choice models."""
 
+import time
+
 import numpy as np
 import tensorflow as tf
-import time
 import tqdm
 
 import choice_learn.tf_ops as tf_ops
@@ -69,9 +70,7 @@ class BaseLatentClassModel(object):
         self.lr = lr
         self.batch_size = batch_size
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(
-            from_logits=False, label_smoothing=0.0
-        )
+        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0.0)
         self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=0.0,
@@ -96,7 +95,7 @@ class BaseLatentClassModel(object):
         for model in self.models:
             weights += model.trainable_weights
         return weights
-    
+
     def instantiate(self, **kwargs):
         """Instantiate the model."""
         init_logit = tf.Variable(
@@ -267,7 +266,7 @@ class BaseLatentClassModel(object):
                 else:
                     print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
-                
+
             return self._fit_with_gd(
                 choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
             )
@@ -557,7 +556,6 @@ class BaseLatentClassModel(object):
         grads = tape.gradient(neg_loglikelihood, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return neg_loglikelihood
-    
 
     def _fit_with_gd(
         self,
@@ -799,9 +797,10 @@ class BaseLatentClassModel(object):
         if np.sum(np.isnan(predicted_probas)) > 0:
             print("A NaN values has been found. You should try again to fit with")
             print("smaller tolerance value (for l-bfgs) and epsilon value (in loss computation)")
-       
+
         latent_model_probas = [
-            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)]
+            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)
+        ]
         latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
         predicted_probas = [
             latent
@@ -819,7 +818,9 @@ class BaseLatentClassModel(object):
             y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
         )
 
-        return tf.clip_by_value(predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1), loss
+        return tf.clip_by_value(
+            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1
+        ), loss
 
     def _maximization(self, choice_dataset, verbose=0):
         """Maximize step.
@@ -873,9 +874,7 @@ class BaseLatentClassModel(object):
         init_sample_weight = init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True)
         for i, model in enumerate(self.models):
             # model.instantiate()
-            model.fit(
-                choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose
-            )
+            model.fit(choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose)
         for i in tqdm.trange(self.epochs):
             self.weights, loss = self._expectation(choice_dataset)
             self.latent_logits = self._maximization(choice_dataset, verbose=verbose)
@@ -917,7 +916,7 @@ class BaseLatentClassModel(object):
             stacked_probabilities.append(probabilities)
 
         return tf.concat(stacked_probabilities, axis=0)
-    
+
     def get_latent_classes_weights(self):
         """Returns the latent classes weights / probabilities from logits.
 
@@ -926,6 +925,4 @@ class BaseLatentClassModel(object):
         np.ndarray (n_latent_classes, )
             Latent classes weights/probabilities
         """
-        return tf.nn.softmax(tf.concat(
-            [[tf.constant(0.0)], self.latent_logits], axis=0
-        ))
+        return tf.nn.softmax(tf.concat([[tf.constant(0.0)], self.latent_logits], axis=0))
