@@ -36,6 +36,7 @@ class BaseLatentClassModel(object):
             hyper-parameters of the models
         fit_method : str
             Method to estimate the parameters: "EM", "MLE".
+            "EM" for Expectation-Maximization, "MLE" for Maximum Likelihood Estimation
         epochs : int
             Number of epochs to train the model.
         optimizer: str, optional
@@ -89,7 +90,8 @@ class BaseLatentClassModel(object):
         Returns
         -------
         list
-           list of trainable weights."""
+           list of trainable weights.
+        """
         weights = [self.latent_logits]
         for model in self.models:
             weights += model.trainable_weights
@@ -740,7 +742,7 @@ class BaseLatentClassModel(object):
                 ]
                 train_logs = {**train_logs, **val_logs}
 
-            temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+            # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
             # self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
             # if self.stop_training:
             #     print("Early Stopping taking effect")
@@ -918,7 +920,6 @@ class BaseLatentClassModel(object):
     
     def get_latent_classes_weights(self):
         """Returns the latent classes weights / probabilities from logits.
-
 
         Returns
         -------
