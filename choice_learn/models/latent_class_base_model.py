@@ -37,6 +37,7 @@ class BaseLatentClassModel(object):
             hyper-parameters of the models
         fit_method : str
             Method to estimate the parameters: "EM", "MLE".
+            "EM" for Expectation-Maximization, "MLE" for Maximum Likelihood Estimation
         epochs : int
             Number of epochs to train the model.
         optimizer: str, optional
