@@ -251,11 +251,11 @@ class BaseLatentClassModel(object):
             )
 
         if self.fit_method.lower() == "mle":
-            if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
-                return self._fit_with_lbfgs(
-                    choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
-                )
             if isinstance(self.optimizer, str):
+                if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
+                    return self._fit_with_lbfgs(
+                        choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
+                    )
                 if self.optimizer.lower() == "adam":
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
                 elif self.optimizer.lower() == "sgd":
