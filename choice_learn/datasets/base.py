@@ -300,7 +300,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"],
             available_items_suffix=availabilities_column,
             choices_column=choice_column,
-            choice_format="item_index",
+            choice_format="items_index",
         )
 
     if preprocessing == "tutorial":
@@ -493,7 +493,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         items_features_suffixes=items_features_by_choice_names,
         available_items_suffix=availabilities_column,
         choices_column=choice_column,
-        choice_format="item_index",
+        choice_format="items_index",
     )
 
 

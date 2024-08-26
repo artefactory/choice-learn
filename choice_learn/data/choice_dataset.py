@@ -939,7 +939,7 @@ class ChoiceDataset(object):
                     available_items_suffix."
             )
         if choice_format not in ["items_index", "items_id"]:
-            logging.warning("choice_format not undersood, defaulting to 'items_index'")
+            logging.warning("choice_format not understood, defaulting to 'items_index'")
 
         if shared_features_columns is not None:
             shared_features_by_choice = df[shared_features_columns].to_numpy()
