@@ -96,7 +96,6 @@ codespell = ">=2.2"
 python-markdown-math = ">=0.8"
 
 [tool.poetry.group.docs.dependencies]
-griffe = "<0.49"
 mkdocs = ">=1.5"
 mkdocs-material = {extras = ["pygments"], version = ">=9.5.3"}
 mkdocs-nbconvert = ">=0.2.1"
