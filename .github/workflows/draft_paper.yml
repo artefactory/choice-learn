@@ -13,14 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: test
-        run: |
-          echo "Hello, World!"
-          ls
-          ls choice_learn/
-          ls .github/
-          ls ./.github/actions/
-
       - name: Build draft PDF
         uses: ./.github/actions/build-draft
         with:

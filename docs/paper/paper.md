@@ -132,7 +132,7 @@ Finally, in Figure \ref{fig:xps} (c) and (d), we observe memory usage gains on a
 ![Memory usage experiments. \label{fig:xps}](../illustrations/ram_usage_comparison.png)
 
 # Acknowledgments
-The authors thank Fortenova[^1] and Martin Možina for their helpful collaboration and providing of the proprietary dataset.
+The authors thank Fortenova[^1] and Martin Možina for their helpful collaboration and provision of the proprietary dataset.
 
 # References
 

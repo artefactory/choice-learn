@@ -1,4 +1,5 @@
 """Latent Class MNL models."""
+
 import copy
 
 import tensorflow as tf
@@ -15,7 +16,8 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         self,
         n_latent_classes,
         fit_method,
-        epochs,
+        epochs=100,
+        batch_size=128,
         add_exit_choice=False,
         tolerance=1e-6,
         intercept=None,
@@ -51,9 +53,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             "add_exit_choice": add_exit_choice,
             "intercept": intercept,
             "optimizer": optimizer,
+            "batch_size": batch_size,
             "tolerance": tolerance,
             "lr": lr,
-            "epochs": epochs,
+            "epochs": 1000,
         }
 
         super().__init__(
@@ -101,22 +104,23 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_shared_features=n_shared_features,
             n_items_features=n_items_features,
         )
+        self.instantiated = True
 
-    def fit(self, dataset, **kwargs):
-        """Fit the model to the dataset.
+    def fit(self, choice_dataset, **kwargs):
+        """Fit the model to the choice_dataset.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
             self.instantiate(
-                n_items=dataset.get_n_items(),
-                n_shared_features=dataset.get_n_shared_features(),
-                n_items_features=dataset.get_n_items_features(),
+                n_items=choice_dataset.get_n_items(),
+                n_shared_features=choice_dataset.get_n_shared_features(),
+                n_items_features=choice_dataset.get_n_items_features(),
             )
-        return super().fit(dataset, **kwargs)
+        return super().fit(choice_dataset, **kwargs)
 
 
 class LatentClassConditionalLogit(BaseLatentClassModel):
@@ -127,7 +131,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         n_latent_classes,
         fit_method,
         coefficients=None,
-        epochs=1,
+        epochs=100,
         add_exit_choice=False,
         tolerance=1e-6,
         optimizer="Adam",
@@ -285,14 +289,14 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             items_names=items_names,
         )
 
-    def fit(self, dataset, **kwargs):
-        """Fit the model to the dataset.
+    def fit(self, choice_dataset, **kwargs):
+        """Fit the model to the choice_dataset.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             Dataset to fit the model to.
         """
         if not self.instantiated:
-            self.instantiate(choice_dataset=dataset)
-        return super().fit(dataset, **kwargs)
+            self.instantiate(choice_dataset=choice_dataset)
+        return super().fit(choice_dataset, **kwargs)

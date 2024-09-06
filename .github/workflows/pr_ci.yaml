@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
       - uses: actions/checkout@v2
@@ -21,5 +21,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-developer.txt
+
       - name: Run Pre commit hook (formatting, linting & tests)
         run: pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure
+
+      - name: Build coverage file
+        run: |
+          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=choice_learn tests/ | tee pytest-coverage.txt
+
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
+          unique-id-for-comment: ${{ matrix.python-version }}
+          title: 'Coverage Report for Python ${{ matrix.python-version }}'
+
