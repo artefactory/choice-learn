@@ -46,6 +46,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
                 get_path("preprocessed_expedia_rumnet.csv", module=CACHE_MODULE), engine="pyarrow"
             )
             logging.info("Loaded cached preprocessed data.")
+
         except FileNotFoundError:
             expedia_df.date_time = pd.to_datetime(expedia_df.date_time, format="%Y-%m-%d %H:%M:%S")
             expedia_df.loc[:, "day_of_week"] = expedia_df.loc[:, "date_time"].dt.dayofweek
