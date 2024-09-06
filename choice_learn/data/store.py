@@ -1,4 +1,5 @@
 """Different classes to optimize RAM usage with repeated features over time."""
+
 import numpy as np
 
 from choice_learn.data.indexer import OneHotStoreIndexer, StoreIndexer

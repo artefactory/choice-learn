@@ -1,4 +1,4 @@
-# Welcome to the choice-learn documentation!
+# Welcome to the Choice-Learn documentation!
 
 <center>
 <img src="illustrations/logos/logo_choice_learn.png" width="300">
@@ -12,12 +12,12 @@
 
 <center>
 
-| [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="40"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, check it out first [here](https://github.com/artefactory/choice-learn)! |
+| [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) |
 |-|-|
+| [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://github.com/artefactory/choice-learn/actions/runs/9642058728/artifacts/1630710678) | You can also read our [academic paper](https://github.com/artefactory/choice-learn/actions/runs/9642058728/artifacts/1630710678) ! |
 
 </center>
 
-<br>
 <br>
 
 Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
@@ -32,15 +32,15 @@ In this documentation you will find examples to be quickly getting started as we
 Here is a quick overview of the different functionalities offered by Choice-Learn. Further details are given in the rest of the documentation.
 
 ### Data
-- [Custom data handling](./reference/data/references_choice_dataset.md) for choice datasets with possible memory usage optimizations
+- [Custom data handling](./references/data/references_choice_dataset.md) for choice datasets with possible memory usage optimizations
 - Some Open-Source ready-to use datasets are included within the datasets:
-    - [SwissMetro](./references/dataset/references_base.md)
-    - [ModeCanada](./references/dataset/references_base.md)
-    - The [Train](./references/dataset/references_base.md) dataset
-    - The [Heating](./references/dataset/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
-    - [Stated car preferences](./references/dataset/references_base.md)
-    - The [TaFeng](./references/dataset/references_tafeng.md) dataset from Kaggle
-    - The ICDM-2013 [Expedia](./references/dataset/references_expedia.md) dataset from Kaggle
+    - [SwissMetro](./references/datasets/references_base.md)
+    - [ModeCanada](./references/datasets/references_base.md)
+    - The [Train](./references/datasets/references_base.md) dataset
+    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
+    - [Stated car preferences](./references/datasets/references_base.md)
+    - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
+    - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
 
 ### Models
 - [Custom modelling](./notebooks/introduction/4_model_customization.md)
@@ -74,7 +74,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
-The easiest is to pip-install the package:
+The easiest is to pip-install the package:b7fc2d1f6e2ff5a5a94a896344592542
 ```bash
 pip install choice-learn
 ```
@@ -123,10 +123,23 @@ If you consider this package and any of its feature useful for your research, pl
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
-### Contributors
-
-### Special Thanks
-
 ### Affiliations
 
-This package has been developped within the [Artefact Research Center](https://www.artefact.com/data-consulting-transformation/artefact-research-center/) in collaboration with CentraleSupélec, université Paris-Saclay.
+Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
+
+<center>
+[![ARC](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:60px"}](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![FNG](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:65px"}](https://www.artefact.com/)
+
+[![PS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png){: style="height:60px"}](https://www.universite-paris-saclay.fr/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![CS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png){: style="height:65px"}](https://mics.centralesupelec.fr/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![LBS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg){: style="height:60px"}](https://www.london.edu/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![INSEAD](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png){: style="height:65px"}](https://www.insead.edu/)
+
+</center>

@@ -1,7 +1,9 @@
 -r requirements.txt
+griffe<=0.48
 ruff==0.1.2
 pre-commit==3.3.3
 pytest==7.3.2
+pytest-cov
 python-markdown-math
 mkdocs==1.5.3
 mkdocs-material==9.5.3

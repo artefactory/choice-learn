@@ -1,4 +1,5 @@
 """Runs manually all test_* functions."""
+
 import importlib
 from pathlib import Path
 

@@ -2,6 +2,7 @@
 
 It is a multi output logistic regression.
 """
+
 import logging
 
 import pandas as pd
@@ -98,8 +99,13 @@ class SimpleMNL(ChoiceModel):
 
         self.instantiated = True
         self.indexes = indexes
-        self.trainable_weights = weights
+        self._trainable_weights = weights
         return indexes, weights
+
+    @property
+    def trainable_weights(self):
+        """Trainable weights of the model."""
+        return self._trainable_weights
 
     def compute_batch_utility(
         self,
@@ -187,7 +193,7 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.trainable_weights = self.instantiate(
+            self.indexes, self._trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
@@ -219,23 +225,25 @@ class SimpleMNL(ChoiceModel):
         """
         if not self.instantiated:
             # Lazy Instantiation
-            self.indexes, self.trainable_weights = self.instantiate(
+            self.indexes, self._trainable_weights = self.instantiate(
                 n_items=choice_dataset.get_n_items(),
                 n_shared_features=choice_dataset.get_n_shared_features(),
                 n_items_features=choice_dataset.get_n_items_features(),
             )
             self.instantiated = True
-        fit = super()._fit_with_lbfgs(dataset=choice_dataset, sample_weight=sample_weight, **kwargs)
+        fit = super()._fit_with_lbfgs(
+            choice_dataset=choice_dataset, sample_weight=sample_weight, **kwargs
+        )
         if get_report:
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def compute_report(self, dataset):
+    def compute_report(self, choice_dataset):
         """Compute a report of the estimated weights.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
@@ -246,7 +254,7 @@ class SimpleMNL(ChoiceModel):
         """
         import tensorflow_probability as tfp
 
-        weights_std = self.get_weights_std(dataset)
+        weights_std = self.get_weights_std(choice_dataset)
         dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
         names = []
@@ -275,12 +283,12 @@ class SimpleMNL(ChoiceModel):
             },
         )
 
-    def get_weights_std(self, dataset):
+    def get_weights_std(self, choice_dataset):
         """Approximates Std Err with Hessian matrix.
 
         Parameters
         ----------
-        dataset : ChoiceDataset
+        choice_dataset : ChoiceDataset
             ChoiceDataset used for the estimation of the weights that will be
             used to compute the Std Err of this estimation.
 
@@ -301,13 +309,13 @@ class SimpleMNL(ChoiceModel):
                 for _w in self.trainable_weights:
                     mw.append(w[index : index + _w.shape[0]])
                     index += _w.shape[0]
-                model.trainable_weights = mw
-                for batch in dataset.iter_batch(batch_size=-1):
+                model._trainable_weights = mw
+                for batch in choice_dataset.iter_batch(batch_size=-1):
                     utilities = model.compute_batch_utility(*batch)
                     probabilities = tf.nn.softmax(utilities, axis=-1)
                     loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
                         y_pred=probabilities,
-                        y_true=tf.one_hot(dataset.choices, depth=probabilities.shape[-1]),
+                        y_true=tf.one_hot(choice_dataset.choices, depth=probabilities.shape[-1]),
                     )
             # Compute the Jacobian
             jacobian = tape_2.jacobian(loss, w)
@@ -333,7 +341,7 @@ class SimpleMNL(ChoiceModel):
         if hasattr(self, "report"):
             clone.report = self.report
         if hasattr(self, "trainable_weights"):
-            clone.trainable_weights = self.trainable_weights
+            clone._trainable_weights = self.trainable_weights
         if hasattr(self, "indexes"):
             clone.indexes = self.indexes
         if hasattr(self, "intercept"):

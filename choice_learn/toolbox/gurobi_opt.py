@@ -1,4 +1,5 @@
 """Tool functions for optimization with Gurobi."""
+
 import logging
 
 import gurobipy as gp
