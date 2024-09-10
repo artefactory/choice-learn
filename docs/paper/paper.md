@@ -53,44 +53,24 @@ The main contributions are summarized in Tables \ref{tab:comparison1} and \ref{t
 
 : Comparison of the different packages for data handling and downstream opereations.\label{tab:comparison1}
 
-+--------------+------------------+--------------------+--------------+----------------+
 |              | Data             |  Data              |              |                |
 | Package      | Format           |  Batching          | Assortment   | Pricing        |
-+:============:+:================:+:==================:+:============:+:==============:+
+| :----------: | :--------------: | :----------------: | :----------: | :------------: |
 | Biogeme      | wide             | $\times$           |   $\times$   |   $\times$     |
-+--------------+------------------+--------------------+--------------+----------------+
 | PyLogit      | long             |  $\times$          |   $\times$   |   $\times$     |
-+--------------+------------------+--------------------+--------------+----------------+
 | Torch-Choice | Multi Index      | $\checkmark$       |   $\times$   |   $\times$     |
-+--------------+------------------+--------------------+--------------+----------------+
 | Choice-Learn | Features Storage | $\checkmark$       | $\checkmark$ | $\checkmark$   |
-+==============+==================+====================+==============+================+
 
 
 : Comparison of the different packages for modelization. CondL, NestL, MixL, and LatC respectively indicate the Conditional Logit, Nested Logit, Mixed Logit and Latent Class models.\label{tab:comparison2}
 
-+--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
-|   Package    | Traditional\                    | NeuralNet\         | Custom         | Non-Stochastic |  Stochastic          |
-|              | Models                          |                    | Models         | Optimizer      |  Optimizer           |
-|              |                                 | Models             |                |                |                      |
-+:============:+:===============================:+:==================:+:==============:+:==============:+:====================:+
-| Biogeme      | CondL, NestL,\                  | $\times$           | $\checkmark$   | Newton BFGS    | $\quad \times \quad$ |
-|              | MixL, LatC\                     |                    |                |                |                      |
-|              | & more\                         |                    |                |                |                      |
-|              |                                 |                    |                |                |                      |
-+--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
-| PyLogit      | CondL, NestL,\                  |  $\times$          | $\times$       | BFGS           |   $\times$           |
-|              | MixL,\                          |                    |                |                |                      |
-|              | Asymmetric\                     |                    |                |                |                      |
-|              |                                 |                    |                |                |                      |
-+--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
-| Torch-       | CondL, NestL\                   | $\times$           | $\times$       | L-BFGS         | $\checkmark$         |
-| Choice\      |                                 |                    |                |                |                      |
-|              |                                 |                    |                |                |                      |
-+--------------+---------------------------------+--------------------+----------------+----------------+----------------------+
-| Choice-Learn | CondL, NestL,\                  | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$         |
-|              | LatC                            |                    |                |                |                      |
-+==============+=================================+====================+================+================+======================+
+|   Package    | Traditional                     | NeuralNet          | Custom         | Non-Stochastic |  Stochastic          |
+|              | Models                          | Models             | Models         | Optimizer      |  Optimizer           |
+| :----------: | :-----------------------------: | :----------------: | :------------: | :------------: | :------------------: |
+| Biogeme      | CondL, NestL,MixL, LatC & more  | $\times$           | $\checkmark$   | Newton BFGS    | $\quad \times \quad$ |
+| PyLogit      | CondL, NestL,MixL,  Asymmetric  |  $\times$          | $\times$       | BFGS           |   $\times$           |
+| Torch-Choice | CondL, NestL                    | $\times$           | $\times$       | L-BFGS         | $\checkmark$         |
+| Choice-Learn | CondL, NestL, LatC              | $\checkmark$       | $\checkmark$   | L-BFGS         | $\checkmark$         |
 
 # Statement of need
 
