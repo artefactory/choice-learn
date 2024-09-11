@@ -204,8 +204,8 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 If you consider this package and any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899).
 
-<a align="left" width="200" href="https://joss.theoj.org/papers/10.21105/joss.06899">
-<img align="left" width="200"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
+<a href="https://joss.theoj.org/papers/10.21105/joss.06899">
+<img align="left" width="150"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
 </a>
 
 ```bash
