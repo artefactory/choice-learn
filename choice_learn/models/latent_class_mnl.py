@@ -17,6 +17,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         n_latent_classes,
         fit_method,
         epochs=100,
+        batch_size=128,
         add_exit_choice=False,
         tolerance=1e-6,
         intercept=None,
@@ -52,9 +53,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             "add_exit_choice": add_exit_choice,
             "intercept": intercept,
             "optimizer": optimizer,
+            "batch_size": batch_size,
             "tolerance": tolerance,
             "lr": lr,
-            "epochs": epochs,
+            "epochs": 1000,
         }
 
         super().__init__(
@@ -102,6 +104,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_shared_features=n_shared_features,
             n_items_features=n_items_features,
         )
+        self.instantiated = True
 
     def fit(self, choice_dataset, **kwargs):
         """Fit the model to the choice_dataset.

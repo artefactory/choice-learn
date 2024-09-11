@@ -127,42 +127,19 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-<figure markdown>
+<center>
+[![ARC](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:60px"}](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![FNG](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:65px"}](https://www.artefact.com/)
 
-  ![Elements](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:60px"}
+[![PS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png){: style="height:60px"}](https://www.universite-paris-saclay.fr/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![CS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png){: style="height:65px"}](https://mics.centralesupelec.fr/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![LBS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg){: style="height:60px"}](https://www.london.edu/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![INSEAD](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png){: style="height:65px"}](https://www.insead.edu/)
 
-  ![Dandi](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:60px"}
-</figure>
-
-<p align="center">
-  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" height="60" />
-  </a>
-  &emsp;
-  &emsp;
-  <a href="https://www.artefact.com/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" height="65" />
-
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://www.universite-paris-saclay.fr/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png" height="60" />
-  </a>
-  &emsp;
-  &emsp;
-  <a href="https://mics.centralesupelec.fr/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png" height="60" />
-  </a>
-  &emsp;
-  &emsp;
-  <a href="https://www.london.edu/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg" height="60" />
-  </a>
-  &emsp;
-  &emsp;
-  <a href="https://www.insead.edu/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" height="60" />
-  </a>
-</p>
+</center>
