@@ -25,20 +25,20 @@ The package provides ready-to-use datasets and models studied in the academic li
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
 ## :trident: Table of Contents
-  - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
-  - [What's in there ?](#whats-in-there-)
-  - [Getting Started](#getting-started)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [Citation](#citation)
+  - [Introduction - Discrete Choice modeling](#trident-introduction---discrete-choice-modeling)
+  - [What's in there ?](#trident-whats-in-there-)
+  - [Getting Started](#trident-getting-started)
+  - [Installation](#trident-installation)
+  - [Usage](#trident-usage)
+  - [Documentation](#trident-documentation)
+  - [Contributing](#trident-contributing)
+  - [Citation](#trident-citation)
 
-## :trident: Introduction - Discrete Choice Modelling
+## :trident: Introduction - Discrete Choice modeling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
-If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
+If you are new to choice modeling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#trident-getting-started) section can also help you understand choice modeling and more importantly help you for your usecase.
 
 ## :trident: What's in there ?
 
@@ -60,7 +60,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
-- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
+- Custom modeling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
 - Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
@@ -71,7 +71,7 @@ You can find the following tutorials to help you getting started with the packag
 - Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
 - Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
 - A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
-- Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
+- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
 ## :trident: Installation
 
@@ -95,7 +95,7 @@ For manual installation, Choice-Learn requires the following:
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
-For modelling you need:
+For modeling you need:
 - TensorFlow (>=2.14, <2.17)
 
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
