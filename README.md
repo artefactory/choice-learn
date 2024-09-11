@@ -15,7 +15,8 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
 ![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
 
-
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
+[![cite](https://img.shields.io/badge/citation-00FFFF)](./CITATION.bib)
 </div>
 
 
@@ -185,7 +186,8 @@ print(model.report)
 ## :trident: Documentation
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
-TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.\
+An academic paper has been published in the Journal of Open-Source Software, [here](https://joss.theoj.org/papers/10.21105/joss.06899).
 
 ## :trident: Contributing
 You are welcome to contribute to the project ! You can help in various ways:
@@ -200,7 +202,25 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 ## :trident: Citation
 
-If you consider this package and any of its feature useful for your research, please cite us.
+If you consider this package and any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899).
+
+<a href="https://joss.theoj.org/papers/10.21105/joss.06899">
+<img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
+</a>
+
+```bash
+@article{Auriau2024,
+  doi = {10.21105/joss.06899},
+  url = {https://doi.org/10.21105/joss.06899},
+  year = {2024},
+  publisher = {The Open Journal},
+  volume = {9},
+  number = {101},
+  pages = {6899},
+  author = {Vincent Auriau and Ali Aouad and Antoine Désir and Emmanuel Malherbe},
+  title = {Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning},
+  journal = {Journal of Open Source Software} }
+```
 
 ### License
 
@@ -262,10 +282,3 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
-
-*Other choice modeling packages:*
-
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
