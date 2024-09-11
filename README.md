@@ -15,7 +15,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
 ![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
 
-
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
 </div>
 
 
@@ -202,6 +202,23 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 If you consider this package and any of its feature useful for your research, please cite us.
 
+
+<img align="left" width="200" src="https://en.wikipedia.org/wiki/Journal_of_Open_Source_Software#/media/File:JOSS.png" />
+
+```bash
+@article{Auriau2024,
+  doi = {10.21105/joss.06899},
+  url = {https://doi.org/10.21105/joss.06899},
+  year = {2024},
+  publisher = {The Open Journal},
+  volume = {9},
+  number = {101},
+  pages = {6899},
+  author = {Vincent Auriau and Ali Aouad and Antoine Désir and Emmanuel Malherbe},
+  title = {Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning},
+  journal = {Journal of Open Source Software} }
+```
+
 ### License
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
@@ -262,10 +279,3 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
-
-*Other choice modeling packages:*
-
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
