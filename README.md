@@ -203,7 +203,7 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 If you consider this package and any of its feature useful for your research, please cite us.
 
 
-<img align="left" width="200" src="https://en.wikipedia.org/wiki/Journal_of_Open_Source_Software#/media/File:JOSS.png" />
+<img align="left" width="200" src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
 
 ```bash
 @article{Auriau2024,
