@@ -16,6 +16,7 @@
 ![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
+[![cite](https://img.shields.io/badge/citation-00FFFF)](./CITATION.bib)
 </div>
 
 
@@ -203,7 +204,7 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 If you consider this package and any of its feature useful for your research, please cite us.
 
 
-<img align="left" width="200" src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
+<img align="left" width="200" src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" href="https://joss.theoj.org/papers/10.21105/joss.06899" />
 
 ```bash
 @article{Auriau2024,
