@@ -928,11 +928,6 @@ class ChoiceDataset(object):
         ChoiceDataset
             corresponding ChoiceDataset
         """
-        if items_features_prefixes is not None and items_features_suffixes is not None:
-            raise ValueError(
-                "You cannot give both items_features_prefixes and\
-                    items_features_suffixes."
-            )
         if available_items_prefix is not None and available_items_suffix is not None:
             raise ValueError(
                 "You cannot give both available_items_prefix and\
@@ -948,7 +943,29 @@ class ChoiceDataset(object):
             shared_features_by_choice = None
             shared_features_by_choice_names = None
 
-        if items_features_suffixes is not None:
+        if items_features_suffixes is not None and items_features_prefixes is not None:
+            items_features_names = [
+                f"{feature_prefix}{delimiter}{feature_suffix}"
+                for feature_prefix in items_features_prefixes
+                for feature_suffix in items_features_suffixes
+            ]
+            items_features_by_choice = []
+            for item in items_id:
+                columns = [
+                    f"{feature_prefix}{delimiter}{item}{delimiter}{feature_suffix}"
+                    for feature_prefix in items_features_prefixes
+                    for feature_suffix in items_features_suffixes
+                ]
+                for col in columns:
+                    if col not in df.columns:
+                        logging.warning(
+                            f"Column {col} was not in DataFrame,\
+                            dummy creation of the feature with zeros."
+                        )
+                        df[col] = 0
+                items_features_by_choice.append(df[columns].to_numpy())
+            items_features_by_choice = np.stack(items_features_by_choice, axis=1)
+        elif items_features_suffixes is not None:
             items_features_names = items_features_suffixes
             items_features_by_choice = []
             for item in items_id:
