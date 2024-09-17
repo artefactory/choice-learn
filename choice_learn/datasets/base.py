@@ -3,6 +3,7 @@
 import csv
 import gzip
 import os
+import requests
 from importlib import resources
 
 import numpy as np
@@ -117,6 +118,41 @@ def slice_from_names(array, slice_names, all_names):
         sliced array
     """
     return array[:, [all_names.index(name) for name in slice_names]]
+
+
+def download_from_url(url):
+    """Download a dataset from an url if not already in the DATA_MODULE directory.
+
+    The Python memory usage is restricted regardless of the size of the downloaded file.
+
+    Parameters
+    ----------
+    url : str
+        name of the url to use for downloading the dataset
+
+    Returns
+    -------
+    local_filename : str
+        local file name of the downloaded dataset
+    """
+    local_filename = url.split('/')[-1]
+    
+    full_path = get_path(local_filename, module=DATA_MODULE)
+
+    # Check that the file is not already downloaded in the DATA_MODULE directory
+    if not os.path.isfile(full_path):
+        print(f"Downloading {local_filename} from {url}")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(local_filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    f.write(chunk)
+
+        # Move the downloaded file to the DATA_MODULE directory
+        os.rename(local_filename, full_path)
+        print(f"Download completed. File saved as {local_filename} in {full_path}")
+
+    return local_filename
 
 
 def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, preprocessing=None):
@@ -1016,4 +1052,73 @@ def load_hc(
         items_id=items_id,
         choices_column="depvar",
         choice_format="items_id",
+    )
+
+
+def load_londonpassenger(add_items_one_hot=False, as_frame=False, return_desc=False, preprocessing=None):
+    """Load and return the Londer Passenger Mode Choice dataset from Hillel et al. (2018).
+
+    Parameters
+    ----------
+    add_items_one_hot : bool, optional
+        Whether to add a OneHot encoding of items as items_features, by default False
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as ChoiceDataset,
+        by default False
+    return_desc : bool, optional
+        Whether to return the description, by default False
+    preprocessing : str, optional
+        Preprocessing to apply to the dataset, by default None
+
+    Returns
+    -------
+    ChoiceDataset
+        Loaded London Passenger Mode Choice dataset
+    """
+    description = """This case study investigates mode choice on an urban multi-modal transport network.
+    The objective was to be able to predict how people will react to changes to the transport network
+    and conditions, to allow for more efficient transport network management and investment planning.
+    This dataset is used to predict mode choice out of walking, cycling, public transport, and driving. 
+    
+
+    Hillel, T., Elshafie, M. Z. E. B. and Jin, Y. (2018), ‘Recreating passenger mode choice-sets for
+    transport simulation: A case study of London, UK’, 171(1), 29–42."""
+
+    # Download the dataset if it does not exist in DATA_MODULE directory
+    url = "http://transp-or.epfl.ch/data/lpmc.dat"
+    data_file_name = download_from_url(url)
+    full_path = get_path(data_file_name, module=DATA_MODULE)
+    london_df = pd.read_csv(full_path, delimiter='\t')
+
+    items = ["walking", "cycling", "pt", "driving"]
+    shared_features_by_choice_names = ["trip_id", "household_id", "person_n", "trip_n", "purpose", "survey_year", "travel_year", "travel_month", "travel_date", "day_of_week", "start_time", "age", "female", "driving_license", "car_ownership", "distance"]
+    items_features_by_choice_names = ["fueltype", "faretype", "bus_scale", "dur", "interchanges", "cost_transit"]
+    choice_column = "travel_mode"
+
+    if add_items_one_hot:
+        items_features_by_choice_names += [f"oh_{item}" for item in items]
+        for item in items:
+            for item2 in items:
+                if item == item2:
+                    london_df[f"{item}_oh_{item}"] = 1
+                else:
+                    london_df[f"{item2}_oh_{item}"] = 0
+    
+    if return_desc:
+        return description
+    
+    if as_frame:
+        return london_df
+
+    # Shift the index of the travel mode to start at 0
+    london_df['travel_mode'] = london_df['travel_mode'] - 1
+
+    return ChoiceDataset.from_single_wide_df(
+        df=london_df,
+        items_id=items,
+        shared_features_columns=shared_features_by_choice_names,
+        items_features_suffixes=items_features_by_choice_names,
+        delimiter="_",
+        choices_column=choice_column,
+        choice_format="items_index",
     )
