@@ -12,6 +12,7 @@ from choice_learn.datasets import (
     load_swissmetro,
     load_tafeng,
     load_train,
+    load_londonpassenger,
 )
 
 
@@ -95,3 +96,15 @@ def test_hc_loader():
 
     hc = load_hc(as_frame=False)
     assert isinstance(hc, ChoiceDataset)
+
+
+def test_londonpassenger_loader():
+    """Test loading the London Passenger Mode Choice dataset."""
+    londonpassenger = load_londonpassenger(as_frame=True)
+    assert isinstance(londonpassenger, pd.DataFrame)
+    assert londonpassenger.shape == (81086, 32)
+
+    londonpassenger = load_londonpassenger()
+    assert isinstance(londonpassenger, ChoiceDataset)
+    londonpassenger = load_londonpassenger(add_items_one_hot=True)
+    assert isinstance(londonpassenger, ChoiceDataset)
