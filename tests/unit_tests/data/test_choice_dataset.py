@@ -711,17 +711,6 @@ def test_from_wide_df():
             items_id=["it_1", "it_2"],
             shared_features_columns=None,
             items_features_suffixes=["1", "2", "3"],
-            items_features_prefixes=["1", "2", "3"],
-            available_items_suffix=["av_it_1", "av_it_2"],
-            choices_column="choice",
-            choice_format="items_id",
-        )
-    with pytest.raises(ValueError):
-        ChoiceDataset.from_single_wide_df(
-            df=pd.DataFrame(wide_df),
-            items_id=["it_1", "it_2"],
-            shared_features_columns=None,
-            items_features_suffixes=["1", "2", "3"],
             available_items_suffix=["av_it_1", "av_it_2"],
             available_items_prefix=["av_it_1", "av_it_2"],
             choices_column="choice",
@@ -806,7 +795,66 @@ def test_from_wide_df():
             available_items_prefix="av",
             choices_column="choice",
             choice_format="items_id",
+        )   
+
+    extra_wide_df = {
+        "sh_1": [1.1, 2.2, 3.3],
+        "sh_2": [11.1, 22.2, 33.3],
+        "1_it_1_1": [0.01, 0.02, 0.03],
+        "2_it_1_1": [0.04, 0.05, 0.06],
+        "3_it_1_1": [0.07, 0.08, 0.09],
+        "1_it_1_2": [0.1, 0.11, 0.12],
+        "2_it_1_2": [0.13, 0.14, 0.15],
+        "3_it_1_2": [0.16, 0.17, 0.18],
+        "1_it_1_3": [0.19, 0.20, 0.21],
+        "2_it_1_3": [0.22, 0.23, 0.24],
+        "3_it_1_3": [0.25, 0.26, 0.27],
+        "1_it_2_1": [1.01, 1.02, 1.03],
+        "2_it_2_1": [1.04, 1.05, 1.06],
+        "3_it_2_1": [1.07, 1.08, 1.09],
+        "1_it_2_2": [1.1, 1.11, 1.12],
+        "2_it_2_2": [1.13, 1.14, 1.15],
+        "3_it_2_2": [1.16, 1.17, 1.18],
+        "1_it_2_3": [1.19, 1.20, 1.21],
+        "2_it_2_3": [1.22, 1.23, 1.24],
+        "3_it_2_3": [1.25, 1.26, 1.27],
+        "av_it_1": [1, 1, 1],
+        "av_it_2": [1, 0, 1],
+        "choice": ["it_1", "it_1", "it_2"],
+    }
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(extra_wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=None,
+        items_features_prefixes=["1", "2", "3"],
+        items_features_suffixes=["1", "2", "3"],
+        available_items_suffix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert dataset.shared_features_by_choice is None
+    assert dataset.shared_features_by_choice_names is None
+    assert dataset.items_features_by_choice_names == (["1_1", "1_2", "1_3", "2_1", "2_2", "2_3", "3_1", "3_2", "3_3"],)
+    assert (
+        dataset.items_features_by_choice
+        == np.array(
+            [
+                [
+                    [0.01, 0.1 , 0.19, 0.04, 0.13, 0.22, 0.07, 0.16, 0.25],
+                    [1.01, 1.1 , 1.19, 1.04, 1.13, 1.22, 1.07, 1.16, 1.25],
+                ],
+                [
+                    [0.02, 0.11, 0.2 , 0.05, 0.14, 0.23, 0.08, 0.17, 0.26],
+                    [1.02, 1.11, 1.2 , 1.05, 1.14, 1.23, 1.08, 1.17, 1.26],
+                ],
+                [
+                    [0.03, 0.12, 0.21, 0.06, 0.15, 0.24, 0.09, 0.18, 0.27],
+                    [1.03, 1.12, 1.21, 1.06, 1.15, 1.24, 1.09, 1.18, 1.27],
+                ],
+            ],
+            dtype=np.float64,
         )
+    ).all()
 
 
 def test_summary():
