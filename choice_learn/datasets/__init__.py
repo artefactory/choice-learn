@@ -8,6 +8,7 @@ from .base import (
     load_modecanada,
     load_swissmetro,
     load_train,
+    load_londonpassenger,
 )
 from .expedia import load_expedia
 from .tafeng import load_tafeng
@@ -22,4 +23,5 @@ __all__ = [
     "load_expedia",
     "load_car_preferences",
     "load_hc",
+    "load_londonpassenger",
 ]
