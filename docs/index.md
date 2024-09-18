@@ -14,7 +14,7 @@
 
 | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) |
 |-|-|
-| [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://github.com/artefactory/choice-learn/actions/runs/9642058728/artifacts/1630710678) | You can also read our [academic paper](https://github.com/artefactory/choice-learn/actions/runs/9642058728/artifacts/1630710678) ! |
+| [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://joss.theoj.org/papers/10.21105/joss.06899) | You can also read our [academic paper](https://joss.theoj.org/papers/10.21105/joss.06899) ! |
 
 </center>
 
@@ -43,7 +43,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
 
 ### Models
-- [Custom modelling](./notebooks/introduction/4_model_customization.md)
+- [Custom modeling](./notebooks/introduction/4_model_customization.md)
 - Ready to be used models:
     - *Linear Models:*
         - [Multinomial Logit](./references/models/references_simple_mnl.md)
@@ -62,11 +62,11 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
 
 Diverse examples are provided in the How-To section, give it a look !
 
-## Introduction - Discrete Choice Modelling
+## Introduction - Discrete Choice Modeling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
-If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). Otherwise, you can also take a look at the [introductive example](notebooks/introduction/1_introductive_example.md).
+If you are new to choice modeling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). Otherwise, you can also take a look at the [introductive example](notebooks/introduction/1_introductive_example.md).
 
 ## Installation
 
@@ -74,7 +74,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
 
 To install the required packages in a virtual environment, run the following command:
 
-The easiest is to pip-install the package:b7fc2d1f6e2ff5a5a94a896344592542
+The easiest is to pip-install the package:
 ```bash
 pip install choice-learn
 ```
@@ -90,7 +90,7 @@ Choice-Learn requires the following:
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
-For modelling you need:
+For modeling you need:
 - TensorFlow (>=2.13)
 
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
