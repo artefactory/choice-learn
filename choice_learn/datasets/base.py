@@ -41,7 +41,7 @@ def get_path(data_file_name, module=DATA_MODULE):
         return path
 
 
-def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
+def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Load csv files.
 
     Parameters
@@ -70,7 +70,7 @@ def load_csv(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
     return names, np.stack(data)
 
 
-def load_gzip(data_file_name, data_module=OS_DATA_MODULE, encoding="utf-8"):
+def load_gzip(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Load zipped .csv.gz files.
 
     Parameters
