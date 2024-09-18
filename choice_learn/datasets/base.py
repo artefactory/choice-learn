@@ -1100,7 +1100,6 @@ def load_londonpassenger(
 
     items = ["walking", "cycling", "pt", "driving"]
     shared_features_by_choice_names = [
-        "trip_id",
         "household_id",
         "person_n",
         "trip_n",
@@ -1126,6 +1125,9 @@ def load_londonpassenger(
         "cost_transit",
     ]
     choice_column = "travel_mode"
+
+    if return_desc:
+        return description
 
     if preprocessing == "summation":
         # Compute the total public transport duration:
@@ -1165,9 +1167,6 @@ def load_londonpassenger(
                     london_df[f"{item}_oh_{item}"] = 1
                 else:
                     london_df[f"{item2}_oh_{item}"] = 0
-
-    if return_desc:
-        return description
 
     if as_frame:
         return london_df
