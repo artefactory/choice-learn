@@ -141,3 +141,4 @@ secrets/*
 choice_learn/datasets/data/expedia.csv
 choice_learn/datasets/cache/*
 !choice_learn/datasets/cache/.gitkeep
+choice_learn/datasets/data/lmpc.dat

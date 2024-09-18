@@ -5,6 +5,7 @@ from .base import (
     load_electricity,
     load_hc,
     load_heating,
+    load_londonpassenger,
     load_modecanada,
     load_swissmetro,
     load_train,
@@ -22,4 +23,5 @@ __all__ = [
     "load_expedia",
     "load_car_preferences",
     "load_hc",
+    "load_londonpassenger",
 ]
