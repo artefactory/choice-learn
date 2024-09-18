@@ -5,10 +5,10 @@ from .base import (
     load_electricity,
     load_hc,
     load_heating,
+    load_londonpassenger,
     load_modecanada,
     load_swissmetro,
     load_train,
-    load_londonpassenger,
 )
 from .expedia import load_expedia
 from .tafeng import load_tafeng
