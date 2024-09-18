@@ -1123,6 +1123,7 @@ def load_londonpassenger(
         "dur",
         "interchanges",
         "cost_transit",
+        "driving_traffic_percent",
     ]
     choice_column = "travel_mode"
 

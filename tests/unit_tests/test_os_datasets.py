@@ -142,7 +142,7 @@ def test_londonpassenger_loader():
 
     londonpassenger = load_londonpassenger()
     assert isinstance(londonpassenger, ChoiceDataset)
-    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 6)
+    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 7)
     assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
     expected_items_features_names = [
         "fueltype",
@@ -151,6 +151,7 @@ def test_londonpassenger_loader():
         "dur",
         "interchanges",
         "cost_transit",
+        "driving_traffic_percent",
     ]
     assert londonpassenger.items_features_by_choice_names[0] == expected_items_features_names
     expected_shared_features_names = [
@@ -178,7 +179,7 @@ def test_londonpassenger_loader():
         1,
         81086,
         4,
-        10,
+        11,
     )  # last dimension +4
     assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
     expected_items_features_names = [
@@ -188,6 +189,7 @@ def test_londonpassenger_loader():
         "dur",
         "interchanges",
         "cost_transit",
+        "driving_traffic_percent",
         "oh_walking",
         "oh_cycling",
         "oh_pt",
@@ -250,7 +252,7 @@ def test_londonpassenger_loader():
 
     londonpassenger = load_londonpassenger(preprocessing="summation")
     assert isinstance(londonpassenger, ChoiceDataset)
-    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 6)
+    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 7)
     assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
     expected_items_features_names = [
         "fueltype",
@@ -259,6 +261,7 @@ def test_londonpassenger_loader():
         "dur",
         "interchanges",
         "cost_transit",
+        "driving_traffic_percent",
     ]
     assert londonpassenger.items_features_by_choice_names[0] == expected_items_features_names
     expected_shared_features_names = [
@@ -286,7 +289,7 @@ def test_londonpassenger_loader():
         1,
         81086,
         4,
-        10,
+        11,
     )  # last dimension +4
     assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
     expected_items_features_names = [
@@ -296,6 +299,7 @@ def test_londonpassenger_loader():
         "dur",
         "interchanges",
         "cost_transit",
+        "driving_traffic_percent",
         "oh_walking",
         "oh_cycling",
         "oh_pt",
