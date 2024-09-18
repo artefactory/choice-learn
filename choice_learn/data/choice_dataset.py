@@ -944,6 +944,8 @@ class ChoiceDataset(object):
             shared_features_by_choice_names = None
 
         if items_features_suffixes is not None and items_features_prefixes is not None:
+            # The list of features names is the concatenation of the two lists of
+            # prefixes and suffixes
             items_features_names = items_features_prefixes + items_features_suffixes
             items_features_by_choice = []
             for item in items_id:
