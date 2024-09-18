@@ -141,7 +141,6 @@ def download_from_url(url):
 
     # Check that the file is not already downloaded in the DATA_MODULE directory
     if not os.path.isfile(full_path):
-        # if not Path.is_file(full_path):
         print(f"Downloading {local_filename} from {url}")
         try:
             with requests.get(url, stream=True, timeout=20) as r:
@@ -173,6 +172,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         Whether to return the description, by default False
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
+        Can be other than None: "long_format", "tastenet", "tutorial", "biogeme_nested", "rumnet"
 
     Returns
     -------
@@ -571,6 +571,7 @@ def load_modecanada(
         by default False (an thus returned in long format).
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
+        Can be other than None: "tutorial"
 
     Returns
     -------
@@ -1075,6 +1076,7 @@ def load_londonpassenger(
         Whether to return the description, by default False
     preprocessing : str, optional
         Preprocessing to apply to the dataset, by default None
+        Can be other than None: "summation"
 
     Returns
     -------
