@@ -8,11 +8,11 @@ from choice_learn.datasets import (
     load_electricity,
     load_hc,
     load_heating,
+    load_londonpassenger,
     load_modecanada,
     load_swissmetro,
     load_tafeng,
     load_train,
-    load_londonpassenger,
 )
 
 
@@ -107,4 +107,13 @@ def test_londonpassenger_loader():
     londonpassenger = load_londonpassenger()
     assert isinstance(londonpassenger, ChoiceDataset)
     londonpassenger = load_londonpassenger(add_items_one_hot=True)
+    assert isinstance(londonpassenger, ChoiceDataset)
+
+    londonpassenger = load_londonpassenger(as_frame=True, preprocessing="summation")
+    assert isinstance(londonpassenger, pd.DataFrame)
+    assert londonpassenger.shape == (81086, 28)
+
+    londonpassenger = load_londonpassenger(preprocessing="summation")
+    assert isinstance(londonpassenger, ChoiceDataset)
+    londonpassenger = load_londonpassenger(add_items_one_hot=True, preprocessing="summation")
     assert isinstance(londonpassenger, ChoiceDataset)
