@@ -20,10 +20,10 @@
 
 <br>
 
-Choice-Learn is a Python package designed to help you estimate discrete choice models and use them (e.g., assortment optimization plug-in).
+Choice-Learn is a **Python package** designed to help you **estimate discrete choice models** and use them (e.g., assortment optimization plug-in).
 The package provides ready-to-use datasets and models from the litterature. It also provides a lower level use if you wish to customize any choice model or create your own from scratch. Choice-Learn efficiently handles data with the objective to limit RAM usage. It is made particularly easy to estimate choice models with your own, large datasets.
 
-Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.els.
+Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
 In this documentation you will find examples to be quickly getting started as well as some more in-depth example.
 
@@ -41,6 +41,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - [Stated car preferences](./references/datasets/references_base.md)
     - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
+    - [London Passenger Mode Choice](./references/datasets/references_base.md)
 
 ### Models
 - [Custom modeling](./notebooks/introduction/4_model_customization.md)
@@ -93,7 +94,7 @@ Choice-Learn requires the following:
 For modeling you need:
 - TensorFlow (>=2.13)
 
-> :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
+> **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
 Finally, an optional requirement used for statsitcal reporting and LBFG-S optimization is:
@@ -117,7 +118,21 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 ## Citation
 
-If you consider this package and any of its feature useful for your research, please cite us.
+If you consider this package and any of its feature useful for your research, please cite us:
+
+```bash
+@article{Auriau2024,
+  doi = {10.21105/joss.06899},
+  url = {https://doi.org/10.21105/joss.06899},
+  year = {2024},
+  publisher = {The Open Journal},
+  volume = {9},
+  number = {101},
+  pages = {6899},
+  author = {Vincent Auriau and Ali Aouad and Antoine Désir and Emmanuel Malherbe},
+  title = {Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning},
+  journal = {Journal of Open Source Software} }
+```
 
 ### License
 
