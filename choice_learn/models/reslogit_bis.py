@@ -114,10 +114,11 @@ class ResNetLayer(tf.keras.layers.Layer):
         w_init = tf.eye(self.n_out, dtype=tf.float64)
 
         # Learnable parameters of a model
-        self.W = tf.Variable(w_init, trainable=True)
-        self.params = [self.W]
+        self.w = tf.Variable(w_init, trainable=True)
+        self.params = [self.w]
 
-    def forward(self, x):
+    # def forward(self, x):
+    def call(self, x):
         """Return the output of each residual layer.
 
         Parameters
@@ -125,10 +126,12 @@ class ResNetLayer(tf.keras.layers.Layer):
         x : tf.Variable
             Input of each residual layer
         """
-        self.lin_output = tf.matmul(x, self.W)
+        # self.lin_output = tf.matmul(x, self.w)
+        self.lin_output = tf.matmul(tf.cast(x, tf.float64), self.w)
 
+        # return x - tf.math.softplus(self.lin_output)  # Not the same softplus function as in PyTorch???
         return x - tf.math.softplus(
-            self.lin_output
+            tf.cast(self.lin_output, tf.float32)
         )  # Not the same softplus function as in PyTorch???
 
 
@@ -156,7 +159,8 @@ class ResNet(tf.keras.layers.Layer):
             ResNetLayer(n_in, n_out) for _ in range(n_layers)
         ]  # Not sure if it's working
 
-    def forward(self, x):
+    # def forward(self, x):
+    def call(self, x):
         """Return the final output of ResNet architecture.
 
         Parameters
@@ -212,7 +216,8 @@ class ResLogit(Logit):
 
         resnet_input = tf.matmul(self.input, self.beta)
 
-        output_resnet = self.resnet_layer.forward(resnet_input)
+        # output_resnet = self.resnet_layer.forward(resnet_input)
+        output_resnet = self.resnet_layer.call(resnet_input)
 
         pre_softmax = output_resnet + self.asc
 
@@ -227,10 +232,12 @@ class ResLogit(Logit):
 
         resnet_input = tf.matmul(self.input, self.beta)
 
-        output_resnet = self.resnet_layer.forward(resnet_input)
+        # output_resnet = self.resnet_layer.forward(resnet_input)
+        output_resnet = self.resnet_layer.call(resnet_input)
 
         # Final output of residual layers
-        pre_softmax = output_resnet + self.asc
+        # pre_softmax = output_resnet + self.asc
+        pre_softmax = output_resnet + tf.cast(self.asc, tf.float32)
 
         # Output of the softmax layer
         self.output = tf.nn.softmax(pre_softmax, axis=1)
