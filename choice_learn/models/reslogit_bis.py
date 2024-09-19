@@ -37,9 +37,9 @@ class Logit(object):
         # Compute the utility function and the probability  of each alternative
         pre_softmax = tf.matmul(input, self.beta) + self.asc
 
-        self.output = tf.nn.softmax(pre_softmax, dim=1)
+        self.output = tf.nn.softmax(pre_softmax, axis=1)
 
-        self.output_pred = tf.math.argmax(self.output, dim=1)
+        self.output_pred = tf.math.argmax(self.output, axis=1)
 
     def negative_log_likelihood(self, x, y):
         """Cost function.
@@ -216,9 +216,29 @@ class ResLogit(Logit):
 
         pre_softmax = output_resnet + self.asc
 
-        self.output = tf.nn.softmax(pre_softmax, dim=1)
+        self.output = tf.nn.softmax(pre_softmax, axis=1)
 
-        self.output_pred = tf.math.argmax(self.output, dim=1)
+        self.output_pred = tf.math.argmax(self.output, axis=1)
+
+    def predict(self, input):
+        self.input = input
+        if self.n_layers < 1:
+            raise ValueError("Number of residual layers must be at least 1.")
+
+        resnet_input = tf.matmul(self.input, self.beta)
+
+        output_resnet = self.resnet_layer.forward(resnet_input)
+
+        # Final output of residual layers
+        pre_softmax = output_resnet + self.asc
+
+        # Output of the softmax layer
+        self.output = tf.nn.softmax(pre_softmax, axis=1)
+
+        # Final prediction
+        self.output_pred = tf.math.argmax(self.output, axis=1)
+
+        return self.output_pred
 
 
 #############################################################################
@@ -233,8 +253,11 @@ class TrainingResLogit(object):
         )
 
         self.cost = tf.keras.losses.SparseCategoricalCrossentropy(reduction="sum")
+        # self.opt = tf.keras.optimizers.RMSprop(
+        #     self.model.params, learning_rate=1e-3, rho=0.9, epsilon=1e-10, weight_decay=0
+        # )
         self.opt = tf.keras.optimizers.RMSprop(
-            self.model.params, learning_rate=1e-3, rho=0.9, epsilon=1e-10, weight_decay=0
+            learning_rate=1e-3, rho=0.9, epsilon=1e-10, weight_decay=0
         )
 
     def main_model_logit(self, x, y, n_vars, n_choices):
