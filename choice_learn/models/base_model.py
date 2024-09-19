@@ -102,6 +102,10 @@ class ChoiceModel(object):
         self.tolerance = tolerance
 
         if regularization is not None:
+            if np.sum(regularization_strength) <= 0:
+                raise ValueError(
+                    "Regularization strength must be positive if regularization is set."
+                )
             if regularization.lower() == "l1":
                 self.regularizer = tf.keras.regularizers.L1(l1=regularization_strength)
             elif regularization.lower() == "l2":
