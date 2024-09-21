@@ -6,14 +6,16 @@ from choice_learn.data import ChoiceDataset
 from choice_learn.models import SimpleMNL
 
 test_dataset = ChoiceDataset(
-    shared_features_by_choice=np.array([[1, 3, 0], [0, 3, 1], [3, 2, 1], [3, 3, 1]]),
-    items_features_by_choice=np.array(
-        [
-            [[1.1, 2.2], [2.9, 3.3], [3.3, 4.4]],
-            [[1.2, 3.3], [2.3, 2.2], [4.3, 4.5]],
-            [[1.4, 3.1], [2.4, 4.5], [3.4, 2.1]],
-            [[1.7, 3.3], [2.3, 4.4], [3.7, 2.2]],
-        ]
+    shared_features_by_choice=(np.array([[1, 3, 0], [0, 3, 1], [3, 2, 1], [3, 3, 1]]),),
+    items_features_by_choice=(
+        np.array(
+            [
+                [[1.1, 2.2], [2.9, 3.3], [3.3, 4.4]],
+                [[1.2, 3.3], [2.3, 2.2], [4.3, 4.5]],
+                [[1.4, 3.1], [2.4, 4.5], [3.4, 2.1]],
+                [[1.7, 3.3], [2.3, 4.4], [3.7, 2.2]],
+            ]
+        ),
     ),
     available_items_by_choice=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 0]]),
     choices=[0, 1, 2, 0],
