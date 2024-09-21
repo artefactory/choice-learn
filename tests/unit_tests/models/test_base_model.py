@@ -1,6 +1,5 @@
 """Testing base ChoiceModel."""
 
-import numpy as np
 import pytest
 import tensorflow as tf
 
@@ -23,29 +22,32 @@ def test_regularizer_instantiation():
     """Checks that the model instantiates reg."""
     model = ChoiceModel(regularization="L1", regularization_strength=0.1)
     assert isinstance(model.regularizer, tf.keras.regularizers.L1)
-    assert model.regularizer.l1 == np.array(0.1, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l1, 0.1)
     model = ChoiceModel(regularization="l1", regularization_strength=0.1)
     assert isinstance(model.regularizer, tf.keras.regularizers.L1)
-    assert model.regularizer.l1 == np.array(0.1, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l1, 0.1)
     model = ChoiceModel(regularization="L2", regularization_strength=0.01)
     assert isinstance(model.regularizer, tf.keras.regularizers.L2)
-    assert model.regularizer.l2 == np.array(0.01, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l2, 0.01)
     model = ChoiceModel(regularization="l2", regularization_strength=0.01)
     assert isinstance(model.regularizer, tf.keras.regularizers.L2)
-    assert model.regularizer.l2 == np.array(0.01, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l2, 0.01)
 
     model = ChoiceModel(regularization="l1L2", regularization_strength=0.2)
     assert isinstance(model.regularizer, tf.keras.regularizers.L1L2)
-    assert model.regularizer.l1 == np.array(0.2, dtype=np.float32)
-    assert model.regularizer.l2 == np.array(0.2, dtype=np.float32)
+    tf.debugging.assert_equal(
+        model.regularizer.l1,
+        0.2,
+    )
+    tf.debugging.assert_equal(model.regularizer.l2, 0.2)
     model = ChoiceModel(regularization="L1l2", regularization_strength=(0.2, 0.2))
     assert isinstance(model.regularizer, tf.keras.regularizers.L1L2)
-    assert model.regularizer.l1 == np.array(0.2, dtype=np.float32)
-    assert model.regularizer.l2 == np.array(0.2, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l1, 0.2)
+    tf.debugging.assert_equal(model.regularizer.l2, 0.2)
     model = ChoiceModel(regularization="L1L2", regularization_strength=(0.2, 0.02))
     assert isinstance(model.regularizer, tf.keras.regularizers.L1L2)
-    assert model.regularizer.l1 == np.array(0.2, dtype=np.float32)
-    assert model.regularizer.l2 == np.array(0.02, dtype=np.float32)
+    tf.debugging.assert_equal(model.regularizer.l1, 0.2)
+    tf.debugging.assert_equal(model.regularizer.l2, 0.02)
 
 
 def test_regularizer_instant_error():
