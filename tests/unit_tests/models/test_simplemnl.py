@@ -59,7 +59,7 @@ def test_fit_adam():
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
     model.fit(test_dataset, get_report=True, val_dataset=test_dataset)
-    nll_a = model.evaluate(test_dataset)
+    nll_a = model.evaluate(test_dataset, batch_size=-1)
     assert nll_a < nll_b
 
     assert model.report.to_numpy().shape == (7, 5)
