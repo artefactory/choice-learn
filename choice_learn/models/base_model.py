@@ -641,7 +641,7 @@ class ChoiceModel(object):
         Parameters
         ----------
         choice_dataset: ChoiceDataset
-            Dataset on which to estimate the paramters.
+            Dataset on which to estimate the parameters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
 
