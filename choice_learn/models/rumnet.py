@@ -566,7 +566,7 @@ class PaperRUMnet(ChoiceModel):
         elif optimizer == "Adamax":
             self.optimizer = tf.keras.optimizers.Adamax(lr)
         else:
-            print(f"Optimizer {optimizer} not implemnted, switching for default Adam")
+            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
 
         self.instantiated = False
