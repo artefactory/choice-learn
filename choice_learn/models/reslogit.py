@@ -15,19 +15,38 @@ class ResNetLayer(tf.keras.layers.Layer):
         """Initialize the ResNetLayer class."""
         super().__init__()
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    # def instantiate(self, n_items, n_shared_features, n_items_features):
+    #     """Create the state of the layer (weights).
+
+    #     Parameters
+    #     ----------
+    #     n_items : int
+    #         Number of items/aternatives to consider.
+    #     n_shared_features : int
+    #         Number of contexts features
+    #     n_items_features : int
+    #         Number of contexts items features
+    #     """
+    #     _, _ = n_shared_features, n_items_features  # Avoid unused variable warning --> À ENLEVER
+
+    #     self.residual_weights = self.add_weight(
+    #         shape=(n_items, n_items),  # NOT SURE ABOUT THIS SHAPE
+    #         initializer="random_normal",
+    #         trainable=True,
+    #         name="resnet_weight",
+    #     )
+    #     print("Instantiation of ResNetLayer done with success.")
+
+    def build(self, input_shape):
         """Create the state of the layer (weights).
 
         Parameters
         ----------
-        n_items : int
-            Number of items/aternatives to consider.
-        n_shared_features : int
-            Number of contexts features
-        n_items_features : int
-            Number of contexts items features
+        input_shape : tuple
+            Shape of the input of the layer. Typically (batch_size, num_features).
+            Batch_size (None) is ignored, but num_features is the shape of the input.
         """
-        _, _ = n_shared_features, n_items_features  # Avoid unused variable warning
+        n_items = input_shape[1]  # TODO : verify the value of input_shape here
 
         self.residual_weights = self.add_weight(
             shape=(n_items, n_items),  # NOT SURE ABOUT THIS SHAPE
@@ -35,23 +54,6 @@ class ResNetLayer(tf.keras.layers.Layer):
             trainable=True,
             name="resnet_weight",
         )
-        print("Instantiation of ResNetLayer done with success.")
-
-    # def build(self, input_shape):
-    #     """Create the state of the layer (weights).
-
-    #     Parameters
-    #     ----------
-    #     input_shape : tuple
-    #         Shape of the input of the layer. Typically (batch_size, num_features).
-    #         Batch_size (None) is ignored, but num_features is the shape of the input.
-    #     """
-    #     self.residual_weights = self.add_weight(
-    #         shape=(???), # NOT SURE ABOUT THIS SHAPE
-    #         initializer="random_normal",
-    #         trainable=True,
-    #         name="resnet_weight",
-    #     )
 
     def call(self, input):
         """Return the output of the ResNet layer.
@@ -61,7 +63,7 @@ class ResNetLayer(tf.keras.layers.Layer):
         inputs : tf.Variable
             Input of the residual layer
         """
-        lin_output = tf.matmul(tf.cast(input, tf.float64), self.residual_weights)
+        lin_output = tf.matmul(input, self.residual_weights)
 
         return input - tf.math.softplus(
             tf.cast(lin_output, tf.float32)
@@ -174,7 +176,8 @@ class ResLogit(ChoiceModel):
         # TODO: modify by adding n_layer times ResNetLayer, each with its weights
         # (add n_layers as argument of instantiate() ???)
         resnet = ResNetLayer()
-        resnet.instantiate(n_items, n_shared_features, n_items_features)
+        # resnet.instantiate(n_items, n_shared_features, n_items_features)
+        resnet.build(input_shape=(None, n_items))  # TODO : verify the value of input_shape here
         residual_weights = resnet.residual_weights
         residual_weights = [resnet.residual_weights]
         print(f"{type(residual_weights)=}")
