@@ -32,6 +32,7 @@ def test_simplemnl_instantiation():
 
 def test_fit_lbfgs():
     """Tests instantiation with item-full and fit with lbfgs."""
+    tf.config.run_functions_eagerly(True)
     model = SimpleMNL(intercept="item-full", optimizer="lbfgs", epochs=20)
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
