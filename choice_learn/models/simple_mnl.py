@@ -177,7 +177,7 @@ class SimpleMNL(ChoiceModel):
         return shared_features_utilities + items_features_utilities + intercept
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
-        """Fit to estimate the paramters.
+        """Fit to estimate the parameters.
 
         Parameters
         ----------
@@ -205,7 +205,7 @@ class SimpleMNL(ChoiceModel):
         return fit
 
     def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
-        """Specific fit function to estimate the paramters with LBFGS.
+        """Specific fit function to estimate the parameters with LBFGS.
 
         Parameters
         ----------
