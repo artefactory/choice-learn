@@ -81,6 +81,8 @@ def test_fit_adam_weights():
         val_dataset=test_dataset,
     )
     nll_a = model.evaluate(test_dataset, batch_size=-1)
+    nll_c = model.evaluate(test_dataset, batch_size=3)
     assert nll_a < nll_b
+    assert nll_c == nll_a
 
     assert model.report.to_numpy().shape == (7, 5)
