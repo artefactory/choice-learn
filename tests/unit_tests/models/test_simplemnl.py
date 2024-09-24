@@ -1,6 +1,7 @@
 """Tests for the SimpleMNL model."""
 
 import numpy as np
+import tensorflow as tf
 
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import SimpleMNL
@@ -55,6 +56,7 @@ def test_fit_lbfgs():
 
 def test_fit_adam():
     """Tests instantiation with item and fit with Adam."""
+    tf.config.run_functions_eagerly(True)
     model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
