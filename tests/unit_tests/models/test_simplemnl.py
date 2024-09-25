@@ -1,5 +1,7 @@
 """Tests for the SimpleMNL model."""
 
+import shutil
+
 import numpy as np
 import tensorflow as tf
 
@@ -71,7 +73,14 @@ def test_fit_adam():
 def test_fit_adam_weights():
     """Tests instantiation with item and fit with Adam."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model = SimpleMNL(
+        intercept="item",
+        optimizer="Adam",
+        epochs=100,
+        lr=0.1,
+        regularization="l1",
+        regularization_strength=0.01,
+    )
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
     model.fit(
@@ -86,3 +95,16 @@ def test_fit_adam_weights():
     assert nll_c == nll_a
 
     assert model.report.to_numpy().shape == (7, 5)
+
+
+def test_save_load():
+    """Tests instantiation with item and fit with Adam."""
+    model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
+    nll_b = model.evaluate(test_dataset)
+    model.save_model("test_save")
+    loaded_model = SimpleMNL.load_model("test_save")
+    nll_a = loaded_model.evaluate(test_dataset)
+
+    assert nll_a == nll_b
+    shutil.rmtree("test_save")
