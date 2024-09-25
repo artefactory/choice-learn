@@ -4,6 +4,7 @@ import logging
 
 import tensorflow as tf
 
+import choice_learn.tf_ops as tf_ops
 from choice_learn.models.base_model import ChoiceModel
 
 
@@ -23,7 +24,6 @@ class ResNetLayer(tf.keras.layers.Layer):
             Shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
         """
-        print(f"Inside build() function of ResNetLayer: {input_shape=}")
         n_items = input_shape[-1]
 
         self.residual_weights = self.add_weight(
@@ -54,25 +54,41 @@ class ResLogit(ChoiceModel):
     def __init__(
         self,
         intercept="item",  # TODO: check if it still works when intercept is not None
-        optimizer="SGD",
         n_layers=16,
+        label_smoothing=0.0,
+        optimizer="SGD",
+        tolerance=1e-8,
+        lr=0.001,
+        epochs=1000,
+        batch_size=32,
+        logmin=1e-5,
         **kwargs,
     ):
         """Initialize the ResLogit class.
 
         Parameters
         ----------
-        add_exit_choice : bool, optional
-            Whether or not to normalize the probabilities computation with an exit choice
-            whose utility would be 1, by default False
         intercept : str, optional
             ????, by default None
-        optimizer: str
-            TensorFlow optimizer to be used for estimation
-        lr: float
-            Learning Rate to be used with optimizer.
         n_layers : int
             Number of residual layers.
+        label_smoothing : float, optional
+            Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing
+        optimizer: str
+            String representation of the TensorFlow optimizer to be used for estimation,
+            by default "SGD"
+            Should be within tf.keras.optimizers
+        tolerance : float, optional
+            Tolerance for the L-BFGS optimizer if applied, by default 1e-8
+        lr: float, optional
+            Learning rate for the optimizer if applied, by default 0.001
+        epochs: int, optional
+            (Max) Number of epochs to train the model, by default 1000
+        batch_size: int, optional
+            Batch size in the case of stochastic gradient descent optimizer
+            Not used in the case of L-BFGS optimizer, by default 32
+        logmin : float, optional
+            Value to be added within log computation to avoid infinity, by default 1e-5
         """
         super().__init__(
             self,
@@ -81,6 +97,26 @@ class ResLogit(ChoiceModel):
         )
         self.intercept = intercept
         self.n_layers = n_layers
+
+        # Optimization parameters
+        self.label_smoothing = label_smoothing
+        self.tolerance = tolerance
+        self.lr = lr
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.logmin = logmin
+
+        if optimizer == "Adam":
+            self.optimizer = tf.keras.optimizers.Adam(lr)
+        elif optimizer == "SGD":
+            self.optimizer = tf.keras.optimizers.SGD(lr)
+        elif optimizer == "Adamax":
+            self.optimizer = tf.keras.optimizers.Adamax(lr)
+        else:
+            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
+            self.optimizer = tf.keras.optimizers.Adam(lr)
+
+        print(f"Inside ResLogit in reslogit.py: {self.label_smoothing=}")
 
     def instantiate(self, n_items, n_shared_features, n_items_features):
         """Instantiate the model from ModelSpecification object.
@@ -103,6 +139,14 @@ class ResLogit(ChoiceModel):
         resnet : tf.keras.Model
             List of the weights created coresponding to the specification.
         """
+        # Instantiate the loss function
+        self.loss = tf_ops.CustomCategoricalCrossEntropy(
+            from_logits=False,
+            label_smoothing=self.label_smoothing,
+            epsilon=self.logmin,
+        )
+
+        # Instantiate the weights
         mnl_weights = []
         indexes = {}
 
@@ -262,16 +306,7 @@ class ResLogit(ChoiceModel):
         )  # Work with a simple "+" instead of tf.add()???
 
         # Residual component of the utility
-        input_shape = (n_items,)
-        print(
-            "Inside compute_batch_utility function of ResLogit before defining",
-            f"'input_data':{input_shape=}",
-        )
         input_data = deterministic_utilities_without_intercept
-        print(
-            "Inside compute_batch_utility function of ResLogit after defining",
-            f"'input_data':{input_data.shape=}",
-        )
 
         resnet_model = self.resnet_model
         residual_utilities = resnet_model(input_data)
