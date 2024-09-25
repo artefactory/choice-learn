@@ -2,7 +2,6 @@
 
 import logging
 
-import numpy as np
 import tensorflow as tf
 
 from choice_learn.models.base_model import ChoiceModel
@@ -15,28 +14,6 @@ class ResNetLayer(tf.keras.layers.Layer):
         """Initialize the ResNetLayer class."""
         super().__init__()
 
-    # def instantiate(self, n_items, n_shared_features, n_items_features):
-    #     """Create the state of the layer (weights).
-
-    #     Parameters
-    #     ----------
-    #     n_items : int
-    #         Number of items/aternatives to consider.
-    #     n_shared_features : int
-    #         Number of contexts features
-    #     n_items_features : int
-    #         Number of contexts items features
-    #     """
-    #     _, _ = n_shared_features, n_items_features  # Avoid unused variable warning --> À ENLEVER
-
-    #     self.residual_weights = self.add_weight(
-    #         shape=(n_items, n_items),  # NOT SURE ABOUT THIS SHAPE
-    #         initializer="random_normal",
-    #         trainable=True,
-    #         name="resnet_weight",
-    #     )
-    #     print("Instantiation of ResNetLayer done with success.")
-
     def build(self, input_shape):
         """Create the state of the layer (weights).
 
@@ -46,10 +23,12 @@ class ResNetLayer(tf.keras.layers.Layer):
             Shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
         """
-        n_items = input_shape[1]  # TODO : verify the value of input_shape here
+        # super().build(input_shape)
+        print(f"Inside build() function of ResNetLayer: {input_shape=}")
+        n_items = input_shape[-1]
 
         self.residual_weights = self.add_weight(
-            shape=(n_items, n_items),  # NOT SURE ABOUT THIS SHAPE
+            shape=(n_items, n_items),
             initializer="random_normal",
             trainable=True,
             name="resnet_weight",
@@ -75,7 +54,7 @@ class ResLogit(ChoiceModel):
 
     def __init__(
         self,
-        intercept=None,
+        intercept="item",  # TODO: check if it still works when intercept is not None
         optimizer="SGD",
         n_layers=16,
         **kwargs,
@@ -125,72 +104,66 @@ class ResLogit(ChoiceModel):
         resnet : tf.keras.Model
             List of the weights created coresponding to the specification.
         """
+        mnl_weights = []
         indexes = {}
 
         # Create the betas parameters for the shared and items features
-        betas = []
         for n_feat, feat_name in zip(
             [n_shared_features, n_items_features],
             ["shared_features", "items_features"],
         ):
             if n_feat > 0:
-                betas += [
+                mnl_weights += [
                     tf.Variable(
                         tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
                         name=f"Betas_{feat_name}",
                     )
                 ]
-                indexes[feat_name] = len(betas) - 1
+                indexes[feat_name] = len(mnl_weights) - 1
 
         # Create the alphas parameters
-        alphas = []
         if self.intercept is None:
             logging.info("No intercept in the model")
         elif self.intercept == "item":
-            alphas.append(
+            mnl_weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
                     name="Intercept",
                 )
             )
-            indexes["intercept"] = len(betas + alphas) - 1
+            indexes["intercept"] = len(mnl_weights) - 1
         elif self.intercept == "item-full":
             logging.info("Simple MNL intercept is not normalized to 0!")
-            alphas.append(
+            mnl_weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
                     name="Intercept",
                 )
             )
-            indexes["intercept"] = len(betas + alphas) - 1
+            indexes["intercept"] = len(mnl_weights) - 1
         else:
-            alphas.append(
+            mnl_weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
                     name="Intercept",
                 )
             )
-            indexes["intercept"] = len(betas + alphas) - 1
+            indexes["intercept"] = len(mnl_weights) - 1
 
         # Create the ResNet layer
         # TODO: modify by adding n_layer times ResNetLayer, each with its weights
         # (add n_layers as argument of instantiate() ???)
         resnet = ResNetLayer()
-        # resnet.instantiate(n_items, n_shared_features, n_items_features)
-        resnet.build(input_shape=(None, n_items))  # TODO : verify the value of input_shape here
-        residual_weights = resnet.residual_weights
+        resnet.build(input_shape=(n_items,))
         residual_weights = [resnet.residual_weights]
-        print(f"{type(residual_weights)=}")
-        # resnet_model = tf.keras.Model(inputs=input, outputs=output, name="resnet")
 
         # Concatenation of all the trainable weights
-        print(f"{type(alphas)=}\n{type(betas)=}\n{type(residual_weights)=}")
-        _trainable_weights = alphas + betas + residual_weights
+        weights = mnl_weights + residual_weights
 
         self.instantiated = True
         self.indexes = indexes
-        self._trainable_weights = _trainable_weights
-        return indexes, _trainable_weights
+        self._trainable_weights = weights
+        return indexes, weights
 
     @property
     def trainable_weights(self):
@@ -228,6 +201,9 @@ class ResLogit(ChoiceModel):
         """
         (_, _) = available_items_by_choice, choices  # Avoid unused variable warning
 
+        batch_size = shared_features_by_choice.shape[0]
+        n_items = items_features_by_choice.shape[1]
+
         # Deterministic component of the utility
         if "shared_features" in self.indexes.keys():
             if isinstance(shared_features_by_choice, tuple):
@@ -238,34 +214,22 @@ class ResLogit(ChoiceModel):
                 self.trainable_weights[self.indexes["shared_features"]],
                 axes=1,
             )
-            print("Tensordot for shared_features_utilities done with success.")
             shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
         else:
             shared_features_utilities = 0
+        shared_features_utilities = tf.squeeze(shared_features_utilities)
 
         if "items_features" in self.indexes.keys():
             if isinstance(items_features_by_choice, tuple):
                 items_features_by_choice = tf.concat([*items_features_by_choice], axis=2)
             items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
-            print(
-                f"{items_features_by_choice.shape=}\n{self.trainable_weights[self.indexes['items_features']].shape=}"
-            )
-            items_features_by_choice_reshaped = tf.reshape(
-                items_features_by_choice,
-                [-1, items_features_by_choice.shape[1] * items_features_by_choice.shape[2]],
-            )
-            print(
-                f"{items_features_by_choice_reshaped.shape=}\n{self.trainable_weights[self.indexes['items_features']].shape=}"
-            )
             items_features_utilities = tf.tensordot(
-                items_features_by_choice_reshaped,
+                items_features_by_choice,
                 self.trainable_weights[self.indexes["items_features"]],
                 axes=1,
             )
         else:
-            items_features_utilities = tf.zeros(
-                (available_items_by_choice.shape[0], available_items_by_choice.shape[1])
-            )
+            items_features_utilities = tf.zeros((batch_size, n_items))
 
         if "intercept" in self.indexes.keys():
             intercept = self.trainable_weights[self.indexes["intercept"]]
@@ -276,27 +240,28 @@ class ResLogit(ChoiceModel):
         else:
             intercept = 0
 
-        deterministic_utilities = shared_features_utilities + items_features_utilities + intercept
+        # /!\ Not sure about the next line shared_features_utilities = tf.tile(...)
+        shared_features_utilities = tf.tile(
+            tf.expand_dims(shared_features_utilities, axis=-1), [1, n_items]
+        )
+        deterministic_utilities_without_intercept = tf.add(
+            shared_features_utilities, items_features_utilities
+        )  # Work with a simple "+" instead of tf.add()???
+        deterministic_utilities = tf.add(
+            deterministic_utilities_without_intercept, intercept
+        )  # Work with a simple "+" instead of tf.add()???
 
         # Residual component of the utility
-        n_items_features = np.shape(items_features_by_choice)[
-            2
-        ]  # TODO: don't use Numpy to get these shapes
-        n_shared_features = np.shape(shared_features_by_choice)[1]
-        input_shape = (n_items_features + n_shared_features,)
-
+        input_shape = (n_items,)
+        print(
+            "Inside compute_batch_utility function of ResLogit before defining",
+            f"'input':{input_shape=}",
+        )
         input = tf.keras.layers.Input(shape=input_shape)
-
-        input_data = [
-            tf.cast(shared_features_by_choice, tf.float32),
-            tf.reshape(
-                items_features_by_choice,
-                [-1, items_features_by_choice.shape[1] * items_features_by_choice.shape[2]],
-            ),
-        ]
-        input_data = tf.convert_to_tensor(input_data)
-        input_data = tf.reshape(
-            input_data, [input_data.shape[1], input_data.shape[0] * input_data.shape[2]]
+        input_data = deterministic_utilities_without_intercept
+        print(
+            "Inside compute_batch_utility function of ResLogit after defining",
+            f"'input_data':{input_data.shape=}",
         )
 
         layers = [ResNetLayer() for _ in range(self.n_layers)]
@@ -305,14 +270,20 @@ class ResLogit(ChoiceModel):
             output = layer(output)
         resnet_model = tf.keras.Model(inputs=input, outputs=output, name="resnet")
 
-        residual_utilities = resnet_model(input_data)
+        residual_utilities = []
+        for i in range(batch_size):
+            print(f"{input_data[i].shape=}")
+            residual_utilities.append(resnet_model(input_data[i]))
+        residual_utilities = tf.convert_to_tensor(residual_utilities)
         residual_utilities = tf.reshape(
             residual_utilities,
-            [items_features_by_choice.shape[0], items_features_by_choice.shape[1]],
+            [batch_size, n_items],
         )  # Useless???
         residual_utilities = tf.cast(residual_utilities, tf.float32)
 
-        return deterministic_utilities + residual_utilities
+        return tf.add(
+            deterministic_utilities, residual_utilities
+        )  # Work with a simple "+" instead of tf.add()???
 
     def fit(
         self, choice_dataset, get_report=False, **kwargs
