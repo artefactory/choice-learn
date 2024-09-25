@@ -23,7 +23,6 @@ class ResNetLayer(tf.keras.layers.Layer):
             Shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
         """
-        # super().build(input_shape)
         print(f"Inside build() function of ResNetLayer: {input_shape=}")
         n_items = input_shape[-1]
 
@@ -151,17 +150,28 @@ class ResLogit(ChoiceModel):
             indexes["intercept"] = len(mnl_weights) - 1
 
         # Create the ResNet layer
-        # TODO: modify by adding n_layer times ResNetLayer, each with its weights
-        # (add n_layers as argument of instantiate() ???)
-        resnet = ResNetLayer()
-        resnet.build(input_shape=(n_items,))
-        residual_weights = [resnet.residual_weights]
+        input_shape = (n_items,)
+        input = tf.keras.layers.Input(shape=input_shape)
+        residual_weights = []
+        layers = [ResNetLayer() for _ in range(self.n_layers)]
+        output = input
+        for layer in layers:
+            layer.build(input_shape=(n_items,))  # /!\ Not sure about this line
+            residual_weights.append(layer.residual_weights)  # /!\ Not sure about this line
+            output = layer(output)
+        resnet_model = tf.keras.Model(
+            inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
+        )
+        # resnet_model.build(input_shape=(n_items,))
 
         # Concatenation of all the trainable weights
         weights = mnl_weights + residual_weights
 
         self.instantiated = True
+        self.resnet_model = resnet_model
         self.indexes = indexes
+        self.mnl_weights = mnl_weights
+        self.residual_weights = residual_weights
         self._trainable_weights = weights
         return indexes, weights
 
@@ -255,26 +265,17 @@ class ResLogit(ChoiceModel):
         input_shape = (n_items,)
         print(
             "Inside compute_batch_utility function of ResLogit before defining",
-            f"'input':{input_shape=}",
+            f"'input_data':{input_shape=}",
         )
-        input = tf.keras.layers.Input(shape=input_shape)
         input_data = deterministic_utilities_without_intercept
         print(
             "Inside compute_batch_utility function of ResLogit after defining",
             f"'input_data':{input_data.shape=}",
         )
 
-        layers = [ResNetLayer() for _ in range(self.n_layers)]
-        output = input
-        for layer in layers:
-            output = layer(output)
-        resnet_model = tf.keras.Model(inputs=input, outputs=output, name="resnet")
-
-        residual_utilities = []
-        for i in range(batch_size):
-            print(f"{input_data[i].shape=}")
-            residual_utilities.append(resnet_model(input_data[i]))
-        residual_utilities = tf.convert_to_tensor(residual_utilities)
+        resnet_model = self.resnet_model
+        residual_utilities = resnet_model(input_data)
+        residual_utilities = tf.convert_to_tensor(residual_utilities)  # Useless???
         residual_utilities = tf.reshape(
             residual_utilities,
             [batch_size, n_items],
