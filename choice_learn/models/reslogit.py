@@ -240,7 +240,7 @@ class ResLogit(ChoiceModel):
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
-            Shape must be (n_choices, n_items_features)
+            Shape must be (n_choices, n_items, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
@@ -255,7 +255,7 @@ class ResLogit(ChoiceModel):
         """
         (_, _) = available_items_by_choice, choices  # Avoid unused variable warning
 
-        batch_size = shared_features_by_choice.shape[0]
+        batch_size = shared_features_by_choice.shape[0]  # Other name: n_choices
         n_items = items_features_by_choice.shape[1]
 
         # Deterministic component of the utility
