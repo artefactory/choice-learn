@@ -116,7 +116,7 @@ class ResLogit(ChoiceModel):
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
 
-        print(f"Inside ResLogit in reslogit.py: {self.label_smoothing=}")
+        self.instantiated = False
 
     def instantiate(self, n_items, n_shared_features, n_items_features):
         """Instantiate the model from ModelSpecification object.
