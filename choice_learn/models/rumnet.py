@@ -625,7 +625,7 @@ class PaperRUMnet(ChoiceModel):
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
             A batch of items features
-            Shape must be (n_choices, n_items_features)
+            Shape must be (n_choices, n_items, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
