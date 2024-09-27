@@ -286,4 +286,4 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
-[11] [ResLogit](https://github.com/LiTrans/reslogit)
+[12] [ResLogit](https://github.com/LiTrans/reslogit)
