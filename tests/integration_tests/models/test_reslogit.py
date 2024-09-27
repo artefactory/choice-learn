@@ -160,6 +160,27 @@ def test_reslogit_comparison_with_simple_mnl():
         )
 
 
+def test_reslogit_different_n_layers():
+    """Tests that ResLogit can fit with different n_layers."""
+    global dataset
+
+    for n_layers in [0, 1, 4, 16]:
+        model = ResLogit(n_layers=n_layers, lr=1e-6, epochs=20, optimizer="SGD", batch_size=32)
+        model.fit(dataset)
+        model.evaluate(dataset)
+
+        # The model can fit
+        assert model.evaluate(dataset) < 1.0
+
+        # The global shape of the residual weights corresponds to the number of layers
+        assert len(model.residual_weights) == n_layers
+
+        if n_layers > 0:
+            for layer_idx in range(n_layers):
+                # Each residual layer has a (n_items, n_items) matrix of weights
+                assert model.residual_weights[layer_idx].shape == (n_items, n_items)
+
+
 def test_that_endpoints_run():
     """Dummy test to check that the endpoints run.
 
