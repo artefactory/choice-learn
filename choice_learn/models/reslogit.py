@@ -43,9 +43,7 @@ class ResNetLayer(tf.keras.layers.Layer):
         """
         lin_output = tf.matmul(input, self.residual_weights)
 
-        return input - tf.math.softplus(
-            tf.cast(lin_output, tf.float32)
-        )  # Not the same softplus function as in PyTorch???
+        return input - tf.math.softplus(tf.cast(lin_output, tf.float32))
 
 
 class ResLogit(ChoiceModel):
@@ -53,7 +51,7 @@ class ResLogit(ChoiceModel):
 
     def __init__(
         self,
-        intercept="item",  # TODO: check if it still works when intercept is not None
+        intercept="item",
         n_layers=16,
         label_smoothing=0.0,
         optimizer="SGD",
@@ -68,8 +66,8 @@ class ResLogit(ChoiceModel):
 
         Parameters
         ----------
-        intercept : str, optional
-            ????, by default None
+        intercept: str, optional
+            Type of intercept to use, by default None
         n_layers : int
             Number of residual layers.
         label_smoothing : float, optional
@@ -200,13 +198,12 @@ class ResLogit(ChoiceModel):
         layers = [ResNetLayer() for _ in range(self.n_layers)]
         output = input
         for layer in layers:
-            layer.build(input_shape=(n_items,))  # /!\ Not sure about this line
-            residual_weights.append(layer.residual_weights)  # /!\ Not sure about this line
+            layer.build(input_shape=(n_items,))
+            residual_weights.append(layer.residual_weights)
             output = layer(output)
         resnet_model = tf.keras.Model(
             inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
         )
-        # resnet_model.build(input_shape=(n_items,))
 
         # Concatenation of all the trainable weights
         weights = mnl_weights + residual_weights
@@ -294,36 +291,24 @@ class ResLogit(ChoiceModel):
         else:
             intercept = 0
 
-        # /!\ Not sure about the next line shared_features_utilities = tf.tile(...)
         shared_features_utilities = tf.tile(
             tf.expand_dims(shared_features_utilities, axis=-1), [1, n_items]
         )
-        deterministic_utilities_without_intercept = tf.add(
-            shared_features_utilities, items_features_utilities
-        )  # Work with a simple "+" instead of tf.add()???
-        deterministic_utilities = tf.add(
-            deterministic_utilities_without_intercept, intercept
-        )  # Work with a simple "+" instead of tf.add()???
+        deterministic_utilities_without_intercept = (
+            shared_features_utilities + items_features_utilities
+        )
+        deterministic_utilities = deterministic_utilities_without_intercept + intercept
 
         # Residual component of the utility
         input_data = deterministic_utilities_without_intercept
 
         resnet_model = self.resnet_model
         residual_utilities = resnet_model(input_data)
-        residual_utilities = tf.convert_to_tensor(residual_utilities)  # Useless???
-        residual_utilities = tf.reshape(
-            residual_utilities,
-            [batch_size, n_items],
-        )  # Useless???
         residual_utilities = tf.cast(residual_utilities, tf.float32)
 
-        return tf.add(
-            deterministic_utilities, residual_utilities
-        )  # Work with a simple "+" instead of tf.add()???
+        return deterministic_utilities + residual_utilities
 
-    def fit(
-        self, choice_dataset, get_report=False, **kwargs
-    ):  # Not necessary to redefine this method, can be deleted
+    def fit(self, choice_dataset, get_report=False, **kwargs):
         """Fit to estimate the parameters.
 
         Parameters

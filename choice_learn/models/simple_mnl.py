@@ -29,6 +29,8 @@ class SimpleMNL(ChoiceModel):
         add_exit_choice : bool, optional
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
+        intercept: str, optional
+            Type of intercept to use, by default None
         optimizer: str
             TensorFlow optimizer to be used for estimation
         lr: float
