@@ -62,6 +62,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
+  - ResLogit [[12]](#citation)[[Example]](notebooks/models/reslogit.ipynb)
 - Custom modeling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
@@ -276,11 +277,13 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)\
 [9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
 [10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)\
-[11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)
+[11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)\
+[12] [ResLogit: A residual neural network logit model for data-driven choice modelling] (https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)
 
 ### Code and Repositories
 
 *Official models implementations:*
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
-[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
+[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
+[11] [ResLogit](https://github.com/LiTrans/reslogit)
