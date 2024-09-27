@@ -21,8 +21,8 @@ class ResNetLayer(tf.keras.layers.Layer):
         Parameters
         ----------
         input_shape : tuple
-            Shape of the input of the layer. Typically (batch_size, num_features).
-            Batch_size (None) is ignored, but num_features is the shape of the input.
+            Shape of the input of the layer. Typically (batch_size, num_features)
+            Batch_size (None) is ignored, but num_features is the shape of the input
         """
         n_items = input_shape[-1]
 
@@ -40,6 +40,11 @@ class ResNetLayer(tf.keras.layers.Layer):
         ----------
         inputs : tf.Variable
             Input of the residual layer
+
+        Returns
+        -------
+        tf.Variable
+            Output of the residual layer
         """
         lin_output = tf.matmul(input, self.residual_weights)
 
@@ -122,7 +127,7 @@ class ResLogit(ChoiceModel):
         Parameters
         ----------
         n_items : int
-            Number of items/aternatives to consider.
+            Number of items/aternatives to consider
         n_shared_features : int
             Number of contexts features
         n_items_features : int
@@ -130,12 +135,10 @@ class ResLogit(ChoiceModel):
 
         Returns
         -------
-        alphas : tf.Variable
-            Alphas parameters (aka intercepts or asc variable) of the model.
-        betas : tf.Variable
-            Betas parameters of the model.
-        resnet : tf.keras.Model
-            List of the weights created coresponding to the specification.
+        indexes : dict
+            Dictionary of the indexes of the weights created
+        weights : list of tf.Variable
+            List of the weights created coresponding to the specification
         """
         # Instantiate the loss function
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
@@ -248,7 +251,7 @@ class ResLogit(ChoiceModel):
         Returns
         -------
         tf.Tensor
-            Computed utilities of shape (n_choices, n_items).
+            Computed utilities of shape (n_choices, n_items)
         """
         (_, _) = available_items_by_choice, choices  # Avoid unused variable warning
 
@@ -320,8 +323,8 @@ class ResLogit(ChoiceModel):
 
         Returns
         -------
-        dict
-            dict with fit history.
+        fit : dict
+            dict with fit history
         """
         if not self.instantiated:
             # Lazy Instantiation
