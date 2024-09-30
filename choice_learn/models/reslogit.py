@@ -15,7 +15,34 @@ class ResNetLayer(tf.keras.layers.Layer):
         """Initialize the ResNetLayer class."""
         super().__init__()
 
-    def build(self, input_shape, layer_width=None):
+    def get_activation_function(self, name):
+        """Get an activation function from its str name.
+
+        Parameters
+        ----------
+        name : str
+            Name of the function to apply.
+
+        Returns
+        -------
+        function
+            Tensorflow function to apply.
+        """
+        if name == "linear":
+            return lambda x: x
+        if name == "relu":
+            return tf.nn.relu
+        if name == "-relu":
+            return lambda x: -tf.nn.relu(-x)
+        if name == "tanh":
+            return tf.nn.tanh
+        if name == "sigmoid":
+            return tf.nn.sigmoid
+        if name == "softplus":
+            return tf.math.softplus
+        raise ValueError(f"Activation function {name} not supported.")
+
+    def build(self, input_shape, layer_width=None, activation="softplus"):
         """Create the state of the layer (weights).
 
         Parameters
@@ -26,6 +53,8 @@ class ResNetLayer(tf.keras.layers.Layer):
         layer_width : int, optional
             Width of the layer, by default None
             If None, the width of the layer is the same as the input shape
+        activation : str, optional
+            Activation function to use in the layer, by default "softplus"
         """
         self.num_features = input_shape[-1]
 
@@ -33,6 +62,8 @@ class ResNetLayer(tf.keras.layers.Layer):
             self.layer_width = input_shape[-1]
         else:
             self.layer_width = layer_width
+
+        self.activation = self.get_activation_function(activation)
 
         # Random normal initialization of the weights
         # Shape of the weights: (num_features, layer_width)
@@ -64,7 +95,7 @@ class ResNetLayer(tf.keras.layers.Layer):
             input = tf.matmul(input, tf.ones((self.num_features, self.layer_width)))
 
         # Softplus: smooth approximation of ReLU
-        return input - tf.math.softplus(tf.cast(lin_output, tf.float32))
+        return input - self.activation(tf.cast(lin_output, tf.float32))
 
     def compute_output_shape(self, input_shape):
         """Compute the output shape of the layer.
@@ -93,6 +124,7 @@ class ResLogit(ChoiceModel):
         intercept="item",
         n_layers=16,
         res_layers_width=None,
+        activation="softplus",
         label_smoothing=0.0,
         optimizer="SGD",
         tolerance=1e-8,
@@ -115,6 +147,8 @@ class ResLogit(ChoiceModel):
             If None, all the residual layers have the same width (n_items)
             The length of the list should be equal to n_layers - 1
             The last element of the list should be equal to n_items
+        activation : str, optional
+            Activation function to use in the residual layers, by default "softplus"
         label_smoothing : float, optional
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing
         optimizer: str
@@ -141,6 +175,7 @@ class ResLogit(ChoiceModel):
         self.intercept = intercept
         self.n_layers = n_layers
         self.res_layers_width = res_layers_width
+        self.activation = activation
 
         # Optimization parameters
         self.label_smoothing = label_smoothing
@@ -245,7 +280,7 @@ class ResLogit(ChoiceModel):
             # Common width for all the residual layers by default: n_items
             # (Like in the original paper of ResLogit)
             for layer in layers:
-                layer.build(input_shape=(n_items,))
+                layer.build(input_shape=(n_items,), activation=self.activation)
                 residual_weights.append(layer.residual_weights)
                 output = layer(output)
         else:
@@ -259,18 +294,23 @@ class ResLogit(ChoiceModel):
             for i, layer in enumerate(layers):
                 if i == 0:
                     # The first layer has the same width as the input
-                    layer.build(input_shape=(n_items,))
+                    layer.build(input_shape=(n_items,), activation=self.activation)
                     residual_weights.append(layer.residual_weights)
                 # The other layers have a width defined by the
                 # res_layers_width parameter and an input shape
                 # depending on the width of the previous layer
                 elif i == 1:
-                    layer.build(input_shape=(n_items,), layer_width=self.res_layers_width[i - 1])
+                    layer.build(
+                        input_shape=(n_items,),
+                        layer_width=self.res_layers_width[i - 1],
+                        activation=self.activation,
+                    )
                     residual_weights.append(layer.residual_weights)
                 else:
                     layer.build(
                         input_shape=(self.res_layers_width[i - 2],),
                         layer_width=self.res_layers_width[i - 1],
+                        activation=self.activation,
                     )
                     residual_weights.append(layer.residual_weights)
                 output = layer(output)
