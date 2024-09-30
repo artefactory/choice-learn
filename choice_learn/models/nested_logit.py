@@ -6,18 +6,19 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.models.base_model import ChoiceModel
 from choice_learn.models.conditional_logit import MNLCoefficients
 
 
 def nested_softmax_with_availabilities(
-    items_logit_by_choice,
-    available_items_by_choice,
-    items_nests,
-    gammas,
-    normalize_exit=False,
-    eps=1e-17,
-):
+    items_logit_by_choice: tf.Tensor,
+    available_items_by_choice: tf.Tensor,
+    items_nests: tf.Tensor,
+    gammas: tf.Tensor,
+    normalize_exit: bool = False,
+    eps: float | int = 1e-17,
+) -> tf.Tensor:
     """Compute softmax probabilities from utilities and items repartition within nests.
 
     Takes into account availabilties (1 if the product is available, 0 otherwise) to set
@@ -29,14 +30,14 @@ def nested_softmax_with_availabilities(
 
     Parameters
     ----------
-    items_logit_by_choice : np.ndarray (n_choices, n_items)
+    items_logit_by_choice :  tf.Tensor (n_choices, n_items)
         Utilities / Logits on which to compute the softmax
-    available_items_by_choice : np.ndarray (n_choices, n_items)
+    available_items_by_choice :  tf.Tensor (n_choices, n_items)
         Matrix indicating the availabitily (1) or not (0) of the products
-    items_nests : np.ndarray (n_items)
+    items_nests :  tf.Tensor (n_items)
         Nest index for each item  # Beware that nest index matches well gammas,
         it is not verified.
-    gammas : np.ndarray of shape (n_choices, n_items)
+    gammas :  tf.Tensor (n_choices, n_items)
         Nest gammas value that must be reshaped so that it matches items_logit_by_choice
         items_gammas_by_choice ?
     normalize_exit : bool, optional
@@ -87,14 +88,14 @@ class NestedLogit(ChoiceModel):
 
     def __init__(
         self,
-        items_nests,
-        shared_gammas_over_nests=False,
-        coefficients=None,
-        add_exit_choice=False,
-        optimizer="lbfgs",
-        lr=0.001,
+        items_nests: list[list[int]],
+        shared_gammas_over_nests: bool = False,
+        coefficients: dict | MNLCoefficients | None = None,
+        add_exit_choice: bool = False,
+        optimizer: str = "lbfgs",
+        lr: float | int = 0.001,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the Nested Logit model.
 
         Parameters
@@ -162,8 +163,12 @@ class NestedLogit(ChoiceModel):
         self.shared_gammas_over_nests = shared_gammas_over_nests
 
     def add_coefficients(
-        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
-    ):
+        self,
+        feature_name: str,
+        coefficient_name: str = "",
+        items_indexes: list[int] = None,
+        items_names: list[str] = None,
+    ) -> None:
         """Add a coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -194,8 +199,12 @@ class NestedLogit(ChoiceModel):
         )
 
     def add_shared_coefficient(
-        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
-    ):
+        self,
+        feature_name: str,
+        coefficient_name: str = "",
+        items_indexes: list[int] = None,
+        items_names: list[str] = None,
+    ) -> None:
         """Add a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -225,7 +234,14 @@ class NestedLogit(ChoiceModel):
             shared=True,
         )
 
-    def _add_coefficient(self, feature_name, coefficient_name, items_indexes, items_names, shared):
+    def _add_coefficient(
+        self,
+        feature_name: str,
+        coefficient_name: str,
+        items_indexes: list[int],
+        items_names: list[str],
+        shared: bool,
+    ) -> None:
         if self.coefficients is None:
             self.coefficients = MNLCoefficients()
         elif not isinstance(self.coefficients, MNLCoefficients):
@@ -240,7 +256,7 @@ class NestedLogit(ChoiceModel):
             items_names=items_names,
         )
 
-    def instantiate(self, choice_dataset):
+    def instantiate(self, choice_dataset: ChoiceDataset) -> None:
         """Instantiate the model using the features in the choice_dataset.
 
         Parameters
@@ -273,7 +289,7 @@ class NestedLogit(ChoiceModel):
             self._store_dataset_features_names(choice_dataset)
             self.instantiated = True
 
-    def _instantiate_tf_weights(self):
+    def _instantiate_tf_weights(self) -> list[tf.Tensor]:
         """Instantiate the model from MNLCoefficients object.
 
         Returns
@@ -317,11 +333,11 @@ class NestedLogit(ChoiceModel):
         return weights
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Tensor]:
         """Trainable weights of the model."""
         return self._trainable_weights
 
-    def _build_coefficients_from_dict(self, n_items):
+    def _build_coefficients_from_dict(self, n_items: int) -> None:
         """Build coefficients when they are given as a dictionnay.
 
         Parameters
@@ -352,7 +368,7 @@ class NestedLogit(ChoiceModel):
 
         self.coefficients = coefficients
 
-    def _store_dataset_features_names(self, choice_dataset):
+    def _store_dataset_features_names(self, choice_dataset: ChoiceDataset) -> None:
         """Register the name of the features in the dataset. For later use in utility computation.
 
         Parameters
@@ -365,26 +381,26 @@ class NestedLogit(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        verbose=1,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        verbose: int = 1,
+    ) -> tf.Tensor:
         """Compute the utility when the model is constructed from a MNLCoefficients object.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             a batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices: np.ndarray
+        choices: tf.Tensor
             Choices
             Shape must be (n_choices, )
         verbose : int, optional
@@ -549,12 +565,12 @@ class NestedLogit(ChoiceModel):
     @tf.function
     def batch_predict(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tuple[tf.Tensor, tf.Tensor]:
         """Represent one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
         Parameters
@@ -565,13 +581,13 @@ class NestedLogit(ChoiceModel):
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices_batch : tf.Tensor
             Choices
             Shape must be (n_choices, )
-        sample_weight : np.ndarray, optional
+        sample_weight : tf.Tensor, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
@@ -630,29 +646,29 @@ class NestedLogit(ChoiceModel):
     @tf.function
     def train_step(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tf.Tensor:
         """Represent one training step (= one gradient descent step) of the model.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             a batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
-        sample_weight : np.ndarray, optional
+        sample_weight : tf.Tensor, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
@@ -706,7 +722,7 @@ class NestedLogit(ChoiceModel):
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return neg_loglikelihood
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, get_report: bool = False, **kwargs) -> dict:
         """Fit function to estimate the paramters.
 
         Parameters
@@ -730,21 +746,20 @@ class NestedLogit(ChoiceModel):
 
     def _fit_with_lbfgs(
         self,
-        choice_dataset,
-        sample_weight=None,
-        get_report=False,
+        choice_dataset: ChoiceDataset,
+        sample_weight: tf.Tensor | None = None,
+        get_report: bool = False,
         **kwargs,
-    ):
+    ) -> dict:
         """Specific fit function to estimate the paramters with LBFGS.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
-        n_epochs : int
-            Number of epochs to run.
-        tolerance : float, optional
-            Tolerance in the research of minimum, by default 1e-8
+        sample_weight : tf.Tensor, optional
+            List samples weights to apply during the gradient descent to the batch elements,
+            by default None
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False
 
@@ -764,7 +779,7 @@ class NestedLogit(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def compute_report(self, choice_dataset):
+    def compute_report(self, choice_dataset: ChoiceDataset) -> pd.DataFrame:
         """Compute a report of the estimated weights.
 
         Parameters
@@ -809,7 +824,7 @@ class NestedLogit(ChoiceModel):
             },
         )
 
-    def get_weights_std(self, choice_dataset):
+    def get_weights_std(self, choice_dataset: ChoiceDataset) -> tf.Tensor:
         """Approximates Std Err with Hessian matrix.
 
         Parameters
@@ -878,7 +893,7 @@ class NestedLogit(ChoiceModel):
             ]
         )
 
-    def clone(self):
+    def clone(self) -> ChoiceModel:
         """Return a clone/deepcopy of the model."""
         clone = NestedLogit(
             coefficients=self.coefficients,
