@@ -8,6 +8,8 @@ import logging
 import pandas as pd
 import tensorflow as tf
 
+from choice_learn.data.choice_dataset import ChoiceDataset
+
 from .base_model import ChoiceModel
 
 
@@ -16,12 +18,12 @@ class SimpleMNL(ChoiceModel):
 
     def __init__(
         self,
-        add_exit_choice=False,
-        intercept=None,
-        optimizer="lbfgs",
-        lr=0.001,
+        add_exit_choice: bool = False,
+        intercept: str | None = None,
+        optimizer: str = "lbfgs",
+        lr: float | int = 0.001,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize of Simple-MNL.
 
         Parameters
@@ -40,7 +42,9 @@ class SimpleMNL(ChoiceModel):
         self.instantiated = False
         self.intercept = intercept
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(
+        self, n_items: int, n_shared_features: int, n_items_features: int
+    ) -> tuple[dict, list[tf.Variable]]:
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -54,8 +58,10 @@ class SimpleMNL(ChoiceModel):
 
         Returns
         -------
-        list of tf.Tensor
-            List of the weights created coresponding to the specification.
+        indexes : dict
+            Dictionary of the indexes of the weights created
+        weights : list of tf.Variable
+            List of the weights created coresponding to the specification
         """
         weights = []
         indexes = {}
@@ -105,31 +111,31 @@ class SimpleMNL(ChoiceModel):
         return indexes, weights
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Variable]:
         """Trainable weights of the model."""
         return self._trainable_weights
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+    ) -> tf.Tensor:
         """Compute the utility of the model. Selects the right method to compute.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             a batch of items features
             Shape must be (n_choices, n_items, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
 
@@ -178,7 +184,7 @@ class SimpleMNL(ChoiceModel):
 
         return shared_features_utilities + items_features_utilities + intercept
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, get_report: bool = False, **kwargs) -> dict:
         """Fit to estimate the parameters.
 
         Parameters
@@ -206,7 +212,13 @@ class SimpleMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
+    def _fit_with_lbfgs(
+        self,
+        choice_dataset: ChoiceDataset,
+        sample_weight: tf.Tensor | None = None,
+        get_report: bool = False,
+        **kwargs,
+    ) -> dict:
         """Specific fit function to estimate the parameters with LBFGS.
 
         Parameters
@@ -215,7 +227,7 @@ class SimpleMNL(ChoiceModel):
             Choice dataset to use for the estimation.
         n_epochs : int
             Number of epochs to run.
-        sample_weight: Iterable, optional
+        sample_weight: tf.Tensor, optional
             list of each sample weight, by default None meaning that all samples have weight 1.
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False.
@@ -240,7 +252,7 @@ class SimpleMNL(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def compute_report(self, choice_dataset):
+    def compute_report(self, choice_dataset: ChoiceDataset) -> pd.DataFrame:
         """Compute a report of the estimated weights.
 
         Parameters
@@ -285,7 +297,7 @@ class SimpleMNL(ChoiceModel):
             },
         )
 
-    def get_weights_std(self, choice_dataset):
+    def get_weights_std(self, choice_dataset: ChoiceDataset) -> tf.Tensor:
         """Approximates Std Err with Hessian matrix.
 
         Parameters
@@ -326,7 +338,7 @@ class SimpleMNL(ChoiceModel):
         hessian = tf.linalg.inv(tf.squeeze(hessian))
         return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
-    def clone(self):
+    def clone(self) -> ChoiceModel:
         """Return a clone of the model."""
         clone = SimpleMNL(
             add_exit_choice=self.add_exit_choice,
