@@ -250,6 +250,44 @@ def test_reslogit_different_layers_width():
             assert True
 
 
+def test_reslogit_different_activation():
+    """Tests that ResLogit can fit with different activation functions for its residual layers."""
+    global dataset
+
+    list_activation = ["linear", "relu", "-relu", "tanh", "sigmoid", "softplus"]
+
+    for activation_str in list_activation:
+        model = ResLogit(
+            n_layers=2,
+            activation=activation_str,
+            lr=1e-6,
+            epochs=20,
+            optimizer="SGD",
+            batch_size=32,
+        )
+        model.fit(dataset)
+        model.evaluate(dataset)
+
+        # The model can fit
+        assert model.evaluate(dataset) < 1
+
+    # Check if the ValueError is raised when the activation is not implemented
+    model = ResLogit(
+        n_layers=2,
+        activation="xyz_not_implemented",
+        lr=1e-6,
+        epochs=20,
+        optimizer="SGD",
+        batch_size=32,
+    )
+    try:
+        model.fit(dataset)
+        # ValueError: The activation function is not implemented
+        assert False
+    except ValueError:
+        assert True
+
+
 def test_that_endpoints_run():
     """Dummy test to check that the endpoints run.
 
