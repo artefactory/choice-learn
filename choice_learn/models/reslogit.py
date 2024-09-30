@@ -15,7 +15,7 @@ class ResNetLayer(tf.keras.layers.Layer):
         """Initialize the ResNetLayer class."""
         super().__init__()
 
-    def build(self, input_shape):
+    def build(self, input_shape, layer_width=None):
         """Create the state of the layer (weights).
 
         Parameters
@@ -23,11 +23,21 @@ class ResNetLayer(tf.keras.layers.Layer):
         input_shape : tuple
             Shape of the input of the layer. Typically (batch_size, num_features)
             Batch_size (None) is ignored, but num_features is the shape of the input
+        layer_width : int, optional
+            Width of the layer, by default None
+            If None, the width of the layer is the same as the input shape
         """
-        n_items = input_shape[-1]
+        self.num_features = input_shape[-1]
 
+        if layer_width is None:
+            self.layer_width = input_shape[-1]
+        else:
+            self.layer_width = layer_width
+
+        # Random normal initialization of the weights
+        # Shape of the weights: (num_features, layer_width)
         self.residual_weights = self.add_weight(
-            shape=(n_items, n_items),
+            shape=(self.num_features, self.layer_width),
             initializer="random_normal",
             trainable=True,
             name="resnet_weight",
@@ -48,7 +58,31 @@ class ResNetLayer(tf.keras.layers.Layer):
         """
         lin_output = tf.matmul(input, self.residual_weights)
 
+        # Ensure the dimensions are compatible for subtraction
+        if input.shape != lin_output.shape:
+            # Then perform a linear projection to match the dimensions
+            input = tf.matmul(input, tf.ones((self.num_features, self.layer_width)))
+
+        # Softplus: smooth approximation of ReLU
         return input - tf.math.softplus(tf.cast(lin_output, tf.float32))
+
+    def compute_output_shape(self, input_shape):
+        """Compute the output shape of the layer.
+
+        Automatically used when calling ResNetLayer.call() to infer the shape of the output.
+
+        Parameters
+        ----------
+        input_shape : tuple
+            Shape of the input of the layer. Typically (batch_size, num_features)
+            Batch_size (None) is ignored, but num_features is the shape of the input
+
+        Returns
+        -------
+        tuple
+            Shape of the output of the layer
+        """
+        return (input_shape[0], self.layer_width)
 
 
 class ResLogit(ChoiceModel):
@@ -58,6 +92,7 @@ class ResLogit(ChoiceModel):
         self,
         intercept="item",
         n_layers=16,
+        res_layers_width=None,
         label_smoothing=0.0,
         optimizer="SGD",
         tolerance=1e-8,
@@ -75,6 +110,11 @@ class ResLogit(ChoiceModel):
             Type of intercept to use, by default None
         n_layers : int
             Number of residual layers.
+        res_layers_width : list of int, optional
+            Width of the *hidden* residual layers, by default None
+            If None, all the residual layers have the same width (n_items)
+            The length of the list should be equal to n_layers - 1
+            The last element of the list should be equal to n_items
         label_smoothing : float, optional
             Whether (then is ]O, 1[ value) or not (then can be None or 0) to use label smoothing
         optimizer: str
@@ -100,6 +140,7 @@ class ResLogit(ChoiceModel):
         )
         self.intercept = intercept
         self.n_layers = n_layers
+        self.res_layers_width = res_layers_width
 
         # Optimization parameters
         self.label_smoothing = label_smoothing
@@ -200,10 +241,39 @@ class ResLogit(ChoiceModel):
         residual_weights = []
         layers = [ResNetLayer() for _ in range(self.n_layers)]
         output = input
-        for layer in layers:
-            layer.build(input_shape=(n_items,))
-            residual_weights.append(layer.residual_weights)
-            output = layer(output)
+        if self.res_layers_width is None:
+            # Common width for all the residual layers by default: n_items
+            # (Like in the original paper of ResLogit)
+            for layer in layers:
+                layer.build(input_shape=(n_items,))
+                residual_weights.append(layer.residual_weights)
+                output = layer(output)
+        else:
+            # Different width for each *hidden* residual layer
+            if self.n_layers > 0 and len(self.res_layers_width) != self.n_layers - 1:
+                raise ValueError(
+                    "The length of the res_layers_width list should be equal to n_layers - 1"
+                )
+            if self.n_layers > 1 and self.res_layers_width[-1] != n_items:
+                raise ValueError("The width of the last residual layer should be equal to n_items")
+            for i, layer in enumerate(layers):
+                if i == 0:
+                    # The first layer has the same width as the input
+                    layer.build(input_shape=(n_items,))
+                    residual_weights.append(layer.residual_weights)
+                # The other layers have a width defined by the
+                # res_layers_width parameter and an input shape
+                # depending on the width of the previous layer
+                elif i == 1:
+                    layer.build(input_shape=(n_items,), layer_width=self.res_layers_width[i - 1])
+                    residual_weights.append(layer.residual_weights)
+                else:
+                    layer.build(
+                        input_shape=(self.res_layers_width[i - 2],),
+                        layer_width=self.res_layers_width[i - 1],
+                    )
+                    residual_weights.append(layer.residual_weights)
+                output = layer(output)
         resnet_model = tf.keras.Model(
             inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
         )
