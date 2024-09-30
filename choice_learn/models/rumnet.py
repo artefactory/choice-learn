@@ -7,13 +7,13 @@ from choice_learn.models.base_model import ChoiceModel
 
 
 def create_ff_network(
-    input_shape,
-    depth,
-    width,
-    activation="elu",
-    add_last=False,
-    l2_regularization_coeff=0.0,
-):
+    input_shape: tuple[int, ...],
+    depth: int,
+    width: int,
+    activation: str = "elu",
+    add_last: bool = False,
+    l2_regularization_coeff: float | int = 0.0,
+) -> tf.keras.Model:
     """Create a simple fully connected (Dense) network.
 
     Parameters
@@ -52,18 +52,18 @@ def create_ff_network(
 
 
 def recreate_official_nets(
-    num_products_features,
-    x_width,
-    x_depth,
-    x_eps,
-    num_customer_features,
-    z_width,
-    z_depth,
-    z_eps,
-    width_u,
-    depth_u,
-    l2_regularization_coeff=0.0,
-):
+    num_products_features: int,
+    x_width: int,
+    x_depth: int,
+    x_eps: int,
+    num_customer_features: int,
+    z_width: int,
+    z_depth: int,
+    z_eps: int,
+    width_u: int,
+    depth_u: int,
+    l2_regularization_coeff: float | int = 0.0,
+) -> tuple[tf.keras.Model, tf.keras.Model, tf.keras.Model]:
     """Create the three nets used in RUMnet: X_net, Z_net and U_net.
 
     Parameters
@@ -154,7 +154,9 @@ class ParallelDense(tf.keras.layers.Layer):
     are totally independant from each other.
     """
 
-    def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
+    def __init__(
+        self, width: int, depth: int, heterogeneity: int, activation: str = "relu", **kwargs
+    ) -> None:
         """Instantiate the layer.
 
         Following tf.keras.Layer API. Note that there will be width * depth * heterogeneity
@@ -177,7 +179,7 @@ class ParallelDense(tf.keras.layers.Layer):
         self.heterogeneity = heterogeneity
         self.activation = tf.keras.layers.Activation(activation)
 
-    def build(self, input_shape):
+    def build(self, input_shape: tuple[int, ...]) -> None:
         """Lazy build of the layer.
 
         Parameters
@@ -220,7 +222,7 @@ class ParallelDense(tf.keras.layers.Layer):
 
         self.w = weights
 
-    def call(self, inputs):
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
         """Predict of the layer.
 
         Follows tf.keras.Layer API.
@@ -254,7 +256,9 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
     to an assortment of items.
     """
 
-    def __init__(self, width, depth, heterogeneity, activation="relu", **kwargs):
+    def __init__(
+        self, width: int, depth: int, heterogeneity: int, activation: str = "relu", **kwargs
+    ) -> None:
         """Inialization of the layer.
 
         Parameters
@@ -274,7 +278,7 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
         self.heterogeneity = heterogeneity
         self.activation = tf.keras.layers.Activation(activation)
 
-    def build(self, input_shape):
+    def build(self, input_shape: tuple[int, ...]) -> None:
         """Lazy build of the layer.
 
         Follows tf.keras API.
@@ -319,7 +323,7 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
 
         self.w = weights
 
-    def call(self, inputs):
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
         """Predict of the layer.
 
         Follows tf.keras.Layer API.
@@ -350,7 +354,9 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
     We apply to the same network over several items and several heterogeneitites.
     """
 
-    def __init__(self, width, depth, activation="relu", add_last=True, **kwargs):
+    def __init__(
+        self, width: int, depth: int, activation: str = "relu", add_last: bool = True, **kwargs
+    ) -> None:
         """Initialize the layer.
 
         Parameters
@@ -370,7 +376,7 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
         self.activation = tf.keras.layers.Activation(activation)
         self.add_last = add_last
 
-    def build(self, input_shape):
+    def build(self, input_shape: tuple[int, ...]) -> None:
         """Lazy build of the layer.
 
         Follows tf.keras.Layer API.
@@ -419,7 +425,7 @@ class AssortmentUtilityDenseNetwork(tf.keras.layers.Layer):
 
         self.w = weights
 
-    def call(self, inputs):
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
         """Predict of the layer.
 
         Parameters
@@ -467,25 +473,25 @@ class PaperRUMnet(ChoiceModel):
 
     def __init__(
         self,
-        num_products_features,
-        num_customer_features,
-        width_eps_x,
-        depth_eps_x,
-        heterogeneity_x,
-        width_eps_z,
-        depth_eps_z,
-        heterogeneity_z,
-        width_u,
-        depth_u,
-        tol,
-        optimizer,
-        lr,
-        add_exit_choice=False,
-        logmin=1e-5,
-        l2_regularization_coef=0.0,
-        label_smoothing=0.0,
+        num_products_features: int,
+        num_customer_features: int,
+        width_eps_x: int,
+        depth_eps_x: int,
+        heterogeneity_x: int,
+        width_eps_z: int,
+        depth_eps_z: int,
+        heterogeneity_z: int,
+        width_u: int,
+        depth_u: int,
+        tol: float | int,
+        lr: float | int,
+        optimizer: str = "Adam",
+        add_exit_choice: bool = False,
+        logmin: float | int = 1e-5,
+        l2_regularization_coef: float | int = 0.0,
+        label_smoothing: float | int = 0.0,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the RUMnet Model.
 
         Parameters
@@ -515,11 +521,11 @@ class PaperRUMnet(ChoiceModel):
             Number of dense layers for the utility net.
         tol : float
             # To be Implemented
+        lr : float
+            Starting learning rate to associate with optimizer.
         optimizer : str
             String representation of the optimizer to use. By default is Adam if not specified.
             Should be within tf.keras.optimizers.
-        lr : float
-            Starting learning rate to associate with optimizer.
         add_exit_choice : bool, optional
             Whether or not to add exit option with utility 1, by default True
         logmin : float, optional
@@ -571,7 +577,7 @@ class PaperRUMnet(ChoiceModel):
 
         self.instantiated = False
 
-    def instantiate(self):
+    def instantiate(self) -> None:
         """Instatiation of the RUMnet model.
 
         Creation of :
@@ -602,17 +608,17 @@ class PaperRUMnet(ChoiceModel):
         self.instantiated = True
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Variable]:
         """Trainable weights of the model."""
         return self.x_model.weights + self.z_model.weights + self.u_model.weights
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+    ) -> tf.Tensor:
         """Compute utility from a batch of ChoiceDataset.
 
         Here we asssume that: item features = {fixed item features + contexts item features}
@@ -620,22 +626,22 @@ class PaperRUMnet(ChoiceModel):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
 
         Returns
         -------
-        np.ndarray
+        tf.Tensor
             Utility of each product for each choice.
             Shape must be (n_choices, n_items)
         """
@@ -688,12 +694,12 @@ class PaperRUMnet(ChoiceModel):
     @tf.function
     def train_step(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tf.Tensor:
         """Update model's weight with a step of gradient descent.
 
         Function that represents one training step (= one gradient descent step) of the model.
@@ -701,19 +707,19 @@ class PaperRUMnet(ChoiceModel):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
-        sample_weight : np.ndarray, optional
+        sample_weight : tf.Tensor, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
@@ -771,12 +777,12 @@ class PaperRUMnet(ChoiceModel):
     @tf.function
     def batch_predict(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tuple[tf.Tensor, tf.Tensor]:
         """Represent one prediction (Probas + Loss) for one batch of a ChoiceDataset.
 
         Specifically recoded for RUMnet because it is needed to average probabilities over
@@ -857,11 +863,11 @@ class CPURUMnet(PaperRUMnet):
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+    ) -> tf.Tensor:
         """Compute utility from a batch of ChoiceDataset.
 
         Here we asssume that: item features = {fixed item features + contexts item features}
@@ -869,22 +875,22 @@ class CPURUMnet(PaperRUMnet):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
 
         Returns
         -------
-        np.ndarray
+        tf.Tensor
             Utility of each product for each contexts.
             Shape must be (n_choices, n_items)
         """
@@ -961,7 +967,7 @@ class GPURUMnet(PaperRUMnet):
         'items_features_by_choice' in the ChoiceDataset used to fit the model
     """
 
-    def instantiate(self):
+    def instantiate(self) -> None:
         """Instatiation of the RUMnet model.
 
         Instantiation of the three nets:
@@ -991,7 +997,7 @@ class GPURUMnet(PaperRUMnet):
         self.instantiated = True
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Variable]:
         """Trainable weights of the model."""
         return (
             self.x_model.trainable_variables
@@ -1001,9 +1007,9 @@ class GPURUMnet(PaperRUMnet):
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
         choices,
     ):
         """Compute utility from a batch of ChoiceDataset.
@@ -1013,22 +1019,22 @@ class GPURUMnet(PaperRUMnet):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
 
         Returns
         -------
-        np.ndarray
+        tf.Tensor
             Utility of each product for each contexts.
             Shape must be (n_choices, n_items)
         """
@@ -1091,12 +1097,12 @@ class GPURUMnet(PaperRUMnet):
     @tf.function
     def train_step(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tf.Tensor:
         """Represent one training step (= one gradient descent step) of the model.
 
         Recoded because heterogeneities generate different shapes of tensors.
@@ -1104,19 +1110,19 @@ class GPURUMnet(PaperRUMnet):
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
-        sample_weight : np.ndarray, optional
+        sample_weight : tf.Tensor, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
@@ -1174,29 +1180,29 @@ class GPURUMnet(PaperRUMnet):
     @tf.function
     def batch_predict(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        sample_weight=None,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        sample_weight: tf.Tensor | None = None,
+    ) -> tuple[tf.Tensor, tf.Tensor]:
         """RUMnet batch_predict.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             A batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             A batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
-        sample_weight : np.ndarray, optional
+        sample_weight : tf.Tensor, optional
             List samples weights to apply during the gradient descent to the batch elements,
             by default None
 
