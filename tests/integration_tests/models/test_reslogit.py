@@ -181,6 +181,75 @@ def test_reslogit_different_n_layers():
                 assert model.residual_weights[layer_idx].shape == (n_items, n_items)
 
 
+def test_reslogit_different_layers_width():
+    """Tests that ResLogit can fit with different custom widths for its residual layers."""
+    global dataset
+
+    list_n_layers = [0, 1, 4, 16]
+    list_res_layers_width = [[], [], [128, 256, n_items], [2, 4, 8, 16] * 3 + [32, 64, n_items]]
+
+    for n_layers, res_layers_width in zip(list_n_layers, list_res_layers_width):
+        model = ResLogit(
+            n_layers=n_layers,
+            res_layers_width=res_layers_width,
+            lr=1e-6,
+            epochs=20,
+            optimizer="SGD",
+            batch_size=32,
+        )
+        model.fit(dataset)
+        model.evaluate(dataset)
+
+        # The model can fit
+        # (We don't check the exact value because the model is not optimized for this test)
+        assert model.evaluate(dataset) < 1e3
+
+        # The global shape of the residual weights corresponds to the number of layers
+        assert len(model.residual_weights) == n_layers
+
+        if n_layers > 0:
+            # The first residual layer has a (n_items, n_items) matrix of weights
+            assert model.residual_weights[0].shape == (n_items, n_items)
+
+            for layer_idx in range(1, n_layers):
+                # For i > 1, the i-th residual layer has a
+                # (res_layers_width[i-2], res_layers_width[i-1]) matrix of weights
+                layer_width = res_layers_width[layer_idx - 1]
+                prev_layer_width = res_layers_width[layer_idx - 2]
+                assert model.residual_weights[layer_idx].shape == (prev_layer_width, layer_width)
+
+        # Check if the ValueError are raised when the res_layers_width is not consistent
+        model = ResLogit(
+            n_layers=4,
+            res_layers_width=[2, 4, 8, n_items],
+            lr=1e-6,
+            epochs=20,
+            optimizer="SGD",
+            batch_size=32,
+        )
+        try:
+            model.fit(dataset)
+            # ValueError: The length of the res_layers_width list should be equal to n_layers - 1
+            assert False
+        except ValueError:
+            assert True
+
+        model = ResLogit(
+            n_layers=4,
+            res_layers_width=[2, 4, 8, 16],
+            lr=1e-6,
+            epochs=20,
+            optimizer="SGD",
+            batch_size=32,
+        )
+        try:
+            model.fit(dataset)
+            # ValueError: The last element of the res_layers_width list should be equal to n_items
+            assert False
+        except ValueError:
+            assert True
+
+
 def test_that_endpoints_run():
     """Dummy test to check that the endpoints run.
 
