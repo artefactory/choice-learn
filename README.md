@@ -278,7 +278,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
 [10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)\
 [11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)\
-[12] [ResLogit: A residual neural network logit model for data-driven choice modelling] (https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)
+[12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)
 
 ### Code and Repositories
 
