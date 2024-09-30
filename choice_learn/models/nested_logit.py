@@ -166,8 +166,8 @@ class NestedLogit(ChoiceModel):
         self,
         feature_name: str,
         coefficient_name: str = "",
-        items_indexes: list[int] = None,
-        items_names: list[str] = None,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
     ) -> None:
         """Add a coefficient to the model throught the specification of the utility.
 
@@ -202,8 +202,8 @@ class NestedLogit(ChoiceModel):
         self,
         feature_name: str,
         coefficient_name: str = "",
-        items_indexes: list[int] = None,
-        items_names: list[str] = None,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
     ) -> None:
         """Add a single, shared coefficient to the model throught the specification of the utility.
 
@@ -238,8 +238,8 @@ class NestedLogit(ChoiceModel):
         self,
         feature_name: str,
         coefficient_name: str,
-        items_indexes: list[int],
-        items_names: list[str],
+        items_indexes: list[int] | None,
+        items_names: list[str] | None,
         shared: bool,
     ) -> None:
         if self.coefficients is None:
