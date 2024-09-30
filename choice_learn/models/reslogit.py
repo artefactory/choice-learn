@@ -5,17 +5,18 @@ import logging
 import tensorflow as tf
 
 import choice_learn.tf_ops as tf_ops
+from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.models.base_model import ChoiceModel
 
 
 class ResNetLayer(tf.keras.layers.Layer):
     """The ResNet layer class."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ResNetLayer class."""
         super().__init__()
 
-    def get_activation_function(self, name):
+    def get_activation_function(self, name: str) -> callable:
         """Get an activation function from its str name.
 
         Parameters
@@ -42,7 +43,9 @@ class ResNetLayer(tf.keras.layers.Layer):
             return tf.math.softplus
         raise ValueError(f"Activation function {name} not supported.")
 
-    def build(self, input_shape, layer_width=None, activation="softplus"):
+    def build(
+        self, input_shape: tuple[int, ...], layer_width: int = None, activation: str = "softplus"
+    ) -> None:
         """Create the state of the layer (weights).
 
         Parameters
@@ -74,7 +77,7 @@ class ResNetLayer(tf.keras.layers.Layer):
             name="resnet_weight",
         )
 
-    def call(self, input):
+    def call(self, input: tf.Variable) -> tf.Variable:
         """Return the output of the ResNet layer.
 
         Parameters
@@ -97,7 +100,7 @@ class ResNetLayer(tf.keras.layers.Layer):
         # Softplus: smooth approximation of ReLU
         return input - self.activation(tf.cast(lin_output, tf.float32))
 
-    def compute_output_shape(self, input_shape):
+    def compute_output_shape(self, input_shape: tuple[int, ...]) -> tuple[int, ...]:
         """Compute the output shape of the layer.
 
         Automatically used when calling ResNetLayer.call() to infer the shape of the output.
@@ -121,19 +124,19 @@ class ResLogit(ChoiceModel):
 
     def __init__(
         self,
-        intercept="item",
-        n_layers=16,
-        res_layers_width=None,
-        activation="softplus",
-        label_smoothing=0.0,
-        optimizer="SGD",
-        tolerance=1e-8,
-        lr=0.001,
-        epochs=1000,
-        batch_size=32,
-        logmin=1e-5,
+        intercept: str = "item",
+        n_layers: int = 16,
+        res_layers_width: None | int = None,
+        activation: str = "softplus",
+        label_smoothing: float | int = 0.0,
+        optimizer: str = "SGD",
+        tolerance: float | int = 1e-8,
+        lr: float | int = 0.001,
+        epochs: int = 1000,
+        batch_size: int = 32,
+        logmin: float | int = 1e-5,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the ResLogit class.
 
         Parameters
@@ -197,7 +200,9 @@ class ResLogit(ChoiceModel):
 
         self.instantiated = False
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(
+        self, n_items: int, n_shared_features: int, n_items_features: int
+    ) -> tuple[dict, list[tf.Variable]]:
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -330,31 +335,31 @@ class ResLogit(ChoiceModel):
         return indexes, weights
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Variable]:
         """Trainable weights of the model."""
         return self._trainable_weights
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-    ):
+        shared_features_by_choice: tf.Tensor,
+        items_features_by_choice: tf.Tensor,
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+    ) -> tf.Tensor:
         """Compute utility from a batch of ChoiceDataset.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tf.Tensor
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tf.Tensor
             a batch of items features
             Shape must be (n_choices, n_items, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices : np.ndarray
+        choices : tf.Tensor
             Choices
             Shape must be (n_choices, )
 
@@ -421,7 +426,7 @@ class ResLogit(ChoiceModel):
 
         return deterministic_utilities + residual_utilities
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, get_report: bool = False, **kwargs) -> dict:
         """Fit to estimate the parameters.
 
         Parameters
