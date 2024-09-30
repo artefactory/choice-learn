@@ -95,7 +95,7 @@ def test_tastenet_instantiation():
 
 
 def test_reslogit_instantiation():
-    """Tests SimpleMNL instantiation."""
+    """Tests ResLogit instantiation."""
     model = ResLogit()
     model.instantiate(n_items=4, n_shared_features=20, n_items_features=10)
     assert True
