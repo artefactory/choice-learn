@@ -6,20 +6,28 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from choice_learn.data.choice_dataset import ChoiceDataset
+
 from .base_model import ChoiceModel
 
 
 class MNLCoefficients(object):
     """Base class to specify the structure of a cLogit."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Instantiate a MNLCoefficients object."""
         # User interface
         self.coefficients = {}
         # Handled by the model
         self.feature_to_weight = {}
 
-    def add(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
+    def add(
+        self,
+        coefficient_name: str,
+        feature_name: str,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -55,7 +63,13 @@ class MNLCoefficients(object):
             "items_names": items_names,
         }
 
-    def add_shared(self, coefficient_name, feature_name, items_indexes=None, items_names=None):
+    def add_shared(
+        self,
+        coefficient_name: str,
+        feature_name: str,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -103,7 +117,7 @@ class MNLCoefficients(object):
             "items_names": items_names if items_names is not None else None,
         }
 
-    def get(self, coefficient_name):
+    def get(self, coefficient_name: str) -> dict:
         """Getter of a coefficient specification, from its name.
 
         Parameters
@@ -118,7 +132,7 @@ class MNLCoefficients(object):
         """
         return self.coefficients[coefficient_name]
 
-    def _add_tf_weight(self, weight_name, weight_index):
+    def _add_tf_weight(self, weight_name: str, weight_index: int) -> None:
         """Create the Tensorflow weight corresponding for cLogit.
 
         Parameters
@@ -147,7 +161,7 @@ class MNLCoefficients(object):
             ]
 
     @property
-    def features_with_weights(self):
+    def features_with_weights(self) -> list:
         """Get a list of the features that have a weight to be estimated.
 
         Returns
@@ -157,7 +171,7 @@ class MNLCoefficients(object):
         """
         return self.feature_to_weight.keys()
 
-    def get_weight_item_indexes(self, feature_name):
+    def get_weight_item_indexes(self, feature_name: str) -> list[list[int], int]:
         """Get the indexes of the concerned items for a given weight.
 
         Parameters
@@ -180,7 +194,7 @@ class MNLCoefficients(object):
         ], weight_indexs
 
     @property
-    def names(self):
+    def names(self) -> list:
         """Returns the list of coefficients.
 
         Returns
@@ -202,12 +216,12 @@ class ConditionalLogit(ChoiceModel):
 
     def __init__(
         self,
-        coefficients=None,
-        add_exit_choice=False,
-        optimizer="lbfgs",
-        lr=0.001,
+        coefficients: dict | MNLCoefficients = None,
+        add_exit_choice: bool = False,
+        optimizer: str = "lbfgs",
+        lr: float | int = 0.001,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize of Conditional-MNL.
 
         Parameters
@@ -221,14 +235,22 @@ class ConditionalLogit(ChoiceModel):
         add_exit_choice : bool, optional
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
+        optimizer : str, optional
+            Optimizer to use for the estimation, by default "lbfgs"
+        lr : float, optional
+            Learning rate for the optimizer, by default 0.001
         """
         super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         self.coefficients = coefficients
         self.instantiated = False
 
     def add_coefficients(
-        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
-    ):
+        self,
+        feature_name: str,
+        coefficient_name: str = "",
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -259,8 +281,12 @@ class ConditionalLogit(ChoiceModel):
         )
 
     def add_shared_coefficient(
-        self, feature_name, coefficient_name="", items_indexes=None, items_names=None
-    ):
+        self,
+        feature_name: str,
+        coefficient_name: str = "",
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -290,7 +316,14 @@ class ConditionalLogit(ChoiceModel):
             shared=True,
         )
 
-    def _add_coefficient(self, feature_name, coefficient_name, items_indexes, items_names, shared):
+    def _add_coefficient(
+        self,
+        feature_name: str,
+        coefficient_name: str,
+        items_indexes: list[int] | None,
+        items_names: list[str] | None,
+        shared: bool,
+    ) -> None:
         if self.coefficients is None:
             self.coefficients = MNLCoefficients()
         elif not isinstance(self.coefficients, MNLCoefficients):
@@ -305,7 +338,7 @@ class ConditionalLogit(ChoiceModel):
             items_names=items_names,
         )
 
-    def instantiate(self, choice_dataset):
+    def instantiate(self, choice_dataset: ChoiceDataset) -> None:
         """Instantiate the model using the features in the choice_dataset.
 
         Parameters
@@ -338,7 +371,7 @@ class ConditionalLogit(ChoiceModel):
             self._store_dataset_features_names(choice_dataset)
             self.instantiated = True
 
-    def _instantiate_tf_weights(self):
+    def _instantiate_tf_weights(self) -> list[tf.Tensor]:
         """Instantiate the model from MNLCoefficients object.
 
         Returns
@@ -365,11 +398,11 @@ class ConditionalLogit(ChoiceModel):
         return weights
 
     @property
-    def trainable_weights(self):
+    def trainable_weights(self) -> list[tf.Variable]:
         """Trainable weights of the model."""
         return self._trainable_weights
 
-    def _build_coefficients_from_dict(self, n_items):
+    def _build_coefficients_from_dict(self, n_items: int) -> None:
         """Build coefficients when they are given as a dictionnay.
 
         Parameters
@@ -392,7 +425,7 @@ class ConditionalLogit(ChoiceModel):
 
         self.coefficients = coefficients
 
-    def _store_dataset_features_names(self, choice_dataset):
+    def _store_dataset_features_names(self, choice_dataset: ChoiceDataset) -> None:
         """Register the name of the features in the dataset. For later use in utility computation.
 
         Parameters
@@ -405,23 +438,23 @@ class ConditionalLogit(ChoiceModel):
 
     def compute_batch_utility(
         self,
-        shared_features_by_choice,
-        items_features_by_choice,
-        available_items_by_choice,
-        choices,
-        verbose=1,
-    ):
+        shared_features_by_choice: tuple[tf.Tensor],
+        items_features_by_choice: tuple[tf.Tensor],
+        available_items_by_choice: tf.Tensor,
+        choices: tf.Tensor,
+        verbose: int = 1,
+    ) -> tf.Tensor:
         """Compute the utility when the model is constructed from a MNLCoefficients object.
 
         Parameters
         ----------
-        shared_features_by_choice : tuple of np.ndarray (choices_features)
+        shared_features_by_choice : tuple of tf.Tensor
             a batch of shared features
             Shape must be (n_choices, n_shared_features)
-        items_features_by_choice : tuple of np.ndarray (choices_items_features)
+        items_features_by_choice : tuple of tf.Tensor
             a batch of items features
             Shape must be (n_choices, n_items_features)
-        available_items_by_choice : np.ndarray
+        available_items_by_choice : tf.Tensor
             A batch of items availabilities
             Shape must be (n_choices, n_items)
         choices: np.ndarray
@@ -575,7 +608,7 @@ class ConditionalLogit(ChoiceModel):
 
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, get_report: bool = False, **kwargs) -> dict:
         """Fit function to estimate the parameters.
 
         Parameters
@@ -599,11 +632,11 @@ class ConditionalLogit(ChoiceModel):
 
     def _fit_with_lbfgs(
         self,
-        choice_dataset,
-        sample_weight=None,
-        get_report=False,
+        choice_dataset: ChoiceDataset,
+        sample_weight: int = None,
+        get_report: bool = False,
         **kwargs,
-    ):
+    ) -> dict:
         """Specific fit function to estimate the parameters with LBFGS.
 
         Parameters
@@ -631,7 +664,7 @@ class ConditionalLogit(ChoiceModel):
             self.report = self.compute_report(choice_dataset)
         return fit
 
-    def compute_report(self, choice_dataset):
+    def compute_report(self, choice_dataset: ChoiceDataset) -> pd.DataFrame:
         """Compute a report of the estimated weights.
 
         Parameters
@@ -676,7 +709,7 @@ class ConditionalLogit(ChoiceModel):
             },
         )
 
-    def get_weights_std(self, choice_dataset):
+    def get_weights_std(self, choice_dataset: ChoiceDataset) -> tf.Tensor:
         """Approximates Std Err with Hessian matrix.
 
         Parameters
@@ -717,7 +750,7 @@ class ConditionalLogit(ChoiceModel):
         inv_hessian = tf.linalg.inv(tf.squeeze(hessian))
         return tf.sqrt([inv_hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
-    def clone(self):
+    def clone(self) -> ChoiceModel:
         """Return a clone of the model."""
         clone = ConditionalLogit(
             coefficients=self.coefficients,
