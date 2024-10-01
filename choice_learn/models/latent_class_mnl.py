@@ -4,6 +4,8 @@ import copy
 
 import tensorflow as tf
 
+from choice_learn.data.choice_dataset import ChoiceDataset
+
 from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import SimpleMNL
@@ -14,17 +16,17 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
 
     def __init__(
         self,
-        n_latent_classes,
-        fit_method,
-        epochs=100,
-        batch_size=128,
-        add_exit_choice=False,
-        tolerance=1e-6,
-        intercept=None,
-        optimizer="Adam",
-        lr=0.001,
+        n_latent_classes: int,
+        fit_method: str,
+        epochs: int = 100,
+        batch_size: int = 128,
+        add_exit_choice: bool = False,
+        tolerance: float | int = 1e-6,
+        intercept: str | None = None,
+        optimizer: str = "Adam",
+        lr: float | int = 0.001,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize model.
 
         Parameters
@@ -72,7 +74,12 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
+    def instantiate_latent_models(
+        self,
+        n_items: int,
+        n_shared_features: int,
+        n_items_features: int,
+    ) -> None:
         """Instantiate the Latent Models that are SimpleMNLs.
 
         Parameters
@@ -90,7 +97,12 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             )
             model.instantiated = True
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(
+        self,
+        n_items: int,
+        n_shared_features: int,
+        n_items_features: int,
+    ) -> None:
         """Instantiate the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
@@ -106,7 +118,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         )
         self.instantiated = True
 
-    def fit(self, choice_dataset, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, **kwargs) -> None:
         """Fit the model to the choice_dataset.
 
         Parameters
@@ -128,16 +140,16 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
 
     def __init__(
         self,
-        n_latent_classes,
-        fit_method,
-        coefficients=None,
-        epochs=100,
-        add_exit_choice=False,
-        tolerance=1e-6,
-        optimizer="Adam",
-        lr=0.001,
+        n_latent_classes: int,
+        fit_method: str,
+        coefficients: dict | MNLCoefficients | None = None,
+        epochs: int = 100,
+        add_exit_choice: bool = False,
+        tolerance: float | int = 1e-6,
+        optimizer: str = "Adam",
+        lr: float | int = 0.001,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize model.
 
         Parameters
@@ -194,7 +206,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(self, choice_dataset):
+    def instantiate_latent_models(self, choice_dataset: ChoiceDataset) -> None:
         """Instantiate of the Latent Models that are SimpleMNLs.
 
         Parameters
@@ -206,7 +218,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             model.coefficients = copy.deepcopy(self.coefficients)
             model.instantiate(choice_dataset)
 
-    def instantiate(self, choice_dataset):
+    def instantiate(self, choice_dataset: ChoiceDataset) -> None:
         """Instantiate of the Latent Class MNL model."""
         self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
@@ -218,8 +230,12 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         self.instantiate_latent_models(choice_dataset)
 
     def add_coefficients(
-        self, coefficient_name, feature_name, items_indexes=None, items_names=None
-    ):
+        self,
+        coefficient_name: str,
+        feature_name: str,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -254,8 +270,12 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         )
 
     def add_shared_coefficient(
-        self, coefficient_name, feature_name, items_indexes=None, items_names=None
-    ):
+        self,
+        coefficient_name: str,
+        feature_name: str,
+        items_indexes: list[int] | None = None,
+        items_names: list[str] | None = None,
+    ) -> None:
         """Add a single, shared coefficient to the model throught the specification of the utility.
 
         Parameters
@@ -289,7 +309,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             items_names=items_names,
         )
 
-    def fit(self, choice_dataset, **kwargs):
+    def fit(self, choice_dataset: ChoiceDataset, **kwargs) -> None:
         """Fit the model to the choice_dataset.
 
         Parameters
