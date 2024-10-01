@@ -323,16 +323,15 @@ class ResLogit(ChoiceModel):
             inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
         )
 
-        # Concatenation of all the trainable weights
-        weights = mnl_weights + residual_weights
-
         self.instantiated = True
         self.resnet_model = resnet_model
         self.indexes = indexes
         self.mnl_weights = mnl_weights
         self.residual_weights = residual_weights
-        self._trainable_weights = weights
-        return indexes, weights
+        # Concatenation of all the trainable weights
+        self._trainable_weights = mnl_weights + residual_weights
+
+        return self.indexes, self._trainable_weights
 
     @property
     def trainable_weights(self):
@@ -418,10 +417,7 @@ class ResLogit(ChoiceModel):
         deterministic_utilities = deterministic_utilities_without_intercept + intercept
 
         # Residual component of the utility
-        input_data = deterministic_utilities_without_intercept
-
-        resnet_model = self.resnet_model
-        residual_utilities = resnet_model(input_data)
+        residual_utilities = self.resnet_model(deterministic_utilities_without_intercept)
         residual_utilities = tf.cast(residual_utilities, tf.float32)
 
         return deterministic_utilities + residual_utilities
