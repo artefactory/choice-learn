@@ -8,11 +8,11 @@ import choice_learn.tf_ops as tf_ops
 from choice_learn.models.base_model import ChoiceModel
 
 
-class ResNetLayer(tf.keras.layers.Layer):
-    """The ResNet layer class."""
+class ResLayer(tf.keras.layers.Layer):
+    """The residual layer class."""
 
     def __init__(self):
-        """Initialize the ResNetLayer class."""
+        """Initialize the ResLayer class."""
         super().__init__()
 
     def get_activation_function(self, name):
@@ -71,11 +71,11 @@ class ResNetLayer(tf.keras.layers.Layer):
             shape=(self.num_features, self.layer_width),
             initializer="random_normal",
             trainable=True,
-            name="resnet_weight",
+            name="res_weight",
         )
 
     def call(self, input):
-        """Return the output of the ResNet layer.
+        """Return the output of the residual layer.
 
         Parameters
         ----------
@@ -100,7 +100,7 @@ class ResNetLayer(tf.keras.layers.Layer):
     def compute_output_shape(self, input_shape):
         """Compute the output shape of the layer.
 
-        Automatically used when calling ResNetLayer.call() to infer the shape of the output.
+        Automatically used when calling ResLayer.call() to infer the shape of the output.
 
         Parameters
         ----------
@@ -270,11 +270,11 @@ class ResLogit(ChoiceModel):
             )
             indexes["intercept"] = len(mnl_weights) - 1
 
-        # Create the ResNet layer
+        # Create the residual layer
         input_shape = (n_items,)
         input = tf.keras.layers.Input(shape=input_shape)
         residual_weights = []
-        layers = [ResNetLayer() for _ in range(self.n_layers)]
+        layers = [ResLayer() for _ in range(self.n_layers)]
         output = input
         if self.res_layers_width is None:
             # Common width for all the residual layers by default: n_items
