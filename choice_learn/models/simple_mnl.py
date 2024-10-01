@@ -352,8 +352,6 @@ class SimpleMNL(ChoiceModel):
             clone.lr = self.lr
         if hasattr(self, "_items_features_names"):
             clone._items_features_names = self._items_features_names
-        if hasattr(self, "_contexts_features_names"):
-            clone._contexts_features_names = self._contexts_features_names
-        if hasattr(self, "_contexts_items_features_names"):
-            clone._contexts_items_features_names = self._contexts_items_features_names
+        if hasattr(self, "_shared_features_names"):
+            clone._shared_features_names = self._shared_features_names
         return clone

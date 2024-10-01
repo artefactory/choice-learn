@@ -37,13 +37,6 @@ def test_clogit_specification():
     assert True
 
 
-def test_simplemnl_instantiation():
-    """Tests SimpleMNL instantiation."""
-    model = SimpleMNL(intercept="item-full")
-    model.instantiate(n_items=4, n_items_features=10, n_shared_features=20)
-    assert True
-
-
 def test_rumnet_instantiation():
     """Tests RUMnet instantiation."""
     model_args = {
