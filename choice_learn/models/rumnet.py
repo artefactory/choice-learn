@@ -559,16 +559,6 @@ class PaperRUMnet(ChoiceModel):
         self.l2_regularization_coef = l2_regularization_coef
         self.label_smoothing = label_smoothing
 
-        if optimizer == "Adam":
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-        elif optimizer == "SGD":
-            self.optimizer = tf.keras.optimizers.SGD(lr)
-        elif optimizer == "Adamax":
-            self.optimizer = tf.keras.optimizers.Adamax(lr)
-        else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-
         self.instantiated = False
 
     def instantiate(self):

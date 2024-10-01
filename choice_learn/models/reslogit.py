@@ -185,16 +185,6 @@ class ResLogit(ChoiceModel):
         self.batch_size = batch_size
         self.logmin = logmin
 
-        if optimizer == "Adam":
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-        elif optimizer == "SGD":
-            self.optimizer = tf.keras.optimizers.SGD(lr)
-        elif optimizer == "Adamax":
-            self.optimizer = tf.keras.optimizers.Adamax(lr)
-        else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-
         self.instantiated = False
 
     def instantiate(self, n_items, n_shared_features, n_items_features):
