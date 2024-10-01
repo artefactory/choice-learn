@@ -898,8 +898,8 @@ class NestedLogit(ChoiceModel):
         clone.label_smoothing = self.label_smoothing
         if hasattr(self, "report"):
             clone.report = self.report
-        if hasattr(self, "trainable_weights"):
-            clone.trainable_weights = self.trainable_weights
+        if hasattr(self, "_trainable_weights"):
+            clone._trainable_weights = self._trainable_weights
         if hasattr(self, "lr"):
             clone.lr = self.lr
         if hasattr(self, "_shared_features_by_choice_names"):

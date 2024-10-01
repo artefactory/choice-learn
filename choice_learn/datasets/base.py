@@ -595,6 +595,7 @@ def load_modecanada(
 
     full_path = get_path(data_file_name, module=DATA_MODULE)
     canada_df = pd.read_csv(full_path)
+    canada_df = canada_df.drop(columns=["Unnamed: 0"])
     canada_df["alt"] = canada_df.apply(lambda row: row.alt.replace('"', ""), axis=1)
     # Just some typing
     canada_df.income = canada_df.income.astype("float32")
@@ -628,8 +629,8 @@ def load_modecanada(
     if return_desc:
         return desc
 
-    for col in canada_df.columns:
-        canada_df[col] = pd.to_numeric(canada_df[col], errors="ignore")
+    for col in ["case", "choice", "dist", "cost", "ivt", "ovt", "freq", "income", "urban", "noalt"]:
+        canada_df[col] = pd.to_numeric(canada_df[col])
 
     if choice_format == "items_id":
         # We need to transform how the choice is encoded to add the chosen item id
