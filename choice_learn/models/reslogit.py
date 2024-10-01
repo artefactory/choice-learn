@@ -57,6 +57,8 @@ class ResLayer(tf.keras.layers.Layer):
     def build(self, input_shape):
         """Create the state of the layer (weights).
 
+        The build() method is automatically invoked by the first __call__() to the layer.
+
         Parameters
         ----------
         input_shape : tuple
@@ -71,7 +73,7 @@ class ResLayer(tf.keras.layers.Layer):
 
         # Random normal initialization of the weights
         # Shape of the weights: (num_features, layer_width)
-        self.residual_weights = self.add_weight(
+        self.add_weight(
             shape=(self.num_features, self.layer_width),
             initializer="random_normal",
             trainable=True,
@@ -91,7 +93,7 @@ class ResLayer(tf.keras.layers.Layer):
         tf.Variable
             Output of the residual layer
         """
-        lin_output = tf.matmul(input, self.residual_weights)
+        lin_output = tf.matmul(input, self.trainable_variables[0])
 
         # Ensure the dimensions are compatible for subtraction
         if input.shape != lin_output.shape:
@@ -265,19 +267,13 @@ class ResLogit(ChoiceModel):
             indexes["intercept"] = len(mnl_weights) - 1
 
         # Create the residual layer
-        input_shape = (n_items,)
-        input = tf.keras.layers.Input(shape=input_shape)
-        residual_weights = []
+        input = tf.keras.layers.Input(shape=(n_items,))
         output = input
 
         if self.res_layers_width is None:
-            # Common width for all the residual layers by default: n_items
+            # Common width by default for all the residual layers: n_items
             # (Like in the original paper of ResLogit)
             layers = [ResLayer(activation=self.activation) for _ in range(self.n_layers)]
-            for layer in layers:
-                layer.build(input_shape=(n_items,))
-                residual_weights.append(layer.residual_weights)
-                output = layer(output)
 
         else:
             # Different width for each *hidden* residual layer
@@ -302,22 +298,9 @@ class ResLogit(ChoiceModel):
                         )
                     )
 
-            # Build the residual layers
-            for i, layer in enumerate(layers):
-                if i == 0:
-                    # The first layer have an input shape depending on the number of items
-                    layer.build(input_shape=(n_items,))
-                    residual_weights.append(layer.residual_weights)
-                # The hidden layers have an input shape depending on the width of the previous layer
-                elif i == 1:
-                    # The first layer (i=0) has the same width as the input
-                    layer.build(input_shape=(n_items,))
-                    residual_weights.append(layer.residual_weights)
-                else:
-                    # Width of the layer i - 1: self.res_layers_width[i - 2]
-                    layer.build(input_shape=(self.res_layers_width[i - 2],))
-                    residual_weights.append(layer.residual_weights)
-                output = layer(output)
+        # Build the residual layers
+        for layer in layers:
+            output = layer(output)
 
         resnet_model = tf.keras.Model(
             inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
@@ -327,16 +310,15 @@ class ResLogit(ChoiceModel):
         self.resnet_model = resnet_model
         self.indexes = indexes
         self.mnl_weights = mnl_weights
-        self.residual_weights = residual_weights
         # Concatenation of all the trainable weights
-        self._trainable_weights = mnl_weights + residual_weights
+        self._trainable_weights = self.mnl_weights + self.resnet_model.trainable_variables
 
         return self.indexes, self._trainable_weights
 
     @property
     def trainable_weights(self):
         """Trainable weights of the model."""
-        return self._trainable_weights
+        return self.mnl_weights + self.resnet_model.trainable_variables
 
     def compute_batch_utility(
         self,

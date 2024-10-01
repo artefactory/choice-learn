@@ -173,12 +173,12 @@ def test_reslogit_different_n_layers():
         assert model.evaluate(dataset) < 1.0
 
         # The global shape of the residual weights corresponds to the number of layers
-        assert len(model.residual_weights) == n_layers
+        assert len(model.resnet_model.trainable_variables) == n_layers
 
         if n_layers > 0:
             for layer_idx in range(n_layers):
                 # Each residual layer has a (n_items, n_items) matrix of weights
-                assert model.residual_weights[layer_idx].shape == (n_items, n_items)
+                assert model.resnet_model.trainable_variables[layer_idx].shape == (n_items, n_items)
 
 
 def test_reslogit_different_layers_width():
@@ -205,18 +205,21 @@ def test_reslogit_different_layers_width():
         assert model.evaluate(dataset) < 1e3
 
         # The global shape of the residual weights corresponds to the number of layers
-        assert len(model.residual_weights) == n_layers
+        assert len(model.resnet_model.trainable_variables) == n_layers
 
         if n_layers > 0:
             # The first residual layer has a (n_items, n_items) matrix of weights
-            assert model.residual_weights[0].shape == (n_items, n_items)
+            assert model.resnet_model.trainable_variables[0].shape == (n_items, n_items)
 
             for layer_idx in range(1, n_layers):
                 # For i > 1, the i-th residual layer has a
                 # (res_layers_width[i-2], res_layers_width[i-1]) matrix of weights
                 layer_width = res_layers_width[layer_idx - 1]
                 prev_layer_width = res_layers_width[layer_idx - 2]
-                assert model.residual_weights[layer_idx].shape == (prev_layer_width, layer_width)
+                assert model.resnet_model.trainable_variables[layer_idx].shape == (
+                    prev_layer_width,
+                    layer_width,
+                )
 
         # Check if the ValueError are raised when the res_layers_width is not consistent
         model = ResLogit(
