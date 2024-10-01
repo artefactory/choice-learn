@@ -33,7 +33,7 @@ def test_modecanada_loader():
     """Test loading the Canada dataset."""
     canada = load_modecanada(as_frame=True)
     assert isinstance(canada, pd.DataFrame)
-    assert canada.shape == (15520, 12)
+    assert canada.shape == (15520, 11)
 
     canada = load_modecanada()
     assert isinstance(canada, ChoiceDataset)
