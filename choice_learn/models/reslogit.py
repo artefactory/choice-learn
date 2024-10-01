@@ -11,10 +11,6 @@ from choice_learn.models.base_model import ChoiceModel
 class ResLayer(tf.keras.layers.Layer):
     """The residual layer class."""
 
-    def __init__(self):
-        """Initialize the ResLayer class."""
-        super().__init__()
-
     def get_activation_function(self, name):
         """Get an activation function from its str name.
 
@@ -42,7 +38,23 @@ class ResLayer(tf.keras.layers.Layer):
             return tf.math.softplus
         raise ValueError(f"Activation function {name} not supported.")
 
-    def build(self, input_shape, layer_width=None, activation="softplus"):
+    def __init__(self, layer_width=None, activation="softplus"):
+        """Initialize the ResLayer class.
+
+        Parameters
+        ----------
+        layer_width : int, optional
+            Width of the layer, by default None
+            If None, the width of the layer is the same as the input shape
+        activation : str, optional
+            Activation function to use in the layer, by default "softplus"
+        """
+        self.layer_width = layer_width
+        self.activation = self.get_activation_function(activation)
+
+        super().__init__()
+
+    def build(self, input_shape):
         """Create the state of the layer (weights).
 
         Parameters
@@ -50,20 +62,12 @@ class ResLayer(tf.keras.layers.Layer):
         input_shape : tuple
             Shape of the input of the layer. Typically (batch_size, num_features)
             Batch_size (None) is ignored, but num_features is the shape of the input
-        layer_width : int, optional
-            Width of the layer, by default None
-            If None, the width of the layer is the same as the input shape
-        activation : str, optional
-            Activation function to use in the layer, by default "softplus"
         """
         self.num_features = input_shape[-1]
 
-        if layer_width is None:
+        # If None, the width of the layer is the same as the input shape
+        if self.layer_width is None:
             self.layer_width = input_shape[-1]
-        else:
-            self.layer_width = layer_width
-
-        self.activation = self.get_activation_function(activation)
 
         # Random normal initialization of the weights
         # Shape of the weights: (num_features, layer_width)
@@ -264,15 +268,17 @@ class ResLogit(ChoiceModel):
         input_shape = (n_items,)
         input = tf.keras.layers.Input(shape=input_shape)
         residual_weights = []
-        layers = [ResLayer() for _ in range(self.n_layers)]
         output = input
+
         if self.res_layers_width is None:
             # Common width for all the residual layers by default: n_items
             # (Like in the original paper of ResLogit)
+            layers = [ResLayer(activation=self.activation) for _ in range(self.n_layers)]
             for layer in layers:
-                layer.build(input_shape=(n_items,), activation=self.activation)
+                layer.build(input_shape=(n_items,))
                 residual_weights.append(layer.residual_weights)
                 output = layer(output)
+
         else:
             # Different width for each *hidden* residual layer
             if self.n_layers > 0 and len(self.res_layers_width) != self.n_layers - 1:
@@ -281,29 +287,38 @@ class ResLogit(ChoiceModel):
                 )
             if self.n_layers > 1 and self.res_layers_width[-1] != n_items:
                 raise ValueError("The width of the last residual layer should be equal to n_items")
+
+            # Initialize the residual layers
+            if self.n_layers == 0:
+                layers = []
+            else:
+                # The first layer has the same width as the input
+                layers = [ResLayer(activation=self.activation)]
+                for i in range(1, self.n_layers):
+                    # The other layers have a width defined by the res_layers_width parameter
+                    layers.append(
+                        ResLayer(
+                            layer_width=self.res_layers_width[i - 1], activation=self.activation
+                        )
+                    )
+
+            # Build the residual layers
             for i, layer in enumerate(layers):
                 if i == 0:
-                    # The first layer has the same width as the input
-                    layer.build(input_shape=(n_items,), activation=self.activation)
+                    # The first layer have an input shape depending on the number of items
+                    layer.build(input_shape=(n_items,))
                     residual_weights.append(layer.residual_weights)
-                # The other layers have a width defined by the
-                # res_layers_width parameter and an input shape
-                # depending on the width of the previous layer
+                # The hidden layers have an input shape depending on the width of the previous layer
                 elif i == 1:
-                    layer.build(
-                        input_shape=(n_items,),
-                        layer_width=self.res_layers_width[i - 1],
-                        activation=self.activation,
-                    )
+                    # The first layer (i=0) has the same width as the input
+                    layer.build(input_shape=(n_items,))
                     residual_weights.append(layer.residual_weights)
                 else:
-                    layer.build(
-                        input_shape=(self.res_layers_width[i - 2],),
-                        layer_width=self.res_layers_width[i - 1],
-                        activation=self.activation,
-                    )
+                    # Width of the layer i - 1: self.res_layers_width[i - 2]
+                    layer.build(input_shape=(self.res_layers_width[i - 2],))
                     residual_weights.append(layer.residual_weights)
                 output = layer(output)
+
         resnet_model = tf.keras.Model(
             inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
         )
