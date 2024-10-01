@@ -1,7 +1,7 @@
 """Testing that model instantiation works as expected."""
 
 from choice_learn.datasets import load_modecanada
-from choice_learn.models import ConditionalLogit, ResLogit, RUMnet, SimpleMNL, TasteNet
+from choice_learn.models import ConditionalLogit, ResLogit, RUMnet, TasteNet
 
 canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
 
