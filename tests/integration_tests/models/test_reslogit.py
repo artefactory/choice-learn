@@ -212,10 +212,10 @@ def test_reslogit_different_layers_width():
         model = ResLogit(
             n_layers=n_layers,
             res_layers_width=res_layers_width,
-            lr=1e-6,
+            lr=1e-4,
             epochs=20,
-            optimizer="SGD",
-            batch_size=32,
+            optimizer="Adam",
+            batch_size=-1,
         )
         # The model can fit
         model.instantiate(n_items, n_shared_features, n_items_features)
@@ -242,36 +242,36 @@ def test_reslogit_different_layers_width():
                     layer_width,
                 )
 
-        # Check if the ValueError are raised when the res_layers_width is not consistent
-        model = ResLogit(
-            n_layers=4,
-            res_layers_width=[2, 4, 8, n_items],
-            lr=1e-6,
-            epochs=20,
-            optimizer="SGD",
-            batch_size=32,
-        )
-        try:
-            model.fit(dataset)
-            # ValueError: The length of the res_layers_width list should be equal to n_layers - 1
-            assert False
-        except ValueError:
-            assert True
+    # Check if the ValueError are raised when the res_layers_width is not consistent
+    model = ResLogit(
+        n_layers=4,
+        res_layers_width=[2, 4, 8, n_items],
+        lr=1e-6,
+        epochs=20,
+        optimizer="SGD",
+        batch_size=32,
+    )
+    try:
+        model.fit(dataset)
+        # ValueError: The length of the res_layers_width list should be equal to n_layers - 1
+        assert False
+    except ValueError:
+        assert True
 
-        model = ResLogit(
-            n_layers=4,
-            res_layers_width=[2, 4, 8, 16],
-            lr=1e-6,
-            epochs=20,
-            optimizer="SGD",
-            batch_size=32,
-        )
-        try:
-            model.fit(dataset)
-            # ValueError: The last element of the res_layers_width list should be equal to n_items
-            assert False
-        except ValueError:
-            assert True
+    model = ResLogit(
+        n_layers=4,
+        res_layers_width=[2, 4, 8, 16],
+        lr=1e-6,
+        epochs=20,
+        optimizer="SGD",
+        batch_size=32,
+    )
+    try:
+        model.fit(dataset)
+        # ValueError: The last element of the res_layers_width list should be equal to n_items
+        assert False
+    except ValueError:
+        assert True
 
 
 def test_reslogit_different_activation():
