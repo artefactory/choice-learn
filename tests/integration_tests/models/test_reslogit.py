@@ -1,6 +1,7 @@
 """Tests ResLogit."""
 
 import numpy as np
+import tensorflow as tf
 
 from choice_learn.datasets import load_swissmetro
 
@@ -21,6 +22,7 @@ def test_reslogit_fit_with_sgd():
     model = ResLogit(lr=1e-6, epochs=30, optimizer="SGD", batch_size=32)
     model.instantiate(n_items, n_shared_features, n_items_features)
     eval_before = model.evaluate(dataset)
+    tf.config.run_functions_eagerly(True)  # To help with the coverage calculation
     model.fit(dataset)
     eval_after = model.evaluate(dataset)
     assert eval_after <= eval_before
