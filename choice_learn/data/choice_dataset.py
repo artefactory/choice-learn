@@ -18,7 +18,7 @@ class ChoiceDataset(object):
     items during the same session, all its choices
     can be regrouped under the same session_features. Limits data duplication in such cases.
 
-    The class has same methods/arguments as ChoiceDatset with a slight difference with
+    The class has same methods/arguments as ChoiceDataset with a slight difference with
     self.choices being a ragged list. The returned features in self.__getitem__ are the same
     as ChoiceDataset. When calling __getitem__(index) we map index to a session index and a
     choice index within the session.
@@ -369,7 +369,7 @@ class ChoiceDataset(object):
         self.shared_features_by_choice_names = shared_features_by_choice_names
         self.items_features_by_choice_names = items_features_by_choice_names
 
-        # What about typing ? should builf after check to change it ?
+        # What about typing ? should build after check to change it ?
         (
             self.shared_features_by_choice_map,
             self.items_features_by_choice_map,

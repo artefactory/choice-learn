@@ -94,7 +94,7 @@ class ChoiceModel(object):
             print("Using L-BFGS optimizer, setting up .fit() function")
             self.fit = self._fit_with_lbfgs
         else:
-            print(f"Optimizer {optimizer} not implemnted, switching for default Adam")
+            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
 
         self.epochs = epochs
@@ -649,7 +649,7 @@ class ChoiceModel(object):
         Parameters
         ----------
         choice_dataset: ChoiceDataset
-            Dataset on which to estimate the paramters.
+            Dataset on which to estimate the parameters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
 

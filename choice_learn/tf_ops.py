@@ -66,7 +66,7 @@ class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):
     label_smoothing : float, optional
         Value of smoothing to apply to labels, by default 0.0
         Smoothing applied is 1.0 - label_smoothing for chosen item and
-        label_smoothing / (num_items - 1)for all other items
+        label_smoothing / (num_items - 1) for all other items
     axis : int, optional
         Axis on which to compute the softmax. Used only if from_logits is True, by default -1
     epsilon : float, optional
