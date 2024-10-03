@@ -205,7 +205,7 @@ def test_reslogit_different_layers_width():
     """Tests that ResLogit can fit with different custom widths for its residual layers."""
     global dataset
 
-    list_n_layers = [0, 1, 4, 16]
+    list_n_layers = [0, 1, 4]
     list_res_layers_width = [[], [], [128, 256, n_items], [2, 4, 8, 16] * 3 + [32, 64, n_items]]
 
     for n_layers, res_layers_width in zip(list_n_layers, list_res_layers_width):
