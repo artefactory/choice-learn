@@ -9,7 +9,7 @@ from choice_learn.datasets import load_swissmetro
 from choice_learn.models import ResLogit
 
 dataset = load_swissmetro()
-dataset = dataset[:10]  # Reduce the dataset size for faster testing
+dataset = dataset[:100]  # Reduce the dataset size for faster testing
 n_items = np.shape(dataset.items_features_by_choice)[2]
 n_shared_features = np.shape(dataset.shared_features_by_choice)[2]
 n_items_features = np.shape(dataset.items_features_by_choice)[3]
