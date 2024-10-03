@@ -22,7 +22,7 @@ def test_reslogit_fit_with_sgd():
     """Tests that ResLogit can fit with SGD."""
     global dataset
 
-    model = ResLogit(lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size)
+    model = ResLogit(lr=1e-3, epochs=nb_epochs, optimizer="SGD", batch_size=batch_size)
     model.instantiate(n_items, n_shared_features, n_items_features)
     eval_before = model.evaluate(dataset)
     tf.config.run_functions_eagerly(True)  # To help with the coverage calculation
@@ -77,7 +77,7 @@ def test_reslogit_fit_with_none_intercept():
     global dataset
 
     model = ResLogit(
-        intercept=None, lr=1e-3, epochs=nb_epochs, optimizer="SGD", batch_size=batch_size
+        intercept=None, lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size
     )
 
     indexes, weights = model.instantiate(
