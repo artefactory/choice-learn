@@ -14,7 +14,8 @@ n_items = np.shape(dataset.items_features_by_choice)[2]
 n_shared_features = np.shape(dataset.shared_features_by_choice)[2]
 n_items_features = np.shape(dataset.items_features_by_choice)[3]
 
-nb_epochs = 100
+lr = 1e-3
+epochs = 100
 batch_size = -1
 
 
@@ -22,12 +23,12 @@ def test_reslogit_fit_with_sgd():
     """Tests that ResLogit can fit with SGD."""
     global dataset
 
-    model = ResLogit(lr=1e-3, epochs=nb_epochs, optimizer="SGD", batch_size=batch_size)
+    model = ResLogit(lr=lr, epochs=epochs, optimizer="SGD", batch_size=batch_size)
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     tf.config.run_functions_eagerly(True)  # To help with the coverage calculation
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -35,11 +36,11 @@ def test_reslogit_fit_with_adam():
     """Tests that ResLogit can fit with Adam."""
     global dataset
 
-    model = ResLogit(lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size)
+    model = ResLogit(lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size)
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -47,11 +48,11 @@ def test_reslogit_fit_with_adamax():
     """Tests that ResLogit can fit with Adamax."""
     global dataset
 
-    model = ResLogit(lr=1e-3, epochs=nb_epochs, optimizer="Adamax", batch_size=batch_size)
+    model = ResLogit(lr=lr, epochs=epochs, optimizer="Adamax", batch_size=batch_size)
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -62,13 +63,11 @@ def test_reslogit_fit_with_optimizer_not_implemented():
     """
     global dataset
 
-    model = ResLogit(
-        lr=1e-3, epochs=nb_epochs, optimizer="xyz_not_implemented", batch_size=batch_size
-    )
+    model = ResLogit(lr=lr, epochs=epochs, optimizer="xyz_not_implemented", batch_size=batch_size)
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -76,9 +75,7 @@ def test_reslogit_fit_with_none_intercept():
     """Tests that ResLogit can fit with intercept=None."""
     global dataset
 
-    model = ResLogit(
-        intercept=None, lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size
-    )
+    model = ResLogit(intercept=None, lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size)
 
     indexes, weights = model.instantiate(
         n_items=n_items, n_shared_features=n_shared_features, n_items_features=n_items_features
@@ -86,9 +83,9 @@ def test_reslogit_fit_with_none_intercept():
     assert "intercept" not in indexes
 
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -97,7 +94,7 @@ def test_reslogit_fit_with_item_intercept():
     global dataset
 
     model = ResLogit(
-        intercept="item", lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size
+        intercept="item", lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size
     )
 
     indexes, weights = model.instantiate(
@@ -105,9 +102,9 @@ def test_reslogit_fit_with_item_intercept():
     )
     assert "intercept" in indexes
 
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -116,7 +113,7 @@ def test_reslogit_fit_with_item_full_intercept():
     global dataset
 
     model = ResLogit(
-        intercept="item-full", lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size
+        intercept="item-full", lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size
     )
 
     indexes, weights = model.instantiate(
@@ -124,9 +121,9 @@ def test_reslogit_fit_with_item_full_intercept():
     )
     assert "intercept" in indexes
 
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -136,8 +133,8 @@ def test_reslogit_fit_with_other_intercept():
 
     model = ResLogit(
         intercept="xyz_other_intercept",
-        lr=1e-3,
-        epochs=nb_epochs,
+        lr=lr,
+        epochs=epochs,
         optimizer="Adam",
         batch_size=batch_size,
     )
@@ -148,9 +145,9 @@ def test_reslogit_fit_with_other_intercept():
     assert "intercept" in indexes
 
     model.instantiate(n_items, n_shared_features, n_items_features)
-    eval_before = model.evaluate(dataset)
+    eval_before = model.evaluate(dataset, mode="optim")
     model.fit(dataset)
-    eval_after = model.evaluate(dataset)
+    eval_after = model.evaluate(dataset, mode="optim")
     assert eval_after <= eval_before
 
 
@@ -161,8 +158,8 @@ def test_reslogit_fit_with_other_intercept():
 #     reslogit = ResLogit(
 #         intercept="item",
 #         n_layers=0,
-#         lr=1e-3,
-#         epochs=nb_epochs,
+#         lr=lr,
+#         epochs=epochs,
 #         optimizer="Adam",
 #         batch_size=batch_size
 #     )
@@ -171,12 +168,12 @@ def test_reslogit_fit_with_other_intercept():
 #     )
 #     reslogit.fit(full_dataset)
 #     reslogit_final_weights = reslogit.trainable_weights
-#     reslogit_score = reslogit.evaluate(full_dataset)
+#     reslogit_score = reslogit.evaluate(full_dataset, mode="optim")
 
 #     simple_mnl = SimpleMNL(
 #         intercept="item",
-#         lr=1e-3,
-#         epochs=nb_epochs,
+#         lr=lr,
+#         epochs=epochs,
 #         optimizer="Adam",
 #         batch_size=batch_size
 #     )
@@ -185,7 +182,7 @@ def test_reslogit_fit_with_other_intercept():
 #     )
 #     simple_mnl.fit(full_dataset)
 #     simple_mnl_final_weights = simple_mnl.trainable_weights
-#     simple_mnl_score = simple_mnl.evaluate(full_dataset)
+#     simple_mnl_score = simple_mnl.evaluate(full_dataset, mode="optim")
 
 #     assert reslogit_indexes == simple_mnl_indexes
 #     for i in range(len(reslogit_initial_weights)):
@@ -211,13 +208,13 @@ def test_reslogit_different_n_layers():
 
     for n_layers in [0, 1, 4]:
         model = ResLogit(
-            n_layers=n_layers, lr=1e-3, epochs=nb_epochs, optimizer="Adam", batch_size=batch_size
+            n_layers=n_layers, lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size
         )
         # The model can fit
         model.instantiate(n_items, n_shared_features, n_items_features)
-        eval_before = model.evaluate(dataset)
+        eval_before = model.evaluate(dataset, mode="optim")
         model.fit(dataset)
-        eval_after = model.evaluate(dataset)
+        eval_after = model.evaluate(dataset, mode="optim")
         assert eval_after <= eval_before
 
         # The global shape of the residual weights corresponds to the number of layers
@@ -240,16 +237,16 @@ def test_reslogit_different_layers_width():
         model = ResLogit(
             n_layers=n_layers,
             res_layers_width=res_layers_width,
-            lr=1e-3,
-            epochs=nb_epochs,
+            lr=lr,
+            epochs=epochs,
             optimizer="Adam",
             batch_size=batch_size,
         )
         # The model can fit
         model.instantiate(n_items, n_shared_features, n_items_features)
-        eval_before = model.evaluate(dataset)
+        eval_before = model.evaluate(dataset, mode="optim")
         model.fit(dataset)
-        eval_after = model.evaluate(dataset)
+        eval_after = model.evaluate(dataset, mode="optim")
         if not tf.math.is_nan(eval_after):
             assert eval_after <= eval_before
 
@@ -274,8 +271,8 @@ def test_reslogit_different_layers_width():
     model = ResLogit(
         n_layers=4,
         res_layers_width=[2, 4, 8, n_items],
-        lr=1e-3,
-        epochs=nb_epochs,
+        lr=lr,
+        epochs=epochs,
         optimizer="Adam",
         batch_size=batch_size,
     )
@@ -289,8 +286,8 @@ def test_reslogit_different_layers_width():
     model = ResLogit(
         n_layers=4,
         res_layers_width=[2, 4, 8, 16],
-        lr=1e-3,
-        epochs=nb_epochs,
+        lr=lr,
+        epochs=epochs,
         optimizer="Adam",
         batch_size=batch_size,
     )
@@ -312,24 +309,24 @@ def test_reslogit_different_activation():
         model = ResLogit(
             n_layers=2,
             activation=activation_str,
-            lr=1e-3,
-            epochs=nb_epochs,
+            lr=lr,
+            epochs=epochs,
             optimizer="Adam",
             batch_size=batch_size,
         )
         # The model can fit
         model.instantiate(n_items, n_shared_features, n_items_features)
-        eval_before = model.evaluate(dataset)
+        eval_before = model.evaluate(dataset, mode="optim")
         model.fit(dataset)
-        eval_after = model.evaluate(dataset)
+        eval_after = model.evaluate(dataset, mode="optim")
         assert eval_after <= eval_before
 
     # Check if the ValueError is raised when the activation is not implemented
     model = ResLogit(
         n_layers=2,
         activation="xyz_not_implemented",
-        lr=1e-3,
-        epochs=nb_epochs,
+        lr=lr,
+        epochs=epochs,
         optimizer="Adam",
         batch_size=batch_size,
     )
@@ -348,8 +345,8 @@ def test_that_endpoints_run():
     """
     global dataset
 
-    model = ResLogit(epochs=nb_epochs)
+    model = ResLogit(epochs=epochs)
     model.fit(dataset)
-    model.evaluate(dataset)
+    model.evaluate(dataset, mode="optim")
     model.predict_probas(dataset)
     assert True
