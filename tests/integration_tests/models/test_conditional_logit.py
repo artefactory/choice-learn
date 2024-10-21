@@ -8,6 +8,7 @@ from choice_learn.models import ConditionalLogit
 
 def test_mode_canada_gt():
     """Tests specific config of cLogit and .evaluate()."""
+    tf.config.run_functions_eagerly(True)
     # Instantiation with the coefficients dictionnary
     coefficients = {
         "income": "item",
@@ -34,5 +35,28 @@ def test_mode_canada_gt():
 
     gt_model._trainable_weights = gt_weights
     total_nll = gt_model.evaluate(canada_dataset) * len(canada_dataset)
+    assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
+    assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
+
+
+def test_mode_canada_fit():
+    """Tests specific config of cLogit and .fit()."""
+    tf.config.run_functions_eagerly(True)
+    # Instantiation with the coefficients dictionnary
+    coefficients = {
+        "income": "item",
+        "cost": "constant",
+        "freq": "constant",
+        "ovt": "constant",
+        "ivt": "item-full",
+        "intercept": "item",
+    }
+
+    canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
+
+    model = ConditionalLogit(coefficients=coefficients)
+    model.fit(canada_dataset)
+
+    total_nll = model.evaluate(canada_dataset) * len(canada_dataset)
     assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
     assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
