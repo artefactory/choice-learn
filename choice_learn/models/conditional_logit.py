@@ -321,10 +321,10 @@ class ConditionalLogit(ChoiceModel):
             # Checking that no weight has been attributed to non existing feature in dataset
             dataset_stacked_features_names = []
             if choice_dataset.shared_features_by_choice_names is not None:
-                for i, feat_tuple in enumerate(choice_dataset.shared_features_by_choice_names):
+                for feat_tuple in choice_dataset.shared_features_by_choice_names:
                     dataset_stacked_features_names.append(feat_tuple)
             if choice_dataset.items_features_by_choice_names is not None:
-                for i, feat_tuple in enumerate(choice_dataset.items_features_by_choice_names):
+                for feat_tuple in choice_dataset.items_features_by_choice_names:
                     dataset_stacked_features_names.append(feat_tuple)
             dataset_stacked_features_names = np.concatenate(dataset_stacked_features_names).ravel()
 
@@ -576,7 +576,7 @@ class ConditionalLogit(ChoiceModel):
         return tf.reduce_sum(items_utilities_by_choice, axis=0)
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
-        """Fit function to estimate the paramters.
+        """Fit function to estimate the parameters.
 
         Parameters
         ----------
@@ -604,16 +604,14 @@ class ConditionalLogit(ChoiceModel):
         get_report=False,
         **kwargs,
     ):
-        """Specific fit function to estimate the paramters with LBFGS.
+        """Specific fit function to estimate the parameters with LBFGS.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
-        n_epochs : int
-            Number of epochs to run.
-        tolerance : float, optional
-            Tolerance in the research of minimum, by default 1e-8
+        sample_weight : int
+            Sample weight to use for the estimation, by default None
         get_report: bool, optional
             Whether or not to compute a report of the estimation, by default False
 

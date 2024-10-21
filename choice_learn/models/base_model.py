@@ -94,7 +94,7 @@ class ChoiceModel(object):
             print("Using L-BFGS optimizer, setting up .fit() function")
             self.fit = self._fit_with_lbfgs
         else:
-            print(f"Optimizer {optimizer} not implemnted, switching for default Adam")
+            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
 
         self.epochs = epochs
@@ -102,6 +102,10 @@ class ChoiceModel(object):
         self.tolerance = tolerance
 
         if regularization is not None:
+            if np.sum(regularization_strength) <= 0:
+                raise ValueError(
+                    "Regularization strength must be positive if regularization is set."
+                )
             if regularization.lower() == "l1":
                 self.regularizer = tf.keras.regularizers.L1(l1=regularization_strength)
             elif regularization.lower() == "l2":
@@ -515,15 +519,18 @@ class ChoiceModel(object):
         path : str
             path to the folder where to save the model
         """
-        if not os.exists(path):
+        if not os.path.exists(path):
             Path(path).mkdir(parents=True)
 
         for i, weight in enumerate(self.trainable_weights):
-            tf.keras.savedmodel.save(Path(path) / f"weight_{i}")
+            np.save(Path(path) / f"weight_{i}.npy", weight.numpy())
 
         # To improve for non-string attributes
-        params = self.__dict__
-        json.dump(Path(path) / "params.json", params)
+        params = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, (int, float, str, dict)):
+                params[k] = v
+        json.dump(params, open(os.path.join(path, "params.json"), "w"))
 
         # Save optimizer state
 
@@ -542,21 +549,22 @@ class ChoiceModel(object):
             Loaded ChoiceModel
         """
         obj = cls()
-        obj.trainable_weights = []
+        obj._trainable_weights = []
+
         i = 0
-        weight_path = f"weight_{i}"
+        weight_path = f"weight_{i}.npy"
         while weight_path in os.listdir(path):
-            obj.trainable_weights.append(tf.keras.load_model.load(Path(path) / weight_path))
+            obj._trainable_weights.append(tf.Variable(np.load(Path(path) / weight_path)))
             i += 1
-            weight_path = f"weight_{i}"
+            weight_path = f"weight_{i}.npy"
 
         # To improve for non string attributes
-        params = json.load(Path(path) / "params.json")
+        params = json.load(open(Path(path) / "params.json", "r"))
         for k, v in params.items():
             setattr(obj, k, v)
 
         # Load optimizer step
-        return cls
+        return obj
 
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
@@ -641,7 +649,7 @@ class ChoiceModel(object):
         Parameters
         ----------
         choice_dataset: ChoiceDataset
-            Dataset on which to estimate the paramters.
+            Dataset on which to estimate the parameters.
         sample_weight: np.ndarray, optional
             Sample weights to apply, by default None
 
@@ -662,7 +670,7 @@ class ChoiceModel(object):
         part = []  # partition indices
 
         for i, shape in enumerate(shapes):
-            n = np.product(shape)
+            n = np.prod(shape)
             idx.append(tf.reshape(tf.range(count, count + n, dtype=tf.int32), shape))
             part.extend([i] * n)
             count += n

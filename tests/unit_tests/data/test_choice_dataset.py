@@ -711,17 +711,6 @@ def test_from_wide_df():
             items_id=["it_1", "it_2"],
             shared_features_columns=None,
             items_features_suffixes=["1", "2", "3"],
-            items_features_prefixes=["1", "2", "3"],
-            available_items_suffix=["av_it_1", "av_it_2"],
-            choices_column="choice",
-            choice_format="items_id",
-        )
-    with pytest.raises(ValueError):
-        ChoiceDataset.from_single_wide_df(
-            df=pd.DataFrame(wide_df),
-            items_id=["it_1", "it_2"],
-            shared_features_columns=None,
-            items_features_suffixes=["1", "2", "3"],
             available_items_suffix=["av_it_1", "av_it_2"],
             available_items_prefix=["av_it_1", "av_it_2"],
             choices_column="choice",
@@ -807,6 +796,59 @@ def test_from_wide_df():
             choices_column="choice",
             choice_format="items_id",
         )
+
+    extra_wide_df = {
+        "sh_1": [1.1, 2.2, 3.3],
+        "sh_2": [11.1, 22.2, 33.3],
+        "it_1_1": [0.4, 0.5, 0.6],
+        "it_2_1": [0.7, 0.8, 0.9],
+        "it_1_2": [1.4, 1.5, 1.6],
+        "it_2_2": [1.7, 1.8, 1.9],
+        "it_1_3": [2.4, 2.5, 2.6],
+        "it_2_3": [2.7, 2.8, 2.9],
+        "1_it_1": [3.4, 3.5, 3.6],
+        "1_it_2": [3.7, 3.8, 3.9],
+        "2_it_1": [4.4, 4.5, 4.6],
+        "2_it_2": [4.7, 4.8, 4.9],
+        "3_it_1": [5.4, 5.5, 5.6],
+        "3_it_2": [5.7, 5.8, 5.9],
+        "av_it_1": [1, 1, 1],
+        "av_it_2": [1, 0, 1],
+        "choice": ["it_1", "it_1", "it_2"],
+    }
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(extra_wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=None,
+        items_features_prefixes=["1", "2", "3"],
+        items_features_suffixes=["1", "2", "3"],
+        available_items_suffix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert dataset.shared_features_by_choice is None
+    assert dataset.shared_features_by_choice_names is None
+    assert dataset.items_features_by_choice_names == (["1", "2", "3", "1", "2", "3"],)
+    assert (
+        dataset.items_features_by_choice
+        == np.array(
+            [
+                [
+                    [3.4, 4.4, 5.4, 0.4, 1.4, 2.4],
+                    [3.7, 4.7, 5.7, 0.7, 1.7, 2.7],
+                ],
+                [
+                    [3.5, 4.5, 5.5, 0.5, 1.5, 2.5],
+                    [3.8, 4.8, 5.8, 0.8, 1.8, 2.8],
+                ],
+                [
+                    [3.6, 4.6, 5.6, 0.6, 1.6, 2.6],
+                    [3.9, 4.9, 5.9, 0.9, 1.9, 2.9],
+                ],
+            ],
+            dtype=np.float64,
+        )
+    ).all()
 
 
 def test_summary():

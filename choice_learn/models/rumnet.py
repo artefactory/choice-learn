@@ -24,6 +24,9 @@ def create_ff_network(
         Number of dense/fully-connected of the network to create.
     width : int
         Neurons number for all dense layers.
+    activation : str, optional
+        Activation function to use at the end of each layer except the last one,
+        by default "elu"
     add_last : bool, optional
         Whether to add a Dense layer with a single output at the end, by default False
         Typically to be used when creating the utility network, that outputs a single number:
@@ -69,20 +72,20 @@ def recreate_official_nets(
         Number of features each product will be described with.
         In terms of ChoiceDataset it is the number of { items_features + contexts_items_features }
         for one product.
+    x_width : int
+        Number of neurons for each dense layer for the products encoding net.
+    x_depth : int
+        Number of dense layers for the products encoding net.
+    x_eps : int
+        Number of nets of products features encoding.
     num_customer_features : int
         Number of features each customer will be described with.
         In terms of ChoiceDataset it is the number of contexts_features.
-    width_eps_x : int
-        Number of neurons for each dense layer for the products encoding net.
-    depth_eps_x : int
-        Number of dense layers for the products encoding net.
-    heterogeneity_x : int
-        Number of nets of products features encoding.
-    width_eps_z : int
+    z_width : int
         Number of neurons for each dense layer for the customers encoding net.
-    depth_eps_z : int
+    z_depth : int
         Number of dense layers for the customers encoding net.
-    heterogeneity_z : int
+    z_eps : int
         Number of nets of customers features encoding.
     width_u : int
         Number of neurons for each dense layer for the utility net.
@@ -166,7 +169,7 @@ class ParallelDense(tf.keras.layers.Layer):
         heterogeneity : int
             Number of dense layers that are in parallel
         activation : str, optional
-            activation function at the end of each layer, by default "relu"
+            Activation function at the end of each layer, by default "relu"
         """
         super().__init__(**kwargs)
         self.width = width
@@ -180,7 +183,7 @@ class ParallelDense(tf.keras.layers.Layer):
         Parameters
         ----------
         input_shape : tuple
-            shape of the input of the layer. Typically (batch_size, num_features).
+            Shape of the input of the layer. Typically (batch_size, num_features).
             Batch_size (None) is ignored, but num_features is the shape of the input.
         """
         super().build(input_shape)
@@ -230,7 +233,7 @@ class ParallelDense(tf.keras.layers.Layer):
         Returns
         -------
         outputs
-            tensor of shape (batch_size, width, heterogeneity)
+            Tensor of shape (batch_size, width, heterogeneity)
         """
         outputs = tf.tensordot(inputs, self.w[0][0], axes=1) + self.w[0][1]
         outputs = self.activation(outputs)
@@ -263,7 +266,7 @@ class AssortmentParallelDense(tf.keras.layers.Layer):
         heterogeneity : int
             Number of dense networks in parallel.
         activation : str, optional
-            activation function of each dense, by default "relu"
+            Activation function of each dense, by default "relu"
         """
         super().__init__(**kwargs)
         self.width = width
@@ -556,16 +559,6 @@ class PaperRUMnet(ChoiceModel):
         self.l2_regularization_coef = l2_regularization_coef
         self.label_smoothing = label_smoothing
 
-        if optimizer == "Adam":
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-        elif optimizer == "SGD":
-            self.optimizer = tf.keras.optimizers.SGD(lr)
-        elif optimizer == "Adamax":
-            self.optimizer = tf.keras.optimizers.Adamax(lr)
-        else:
-            print(f"Optimizer {optimizer} not implemnted, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(lr)
-
         self.instantiated = False
 
     def instantiate(self):
@@ -618,15 +611,15 @@ class PaperRUMnet(ChoiceModel):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
-            Shape must be (n_choices, n_items_features)
+            A batch of items features
+            Shape must be (n_choices, n_items, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
 
@@ -699,15 +692,15 @@ class PaperRUMnet(ChoiceModel):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
@@ -782,15 +775,15 @@ class PaperRUMnet(ChoiceModel):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
@@ -867,15 +860,15 @@ class CPURUMnet(PaperRUMnet):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
 
@@ -1011,15 +1004,15 @@ class GPURUMnet(PaperRUMnet):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
 
@@ -1102,15 +1095,15 @@ class GPURUMnet(PaperRUMnet):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
         sample_weight : np.ndarray, optional
@@ -1182,15 +1175,15 @@ class GPURUMnet(PaperRUMnet):
         Parameters
         ----------
         shared_features_by_choice : tuple of np.ndarray (choices_features)
-            a batch of shared features
+            A batch of shared features
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
-            a batch of items features
+            A batch of items features
             Shape must be (n_choices, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
-        choices_batch : np.ndarray
+        choices : np.ndarray
             Choices
             Shape must be (n_choices, )
         sample_weight : np.ndarray, optional

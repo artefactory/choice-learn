@@ -1,7 +1,7 @@
 """Testing that model instantiation works as expected."""
 
 from choice_learn.datasets import load_modecanada
-from choice_learn.models import ConditionalLogit, RUMnet, SimpleMNL, TasteNet
+from choice_learn.models import ConditionalLogit, ResLogit, RUMnet, TasteNet
 
 canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
 
@@ -34,13 +34,6 @@ def test_clogit_specification():
     model.add_coefficients(feature_name="intercept", items_indexes=[1, 2, 3])
     model.add_coefficients(feature_name="income", items_indexes=[1, 2, 3])
     model.instantiate(canada_dataset)
-    assert True
-
-
-def test_simplemnl_instantiation():
-    """Tests SimpleMNL instantiation."""
-    model = SimpleMNL(intercept="item-full")
-    model.instantiate(n_items=4, n_items_features=10, n_shared_features=20)
     assert True
 
 
@@ -91,4 +84,11 @@ def test_tastenet_instantiation():
         batch_size=32,
     )
     tastenet.instantiate(n_shared_features=17)
+    assert True
+
+
+def test_reslogit_instantiation():
+    """Tests ResLogit instantiation."""
+    model = ResLogit()
+    model.instantiate(n_items=4, n_shared_features=20, n_items_features=10)
     assert True

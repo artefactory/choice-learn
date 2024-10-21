@@ -15,7 +15,8 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
 ![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
 
-
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
+[![cite](https://img.shields.io/badge/citation-00FFFF)](./CITATION.bib)
 </div>
 
 
@@ -25,20 +26,20 @@ The package provides ready-to-use datasets and models studied in the academic li
 Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
 
 ## :trident: Table of Contents
-  - [Introduction - Discrete Choice Modelling](#introduction---discrete-choice-modelling)
-  - [What's in there ?](#whats-in-there-)
-  - [Getting Started](#getting-started)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [Citation](#citation)
+  - [Introduction - Discrete Choice modeling](#trident-introduction---discrete-choice-modeling)
+  - [What's in there ?](#trident-whats-in-there-)
+  - [Getting Started](#trident-getting-started)
+  - [Installation](#trident-installation)
+  - [Usage](#trident-usage)
+  - [Documentation](#trident-documentation)
+  - [Contributing](#trident-contributing)
+  - [Citation](#trident-citation)
 
-## :trident: Introduction - Discrete Choice Modelling
+## :trident: Introduction - Discrete Choice modeling
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
-If you are new to choice modelling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#getting-started---fast-track) section can also help you understand choice modelling and more importantly help you for your usecase.
+If you are new to choice modeling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#trident-getting-started) section can also help you understand choice modeling and more importantly help you for your usecase.
 
 ## :trident: What's in there ?
 
@@ -52,6 +53,7 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#citation)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
   - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
+  - The London Passenger Mode Choice dataset [[11]](#citation)
 
 ### Model estimation
 - Ready-to-use models:
@@ -60,7 +62,8 @@ If you are new to choice modelling, you can check this [resource](https://www.pu
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
   - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
   - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
-- Custom modelling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
+  - ResLogit [[12]](#citation)[[Example]](notebooks/models/reslogit.ipynb)
+- Custom modeling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
 - Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
@@ -71,7 +74,7 @@ You can find the following tutorials to help you getting started with the packag
 - Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
 - Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
 - A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
-- Introduction to custom modelling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
+- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
 
 ## :trident: Installation
 
@@ -95,7 +98,7 @@ For manual installation, Choice-Learn requires the following:
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
-For modelling you need:
+For modeling you need:
 - TensorFlow (>=2.14, <2.17)
 
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
@@ -185,7 +188,8 @@ print(model.report)
 ## :trident: Documentation
 
 A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
-TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.
+TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.\
+An academic paper has been published in the Journal of Open-Source Software, [here](https://joss.theoj.org/papers/10.21105/joss.06899).
 
 ## :trident: Contributing
 You are welcome to contribute to the project ! You can help in various ways:
@@ -200,7 +204,25 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 ## :trident: Citation
 
-If you consider this package and any of its feature useful for your research, please cite us.
+If you consider this package and any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899).
+
+<a href="https://joss.theoj.org/papers/10.21105/joss.06899">
+<img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
+</a>
+
+```bash
+@article{Auriau2024,
+  doi = {10.21105/joss.06899},
+  url = {https://doi.org/10.21105/joss.06899},
+  year = {2024},
+  publisher = {The Open Journal},
+  volume = {9},
+  number = {101},
+  pages = {6899},
+  author = {Vincent Auriau and Ali Aouad and Antoine Désir and Emmanuel Malherbe},
+  title = {Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning},
+  journal = {Journal of Open Source Software} }
+```
 
 ### License
 
@@ -254,18 +276,14 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [7] [A Neural-embedded Discrete Choice Model: Learning Taste Representation with Strengthened Interpretability](https://arxiv.org/abs/2002.00922), Han, Y.; Calara Oereuran F.; Ben-Akiva, M.; Zegras, C. (2020)\
 [8] [A branch-and-cut algorithm for the latent-class logit assortment problem](https://www.sciencedirect.com/science/article/pii/S0166218X12001072), Méndez-Díaz, I.; Miranda-Bront, J. J.; Vulcano, G.; Zabala, P. (2014)\
 [9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
-[10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)
+[10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)\
+[11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)\
+[12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)
 
 ### Code and Repositories
 
 *Official models implementations:*
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
-[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]
-
-*Other choice modeling packages:*
-
-- [PyLogit](https://github.com/timothyb0912/pylogit)
-- [Torch Choice](https://gsbdbi.github.io/torch-choice)
-- [BioGeme](https://github.com/michelbierlaire/biogeme)
-- [mlogit](https://github.com/cran/mlogit)
+[7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
+[12] [ResLogit](https://github.com/LiTrans/reslogit)

@@ -29,6 +29,8 @@ class SimpleMNL(ChoiceModel):
         add_exit_choice : bool, optional
             Whether or not to normalize the probabilities computation with an exit choice
             whose utility would be 1, by default True
+        intercept: str, optional
+            Type of intercept to use, by default None
         optimizer: str
             TensorFlow optimizer to be used for estimation
         lr: float
@@ -123,7 +125,7 @@ class SimpleMNL(ChoiceModel):
             Shape must be (n_choices, n_shared_features)
         items_features_by_choice : tuple of np.ndarray (choices_items_features)
             a batch of items features
-            Shape must be (n_choices, n_items_features)
+            Shape must be (n_choices, n_items, n_items_features)
         available_items_by_choice : np.ndarray
             A batch of items availabilities
             Shape must be (n_choices, n_items)
@@ -177,7 +179,7 @@ class SimpleMNL(ChoiceModel):
         return shared_features_utilities + items_features_utilities + intercept
 
     def fit(self, choice_dataset, get_report=False, **kwargs):
-        """Fit to estimate the paramters.
+        """Fit to estimate the parameters.
 
         Parameters
         ----------
@@ -205,7 +207,7 @@ class SimpleMNL(ChoiceModel):
         return fit
 
     def _fit_with_lbfgs(self, choice_dataset, sample_weight=None, get_report=False, **kwargs):
-        """Specific fit function to estimate the paramters with LBFGS.
+        """Specific fit function to estimate the parameters with LBFGS.
 
         Parameters
         ----------
@@ -350,8 +352,6 @@ class SimpleMNL(ChoiceModel):
             clone.lr = self.lr
         if hasattr(self, "_items_features_names"):
             clone._items_features_names = self._items_features_names
-        if hasattr(self, "_contexts_features_names"):
-            clone._contexts_features_names = self._contexts_features_names
-        if hasattr(self, "_contexts_items_features_names"):
-            clone._contexts_items_features_names = self._contexts_items_features_names
+        if hasattr(self, "_shared_features_names"):
+            clone._shared_features_names = self._shared_features_names
         return clone
