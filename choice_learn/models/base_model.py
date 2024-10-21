@@ -22,7 +22,8 @@ class ChoiceModel(object):
         label_smoothing=0.0,
         add_exit_choice=False,
         optimizer="lbfgs",
-        tolerance=1e-8,
+        lbfgs_tolerance=1e-8,
+        lbfgs_parallel_iterations=4,
         callbacks=None,
         lr=0.001,
         epochs=1000,
@@ -45,8 +46,10 @@ class ChoiceModel(object):
             List of callbacks to add to model.fit, by default None and only add History
         optimizer : str, optional
             Name of the tf.keras.optimizers to be used, by default "lbfgs"
-        tolerance : float, optional
+        lbfgs_tolerance : float, optional
             Tolerance for the L-BFGS optimizer if applied, by default 1e-8
+        lbfgs_parallel_iterations : int, optional
+            Number of parallel iterations for the L-BFGS optimizer, by default 4
         lr: float, optional
             Learning rate for the optimizer if applied, by default 0.001
         epochs: int, optional
@@ -99,7 +102,8 @@ class ChoiceModel(object):
 
         self.epochs = epochs
         self.batch_size = batch_size
-        self.tolerance = tolerance
+        self.lbfgs_tolerance = lbfgs_tolerance
+        self.lbfgs_parallel_iterations = lbfgs_parallel_iterations
 
         if regularization is not None:
             if np.sum(regularization_strength) <= 0:
@@ -778,9 +782,10 @@ class ChoiceModel(object):
             value_and_gradients_function=func,
             initial_position=init_params,
             max_iterations=epochs,
-            tolerance=self.tolerance,
+            tolerance=self.lbfgs_tolerance,
             f_absolute_tolerance=-1,
             f_relative_tolerance=-1,
+            parallel_iterations=self.lbfgs_parallel_iterations,
         )
 
         # after training, the final optimized parameters are still in results.position
