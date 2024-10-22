@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import NestedLogit
@@ -76,6 +77,7 @@ def test_error_nest():
 def test_fit_adam():
     """Tests the Nested Logit fit with Adam on dummy dataset."""
     global test_dataset
+    tf.config.run_functions_eagerly(True)
 
     model = NestedLogit(
         items_nests=[[0, 1], [2]],
@@ -97,6 +99,7 @@ def test_fit_adam():
 def test_fit_adam_specific_specification():
     """Tests the Nested Logit fit with Adam on dummy dataset and specific specification."""
     global test_dataset
+    tf.config.run_functions_eagerly(True)
 
     spec = {
         "sf1": "item",
