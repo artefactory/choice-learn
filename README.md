@@ -13,10 +13,10 @@
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/choice-learn?logo=python)
 ![PyPI - Version](https://img.shields.io/pypi/v/choice-learn)
-![PyPI - License](https://img.shields.io/pypi/l/choice-learn)
+![PyPI - License](https://img.shields.io/pypi/l/choice-learn?color=purple)
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
-[![cite](https://img.shields.io/badge/citation-00FFFF)](./CITATION.bib)
+[![cite](https://img.shields.io/badge/Citation-BibTeX-cyan)](./CITATION.bib)
 </div>
 
 
