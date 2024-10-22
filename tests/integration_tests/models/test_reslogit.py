@@ -232,7 +232,7 @@ def test_reslogit_different_layers_width():
     global dataset
 
     list_n_layers = [0, 1, 3]
-    list_res_layers_width = [[], [], [12, 24, n_items]]
+    list_res_layers_width = [[], [], [12, n_items]]
 
     for n_layers, res_layers_width in zip(list_n_layers, list_res_layers_width):
         model = ResLogit(
