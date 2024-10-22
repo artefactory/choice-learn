@@ -15,7 +15,7 @@ n_shared_features = np.shape(dataset.shared_features_by_choice)[2]
 n_items_features = np.shape(dataset.items_features_by_choice)[3]
 
 
-lr = 1e-3
+lr = 1e-4
 epochs = 100
 batch_size = -1
 
