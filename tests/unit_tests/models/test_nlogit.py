@@ -8,14 +8,14 @@ from choice_learn.data import ChoiceDataset
 from choice_learn.models import NestedLogit
 
 test_dataset = ChoiceDataset(
-    shared_features_by_choice=(np.array([[1, 3, 0], [0, 3, 1], [3, 2, 1], [3, 3, 1]]),),
+    shared_features_by_choice=(np.array([[1, 0.3, 0.7], [0, 3.2, 1], [3.9, 2, 1], [2.9, 3.4, 1]]),),
     items_features_by_choice=(
         np.array(
             [
-                [[1.1, 2.2], [2.9, 3.3], [3.3, 4.4]],
-                [[1.2, 3.3], [2.3, 2.2], [4.3, 4.5]],
-                [[1.4, 3.1], [2.4, 4.5], [3.4, 2.1]],
-                [[1.7, 3.3], [2.3, 4.4], [3.7, 2.2]],
+                [[1.1, 2.2], [2.9, 3.3], [5.3, 4.4]],
+                [[1.2, 5.3], [1.3, 6.2], [4.3, 4.5]],
+                [[2.4, 3.1], [2.4, 7.5], [3.4, 7.1]],
+                [[1.7, 3.3], [8.3, 4.4], [2.7, 1.2]],
             ]
         ),
     ),
@@ -101,27 +101,69 @@ def test_fit_adam_specific_specification():
     global test_dataset
     tf.config.run_functions_eagerly(True)
 
+    test_dataset_2 = ChoiceDataset(
+        shared_features_by_choice=(
+            np.array([[1, 0.3, 0.7], [0, 3.2, 1], [3.9, 2, 1], [2.9, 3.4, 1]]),
+        ),
+        items_features_by_choice=(
+            np.array(
+                [
+                    [[1.1, 2.2], [2.9, 3.3], [5.3, 4.4], [5.2, 4.0]],
+                    [[1.2, 5.3], [1.3, 6.2], [4.3, 4.5], [2.1, 8.6]],
+                    [[2.4, 3.1], [9.4, 7.5], [3.4, 7.1], [7.3, 4.1]],
+                    [[9.7, 3.3], [8.3, 4.4], [2.7, 1.2], [4.3, 1.2]],
+                ]
+            ),
+        ),
+        items_features_by_choice_names=(["if1", "if2"],),
+        shared_features_by_choice_names=(["sf1", "sf2", "sf3"],),
+        available_items_by_choice=np.array(
+            [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
+        ),
+        choices=[0, 1, 3, 2],
+    )
+
     spec = {
         "sf1": "item",
-        "sf2": "item-full",
-        "sf3": "nest",
-        "if1": "nest",
         "if2": "constant",
+        "sf2": "item-full",
+        "if1": "nest",
     }
 
     model = NestedLogit(
         coefficients=spec,
-        items_nests=[[0, 1], [2]],
-        optimizer="Adam",
-        epochs=1,
+        items_nests=[[0, 1], [2, 3]],
+        optimizer="sgd",
+        epochs=100,
+        lr=1e-5,
         batch_size=-1,
         shared_gammas_over_nests=False,
-        regulariation="l1",
-        regularization_strength=0.0001,
+        regularization="l2",
+        regularization_strength=1e-5,
     )
 
-    model.instantiate(test_dataset)
-    nll_b = model.evaluate(test_dataset)
-    model.fit(test_dataset, get_report=True)
-    nll_a = model.evaluate(test_dataset)
+    model.instantiate(test_dataset_2)
+
+    spec = {
+        "sf1": "item",
+        "if2": "constant",
+        "sf2": "item-full",
+    }
+
+    model = NestedLogit(
+        coefficients=spec,
+        items_nests=[[0, 1], [2, 3]],
+        optimizer="sgd",
+        epochs=2,
+        lr=1e-5,
+        batch_size=-1,
+        shared_gammas_over_nests=False,
+        regularization="l2",
+        regularization_strength=1e-5,
+    )
+
+    model.instantiate(test_dataset_2)
+    nll_b = model.evaluate(test_dataset_2)
+    model.fit(test_dataset_2, get_report=True)
+    nll_a = model.evaluate(test_dataset_2)
     assert nll_a < nll_b
