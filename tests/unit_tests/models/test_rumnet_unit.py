@@ -156,6 +156,7 @@ def test_paper_rumnet_errors():
             tol=1e-5,
             optimizer="adam",
             lr=0.001,
+            epochs=2,
         )
         model.instantiate()
 
@@ -179,6 +180,7 @@ def test_paper_rumnet():
         tol=1e-5,
         optimizer="adam",
         lr=0.001,
+        epochs=2,
     )
     model.instantiate()
     nll_a = model.evaluate(dataset)
@@ -213,6 +215,7 @@ def test_cpu_rumnet():
         tol=1e-5,
         optimizer="adam",
         lr=0.001,
+        epochs=2,
     )
     model.instantiate()
     assert model.batch_predict(
@@ -251,6 +254,7 @@ def test_gpu_rumnet():
         tol=1e-5,
         optimizer="adam",
         lr=0.001,
+        epochs=2,
     )
     model.instantiate()
     assert model.batch_predict(
