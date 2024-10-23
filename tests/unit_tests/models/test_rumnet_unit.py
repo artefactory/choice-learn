@@ -3,10 +3,33 @@
 import numpy as np
 import tensorflow as tf
 
+from choice_learn.data import ChoiceDataset
 from choice_learn.models.rumnet import (
     AssortmentParallelDense,
     AssortmentUtilityDenseNetwork,
+    CPURUMnet,
+    GPURUMnet,
+    PaperRUMnet,
     ParallelDense,
+)
+
+dataset = ChoiceDataset(
+    items_features_by_choice=(
+        np.array(
+            [
+                [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+                [[1.1, 2.1], [3.1, 4.1], [5.1, 6.1]],
+                [[1.2, 2.2], [3.2, 4.2], [5.2, 6.2]],
+                [[1.3, 2.3], [3.3, 4.3], [5.3, 6.3]],
+            ]
+        ).astype("float32"),
+    ),
+    shared_features_by_choice=(
+        np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0], [10.0, 11.0, 12.0]]).astype(
+            "float32"
+        ),
+    ),
+    choices=np.array([0, 1, 2, 0]),
 )
 
 
@@ -96,3 +119,98 @@ def test_assortment_parallel_dense():
             assert w.shape == (8, 8, 2)
         else:
             assert w.shape == (8, 2)
+
+
+def test_paper_rumnet():
+    """Tests the PaperRUMnet model."""
+    tf.config.run_functions_eagerly(True)
+    global dataset
+
+    model = PaperRUMnet(
+        num_products_features=2,
+        num_customer_features=3,
+        width_eps_x=3,
+        depth_eps_x=2,
+        heterogeneity_x=2,
+        width_eps_z=3,
+        depth_eps_z=2,
+        heterogeneity_z=2,
+        width_u=3,
+        depth_u=1,
+        tol=1e-5,
+        optimizer="adam",
+        lr=0.001,
+    )
+    model.instantiate()
+    nll_a = model.evaluate(dataset)
+    model.fit(dataset)
+    nll_b = model.evaluate(dataset)
+    assert nll_b < nll_a
+    assert model.batch_predict(
+        dataset.shared_features_by_choice[0],
+        dataset.items_features_by_choice[0],
+        np.ones((4, 3)),
+        dataset.choices,
+        None,
+    )[1].shape == (4, 3)
+
+
+def test_cpu_rumnet():
+    """Tests the CPURUMNet model."""
+    tf.config.run_functions_eagerly(True)
+    global dataset
+
+    model = CPURUMnet(
+        num_products_features=2,
+        num_customer_features=3,
+        width_eps_x=4,
+        depth_eps_x=3,
+        heterogeneity_x=2,
+        width_eps_z=4,
+        depth_eps_z=3,
+        heterogeneity_z=2,
+        width_u=4,
+        depth_u=3,
+        tol=1e-5,
+        optimizer="adam",
+        lr=0.001,
+    )
+    model.instantiate()
+    assert model.batch_predict(
+        dataset.shared_features_by_choice[0],
+        dataset.items_features_by_choice[0],
+        np.ones((4, 3)),
+        dataset.choices,
+        None,
+    )[1].shape == (4, 3)
+
+
+def test_gpu_rumnet():
+    """Tests the GPURUMNet model."""
+    tf.config.run_functions_eagerly(True)
+    global dataset
+
+    model = GPURUMnet(
+        num_products_features=2,
+        num_customer_features=3,
+        width_eps_x=4,
+        depth_eps_x=3,
+        heterogeneity_x=2,
+        width_eps_z=4,
+        depth_eps_z=3,
+        heterogeneity_z=2,
+        width_u=4,
+        depth_u=3,
+        tol=1e-5,
+        optimizer="adam",
+        lr=0.001,
+    )
+    print(dataset.items_features_by_choice[0].dtype)
+    model.instantiate()
+    assert model.batch_predict(
+        dataset.shared_features_by_choice[0],
+        dataset.items_features_by_choice[0],
+        np.ones((4, 3)),
+        dataset.choices,
+        None,
+    )[1].shape == (4, 3)
