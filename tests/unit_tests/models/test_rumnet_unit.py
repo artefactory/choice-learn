@@ -1,6 +1,7 @@
 """Basic tests for the RUMnet model."""
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from choice_learn.data import ChoiceDataset
@@ -121,6 +122,44 @@ def test_assortment_parallel_dense():
             assert w.shape == (8, 2)
 
 
+def test_paper_rumnet_errors():
+    """Tests errors raisded by PaperRUMnet model."""
+    with pytest.raises(ValueError):
+        model = PaperRUMnet(
+            num_products_features=0,
+            num_customer_features=3,
+            width_eps_x=3,
+            depth_eps_x=2,
+            heterogeneity_x=2,
+            width_eps_z=3,
+            depth_eps_z=2,
+            heterogeneity_z=2,
+            width_u=3,
+            depth_u=1,
+            tol=1e-5,
+            optimizer="adam",
+            lr=0.001,
+        )
+        model.instantiate()
+    with pytest.raises(ValueError):
+        model = PaperRUMnet(
+            num_products_features=2,
+            num_customer_features=0,
+            width_eps_x=3,
+            depth_eps_x=2,
+            heterogeneity_x=2,
+            width_eps_z=3,
+            depth_eps_z=2,
+            heterogeneity_z=2,
+            width_u=3,
+            depth_u=1,
+            tol=1e-5,
+            optimizer="adam",
+            lr=0.001,
+        )
+        model.instantiate()
+
+
 def test_paper_rumnet():
     """Tests the PaperRUMnet model."""
     tf.config.run_functions_eagerly(True)
@@ -184,6 +223,14 @@ def test_cpu_rumnet():
         None,
     )[1].shape == (4, 3)
 
+    assert model.batch_predict(
+        (dataset.shared_features_by_choice[0],),
+        (dataset.items_features_by_choice[0],),
+        np.ones((4, 3)),
+        dataset.choices,
+        None,
+    )[1].shape == (4, 3)
+
 
 def test_gpu_rumnet():
     """Tests the GPURUMNet model."""
@@ -205,11 +252,22 @@ def test_gpu_rumnet():
         optimizer="adam",
         lr=0.001,
     )
-    print(dataset.items_features_by_choice[0].dtype)
     model.instantiate()
     assert model.batch_predict(
         dataset.shared_features_by_choice[0],
         dataset.items_features_by_choice[0],
+        np.ones((4, 3)),
+        dataset.choices,
+        None,
+    )[1].shape == (4, 3)
+    nll_a = model.evaluate(dataset)
+    model.fit(dataset)
+    nll_b = model.evaluate(dataset)
+    assert nll_b < nll_a
+
+    assert model.batch_predict(
+        (dataset.shared_features_by_choice[0],),
+        (dataset.items_features_by_choice[0],),
         np.ones((4, 3)),
         dataset.choices,
         None,

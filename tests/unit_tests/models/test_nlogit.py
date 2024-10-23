@@ -116,10 +116,12 @@ def test_fit_adam_specific_specification():
         epochs=1,
         batch_size=-1,
         shared_gammas_over_nests=False,
+        regulariation="l1",
+        regularization_strength=0.0001,
     )
 
     model.instantiate(test_dataset)
     nll_b = model.evaluate(test_dataset)
-    model.fit(test_dataset, get_report=False)
+    model.fit(test_dataset, get_report=True)
     nll_a = model.evaluate(test_dataset)
     assert nll_a < nll_b
