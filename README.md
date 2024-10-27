@@ -36,7 +36,7 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
   - [Usage](#trident-usage)
   - [Documentation](#trident-documentation)
   - [Contributing](#trident-contributing)
-  - [Citation](#trident-citation)
+  - [Citation](#trident-references)
 
 ## :trident: Introduction - Discrete Choice modeling
 
@@ -49,27 +49,28 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 ### Data
 - Generic dataset handling with the ChoiceDataset class [[Example]](notebooks/introduction/2_data_handling.ipynb)
 - Ready-To-Use datasets:
-  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#citation)
-  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#citation)
-  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset [[5]](#citation)
+  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#trident-references)
+  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#trident-references)
+  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset [[5]](#trident-references)
   - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz), [HC](./choice_learn/datasets/data/HC.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html), [here](https://cran.r-project.org/web/packages/mlogit/vignettes/e2nlogit.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
-  - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#citation)
+  - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#trident-references)
   - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
-  - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#citation)
-  - The London Passenger Mode Choice dataset [[11]](#citation)
+  - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#trident-references)
+  - The London Passenger Mode Choice dataset [[11]](#trident-references)
 
 ### Model estimation
 - Ready-to-use models:
-  - Conditional MultiNomialLogit [[4]](#citation)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
-  - Nested Logit [[10]](#citation) [[Example]](notebooks/models/nested_logit.ipynb)
+  - Conditional MultiNomialLogit [[4]](#trident-references)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
+  - Nested Logit [[10]](#trident-references) [[Example]](notebooks/models/nested_logit.ipynb)
   - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
-  - RUMnet [[1]](#citation)[[Example]](notebooks/models/rumnet.ipynb)
-  - TasteNet [[7]](#citation)[[Example]](notebooks/models/tastenet.ipynb)
-  - ResLogit [[12]](#citation)[[Example]](notebooks/models/reslogit.ipynb)
+  - RUMnet [[1]](#trident-references)[[Example]](notebooks/models/rumnet.ipynb)
+  - TasteNet [[7]](#trident-references)[[Example]](notebooks/models/tastenet.ipynb)
+  - Learning-MNL [[13]](#trident-references)[[Example]](notebooks/models/learning_mnl.ipynb)
+  - ResLogit [[12]](#trident-references)[[Example]](notebooks/models/reslogit.ipynb)
 - Custom modeling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
-- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#citation)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#trident-references)
 
 ## :trident: Getting Started
 
@@ -281,7 +282,8 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [9] [Stated Preferences for Car Choice in Mixed MNL models for discrete response.](https://www.jstor.org/stable/2678603), McFadden, D. and Kenneth Train (2000)\
 [10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)\
 [11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)\
-[12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)
+[12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)\
+[13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)
 
 ### Code and Repositories
 
@@ -289,4 +291,5 @@ Choice-Learn has been developed through a collaboration between researchers at t
 
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
-[12] [ResLogit](https://github.com/LiTrans/reslogit)
+[12] [ResLogit](https://github.com/LiTrans/reslogit)\
+[13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)
