@@ -71,6 +71,7 @@ class LearningMNL(ConditionalLogit):
             x = nn_input
             for width in self.nn_layers_widths:
                 x = tf.keras.layers.Dense(width, activation=self.nn_activation)(x)
+                x = tf.keras.layers.Dropout(0.2, name="Regularizer")(x)
             nn_output = tf.keras.layers.Dense(choice_dataset.get_n_items())(x)
             self.nn_model = tf.keras.Model(inputs=nn_input, outputs=nn_output)
 
