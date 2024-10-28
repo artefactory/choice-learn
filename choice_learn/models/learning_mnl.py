@@ -24,7 +24,7 @@ class LearningMNL(ConditionalLogit):
         self,
         coefficients=None,
         nn_features=[],
-        nn_layers_widths=[],
+        nn_layers_widths=[10],
         nn_activation="relu",
         add_exit_choice=False,
         optimizer="Adam",
@@ -43,7 +43,7 @@ class LearningMNL(ConditionalLogit):
             (same specifications as torch-choice).
         nn_features: list of str
             List of features names that will be used in the neural network.
-            Features used as NN inputs must be shared_features !
+            Features used as NN inputs MUST BE shared_features !
         nn_layers_widths: list of int
             List of integers representing the width of each hidden layer in the neural network.
         add_exit_choice : bool, optional
