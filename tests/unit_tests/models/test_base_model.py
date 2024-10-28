@@ -56,3 +56,14 @@ def test_regularizer_instant_error():
         _ = ChoiceModel(regularization="L3", regularization_strength=0.1)
     with pytest.raises(ValueError):
         _ = ChoiceModel(regularization="L1", regularization_strength=0.0)
+
+
+def test_lr_value_change():
+    """Tests that the endpoint to change learning rate value works."""
+    model = ChoiceModel(optimizer="Adam", lr=0.1)
+    model.assign_lr(0.001)
+    assert model.optimizer.lr == 0.001
+
+    with pytest.raises(NotImplementedError):
+        model = ChoiceModel(optimizer="lbfgs", lr=0.1)
+        model.assign_lr(0.001)
