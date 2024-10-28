@@ -67,12 +67,32 @@ class LearningMNL(ConditionalLogit):
         """
         if not self.instantiated:
             # Instantiate NN
-            nn_input = tf.keras.Input(shape=(len(self.nn_features),))
-            x = nn_input
-            for width in self.nn_layers_widths:
-                x = tf.keras.layers.Dense(width, activation=self.nn_activation)(x)
-                x = tf.keras.layers.Dropout(0.2, name="Regularizer")(x)
-            nn_output = tf.keras.layers.Dense(choice_dataset.get_n_items())(x)
+            nn_input = tf.keras.Input(shape=(len(self.nn_features), 1, 1))
+            nn_output = tf.keras.layers.Conv2D(
+                filters=self.nn_layers_widths[0],
+                kernel_size=[len(self.nn_features), 1],
+                activation="relu",
+                padding="valid",
+                name="Dense_NN_per_frame",
+            )(nn_input)
+            nn_output = tf.keras.layers.Dropout(0.2, name="Regularizer")(nn_output)
+            nn_output = tf.reshape(nn_output, (-1, self.nn_layers_widths[0]))
+
+            for i in range(len(self.nn_layers_widths) - 1):
+                nn_output = tf.keras.layers.Dense(
+                    units=self.nn_layers_widths[i + 1], activation="relu", name="Dense{}".format(i)
+                )(nn_output)
+                nn_output = tf.keras.layers.ropout(0.2, name="Drop{}".format(i))(nn_output)
+            nn_output = tf.keras.layers.Dense(
+                units=choice_dataset.get_n_items(), name="Output_new_feature"
+            )(nn_output)
+
+            # nn_input = tf.keras.Input(shape=(len(self.nn_features), ))
+            # x = nn_input
+            # for width in self.nn_layers_widths:
+            #     x = tf.keras.layers.Dense(width, activation=self.nn_activation)(x)
+            #     x = tf.keras.layers.Dropout(0.2, name="Regularizer")(x)
+            # nn_output = tf.keras.layers.Dense(choice_dataset.get_n_items())(x)
             self.nn_model = tf.keras.Model(inputs=nn_input, outputs=nn_output)
 
             super().instantiate(choice_dataset)
@@ -134,7 +154,9 @@ class LearningMNL(ConditionalLogit):
                             data_driven_inputs.append(shared_features_by_choice[i][:, j])
         else:
             logging.warn("No shared features found in the dataset.")
-        data_driven_utilities = self.nn_model(tf.stack(data_driven_inputs, axis=1))
+        data_driven_utilities = self.nn_model(
+            tf.expand_dims(tf.expand_dims(tf.stack(data_driven_inputs, axis=1), axis=-1), axis=-1)
+        )
 
         return tf.reduce_sum(knowledge_driven_utilities, axis=0) + data_driven_utilities
 
