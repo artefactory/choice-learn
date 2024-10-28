@@ -157,8 +157,7 @@ class LearningMNL(ConditionalLogit):
         data_driven_utilities = self.nn_model(
             tf.expand_dims(tf.expand_dims(tf.stack(data_driven_inputs, axis=1), axis=-1), axis=-1)
         )
-
-        return tf.reduce_sum(knowledge_driven_utilities, axis=0) + data_driven_utilities
+        return knowledge_driven_utilities + data_driven_utilities
 
     def clone(self):
         """Return a clone of the model."""
