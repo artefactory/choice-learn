@@ -179,8 +179,8 @@ def test_paper_rumnet():
         depth_u=1,
         tol=1e-5,
         optimizer="adam",
-        lr=0.001,
-        epochs=2,
+        lr=0.0005,
+        epochs=5,
     )
     model.instantiate()
     nll_a = model.evaluate(dataset)
