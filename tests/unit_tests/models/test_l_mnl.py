@@ -35,6 +35,7 @@ def test_l_mnl():
 
     model = LearningMNL(
         nn_features=["sf1", "sf3"],
+        nn_layers_widths=[4, 4],
         optimizer="adam",
         lr=0.01,
         epochs=3,
@@ -62,3 +63,24 @@ def test_l_mnl():
         dataset.choices,
         None,
     )[1].shape == (4, 3)
+
+
+def test_clone():
+    """Tests the clone method."""
+    tf.config.run_functions_eagerly(True)
+    global dataset
+
+    model = LearningMNL(
+        nn_features=["sf1", "sf3"],
+        nn_layers_widths=[4, 4],
+        optimizer="adam",
+        lr=0.01,
+        epochs=3,
+    )
+    model.add_coefficients(feature_name="sf2", items_indexes=[0, 1, 2])
+    model.add_shared_coefficient(feature_name="if2", items_indexes=[0, 1, 2])
+    model.add_coefficients(feature_name="intercept", items_indexes=[1, 2])
+    model.instantiate(dataset)
+
+    model_clone = model.clone()
+    assert np.sum(model_clone.predict_probas(dataset) - model.predict_probas(dataset)) < 1e-5
