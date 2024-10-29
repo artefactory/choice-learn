@@ -529,7 +529,7 @@ class PaperRUMnet(ChoiceModel):
         label_smoothing : float, optional
             Value of smoothing to apply in CrossEntropy loss computation, by default 0.0
         """
-        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, **kwargs)
+        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
         # Number of features
         if num_customer_features <= 0:
             raise ValueError("Number of customer features must be at least 1.")
