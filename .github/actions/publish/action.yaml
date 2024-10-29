@@ -111,8 +111,8 @@ runs:
         then
           git checkout -b ${{ inputs.PUSH_BRANCH }}
           git add ${{ inputs.PACKAGE_DIRECTORY }}__init__.py ./pyproject.toml
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name 'VincentAuriau'
+          git config user.email '22350719+VincentAuriau@users.noreply.github.com'
           git commit -m "Change version to ${{ github.event.release.tag_name }}" --allow-empty
           git push origin HEAD:${{ inputs.PUSH_BRANCH }}
         fi

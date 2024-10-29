@@ -95,6 +95,7 @@ class ChoiceModel(object):
             self.optimizer = tf.keras.optimizers.Adamax(lr)
         elif optimizer.lower() == "lbfgs" or optimizer.lower() == "l-bfgs":
             print("Using L-BFGS optimizer, setting up .fit() function")
+            self.optimizer = "lbfgs"
             self.fit = self._fit_with_lbfgs
         else:
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
@@ -801,3 +802,18 @@ class ChoiceModel(object):
                 f"Algorithm converged before reaching max iterations: {results[0].numpy()}",
             )
         return {"train_loss": func.history}
+
+    def assign_lr(self, lr):
+        """Change value of learning rate.
+
+        Parameters
+        ----------
+        lr : float
+            new learning rate value to be assigned
+        """
+        if isinstance(self.optimizer, tf.keras.optimizers.Optimizer):
+            self.optimizer.lr = lr
+        else:
+            raise NotImplementedError(
+                f"Learning rate cannot be changed for optimizer: {self.optimizer}"
+            )
