@@ -181,7 +181,7 @@ def test_paper_rumnet():
         optimizer="adam",
         lr=0.0005,
         epochs=10,
-        batch_size=3,
+        batch_size=4,
     )
     model.instantiate()
     nll_a = model.evaluate(dataset)

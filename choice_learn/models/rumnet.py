@@ -671,9 +671,8 @@ class PaperRUMnet(ChoiceModel):
                         ]
                     )
                     utilities[-1].append(self.u_model(_u))
-
         # Reshape utilities: (batch_size, num_items, heterogeneity)
-        return tf.squeeze(tf.stack(utilities, axis=1), -1)
+        return tf.squeeze(tf.transpose(tf.stack(utilities, axis=1)), 0)
 
     @tf.function
     def train_step(
@@ -720,13 +719,11 @@ class PaperRUMnet(ChoiceModel):
                 available_items_by_choice=available_items_by_choice,
                 choices=choices,
             )
-
             # Iterate over heterogeneities
             eps_probabilities = tf.nn.softmax(all_u, axis=1)
 
             # Average probabilities over heterogeneities
             probabilities = tf.reduce_mean(eps_probabilities, axis=-1)
-
             # It is not in the paper, but let's normalize with availabilities
             probabilities = tf.multiply(probabilities, available_items_by_choice)
             probabilities = tf.divide(
