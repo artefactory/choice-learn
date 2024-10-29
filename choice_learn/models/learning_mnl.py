@@ -76,7 +76,8 @@ class LearningMNL(ConditionalLogit):
                 name="Dense_NN_per_frame",
             )(nn_input)
             nn_output = tf.keras.layers.Dropout(0.2, name="Regularizer")(nn_output)
-            nn_output = tf.reshape(nn_output, (-1, self.nn_layers_widths[0]))
+            # nn_output = tf.reshape(nn_output, (-1, self.nn_layers_widths[0]))
+            nn_output = tf.keras.layers.Reshape((self.nn_layers_widths[0],))(nn_output)
 
             for i in range(len(self.nn_layers_widths) - 1):
                 nn_output = tf.keras.layers.Dense(
