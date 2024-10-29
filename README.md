@@ -36,7 +36,8 @@ Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for mo
   - [Usage](#trident-usage)
   - [Documentation](#trident-documentation)
   - [Contributing](#trident-contributing)
-  - [Citation](#trident-references)
+  - [Citation](#trident-citation)
+  - [References](#trident-references)
 
 ## :trident: Introduction - Discrete Choice modeling
 
