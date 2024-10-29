@@ -58,6 +58,25 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
   - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#trident-references)
   - The London Passenger Mode Choice dataset [[11]](#trident-references)
 
+| Dataset    | Raw Data | Origin |
+| ---------- | -------- | ------ |
+| SwissMetro  | [csv](./choice_learn/datasets/data/swissmetro.csv.gz)    | Bierlaire et al. [[2]](#trident-references) |
+| February | $80     |
+| March    | $420    |
+
+| Model    | Example | Related Paper |
+| ---------- | -------- | ------ |
+| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) |
+| Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  |
+| Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) |
+
+| NN-based Model    | Example | Related Paper |
+| ---------- | -------- | ------ |
+| RUMnet| [notebook](notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) |
+| TasteNet | [notebook](notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) |
+| Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) |
+| ResLogit | [notebook](notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) |
+
 ### Model estimation
 - Ready-to-use models:
   - Conditional MultiNomialLogit [[4]](#trident-references)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
