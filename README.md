@@ -48,61 +48,45 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 ## :trident: What's in there ?
 
 ### Data
-- The **ChoiceDataset** class can handle choice datasets with efficient memory management. It can be used on your own dataset.[[Example]](notebooks/introduction/2_data_handling.ipynb)
-- Many Ready-To-Use datasets are integrated directly:
-  - [SwissMetro](./choice_learn/datasets/data/swissmetro.csv.gz) [[2]](#trident-references)
-  - [ModeCanada](./choice_learn/datasets/data/ModeCanada.csv.gz) [[3]](#trident-references)
-  - The [Train](./choice_learn/datasets/data/train_data.csv.gz) dataset [[5]](#trident-references)
-  - The [Heating](./choice_learn/datasets/data/heating_data.csv.gz), [HC](./choice_learn/datasets/data/HC.csv.gz) & [Electricity](./choice_learn/datasets/data/electricity.csv.gz) datasets from Kenneth Train described [here](https://rdrr.io/cran/mlogit/man/Electricity.html), [here](https://cran.r-project.org/web/packages/mlogit/vignettes/e2nlogit.html) and [here](https://rdrr.io/cran/mlogit/man/Heating.html)
-  - [Stated car preferences](./choice_learn/datasets/data/car.csv.gz) [[9]](#trident-references)
-  - The [TaFeng](./choice_learn/datasets/data/ta_feng.csv.zip) dataset from [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset)
-  - The ICDM-2013 [Expedia](./choice_learn/datasets/expedia.py) dataset from [Kaggle](https://www.kaggle.com/c/expedia-personalized-sort) [[6]](#trident-references)
-  - The London Passenger Mode Choice dataset [[11]](#trident-references)
+- The **ChoiceDataset** class can handle choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
+- Many academic datasets are integrated in the library and are ready to be used:
 
-| Dataset    | Raw Data | Origin | from choice_learn.datasets import | Doc |
+| Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
-| SwissMetro  | [csv](./choice_learn/datasets/data/swissmetro.csv.gz)    | Bierlaire et al. (2001) [[2]](#trident-references) | load_swissmetro | [#]() |
-| ModeCanada | [csv](./choice_learn/datasets/data/ModeCanada.csv.gz) | Forinash and Koppelman (1993) [[3]](#trident-references) |load_modecanada | [#]() |
-| Train    | [csv](./choice_learn/datasets/data/train_data.csv.gz) | Ben-Akiva et al. (1993) [[5]](#trident-references) |load_train | [#]() |
-| Heating | [csv](./choice_learn/datasets/data/heating_data.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | load_heating | [#]() |
-| HC | [csv](./choice_learn/datasets/data/HC.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | load_hc | [#]() |
-| Electricity | [csv](./choice_learn/datasets/data/electricity.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | load_electricity | [#]() |
-| Stated Car Preferences | [csv](./choice_learn/datasets/data/car.csv.gz) | McFadden and Train (2000) [[9]](#trident-references) | load_car_preferences | [#]() |
-| TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | load_tafeng | [#]() |
-| ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | load_expedia | [#]() |
-| London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | load_london_passenger | [#]() |
+| SwissMetro  | [csv](./choice_learn/datasets/data/swissmetro.csv.gz)    | Bierlaire et al. (2001) [[2]](#trident-references) | *load_swissmetro* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_swissmetro) |
+| ModeCanada | [csv](./choice_learn/datasets/data/ModeCanada.csv.gz) | Forinash and Koppelman (1993) [[3]](#trident-references) | *load_modecanada* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_modecanada) |
+| Train    | [csv](./choice_learn/datasets/data/train_data.csv.gz) | Ben-Akiva et al. (1993) [[5]](#trident-references) |*load_train* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_train) |
+| Heating | [csv](./choice_learn/datasets/data/heating_data.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | *load_heating* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_heating) |
+| HC | [csv](./choice_learn/datasets/data/HC.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | *load_hc* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_hc) |
+| Electricity | [csv](./choice_learn/datasets/data/electricity.csv.gz) | Kenneth Train's [website](https://eml.berkeley.edu/~train/) | *load_electricity* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_electricity) |
+| Stated Car Preferences | [csv](./choice_learn/datasets/data/car.csv.gz) | McFadden and Train (2000) [[9]](#trident-references) | *load_car_preferences* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_car_preferences) |
+| TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | *load_tafeng* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_tafeng/) |
+| ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | *load_expedia* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_expedia/) |
+| London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
 
 
 ### Model estimation
 - Different models are already implemented. You can import and parametrize the models for your own usage.
-- Otherwise, **custom modeling** is made easy by subclassing the ChoiceModel class[[Example]](notebooks/introduction/4_model_customization.ipynb)
+- Otherwise, **custom modeling** is made easy by subclassing the ChoiceModel class and specifying your own utility function. [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
-*List of implemented models:*
-| Model | Example | Related Paper | from choice_learn.models import | Doc |
+*List of implemented & ready-to-use models:*
+| Model | Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- | -------- | ------ | ------ | :---: |
-| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) | ConditionalLogit | [#]() |
-| Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | NestedLogit | [#]() |
-| Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | | LatentClassConditionalLogit | [#]() |
+| MNL | [notebook](notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
+| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) | *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
+| Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
+| Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](LatentClassConditionalLogit) |
 
-| NN-based Model    | Example | Related Paper | from choice_learn.models import | Doc |
+| NN-based Model    | Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- | -------- | ------ | ------ | :---: |
-| RUMnet| [notebook](notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) | RUMnet | [#]() |
-| TasteNet | [notebook](notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) | TasteNet | [#]() |
-| Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | LearningMNL | [#]() |
-| ResLogit | [notebook](notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | ResLogit  | [#]() |
+| RUMnet| [notebook](notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
+| TasteNet | [notebook](notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
+| Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
+| ResLogit | [notebook](notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit*  | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
 
-### Model estimation
-- Ready-to-use models:
-  - Conditional MultiNomialLogit [[4]](#trident-references)[[Example]](notebooks/introduction/3_model_clogit.ipynb)
-  - Nested Logit [[10]](#trident-references) [[Example]](notebooks/models/nested_logit.ipynb)
-  - Latent Class MultiNomialLogit [[Example]](notebooks/models/latent_class_model.ipynb)
-  - RUMnet [[1]](#trident-references)[[Example]](notebooks/models/rumnet.ipynb)
-  - TasteNet [[7]](#trident-references)[[Example]](notebooks/models/tastenet.ipynb)
-  - Learning-MNL [[13]](#trident-references)[[Example]](notebooks/models/learning_mnl.ipynb)
-  - ResLogit [[12]](#trident-references)[[Example]](notebooks/models/reslogit.ipynb)
-- Custom modeling is made easy by subclassing the ChoiceModel class [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 ### Auxiliary tools
+Algorithms leveraging choice models are integrated within the library:
 - Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#trident-references)
 
 ## :trident: Getting Started
