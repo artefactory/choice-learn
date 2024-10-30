@@ -93,9 +93,12 @@ nav:
       - SimpleMNL Model: references/models/references_simple_mnl.md
       - Conditional Logit: references/models/references_clogit.md
       - Nested Logit: references/models/references_nested_logit.md
-      - RUMnet: references/models/references_rumnet.md
       - Latent Class BaseModel: reference/models/references_latent_class_base_model.md
       - Latent Class MNL: references/models/references_latent_class_mnl.md
+      - RUMnet: references/models/references_rumnet.md
+      - TasetNet: references/models/references_tasetnet.md
+      - Learning MNL: references/models/references_learning_mnl.md
+      - ResLogit: references/models/references_reslogit.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
   - explanations.md
