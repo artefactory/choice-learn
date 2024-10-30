@@ -49,7 +49,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 ### Data
 - The **ChoiceDataset** class can handle choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
-- Many academic datasets are integrated in the library and are ready to be used:
+- Many academic datasets are integrated in the library and ready to be used:
 
 | Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
@@ -73,7 +73,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Model | Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- | -------- | ------ | ------ | :---: |
 | MNL | [notebook](notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
-| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) | *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
+| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
 | Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
 | Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](LatentClassConditionalLogit) |
 
