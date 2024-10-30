@@ -96,7 +96,7 @@ nav:
       - Latent Class BaseModel: reference/models/references_latent_class_base_model.md
       - Latent Class MNL: references/models/references_latent_class_mnl.md
       - RUMnet: references/models/references_rumnet.md
-      - TasetNet: references/models/references_tasetnet.md
+      - TasteNet: references/models/references_tasetnet.md
       - Learning MNL: references/models/references_learning_mnl.md
       - ResLogit: references/models/references_reslogit.md
     - Toolbox:
