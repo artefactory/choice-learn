@@ -70,32 +70,33 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 - Otherwise, **custom modeling** is made easy by subclassing the ChoiceModel class and specifying your own utility function. [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
 *List of implemented & ready-to-use models:*
-| Model | Example | Related Paper | *from choice_learn.models import* | Doc |
-| ---------- | -------- | ------ | ------ | :---: |
-| MNL | [notebook](notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
-| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | Train et al. [[4]](#trident-references) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
-| Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
-| Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](LatentClassConditionalLogit) |
+| Model | Example | Colab | Related Paper | *from choice_learn.models import* | Doc |
+| ---------- | -------- | -------- | ------ | ------ | :---: |
+| MNL | [notebook](notebooks/models/simple_mnl.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
+| Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb) | Train et al. [[4]](#trident-references) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
+| Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
+| Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](LatentClassConditionalLogit) |
 
-| NN-based Model    | Example | Related Paper | *from choice_learn.models import* | Doc |
-| ---------- | -------- | ------ | ------ | :---: |
-| RUMnet| [notebook](notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
-| TasteNet | [notebook](notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
-| Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
-| ResLogit | [notebook](notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit*  | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
+| NN-based Model    | Example | Colab | Related Paper | *from choice_learn.models import* | Doc |
+| ---------- | -------- | ------ | ---- | ------ | :---: |
+| RUMnet| [notebook](notebooks/models/rumnet.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/rumnet.ipynb) |Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
+| TasteNet | [notebook](notebooks/models/tastenet.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/tastenet.ipynb) |Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
+| Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) |Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
+| ResLogit | [notebook](notebooks/models/reslogit.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) |Wong and Farooq [[12]](#trident-references) | *ResLogit*  | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
 
 
 ### Auxiliary tools
 Algorithms leveraging choice models are integrated within the library:
-- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#trident-references)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#trident-references) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb)
 
 ## :trident: Getting Started
 
 You can find the following tutorials to help you getting started with the package:
-- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)
-- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)
-- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)
-- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)
+- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab
+)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
+- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
+- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
 - All models and algorithms have a companion example in the notebook [directory](./notebooks/)
 
 ## :trident: Installation
