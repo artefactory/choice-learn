@@ -16,8 +16,8 @@ jobs:
       - name: Install Python, choice-learn & run tests
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' 
-          
+          python-version: '3.10'
+
       - name: Install from TestPyPI & run tests with installed package
         id: install
         run: |
@@ -44,4 +44,3 @@ jobs:
           PUBLISH_REGISTRY_USERNAME: ${{ secrets.PYPI_USERNAME }}
           UPDATE_CODE_VERSION: false
           BRANCH: ${{ steps.install.outputs.BRANCH }}
-

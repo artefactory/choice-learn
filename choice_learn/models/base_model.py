@@ -14,7 +14,7 @@ import tqdm
 import choice_learn.tf_ops as tf_ops
 
 
-class ChoiceModel(object):
+class ChoiceModel:
     """Base class for choice models."""
 
     def __init__(
@@ -564,7 +564,7 @@ class ChoiceModel(object):
             weight_path = f"weight_{i}.npy"
 
         # To improve for non string attributes
-        params = json.load(open(Path(path) / "params.json", "r"))
+        params = json.load(open(Path(path) / "params.json"))
         for k, v in params.items():
             setattr(obj, k, v)
 
