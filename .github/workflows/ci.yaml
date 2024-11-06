@@ -27,7 +27,7 @@ jobs:
 
       - name: Build coverage file
         run: |
-          pytest -n auto --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=choice_learn tests/ | tee pytest-coverage.txt
+          pytest -n auto --junitxml=pytest.xml --cov-report=term-missing --cov=choice_learn tests/ | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
         uses: VincentAuriau/pytest-coverage-comment@main
