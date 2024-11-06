@@ -81,9 +81,9 @@ class LearningMNL(ConditionalLogit):
 
             for i in range(len(self.nn_layers_widths) - 1):
                 nn_output = tf.keras.layers.Dense(
-                    units=self.nn_layers_widths[i + 1], activation="relu", name="Dense{}".format(i)
+                    units=self.nn_layers_widths[i + 1], activation="relu", name=f"Dense{i}"
                 )(nn_output)
-                nn_output = tf.keras.layers.Dropout(0.2, name="Drop{}".format(i))(nn_output)
+                nn_output = tf.keras.layers.Dropout(0.2, name=f"Drop{i}")(nn_output)
             nn_output = tf.keras.layers.Dense(
                 units=choice_dataset.get_n_items(), name="Output_new_feature"
             )(nn_output)

@@ -2,7 +2,7 @@ name: Deploy MkDocs to GitHub Pages
 
 on:
   push:
-    branches: 
+    branches:
       - main
 
 jobs:
@@ -24,5 +24,3 @@ jobs:
         run: |
           mkdocs build
           mkdocs gh-deploy --force
-        
-    

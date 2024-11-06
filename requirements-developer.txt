@@ -4,6 +4,7 @@ ruff==0.1.2
 pre-commit==3.3.3
 pytest==7.3.2
 pytest-cov
+pytest-xdist
 python-markdown-math
 mkdocs==1.5.3
 mkdocs-material==9.5.3

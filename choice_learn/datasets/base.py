@@ -60,7 +60,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     np.ndarray
         data contained in the csv file
     """
-    with open(os.path.join(data_module, data_file_name), "r", encoding=encoding) as csv_file:
+    with open(os.path.join(data_module, data_file_name), encoding=encoding) as csv_file:
         data_file = csv.reader(csv_file)
         names = next(data_file)
         data = []

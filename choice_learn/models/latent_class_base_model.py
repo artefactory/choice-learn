@@ -9,7 +9,7 @@ import tqdm
 import choice_learn.tf_ops as tf_ops
 
 
-class BaseLatentClassModel(object):
+class BaseLatentClassModel:
     """Base Class to work with Mixtures of models."""
 
     def __init__(

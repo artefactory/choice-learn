@@ -9,7 +9,7 @@ import tensorflow as tf
 from .base_model import ChoiceModel
 
 
-class MNLCoefficients(object):
+class MNLCoefficients:
     """Base class to specify the structure of a cLogit."""
 
     def __init__(self):

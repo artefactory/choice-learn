@@ -71,7 +71,7 @@ class Storage(ABC):
         return "FeatureStorage with name: ."
 
 
-class FeaturesStorage(object):
+class FeaturesStorage:
     """Base FeaturesStorage class that redirects toward the right one."""
 
     def __new__(
