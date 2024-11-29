@@ -22,7 +22,7 @@ class BaseLatentClassModel:
         batch_size=128,
         optimizer=None,
         add_exit_choice=False,
-        tolerance=1e-6,
+        lbfgs_tolerance=1e-6,
         lr=0.001,
     ):
         """Instantiate of the model mixture.
@@ -44,7 +44,7 @@ class BaseLatentClassModel:
             Name of the tf.keras.optimizers to be used if one is used, by default None
         add_exit_choice : bool, optional
             Whether or not to add an exit choice, by default False
-        tolerance: float, optional
+        lbfgs_tolerance: float, optional
             Tolerance for the L-BFGS optimizer if applied, by default 1e-6
         lr: float, optional
             Learning rate for the optimizer if applied, by default 0.001
@@ -65,7 +65,7 @@ class BaseLatentClassModel:
 
         self.epochs = epochs
         self.add_exit_choice = add_exit_choice
-        self.tolerance = tolerance
+        self.lbfgs_tolerance = lbfgs_tolerance
         self.optimizer = optimizer
         self.lr = lr
         self.batch_size = batch_size
@@ -472,7 +472,7 @@ class BaseLatentClassModel:
             initial_position=init_params,
             max_iterations=epochs,
             tolerance=-1,
-            f_absolute_tolerance=self.tolerance,
+            f_absolute_tolerance=self.lbfgs_tolerance,
             f_relative_tolerance=-1,
             x_tolerance=-1,
         )
