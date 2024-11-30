@@ -82,4 +82,5 @@ def test_manual_lc_gd():
     nll_before = manual_lc.evaluate(elec_dataset)
     manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
     _ = manual_lc.fit(elec_dataset)
+    manual_lc.compute_report(elec_dataset)
     assert manual_lc.evaluate(elec_dataset) < nll_before

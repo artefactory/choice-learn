@@ -25,7 +25,7 @@ def test_simple_mnl_lbfgs_fit_with_adam():
     global dataset
 
     model = SimpleMNL(epochs=20, optimizer="adam", batch_size=256)
-    model.fit(dataset, get_report=True)
+    model.fit(dataset)
     model.evaluate(dataset)
     assert model.evaluate(dataset) < 1.0
 
@@ -39,7 +39,8 @@ def test_that_endpoints_run():
     global dataset
 
     model = SimpleMNL(epochs=20)
-    model.fit(dataset, get_report=True)
+    model.fit(dataset)
+    model.compute_report(dataset)
     model.evaluate(dataset)
     model.predict_probas(dataset)
     assert True
