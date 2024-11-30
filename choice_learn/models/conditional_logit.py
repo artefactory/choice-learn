@@ -1,6 +1,7 @@
 """Conditional MNL model."""
 
 import logging
+import math
 
 import numpy as np
 import pandas as pd
@@ -645,10 +646,12 @@ class ConditionalLogit(ChoiceModel):
         pandas.DataFrame
             A DF with estimation, Std Err, z_value and p_value for each coefficient.
         """
-        import tensorflow_probability as tfp
+
+        def phi(x):
+            """Cumulative distribution function for the standard normal distribution."""
+            return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
         weights_std = self.get_weights_std(choice_dataset)
-        dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
         names = []
         z_values = []
@@ -663,7 +666,7 @@ class ConditionalLogit(ChoiceModel):
                     names.append(f"{weight.name[:-2]}")
                 estimations.append(weight.numpy()[0][j])
                 z_values.append(weight.numpy()[0][j] / weights_std[i].numpy())
-                p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
+                p_z.append(2 * (1 - phi(tf.math.abs(z_values[-1]).numpy())))
                 i += 1
 
         return pd.DataFrame(

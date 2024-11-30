@@ -55,7 +55,8 @@ def test_mode_canada_fit():
     canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
 
     model = ConditionalLogit(coefficients=coefficients)
-    model.fit(canada_dataset, get_report=True)
+    model.fit(canada_dataset)
+    model.compute_report(canada_dataset)
 
     total_nll = model.evaluate(canada_dataset) * len(canada_dataset)
     assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
