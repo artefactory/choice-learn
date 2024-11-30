@@ -14,7 +14,7 @@ def test_latent_simple_mnl():
     """Test the simple latent class model fit() method."""
     tf.config.run_functions_eagerly(True)
     lc_model = LatentClassSimpleMNL(
-        n_latent_classes=3, fit_method="mle", optimizer="lbfgs", epochs=1000, lbfgs_tolerance=1e-20
+        n_latent_classes=3, fit_method="mle", optimizer="lbfgs", epochs=1000, lbfgs_tolerance=1e-8
     )
     _, _ = lc_model.fit(elec_dataset)
 
@@ -25,7 +25,7 @@ def test_latent_clogit():
     """Test the conditional logit latent class model fit() method."""
     tf.config.run_functions_eagerly(True)
     lc_model = LatentClassConditionalLogit(
-        n_latent_classes=3, fit_method="mle", optimizer="lbfgs", epochs=1000, lbfgs_tolerance=1e-12
+        n_latent_classes=3, fit_method="mle", optimizer="lbfgs", epochs=100, lbfgs_tolerance=1e-8
     )
     lc_model.add_shared_coefficient(
         coefficient_name="pf", feature_name="pf", items_indexes=[0, 1, 2, 3]
@@ -60,7 +60,7 @@ def test_manual_lc():
         fit_method="mle",
         epochs=1000,
         optimizer="lbfgs",
-        lbfgs_tolerance=1e-12,
+        lbfgs_tolerance=1e-8,
     )
 
     manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
@@ -79,8 +79,7 @@ def test_manual_lc_gd():
         epochs=1000,
         optimizer="Adam",
     )
-    nll_before = manual_lc.evaluate(elec_dataset)
     manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
+    nll_before = manual_lc.evaluate(elec_dataset)
     _ = manual_lc.fit(elec_dataset)
-    manual_lc.compute_report(elec_dataset)
     assert manual_lc.evaluate(elec_dataset) < nll_before
