@@ -66,3 +66,20 @@ def test_manual_lc():
     manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
     _ = manual_lc.fit(elec_dataset)
     assert manual_lc.evaluate(elec_dataset) < 1.15
+
+
+def test_manual_lc_gd():
+    """Test manual specification of Latent Class Simple MNL model with gradient descent."""
+    tf.config.run_functions_eagerly(True)
+    manual_lc = BaseLatentClassModel(
+        model_class=SimpleMNL,
+        model_parameters={"add_exit_choice": False},
+        n_latent_classes=3,
+        fit_method="mle",
+        epochs=1000,
+        optimizer="Adam",
+    )
+    nll_before = manual_lc.evaluate(elec_dataset)
+    manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
+    _ = manual_lc.fit(elec_dataset)
+    assert manual_lc.evaluate(elec_dataset) < nll_before

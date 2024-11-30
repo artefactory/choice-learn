@@ -10,6 +10,7 @@ dataset = load_swissmetro()
 
 def test_simple_mnl_lbfgs_fit_with_lbfgs():
     """Tests that SimpleMNL can fit with LBFGS."""
+    tf.config.run_functions_eagerly(True)
     global dataset
 
     model = SimpleMNL(epochs=20)
@@ -34,10 +35,11 @@ def test_that_endpoints_run():
 
     No verification of results.
     """
+    tf.config.run_functions_eagerly(True)
     global dataset
 
     model = SimpleMNL(epochs=20)
-    model.fit(dataset)
+    model.fit(dataset, get_report=True)
     model.evaluate(dataset)
     model.predict_probas(dataset)
     assert True
