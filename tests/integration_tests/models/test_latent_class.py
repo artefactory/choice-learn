@@ -67,6 +67,7 @@ def test_manual_lc():
     _ = manual_lc.fit(elec_dataset)
     assert manual_lc.evaluate(elec_dataset) < 1.15
 
+
 def test_manual_lc_gd():
     """Test manual specification of Latent Class Simple MNL model with gradient descent."""
     tf.config.run_functions_eagerly(True)
