@@ -2,12 +2,16 @@
 
 import tensorflow as tf
 
-from choice_learn.datasets import load_electricity
-from choice_learn.models.latent_class_base_model import BaseLatentClassModel
-from choice_learn.models.latent_class_mnl import LatentClassConditionalLogit, LatentClassSimpleMNL
-from choice_learn.models.simple_mnl import SimpleMNL
-
 tf.config.run_functions_eagerly(True)
+
+from choice_learn.datasets import load_electricity  # noqa: E402
+from choice_learn.models.latent_class_base_model import BaseLatentClassModel  # noqa: E402
+from choice_learn.models.latent_class_mnl import (  # noqa: E402
+    LatentClassConditionalLogit,
+    LatentClassSimpleMNL,
+)
+from choice_learn.models.simple_mnl import SimpleMNL  # noqa: E402
+
 elec_dataset = load_electricity(as_frame=False)
 
 
