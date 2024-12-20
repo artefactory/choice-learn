@@ -107,6 +107,8 @@ class BaseLatentClassModel:
         for model in self.models:
             model.instantiate(**kwargs)
 
+        self.instantiated = True
+
     # @tf.function
     def batch_predict(
         self,
