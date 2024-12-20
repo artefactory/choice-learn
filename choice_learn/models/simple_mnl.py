@@ -326,6 +326,8 @@ class SimpleMNL(ChoiceModel):
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.jacobian(jacobian, w)
+        tf.print(tf.squeeze(hessian))
+        tf.print(model.trainable_weights)
         hessian = tf.linalg.inv(tf.squeeze(hessian))
         return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 
