@@ -951,8 +951,9 @@ class BaseLatentClassModel:
             compute = getattr(model, "compute_report", None)
             if callable(compute):
                 report = model.compute_report(choice_dataset)
-                report["latent_class"] = i
+                report["Latent Class"] = i
                 reports.append(report)
             else:
                 raise ValueError(f"{i}-th model {model} does not have a compute_report method.")
-        return pd.concat(reports, axis=0)
+        return pd.concat(reports, axis=0, ignore_index=True)[["Latent Class", "Coefficient Name", "Coefficient Estimation",
+        "Std. Err", "z_value", "P(.>z)"]]
