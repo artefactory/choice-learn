@@ -955,5 +955,13 @@ class BaseLatentClassModel:
                 reports.append(report)
             else:
                 raise ValueError(f"{i}-th model {model} does not have a compute_report method.")
-        return pd.concat(reports, axis=0, ignore_index=True)[["Latent Class", "Coefficient Name", "Coefficient Estimation",
-        "Std. Err", "z_value", "P(.>z)"]]
+        return pd.concat(reports, axis=0, ignore_index=True)[
+            [
+                "Latent Class",
+                "Coefficient Name",
+                "Coefficient Estimation",
+                "Std. Err",
+                "z_value",
+                "P(.>z)",
+            ]
+        ]
