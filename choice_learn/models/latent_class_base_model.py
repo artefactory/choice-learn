@@ -3,6 +3,7 @@
 import time
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import tqdm
 
@@ -930,3 +931,37 @@ class BaseLatentClassModel:
             Latent classes weights/probabilities
         """
         return tf.nn.softmax(tf.concat([[tf.constant(0.0)], self.latent_logits], axis=0))
+
+    def compute_report(self, choice_dataset):
+        """Compute a report of the estimated weights.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DF with estimation, Std Err, z_value and p_value for each coefficient.
+        """
+        reports = []
+        for i, model in enumerate(self.models):
+            compute = getattr(model, "compute_report", None)
+            if callable(compute):
+                report = model.compute_report(choice_dataset)
+                report["Latent Class"] = i
+                reports.append(report)
+            else:
+                raise ValueError(f"{i}-th model {model} does not have a compute_report method.")
+        return pd.concat(reports, axis=0, ignore_index=True)[
+            [
+                "Latent Class",
+                "Coefficient Name",
+                "Coefficient Estimation",
+                "Std. Err",
+                "z_value",
+                "P(.>z)",
+            ]
+        ]
