@@ -1,8 +1,10 @@
 name: Build
+
 on:
   push:
     branches:
-      - main
+      - main  # Run on pushes to main
+  pull_request:   # Run on pull requests
 
 jobs:
   CI:
@@ -12,9 +14,9 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -22,18 +24,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-developer.txt
-      - name: Run Pre commit hook (formatting, linting & tests)
-        run: pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure
 
       - name: Build coverage file
         run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing --cov=choice_learn tests/ | tee pytest-coverage.txt
+          pytest -n auto --junitxml=pytest.xml --cov-report=term-missing --cov=choice_learn tests/ | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
         uses: VincentAuriau/pytest-coverage-comment@main
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
-          issue-number: '101'
+          issue-number: ${{ github.event.pull_request.number || '101' }}
           unique-id-for-comment: ${{ matrix.python-version }}
           title: 'Coverage Report for Python ${{ matrix.python-version }}'

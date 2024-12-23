@@ -1,6 +1,6 @@
 ## Description of the goal of the PR
 
-Description: 
+Description:
 
 ## Changes this PR introduces (fill it before implementation)
 

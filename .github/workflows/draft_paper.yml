@@ -2,7 +2,7 @@ name: Paper draft to PDF
 
 on:
   push:
-    branches: 
+    branches:
       - paper
 
 jobs:

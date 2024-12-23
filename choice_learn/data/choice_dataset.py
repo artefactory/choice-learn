@@ -9,7 +9,7 @@ from choice_learn.data.indexer import ChoiceDatasetIndexer
 from choice_learn.data.storage import Storage
 
 
-class ChoiceDataset(object):
+class ChoiceDataset:
     """ChoiceDataset is the main class to handle assortment data minimizing RAM usage.
 
     The choices are given as a ragged list of choices

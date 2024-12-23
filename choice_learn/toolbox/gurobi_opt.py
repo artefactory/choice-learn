@@ -10,7 +10,7 @@ TODO 2: ADD easy integration of additionnal constraints
 """
 
 
-class GurobiMNLAssortmentOptimizer(object):
+class GurobiMNLAssortmentOptimizer:
     """Base class for assortment optimization."""
 
     def __init__(self, utilities, itemwise_values, assortment_size, outside_option_given=False):
@@ -140,7 +140,7 @@ class GurobiMNLAssortmentOptimizer(object):
         return assortment, recomputed_obj
 
 
-class GurobiLatentClassAssortmentOptimizer(object):
+class GurobiLatentClassAssortmentOptimizer:
     """Assortment optimizer for latent class models.
 
     Implementation of the paper:
@@ -388,7 +388,7 @@ class GurobiLatentClassAssortmentOptimizer(object):
         return assortment, recomputed_obj
 
 
-class GurobiLatentClassPricingOptimizer(object):
+class GurobiLatentClassPricingOptimizer:
     """Assortment optimizer for latent class models with additional pricing optimization.
 
     Implementation of the paper:

@@ -69,9 +69,9 @@ runs:
       run: |
         echo ${{ inputs.BRANCH }}
       shell: bash
-      
+
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ inputs.BRANCH }}
         token: ${{ inputs.ACCESS_TOKEN }}
@@ -87,7 +87,7 @@ runs:
       shell: bash
 
     - name: Set up Python ${{ inputs.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.PYTHON_VERSION }}
         cache: poetry
@@ -111,8 +111,8 @@ runs:
         then
           git checkout -b ${{ inputs.PUSH_BRANCH }}
           git add ${{ inputs.PACKAGE_DIRECTORY }}__init__.py ./pyproject.toml
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name 'VincentAuriau'
+          git config user.email '22350719+VincentAuriau@users.noreply.github.com'
           git commit -m "Change version to ${{ github.event.release.tag_name }}" --allow-empty
           git push origin HEAD:${{ inputs.PUSH_BRANCH }}
         fi
@@ -134,6 +134,6 @@ runs:
 
     - name: Build and Publish
       run: |
-        poetry config repositories.publish ${{ inputs.PUBLISH_REGISTRY }}    
+        poetry config repositories.publish ${{ inputs.PUBLISH_REGISTRY }}
         poetry publish -p ${{ inputs.PUBLISH_REGISTRY_PASSWORD }} -u ${{ inputs.PUBLISH_REGISTRY_USERNAME }} -r publish --build
       shell: bash

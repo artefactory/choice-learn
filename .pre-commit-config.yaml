@@ -1,6 +1,17 @@
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: true
+    autoupdate_branch: ''
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: false
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -8,36 +19,32 @@ repos:
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-  - repo: local
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.0
     hooks:
+      - id: pyupgrade
+        args: [--py39-plus]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+    rev: v0.8.3
+    hooks:
+      # Run the linter.
+      - id: ruff
+        types_or: [ python, pyi ]
+        args: [ --fix  , --fixable , I001]
+        # Run the formatter.
       - id: ruff-format
-        name: Formatting (ruff)
-        entry: ruff format
-        types: [python]
-        language: system
-      - id: ruff-fix
-        name: Linting & sorting (ruff)
-        entry: ruff --fix --fixable I001  # allow only to fix unsorted imports
-        types: [python]
-        language: system
+        types_or: [ python, pyi ]
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
       - id: nbstripout
-        name: Strip Jupyter notebook output (nbstripout)
-        entry: nbstripout
-        types: [file]
-        files: (.ipynb)$
-        language: system
-      - id: python-bandit-vulnerability-check
-        name: Security check (bandit)
-        entry: bandit
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
         types: [python]
         args: ["-x", "tests", --recursive, choice_learn]
-        language: system
-      - id: pytest-check
-        name: Tests (pytest)
-        stages: [push]
-        entry: pytest tests/
-        types: [python]
-        language: system
-        pass_filenames: false
-        always_run: true
-exclude: ^(.svn|CVS|.bzr|.hg|.git|__pycache__|.tox|.ipynb_checkpoints|assets|tests/assets/|venv/|.venv/)
+
+    exclude: ^(.svn|CVS|.bzr|.hg|.git|__pycache__|.tox|.ipynb_checkpoints|assets|tests/assets/|venv/|.venv/)

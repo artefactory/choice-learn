@@ -3,13 +3,14 @@
 import time
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import tqdm
 
 import choice_learn.tf_ops as tf_ops
 
 
-class BaseLatentClassModel(object):
+class BaseLatentClassModel:
     """Base Class to work with Mixtures of models."""
 
     def __init__(
@@ -22,7 +23,7 @@ class BaseLatentClassModel(object):
         batch_size=128,
         optimizer=None,
         add_exit_choice=False,
-        tolerance=1e-6,
+        lbfgs_tolerance=1e-6,
         lr=0.001,
     ):
         """Instantiate of the model mixture.
@@ -44,7 +45,7 @@ class BaseLatentClassModel(object):
             Name of the tf.keras.optimizers to be used if one is used, by default None
         add_exit_choice : bool, optional
             Whether or not to add an exit choice, by default False
-        tolerance: float, optional
+        lbfgs_tolerance: float, optional
             Tolerance for the L-BFGS optimizer if applied, by default 1e-6
         lr: float, optional
             Learning rate for the optimizer if applied, by default 0.001
@@ -65,7 +66,7 @@ class BaseLatentClassModel(object):
 
         self.epochs = epochs
         self.add_exit_choice = add_exit_choice
-        self.tolerance = tolerance
+        self.lbfgs_tolerance = lbfgs_tolerance
         self.optimizer = optimizer
         self.lr = lr
         self.batch_size = batch_size
@@ -106,6 +107,8 @@ class BaseLatentClassModel(object):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
         for model in self.models:
             model.instantiate(**kwargs)
+
+        self.instantiated = True
 
     # @tf.function
     def batch_predict(
@@ -472,7 +475,7 @@ class BaseLatentClassModel(object):
             initial_position=init_params,
             max_iterations=epochs,
             tolerance=-1,
-            f_absolute_tolerance=self.tolerance,
+            f_absolute_tolerance=self.lbfgs_tolerance,
             f_relative_tolerance=-1,
             x_tolerance=-1,
         )
@@ -928,3 +931,37 @@ class BaseLatentClassModel(object):
             Latent classes weights/probabilities
         """
         return tf.nn.softmax(tf.concat([[tf.constant(0.0)], self.latent_logits], axis=0))
+
+    def compute_report(self, choice_dataset):
+        """Compute a report of the estimated weights.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DF with estimation, Std Err, z_value and p_value for each coefficient.
+        """
+        reports = []
+        for i, model in enumerate(self.models):
+            compute = getattr(model, "compute_report", None)
+            if callable(compute):
+                report = model.compute_report(choice_dataset)
+                report["Latent Class"] = i
+                reports.append(report)
+            else:
+                raise ValueError(f"{i}-th model {model} does not have a compute_report method.")
+        return pd.concat(reports, axis=0, ignore_index=True)[
+            [
+                "Latent Class",
+                "Coefficient Name",
+                "Coefficient Estimation",
+                "Std. Err",
+                "z_value",
+                "P(.>z)",
+            ]
+        ]
