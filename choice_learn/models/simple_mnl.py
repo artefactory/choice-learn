@@ -4,6 +4,7 @@ It is a multi output logistic regression.
 """
 
 import logging
+import math
 
 import pandas as pd
 import tensorflow as tf
@@ -254,10 +255,12 @@ class SimpleMNL(ChoiceModel):
         pandas.DataFrame
             A DF with estimation, Std Err, z_value and p_value for each coefficient.
         """
-        import tensorflow_probability as tfp
+
+        def phi(x):
+            """Cumulative distribution function for the standard normal distribution."""
+            return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
         weights_std = self.get_weights_std(choice_dataset)
-        dist = tfp.distributions.Normal(loc=0.0, scale=1.0)
 
         names = []
         z_values = []
@@ -272,7 +275,7 @@ class SimpleMNL(ChoiceModel):
                     names.append(f"{weight.name[:-2]}")
                 estimations.append(weight.numpy()[j])
                 z_values.append(weight.numpy()[j] / weights_std[i].numpy())
-                p_z.append(2 * (1 - dist.cdf(tf.math.abs(z_values[-1])).numpy()))
+                p_z.append(2 * (1 - phi(tf.math.abs(z_values[-1]).numpy())))
                 i += 1
 
         return pd.DataFrame(
@@ -323,6 +326,8 @@ class SimpleMNL(ChoiceModel):
             jacobian = tape_2.jacobian(loss, w)
         # Compute the Hessian from the Jacobian
         hessian = tape_1.jacobian(jacobian, w)
+        tf.print(tf.squeeze(hessian))
+        tf.print(model.trainable_weights)
         hessian = tf.linalg.inv(tf.squeeze(hessian))
         return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
 

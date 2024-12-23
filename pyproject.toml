@@ -54,7 +54,7 @@ testpaths = ["tests/"]
 
 [tool.poetry]
 name = "choice-learn"
-version = "1.0.0"
+version = "1.1.1"
 description = "Large-scale choice modeling through the lens of machine learning."
 authors = [
   "artefactory <vincent.auriau@artefact.com>",
@@ -92,6 +92,7 @@ ipykernel = ">=6.9"
 nbstripout = ">=0.7"
 ruff = ">=0.1.2"
 pytest-cov = ">=4.1"
+pytest-xdist = ">=3.6"
 codespell = ">=2.2"
 python-markdown-math = ">=0.8"
 

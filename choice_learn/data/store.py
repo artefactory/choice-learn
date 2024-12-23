@@ -5,7 +5,7 @@ import numpy as np
 from choice_learn.data.indexer import OneHotStoreIndexer, StoreIndexer
 
 
-class Store(object):
+class Store:
     """Class to keep OneHotStore and FeaturesStore with same parent."""
 
     def __init__(self, indexes=None, values=None, sequence=None, name=None, indexer=StoreIndexer):

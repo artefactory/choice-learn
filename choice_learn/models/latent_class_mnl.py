@@ -19,7 +19,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         epochs=100,
         batch_size=128,
         add_exit_choice=False,
-        tolerance=1e-6,
+        lbfgs_tolerance=1e-6,
         intercept=None,
         optimizer="Adam",
         lr=0.001,
@@ -37,7 +37,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             Number of epochs
         add_exit_choice : bool, optional
             Whether to normalize probabilities with exit choice, by default False
-        tolerance : float, optional
+        lbfgs_tolerance : float, optional
             LBFG-S tolerance, by default 1e-6
         intercept : str, optional
             Type of intercept to include in the SimpleMNL.
@@ -49,24 +49,24 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         """
         self.n_latent_classes = n_latent_classes
         self.intercept = intercept
-        model_coefficients = {
+        model_parameters = {
             "add_exit_choice": add_exit_choice,
             "intercept": intercept,
             "optimizer": optimizer,
             "batch_size": batch_size,
-            "tolerance": tolerance,
+            "lbfgs_tolerance": lbfgs_tolerance,
             "lr": lr,
             "epochs": 1000,
         }
 
         super().__init__(
             model_class=SimpleMNL,
-            model_parameters=model_coefficients,
+            model_parameters=model_parameters,
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
             epochs=epochs,
             add_exit_choice=add_exit_choice,
-            tolerance=tolerance,
+            lbfgs_tolerance=lbfgs_tolerance,
             optimizer=optimizer,
             lr=lr,
             **kwargs,
@@ -133,7 +133,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         coefficients=None,
         epochs=100,
         add_exit_choice=False,
-        tolerance=1e-6,
+        lbfgs_tolerance=1e-6,
         optimizer="Adam",
         lr=0.001,
         **kwargs,
@@ -156,7 +156,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             Number of epochs
         add_exit_choice : bool, optional
             Whether to normalize probabilities with exit choice, by default False
-        tolerance : float, optional
+        lbfgs_tolerance : float, optional
             LBFG-S tolerance, by default 1e-6
         optimizer : str, optional
             tf.keras.optimizers to be used, by default "Adam"
@@ -168,7 +168,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         self.coefficients = coefficients
         self.epochs = epochs
         self.add_exit_choice = add_exit_choice
-        self.tolerance = tolerance
+        self.lbfgs_tolerance = lbfgs_tolerance
         self.optimizer = optimizer
         self.lr = lr
 
@@ -176,7 +176,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             "coefficients": self.coefficients,
             "add_exit_choice": self.add_exit_choice,
             "optimizer": self.optimizer,
-            "tolerance": self.tolerance,
+            "lbfgs_tolerance": self.lbfgs_tolerance,
             "lr": self.lr,
             "epochs": self.epochs,
         }
@@ -188,7 +188,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
             fit_method=fit_method,
             epochs=epochs,
             add_exit_choice=add_exit_choice,
-            tolerance=tolerance,
+            lbfgs_tolerance=lbfgs_tolerance,
             optimizer=optimizer,
             lr=lr,
             **kwargs,

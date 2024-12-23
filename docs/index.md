@@ -54,6 +54,8 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - *Non-Linear Models:*
         - [RUMnet](./references/models/references_rumnet.md)
         - [TasteNet](./references/models/references_tastenet.md)
+        - [Learning MNL](./references/models/references_learning_mnl.md)
+        - [ResLogit](./references/models/references_reslogit.md)
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)

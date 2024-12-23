@@ -835,7 +835,7 @@ class NestedLogit(ChoiceModel):
                 for _w in self.trainable_weights:
                     mw.append(w[:, index : index + _w.shape[1]])
                     index += _w.shape[1]
-                model.trainable_weights = mw
+                model._trainable_weights = mw
                 batch = next(choice_dataset.iter_batch(batch_size=-1))
                 utilities = model.compute_batch_utility(*batch)
 

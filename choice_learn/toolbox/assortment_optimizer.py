@@ -1,7 +1,7 @@
 """Tool function for assortment and pricing optimization."""
 
 
-class MNLAssortmentOptimizer(object):
+class MNLAssortmentOptimizer:
     """Base class for assortment optimization."""
 
     def __new__(
@@ -46,7 +46,7 @@ class MNLAssortmentOptimizer(object):
         raise ValueError("Unknown solver. Please choose between 'gurobi' and 'or-tools'.")
 
 
-class LatentClassAssortmentOptimizer(object):
+class LatentClassAssortmentOptimizer:
     """Assortment optimizer for latent class models.
 
     Implementation of the paper:
@@ -113,7 +113,7 @@ class LatentClassAssortmentOptimizer(object):
         raise ValueError("Unknown solver. Please choose between 'gurobi' and 'or-tools'.")
 
 
-class LatentClassPricingOptimizer(object):
+class LatentClassPricingOptimizer:
     """Assortment optimizer for latent class models with additional pricing optimization.
 
     Implementation of the paper:
