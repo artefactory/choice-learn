@@ -4,6 +4,8 @@ import copy
 
 import tensorflow as tf
 
+import choice_learn.tf_ops as tf_ops
+
 from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import SimpleMNL
@@ -23,6 +25,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         intercept=None,
         optimizer="Adam",
         lr=0.001,
+        epochs_maximization=1000,
         **kwargs,
     ):
         """Initialize model.
@@ -56,7 +59,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             "batch_size": batch_size,
             "lbfgs_tolerance": lbfgs_tolerance,
             "lr": lr,
-            "epochs": 1000,
+            "epochs": epochs_maximization,
         }
 
         super().__init__(
@@ -87,6 +90,15 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         for model in self.models:
             model.indexes, model.weights = model.instantiate(
                 n_items, n_shared_features, n_items_features
+            )
+            model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+                from_logits=False,
+                label_smoothing=0.0,
+                sparse=False,
+                axis=-1,
+                epsilon=1e-25,
+                name="exact_categorical_crossentropy",
+                reduction="sum_over_batch_size",
             )
             model.instantiated = True
 

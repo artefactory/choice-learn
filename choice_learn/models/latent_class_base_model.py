@@ -104,11 +104,17 @@ class BaseLatentClassModel:
             name="Latent-Logits",
         )
         self.latent_logits = init_logit
-        self.models = [self.model_class(**mp) for mp in self.model_parameters]
-        for model in self.models:
+
+        self.models = self.instantiate_latent_models(**kwargs)
+        self.instantiated = True
+
+    def instantiate_latent_models(self, **kwargs):
+        """Instantiate latent models."""
+        models = [self.model_class(**mp) for mp in self.model_parameters]
+        for model in models:
             model.instantiate(**kwargs)
 
-        self.instantiated = True
+        return models
 
     # @tf.function
     def batch_predict(
@@ -824,7 +830,7 @@ class BaseLatentClassModel:
         )
 
         return tf.clip_by_value(
-            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-10, 1
+            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-6, 1
         ), loss
 
     def _maximization(self, choice_dataset, verbose=0):
@@ -842,10 +848,17 @@ class BaseLatentClassModel:
         np.ndarray
             latent probabilities resulting of maximization step
         """
-        self.models = [self.model_class(**mp) for mp in self.model_parameters]
+        # models = [self.model_class(**mp) for mp in self.model_parameters]
+        # for i in range(len(models)):
+        #     for j, var in enumerate(self.models[i].trainable_weights):
+        #         models[i]._trainable_weights[j] = var
+        # self.instantiate_latent_models(choice_dataset)
+
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
-            self.models[q].fit(choice_dataset, sample_weight=self.weights[:, q], verbose=verbose)
+            self.models[q].fit(
+                choice_dataset, sample_weight=self.weights[:, q].numpy(), verbose=verbose
+            )
 
         # M-step: latent probability estimation
         latent_probas = np.sum(self.weights, axis=0)
@@ -876,7 +889,9 @@ class BaseLatentClassModel:
 
         # Initialization
         init_sample_weight = np.random.rand(self.n_latent_classes, len(choice_dataset))
-        init_sample_weight = init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True)
+        init_sample_weight = np.clip(
+            init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True), 1e-6, 1
+        )
         for i, model in enumerate(self.models):
             # model.instantiate()
             model.fit(choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose)
@@ -888,7 +903,7 @@ class BaseLatentClassModel:
             if np.sum(np.isnan(self.latent_logits)) > 0:
                 print("Nan in logits")
                 break
-        return hist_logits, hist_loss
+        return hist_loss, hist_logits
 
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
