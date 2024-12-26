@@ -255,7 +255,6 @@ class BaseLatentClassModel:
         """
         if self.fit_method.lower() == "em":
             self.minf = np.log(1e-3)
-            print("Expectation-Maximization estimation algorithm not well implemented yet.")
             return self._em_fit(
                 choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
             )
