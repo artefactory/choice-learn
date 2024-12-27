@@ -1,5 +1,6 @@
 """Tests basic stuff for the latent class models."""
 
+import numpy as np
 import tensorflow as tf
 
 tf.config.run_functions_eagerly(True)
@@ -88,7 +89,9 @@ def test_manual_lc_gd():
     )
     manual_lc.instantiate(n_items=4, n_shared_features=0, n_items_features=6)
     nll_before = manual_lc.evaluate(elec_dataset)
-    _ = manual_lc.fit(elec_dataset)
+    _ = manual_lc.fit(
+        elec_dataset, sample_weight=np.ones(len(elec_dataset)), val_dataset=elec_dataset[-10:]
+    )
     assert manual_lc.evaluate(elec_dataset) < nll_before
 
 
