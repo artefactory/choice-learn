@@ -30,29 +30,29 @@ def test_swissmetro_loader():
 
 
 def test_swissmetro_long_format():
-    """Test loading the Swissmetro dataset in long format"""
+    """Test loading the Swissmetro dataset in long format."""
     swissmetro = load_swissmetro(as_frame=True, preprocessing="long_format")
     assert isinstance(swissmetro, pd.DataFrame)
     assert swissmetro.shape == (30474, 7)
 
 
 def test_swissmetro_tastenet():
-    """Test TasteNet preprocessing of dataset"""
+    """Test TasteNet preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="tastenet")
 
 
 def test_swissmetro_tutorial():
-    """Test tutorial preprocessing of dataset"""
+    """Test tutorial preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="tutorial")
 
 
 def test_biogeme_nested_tutorial():
-    """Test biogeme_nested preprocessing of dataset"""
+    """Test biogeme_nested preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="biogeme_nested")
 
 
 def test_rumnet_tutorial():
-    """Test rumnet preprocessing of dataset"""
+    """Test rumnet preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="rumnet")
 
 
