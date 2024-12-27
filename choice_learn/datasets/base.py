@@ -687,7 +687,7 @@ def load_modecanada(
                     cf.append(context_df.loc[context_df.alt == item][items_features].to_numpy()[0])
                     cav.append(1)
                 else:
-                    cf.append([0.0, 0.0, 0.0, 0.0])
+                    cf.append([0.0 for _ in range(len(items_features))])
                     cav.append(0)
             cif.append(cf)
             ci_av.append(cav)
