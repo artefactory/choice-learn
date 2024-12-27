@@ -254,8 +254,8 @@ def test_gpu_rumnet():
         depth_u=3,
         tol=1e-5,
         optimizer="adam",
-        lr=0.01,
-        epochs=5,
+        lr=0.001,
+        epochs=10,
     )
     model.instantiate()
     assert model.batch_predict(
