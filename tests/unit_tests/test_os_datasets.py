@@ -381,7 +381,7 @@ def test_londonpassenger_loader():
 
 
 def test_description():
-    """Test getting description"""
+    """Test getting description."""
     _ = load_swissmetro(return_desc=True)
     _ = load_modecanada(return_desc=True)
     _ = load_heating(return_desc=True)
