@@ -28,27 +28,33 @@ def test_swissmetro_loader():
     swissmetro = load_swissmetro(add_items_one_hot=True)
     assert isinstance(swissmetro, ChoiceDataset)
 
+
 def test_swissmetro_long_format():
     """Test loading the Swissmetro dataset in long format"""
     swissmetro = load_swissmetro(as_frame=True, preprocessing="long_format")
     assert isinstance(swissmetro, pd.DataFrame)
     assert swissmetro.shape == (30474, 7)
 
+
 def test_swissmetro_tastenet():
     """Test TasteNet preprocessing of dataset"""
     _ = load_swissmetro(preprocessing="tastenet")
+
 
 def test_swissmetro_tutorial():
     """Test tutorial preprocessing of dataset"""
     _ = load_swissmetro(preprocessing="tutorial")
 
+
 def test_biogeme_nested_tutorial():
     """Test biogeme_nested preprocessing of dataset"""
     _ = load_swissmetro(preprocessing="biogeme_nested")
 
+
 def test_rumnet_tutorial():
     """Test rumnet preprocessing of dataset"""
     _ = load_swissmetro(preprocessing="rumnet")
+
 
 def test_modecanada_loader():
     """Test loading the Canada dataset."""
@@ -59,18 +65,33 @@ def test_modecanada_loader():
     canada = load_modecanada()
     assert isinstance(canada, ChoiceDataset)
 
-    ca, na, da = load_modecanada(as_frame=True, add_items_one_hot=True, add_is_public=True, choice_format="item_id", split_features=True)
+    ca, na, da = load_modecanada(
+        as_frame=True,
+        add_items_one_hot=True,
+        add_is_public=True,
+        choice_format="item_id",
+        split_features=True,
+    )
     assert ca.shape == (4324, 4)
     assert na.shape == (15520, 11)
     assert da.shape == (4324, 2)
 
+
 def test_modecanada_features_split():
     """Test that features are split well."""
-    o, ca, na, da,  = load_modecanada(add_items_one_hot=True, add_is_public=True, choice_format="item_id", split_features=True)
+    (
+        o,
+        ca,
+        na,
+        da,
+    ) = load_modecanada(
+        add_items_one_hot=True, add_is_public=True, choice_format="item_id", split_features=True
+    )
     assert o.shape == (4324, 3)
     assert ca.shape == (4324, 4, 9)
     assert na.shape == (4324, 4)
-    assert da.shape == (4324, )
+    assert da.shape == (4324,)
+
 
 def test_electricity_loader():
     """Test loading the Electricity dataset."""
@@ -357,6 +378,7 @@ def test_londonpassenger_loader():
         "distance",
     ]
     assert londonpassenger.shared_features_by_choice_names[0] == expected_shared_features_names
+
 
 def test_description():
     """Test getting description"""
