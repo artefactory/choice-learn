@@ -236,7 +236,7 @@ class BaseLatentClassModel:
             utilities.append(model_utilities)
         return utilities
 
-    def fit(self, choice_dataset, sample_weight=None, verbose=0):
+    def fit(self, choice_dataset, sample_weight=None, val_dataset=None, verbose=0):
         """Fit the model on a ChoiceDataset.
 
         Parameters
@@ -245,6 +245,8 @@ class BaseLatentClassModel:
             Dataset to be used for coefficients estimations
         sample_weight : np.ndarray, optional
             sample weights to apply, by default None
+        val_dataset: ChoiceDataset
+            Validation dataset for MLE Gradient Descent Optimization
         verbose : int, optional
             print level, for debugging, by default 0
 
@@ -277,7 +279,10 @@ class BaseLatentClassModel:
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
 
             return self._fit_with_gd(
-                choice_dataset=choice_dataset, sample_weight=sample_weight, verbose=verbose
+                choice_dataset=choice_dataset,
+                sample_weight=sample_weight,
+                verbose=verbose,
+                val_dataset=val_dataset,
             )
 
         raise ValueError(f"Fit method not implemented: {self.fit_method}")
@@ -762,45 +767,6 @@ class BaseLatentClassModel:
         # self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
-    def _nothing(self, inputs):
-        """_summary_.
-
-        Parameters
-        ----------
-        inputs : _type_
-            _description_
-
-        Returns
-        -------
-        _type_
-            _description_
-        """
-        latent_probas = tf.clip_by_value(
-            self.latent_logits - tf.reduce_max(self.latent_logits), self.minf, 0
-        )
-        latent_probas = tf.math.exp(latent_probas)
-        # latent_probas = tf.math.abs(self.logit_latent_probas)  # alternative implementation
-        latent_probas = latent_probas / tf.reduce_sum(latent_probas)
-        proba_list = []
-        avail = inputs[4]
-        for q in range(self.n_latent_classes):
-            combined = self.models[q].compute_batch_utility(*inputs)
-            combined = tf.clip_by_value(
-                combined - tf.reduce_max(combined, axis=1, keepdims=True), self.minf, 0
-            )
-            combined = tf.keras.layers.Activation(activation=tf.nn.softmax)(combined)
-            # combined = tf.keras.layers.Softmax()(combined)
-            combined = combined * avail
-            combined = latent_probas[q] * tf.math.divide(
-                combined, tf.reduce_sum(combined, axis=1, keepdims=True)
-            )
-            combined = tf.expand_dims(combined, -1)
-            proba_list.append(combined)
-            # print(combined.get_shape()) # it is useful to print the shape of tensors for debugging
-
-        proba_final = tf.keras.layers.Concatenate(axis=2)(proba_list)
-        return tf.math.reduce_sum(proba_final, axis=2, keepdims=False)
-
     def _expectation(self, choice_dataset):
         predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
         latent_probabilities = self.get_latent_classes_weights()
@@ -935,6 +901,43 @@ class BaseLatentClassModel:
             stacked_probabilities.append(probabilities)
 
         return tf.concat(stacked_probabilities, axis=0)
+
+    def predict_modelwise_probas(self, choice_dataset, batch_size=-1):
+        """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
+
+        Stacks each model probability.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            Dataset on which to apply to prediction
+        batch_size : int, optional
+            Batch size to use for the prediction, by default -1
+
+        Returns
+        -------
+        np.ndarray (n_choices, n_items)
+            Choice probabilties for each choice and each product
+        """
+        modelwise_probabilities = []
+        for model in self.models:
+            stacked_probabilities = []
+            for (
+                shared_features,
+                items_features,
+                available_items,
+                choices,
+            ) in choice_dataset.iter_batch(batch_size=batch_size):
+                _, probabilities = model.batch_predict(
+                    shared_features_by_choice=shared_features,
+                    items_features_by_choice=items_features,
+                    available_items_by_choice=available_items,
+                    choices=choices,
+                )
+                stacked_probabilities.append(probabilities)
+            modelwise_probabilities.append(tf.concat(stacked_probabilities, axis=0))
+
+        return tf.stack(modelwise_probabilities, axis=0)
 
     def get_latent_classes_weights(self):
         """Return the latent classes weights / probabilities from logits.
