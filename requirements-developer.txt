@@ -10,6 +10,7 @@ mkdocs==1.5.3
 mkdocs-material==9.5.3
 mkdocs-nbconvert==0.2.1
 mkdocstrings-python==1.7.5
+ortools
 python-markdown-math
 bandit==1.7.5
 nbstripout==0.6.1
