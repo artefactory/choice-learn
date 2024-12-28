@@ -81,6 +81,7 @@ def test_wrong_solver():
             assortment_size=2,
         )
 
+
 def test_raised_errors():
     """Test diverse parametrization that should raise errors."""
     with pytest.raises(ValueError):
@@ -98,7 +99,7 @@ def test_raised_errors():
             itemwise_values=np.array([0.5, 0.5, 0.5]),
             assortment_size=2,
         )
-        
+
     with pytest.raises(ValueError):
         LatentClassAssortmentOptimizer(
             solver="ortools",
@@ -118,7 +119,7 @@ def test_raised_errors():
             itemwise_values=np.array([[0.5, 1.2, 2.4], [0.5, 1.2, 2.4], [0.5, 1.2, 2.4]]),
             assortment_size=2,
         )
-    
+
     with pytest.raises(ValueError):
         LatentClassPricingOptimizer(
             solver="ortools",
