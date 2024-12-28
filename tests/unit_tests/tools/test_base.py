@@ -48,6 +48,7 @@ def test_lc_pricing_instantiate():
             assortment_size=2,
         )
 
+
 def test_wrong_solver():
     """Test error raised when specifying wrong solver."""
     solver = "rotools"
