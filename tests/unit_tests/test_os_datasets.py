@@ -15,6 +15,7 @@ from choice_learn.datasets import (
     load_tafeng,
     load_train,
 )
+from choice_learn.datasets.base import load_csv, load_gzip, slice_from_names
 
 
 def test_swissmetro_loader():
@@ -92,6 +93,11 @@ def test_modecanada_features_split():
     assert na.shape == (4324, 4)
     assert da.shape == (4324,)
 
+
+def test_modecanada_loader():
+    """Test loading the Canada dataset w/ preprocessing."""
+    canada = load_modecanada(preprocessing="tutorial", add_items_one_hot=True)
+    assert isinstance(canada, ChoiceDataset)
 
 def test_electricity_loader():
     """Test loading the Electricity dataset."""
@@ -390,3 +396,14 @@ def test_description():
     _ = load_car_preferences(return_desc=True)
     _ = load_hc(return_desc=True)
     _ = load_londonpassenger(return_desc=True)
+    _ = load_tafeng(return_desc=True)
+
+def test_load_csv():
+    """Test csv file loader."""
+    import os
+    print(os.listdir())
+    _ = load_csv(data_file_name="test_data.csv", data_module="tests/data")
+    import os
+    print(os.listdir())
+    names, data = load_gzip("swissmetro.csv.gz", data_module="choice_learn/datasets/data")
+    _ = slice_from_names(data, names[:4], names)
