@@ -23,6 +23,7 @@ def test_mnl_assort_instantiate():
         )
         opt.solve()
 
+
 def test_various_params():
     """Test specific parametrizations."""
     MNLAssortmentOptimizer(
@@ -51,6 +52,7 @@ def test_various_params():
         outside_option_given=True,
     )
 
+
 def test_capacity_constraints():
     """Test that capacity constraints work."""
     opt = LatentClassAssortmentOptimizer(
@@ -76,7 +78,6 @@ def test_capacity_constraints():
 
     opt.add_maximal_capacity_constraint(itemwise_capacities=[1.1, 2.2, 3.3], maximum_capacity=4.5)
     opt.add_minimal_capacity_constraint(itemwise_capacities=[1.1, 2.2, 3.3], minimum_capacity=1.2)
-
 
 
 def test_lc_assort_instantiate():
