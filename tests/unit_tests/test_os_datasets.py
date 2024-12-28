@@ -85,9 +85,7 @@ def test_modecanada_features_split():
         ca,
         na,
         da,
-    ) = load_modecanada(
-        add_items_one_hot=True, add_is_public=True, split_features=True
-    )
+    ) = load_modecanada(add_items_one_hot=True, add_is_public=True, split_features=True)
     assert o.shape == (4324, 3)
     assert ca.shape == (4324, 4, 9)
     assert na.shape == (4324, 4)
