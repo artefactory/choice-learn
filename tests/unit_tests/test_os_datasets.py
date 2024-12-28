@@ -59,7 +59,7 @@ def test_rumnet_tutorial():
 
 def test_modecanada_loader():
     """Test loading the Canada dataset."""
-    canada = load_modecanada(as_frame=True)
+    canada = load_modecanada(as_frame=True, choice_format="items_id")
     assert isinstance(canada, pd.DataFrame)
     assert canada.shape == (15520, 11)
 
@@ -70,7 +70,7 @@ def test_modecanada_loader():
         as_frame=True,
         add_items_one_hot=True,
         add_is_public=True,
-        choice_format="item_id",
+        choice_format="items_id",
         split_features=True,
     )
     assert ca.shape == (4324, 4)
@@ -86,7 +86,7 @@ def test_modecanada_features_split():
         na,
         da,
     ) = load_modecanada(
-        add_items_one_hot=True, add_is_public=True, choice_format="item_id", split_features=True
+        add_items_one_hot=True, add_is_public=True, split_features=True
     )
     assert o.shape == (4324, 3)
     assert ca.shape == (4324, 4, 9)
