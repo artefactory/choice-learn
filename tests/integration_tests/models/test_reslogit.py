@@ -352,3 +352,12 @@ def test_that_endpoints_run():
     model.evaluate(dataset, mode="optim")
     model.predict_probas(dataset)
     assert True
+
+
+def test_activation():
+    """Tests ResLogit activation."""
+    model = ResLogit(epochs=epochs)
+    for act in ["linear", "relu", "-relu", "exp", "-exp", "tanh", "sigmoid"]:
+        _ = model.get_activation_function(act)
+    with pytest.raises(ValueError):
+        model.get_activation_function("abc")
