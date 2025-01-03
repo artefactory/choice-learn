@@ -34,7 +34,7 @@ def test_activation():
         tastenet.get_activation_function("abc")
 
 
-def test_fit_adam():
+def test_fit_adam_and_predict():
     """Test fit with Gradient Descent."""
     tastenet = TasteNet(
         taste_net_layers=taste_net_layers,
@@ -46,13 +46,14 @@ def test_fit_adam():
         batch_size=32,
     )
     _ = tastenet.fit(dataset)
+    _ = tastenet.predict_tastes(dataset.shared_features_by_choice)
     assert True
 
 
 def test_fit_lbfgs():
     """Test fit with Gradient Descent."""
     tastenet = TasteNet(
-        taste_net_layers=taste_net_layers,
+        taste_net_layers=[4],
         taste_net_activation=taste_net_activation,
         items_features_by_choice_parametrization=items_features_by_choice_parametrization,
         optimizer="lbfgs",
@@ -127,3 +128,20 @@ def test_errors_raised():
             batch_size=32,
         )
         _ = tastenet.fit(dataset)
+
+    with pytest.raises(ValueError):
+        tastenet = TasteNet(
+            taste_net_layers=taste_net_layers,
+            taste_net_activation=taste_net_activation,
+            items_features_by_choice_parametrization=[
+    [-1.0, "-exp", "-exp", 0.0, "linear", 0.0, 0.0],
+    [-1.0, "-exp", "-exp", "linear", 0.0, "linear", 0.0, 0.0],
+    [-1.0, "-exp", 0.0, 0.0, 0.0, 0.0, 0.0],
+],
+            optimizer="lbfgs",
+            epochs=5,
+            lr=0.001,
+            batch_size=32,
+        )
+        _ = tastenet.fit(dataset)
+
