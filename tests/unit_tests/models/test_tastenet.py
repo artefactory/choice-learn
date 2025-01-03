@@ -45,7 +45,7 @@ def test_fit_adam():
         lr=0.001,
         batch_size=32,
     )
-    hist = tastenet.fit(dataset)
+    _ = tastenet.fit(dataset)
     assert True
 
 
@@ -60,7 +60,7 @@ def test_fit_lbfgs():
         lr=0.001,
         batch_size=32,
     )
-    hist = tastenet.fit(dataset)
+    _ = tastenet.fit(dataset)
     assert True
 
 
@@ -79,7 +79,7 @@ def test_errors_raised():
             lr=0.001,
             batch_size=32,
         )
-        hist = tastenet.fit(dataset)
+        _ = tastenet.fit(dataset)
 
     with pytest.raises(ValueError):
         tastenet = TasteNet(
@@ -95,7 +95,7 @@ def test_errors_raised():
             lr=0.001,
             batch_size=32,
         )
-        hist = tastenet.fit(dataset)
+        _ = tastenet.fit(dataset)
 
     with pytest.raises(ValueError):
         tastenet = TasteNet(
@@ -110,7 +110,7 @@ def test_errors_raised():
             lr=0.001,
             batch_size=32,
         )
-        hist = tastenet.fit(dataset)
+        _ = tastenet.fit(dataset)
 
     with pytest.raises(ValueError):
         tastenet = TasteNet(
@@ -126,4 +126,4 @@ def test_errors_raised():
             lr=0.001,
             batch_size=32,
         )
-        hist = tastenet.fit(dataset)
+        _ = tastenet.fit(dataset)
