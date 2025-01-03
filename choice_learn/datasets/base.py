@@ -41,8 +41,7 @@ def get_path(data_file_name, module=DATA_MODULE):
     # with resources.path(module, data_file_name) as path:
     #     return path
     path = Path(module).resolve() / data_file_name
-    path = path.as_posix()
-    return path
+    return path.as_posix()
 
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
