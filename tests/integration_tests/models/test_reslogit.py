@@ -359,7 +359,7 @@ def test_that_endpoints_run():
 def test_activation():
     """Tests ResLogit activation."""
     layer = ResLayer()
-    for act in ["linear", "relu", "-relu", "exp", "-exp", "tanh", "sigmoid"]:
+    for act in ["linear", "relu", "-relu", "softplus", "tanh", "sigmoid"]:
         _ = layer.get_activation_function(act)
     with pytest.raises(ValueError):
         layer.get_activation_function("abc")
