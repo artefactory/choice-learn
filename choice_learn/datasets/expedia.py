@@ -10,8 +10,8 @@ from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.data.storage import OneHotStorage
 from choice_learn.datasets.base import get_path
 
-DATA_MODULE = "choice_learn.datasets.data"
-CACHE_MODULE = "choice_learn.datasets.cache"
+DATA_MODULE = "choice_learn/datasets/data"
+CACHE_MODULE = "choice_learn/datasets/cache"
 
 
 def load_expedia(as_frame=False, preprocessing="rumnet"):
@@ -26,7 +26,7 @@ def load_expedia(as_frame=False, preprocessing="rumnet"):
     """
     filename = "expedia.csv"
     data_path = get_path(filename, module=DATA_MODULE)
-    if not Path.exists(data_path):
+    if not Path.exists(Path(data_path)):
         print("In order to use the Expedia dataset, please download it from:")
         print("https://www.kaggle.com/c/expedia-personalized-sort")
         print("and save it in the following location:")
