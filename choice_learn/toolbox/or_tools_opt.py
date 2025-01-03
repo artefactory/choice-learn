@@ -32,6 +32,9 @@ class ORToolsMNLAssortmentOptimizer:
         if not self.outside_option_given:
             self.utilities = np.concatenate([[np.exp(0.0)], utilities], axis=0)
             self.itemwise_values = np.concatenate([[0.0], itemwise_values], axis=0)
+        else:
+            self.utilities = utilities
+            self.itemwise_values = itemwise_values
         self.n_items = len(self.utilities) - 1
         self.assortment_size = assortment_size
 
@@ -460,9 +463,13 @@ class ORToolsLatentClassPricingOptimizer:
             self.class_utilities = class_utilities
             self.itemwise_values = itemwise_values
         else:
-            # TO DO
-            self.class_utilities = class_utilities
-            self.itemwise_values = itemwise_values
+            # First Specified item
+            self.outside_utility = [class_utilities[i][0][0] for i in range(len(class_weights))]
+            self.outside_value = [itemwise_values[i][0] for i in range(len(class_weights))]
+
+            self.class_utilities = [class_utilities[i][1:] for i in range(len(class_weights))]
+            self.itemwise_values = [itemwise_values[i][1:] for i in range(len(class_weights))]
+
         self.n_items = len(self.itemwise_values) - 1
         self.assortment_size = assortment_size
         self.class_weights = class_weights
@@ -639,7 +646,11 @@ class ORToolsLatentClassPricingOptimizer:
             Value of the maximal capacity.
         """
         assortment_capacity = sum(
-            [self.y[j] * itemwise_capacities[j - 1] for j in range(1, self.n_items + 1)]
+            [
+                self.y[(j, k)] * itemwise_capacities[j - 1]
+                for j in range(1, self.n_items + 1)
+                for k in range(len(self.itemwise_values[j - 1]))
+            ]
         )
         self.solver.Add(assortment_capacity >= minimum_capacity)
 

@@ -645,7 +645,7 @@ def load_modecanada(
             if row.choice == 1:
                 named_choice[n_row - 1] = row.alt
 
-        canada_df["choice"] = named_choice
+        canada_df["named_choice"] = named_choice
 
     if as_frame:
         if split_features:
@@ -667,6 +667,9 @@ def load_modecanada(
                 items_features_by_choice,
                 choices,
             )
+        if choice_format == "items_id":
+            canada_df["choice"] = canada_df["named_choice"]
+            canada_df = canada_df.drop("named_choice", axis=1)
         return canada_df
 
     if split_features:
@@ -687,7 +690,7 @@ def load_modecanada(
                     cf.append(context_df.loc[context_df.alt == item][items_features].to_numpy()[0])
                     cav.append(1)
                 else:
-                    cf.append([0.0, 0.0, 0.0, 0.0])
+                    cf.append([0.0 for _ in range(len(items_features))])
                     cav.append(0)
             cif.append(cf)
             ci_av.append(cav)

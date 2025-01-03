@@ -444,7 +444,7 @@ class ChoiceModel:
         self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
-    @tf.function
+    @tf.function(reduce_retracing=True)
     def batch_predict(
         self,
         shared_features_by_choice,
@@ -731,7 +731,6 @@ class ChoiceModel:
             # calculate gradients and convert to 1D tf.Tensor
             grads = tape.gradient(loss_value, self.trainable_weights)
             grads = tf.dynamic_stitch(idx, grads)
-            # print out iteration & loss
             f.iter.assign_add(1)
 
             # store loss value so we can retrieve later
