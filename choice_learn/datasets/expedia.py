@@ -10,8 +10,8 @@ from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.data.storage import OneHotStorage
 from choice_learn.datasets.base import get_path
 
-DATA_MODULE = "choice_learn.datasets.data"
-CACHE_MODULE = "choice_learn.datasets.cache"
+DATA_MODULE = "choice_learn/datasets/data"
+CACHE_MODULE = "choice_learn/datasets/cache"
 
 
 def load_expedia(as_frame=False, preprocessing="rumnet"):
