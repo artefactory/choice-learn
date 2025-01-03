@@ -8,6 +8,7 @@ from choice_learn.datasets import load_swissmetro
 
 # from choice_learn.models import ResLogit, SimpleMNL
 from choice_learn.models import ResLogit
+from choice_learn.models.reslogit import ResLayer
 
 dataset = load_swissmetro()
 dataset = dataset[:100]  # Reduce the dataset size for faster testing
@@ -357,8 +358,8 @@ def test_that_endpoints_run():
 
 def test_activation():
     """Tests ResLogit activation."""
-    model = ResLogit(epochs=epochs)
+    layer = ResLayer()
     for act in ["linear", "relu", "-relu", "exp", "-exp", "tanh", "sigmoid"]:
-        _ = model.get_activation_function(act)
+        _ = layer.get_activation_function(act)
     with pytest.raises(ValueError):
-        model.get_activation_function("abc")
+        layer.get_activation_function("abc")
