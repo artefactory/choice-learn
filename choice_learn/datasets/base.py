@@ -44,6 +44,7 @@ def get_path(data_file_name, module=DATA_MODULE):
     path = path.as_posix()
     return path
 
+
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Load csv files.
 
