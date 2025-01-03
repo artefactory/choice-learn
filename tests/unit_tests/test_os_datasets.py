@@ -15,6 +15,7 @@ from choice_learn.datasets import (
     load_tafeng,
     load_train,
 )
+from choice_learn.datasets.base import load_csv, load_gzip, slice_from_names
 
 
 def test_swissmetro_loader():
@@ -30,35 +31,35 @@ def test_swissmetro_loader():
 
 
 def test_swissmetro_long_format():
-    """Test loading the Swissmetro dataset in long format"""
+    """Test loading the Swissmetro dataset in long format."""
     swissmetro = load_swissmetro(as_frame=True, preprocessing="long_format")
     assert isinstance(swissmetro, pd.DataFrame)
     assert swissmetro.shape == (30474, 7)
 
 
 def test_swissmetro_tastenet():
-    """Test TasteNet preprocessing of dataset"""
+    """Test TasteNet preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="tastenet")
 
 
 def test_swissmetro_tutorial():
-    """Test tutorial preprocessing of dataset"""
+    """Test tutorial preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="tutorial")
 
 
 def test_biogeme_nested_tutorial():
-    """Test biogeme_nested preprocessing of dataset"""
+    """Test biogeme_nested preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="biogeme_nested")
 
 
 def test_rumnet_tutorial():
-    """Test rumnet preprocessing of dataset"""
+    """Test rumnet preprocessing of dataset."""
     _ = load_swissmetro(preprocessing="rumnet")
 
 
 def test_modecanada_loader():
     """Test loading the Canada dataset."""
-    canada = load_modecanada(as_frame=True)
+    canada = load_modecanada(as_frame=True, choice_format="items_id")
     assert isinstance(canada, pd.DataFrame)
     assert canada.shape == (15520, 11)
 
@@ -69,7 +70,7 @@ def test_modecanada_loader():
         as_frame=True,
         add_items_one_hot=True,
         add_is_public=True,
-        choice_format="item_id",
+        choice_format="items_id",
         split_features=True,
     )
     assert ca.shape == (4324, 4)
@@ -84,14 +85,17 @@ def test_modecanada_features_split():
         ca,
         na,
         da,
-    ) = load_modecanada(
-        add_items_one_hot=True, add_is_public=True, choice_format="item_id", split_features=True
-    )
+    ) = load_modecanada(add_items_one_hot=True, add_is_public=True, split_features=True)
     assert o.shape == (4324, 3)
     assert ca.shape == (4324, 4, 9)
     assert na.shape == (4324, 4)
     assert da.shape == (4324,)
 
+
+def test_modecanada_loader_2():
+    """Test loading the Canada dataset w/ preprocessing."""
+    canada = load_modecanada(preprocessing="tutorial", add_items_one_hot=True)
+    assert isinstance(canada, ChoiceDataset)
 
 def test_electricity_loader():
     """Test loading the Electricity dataset."""
@@ -381,7 +385,7 @@ def test_londonpassenger_loader():
 
 
 def test_description():
-    """Test getting description"""
+    """Test getting description."""
     _ = load_swissmetro(return_desc=True)
     _ = load_modecanada(return_desc=True)
     _ = load_heating(return_desc=True)
@@ -390,3 +394,10 @@ def test_description():
     _ = load_car_preferences(return_desc=True)
     _ = load_hc(return_desc=True)
     _ = load_londonpassenger(return_desc=True)
+    _ = load_tafeng(return_desc=True)
+
+def test_load_csv():
+    """Test csv file loader."""
+    _ = load_csv(data_file_name="test_data.csv", data_module="tests/data")
+    names, data = load_gzip("swissmetro.csv.gz", data_module="choice_learn/datasets/data")
+    _ = slice_from_names(data, names[:4], names)
