@@ -134,14 +134,13 @@ def test_errors_raised():
             taste_net_layers=taste_net_layers,
             taste_net_activation=taste_net_activation,
             items_features_by_choice_parametrization=[
-    [-1.0, "-exp", "-exp", 0.0, "linear", 0.0, 0.0],
-    [-1.0, "-exp", "-exp", "linear", 0.0, "linear", 0.0, 0.0],
-    [-1.0, "-exp", 0.0, 0.0, 0.0, 0.0, 0.0],
-],
+                [-1.0, "-exp", "-exp", 0.0, "linear", 0.0, 0.0],
+                [-1.0, "-exp", "-exp", "linear", 0.0, "linear", 0.0, 0.0],
+                [-1.0, "-exp", 0.0, 0.0, 0.0, 0.0, 0.0],
+            ],
             optimizer="lbfgs",
             epochs=5,
             lr=0.001,
             batch_size=32,
         )
         _ = tastenet.fit(dataset)
-
