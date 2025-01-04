@@ -6,7 +6,7 @@ import pandas as pd
 from choice_learn.data.choice_dataset import ChoiceDataset
 from choice_learn.datasets.base import get_path
 
-DATA_MODULE = "choice_learn.datasets.data"
+DATA_MODULE = "choice_learn/datasets/data"
 
 
 def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):

@@ -1,12 +1,14 @@
 """Tests ResLogit."""
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from choice_learn.datasets import load_swissmetro
 
 # from choice_learn.models import ResLogit, SimpleMNL
 from choice_learn.models import ResLogit
+from choice_learn.models.reslogit import ResLayer
 
 dataset = load_swissmetro()
 dataset = dataset[:100]  # Reduce the dataset size for faster testing
@@ -352,3 +354,12 @@ def test_that_endpoints_run():
     model.evaluate(dataset, mode="optim")
     model.predict_probas(dataset)
     assert True
+
+
+def test_activation():
+    """Tests ResLogit activation."""
+    layer = ResLayer()
+    for act in ["linear", "relu", "-relu", "softplus", "tanh", "sigmoid"]:
+        _ = layer.get_activation_function(act)
+    with pytest.raises(ValueError):
+        layer.get_activation_function("abc")
