@@ -1,17 +1,14 @@
 """Halo MNL model."""
 
-import logging
-import math
-
-import numpy as np
-import pandas as pd
 import tensorflow as tf
 
+# from .conditional_logit import ConditionalLogit
 from .simple_mnl import SimpleMNL
-from .conditional_logit import ConditionalLogit
 
 
 class LowRankHaloMNL(SimpleMNL):
+    """Implementation of Low Rank Halo MNL model."""
+
     def __init__(
         self,
         halo_latent_dim,
@@ -58,53 +55,13 @@ class LowRankHaloMNL(SimpleMNL):
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
-        weights = []
-        indexes = {}
-        for n_feat, feat_name in zip(
-            [n_shared_features, n_items_features],
-            ["shared_features", "items_features"],
-        ):
-            if n_feat > 0:
-                weights += [
-                    tf.Variable(
-                        tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
-                        name=f"Weights_{feat_name}",
-                    )
-                ]
-                indexes[feat_name] = len(weights) - 1
-        if self.intercept is None:
-            logging.info("No intercept in the model")
-        elif self.intercept == "item":
-            weights.append(
-                tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
-                    name="Intercept",
-                )
-            )
-            indexes["intercept"] = len(weights) - 1
-        elif self.intercept == "item-full":
-            logging.info("Simple MNL intercept is not normalized to 0!")
-            weights.append(
-                tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
-                    name="Intercept",
-                )
-            )
-            indexes["intercept"] = len(weights) - 1
-        else:
-            weights.append(
-                tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
-                    name="Intercept",
-                )
-            )
-            indexes["intercept"] = len(weights) - 1
+        indexes, weights = super().instantiate(n_items, n_shared_features, n_items_features)
 
-        alpha = tf.Variable((tf.random.normal((1, n_items))), name="alpha")
-        U = tf.Variable((tf.random.normal((n_items, self.halo_latent_dim))), name="U")
-        V = tf.Variable((tf.random.normal((n_items, self.halo_latent_dim))), name="V")
-        weights += [alpha, U, V]
+        u_mat = tf.Variable((tf.zeros((n_items, self.halo_latent_dim))), name="U")
+        v_mat = tf.Variable((tf.zeros((self.halo_latent_dim, n_items))), name="V")
+        weights += [u_mat, v_mat]
 
+        self.zero_diag = tf.zeros(n_items)
         self.instantiated = True
         self.indexes = indexes
         self._trainable_weights = weights
@@ -139,50 +96,10 @@ class LowRankHaloMNL(SimpleMNL):
         tf.Tensor
             Computed utilities of shape (n_choices, n_items).
         """
-        _ = choices
-
-        if "shared_features" in self.indexes.keys():
-            if isinstance(shared_features_by_choice, tuple):
-                shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
-            shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
-            shared_features_utilities = tf.tensordot(
-                shared_features_by_choice,
-                self.trainable_weights[self.indexes["shared_features"]],
-                axes=1,
-            )
-            shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
-        else:
-            shared_features_utilities = 0
-
-        if "items_features" in self.indexes.keys():
-            if isinstance(items_features_by_choice, tuple):
-                items_features_by_choice = tf.concat([*items_features_by_choice], axis=2)
-            items_features_by_choice = tf.cast(items_features_by_choice, tf.float32)
-            items_features_utilities = tf.tensordot(
-                items_features_by_choice,
-                self.trainable_weights[self.indexes["items_features"]],
-                axes=1,
-            )
-        else:
-            items_features_utilities = tf.zeros(
-                (available_items_by_choice.shape[0], available_items_by_choice.shape[1])
-            )
-
-        if "intercept" in self.indexes.keys():
-            intercept = self.trainable_weights[self.indexes["intercept"]]
-            if self.intercept == "item":
-                intercept = tf.concat([tf.constant([0.0]), intercept], axis=0)
-            if self.intercept in ["item", "item-full"]:
-                intercept = tf.expand_dims(intercept, axis=0)
-        else:
-            intercept = 0
-
-        items_utilities = shared_features_utilities + items_features_utilities + intercept
-
-        halo = tf.tensordot(
-            self.trainable_weights[-2], tf.transpose(self.trainable_weights[-1]), axes=1
+        items_utilities = super().compute_batch_utility(
+            shared_features_by_choice, items_features_by_choice, available_items_by_choice, choices
         )
-        return (
-            items_utilities * self.trainable_weights[-3]
-            + tf.tensordot(items_utilities, halo, axes=1) * available_items_by_choice
-        )
+
+        halo = tf.linalg.matmul(self.trainable_weights[-2], self.trainable_weights[-1])
+        tf.linalg.set_diag(halo, self.zero_diag)
+        return items_utilities + halo
