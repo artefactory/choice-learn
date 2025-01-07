@@ -76,8 +76,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Conditional Logit  | [notebook](notebooks/introduction/3_model_clogit.ipynb)    | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb) | Train et al. [[4]](#trident-references) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
 | Nested Logit | [notebook](notebooks/models/nested_logit.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
 | Latent Class MNL    | [notebook](notebooks/models/latent_class_model.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_latent_class_mnl/) |
-| Halo MNL    | [notebook](notebooks/models/halo_mnl.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | | *HaloMNL* | [#]() |
-| Low-Rank Halo MNL    | [notebook](notebooks/models/halo_mnl.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | | *LowRankHaloMNL* | [#]() |
+| Halo MNL    | [notebook](notebooks/models/halo_mnl.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Maragheh et al. [[14]](#trident-references) | *HaloMNL* | [#]() |
+| Low-Rank Halo MNL    | [notebook](notebooks/models/halo_mnl.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Ko and Li [[15]](#trident-references) | *LowRankHaloMNL* | [#]() |
 
 | NN-based Model    | Example | Colab | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
@@ -304,7 +304,9 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [10] [Modeling the Choice of Residential Location](https://onlinepubs.trb.org/Onlinepubs/trr/1978/673/673-012.pdf), McFadden, D. (1978)\
 [11] [Recreating passenger mode choice-sets for transport simulation: A case study of London, UK](https://www.icevirtuallibrary.com/doi/10.1680/jsmic.17.00018), Hillel, T.; Elshafie, M. Z. E. B.; Jin, Y. (2018)\
 [12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)\
-[13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)
+[13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)\
+[14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
+[15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)
 
 ### Code and Repositories
 
