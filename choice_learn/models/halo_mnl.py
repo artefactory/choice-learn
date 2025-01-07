@@ -1,5 +1,8 @@
 """Halo MNL model."""
 
+import math
+
+import pandas as pd
 import tensorflow as tf
 
 # from .conditional_logit import ConditionalLogit
@@ -57,8 +60,8 @@ class LowRankHaloMNL(SimpleMNL):
         """
         indexes, weights = super().instantiate(n_items, n_shared_features, n_items_features)
 
-        u_mat = tf.Variable((tf.zeros((n_items, self.halo_latent_dim))), name="U")
-        v_mat = tf.Variable((tf.zeros((self.halo_latent_dim, n_items))), name="V")
+        u_mat = tf.Variable((tf.random.normal((n_items, self.halo_latent_dim))), name="U")
+        v_mat = tf.Variable((tf.random.normal((self.halo_latent_dim, n_items))), name="V")
         weights += [u_mat, v_mat]
 
         self.zero_diag = tf.zeros(n_items)
@@ -101,5 +104,97 @@ class LowRankHaloMNL(SimpleMNL):
         )
 
         halo = tf.linalg.matmul(self.trainable_weights[-2], self.trainable_weights[-1])
-        tf.linalg.set_diag(halo, self.zero_diag)
+        halo = tf.linalg.set_diag(halo, self.zero_diag)
+        halo = tf.linalg.matmul(available_items_by_choice, halo)
         return items_utilities + halo
+
+    def get_weights_std(self, choice_dataset):
+        """Approximates Std Err with Hessian matrix.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns
+        -------
+        tf.Tensor
+            Estimation of the Std Err for the weights.
+        """
+        # Loops of differentiation
+        with tf.GradientTape() as tape_1:
+            with tf.GradientTape(persistent=True) as tape_2:
+                model = self.clone()
+                w = tf.concat(self.trainable_weights[:-2], axis=0)
+                tape_2.watch(w)
+                tape_1.watch(w)
+                mw = []
+                index = 0
+                for _w in self.trainable_weights:
+                    mw.append(w[index : index + _w.shape[0]])
+                    index += _w.shape[0]
+                model._trainable_weights = mw + [
+                    self.trainable_weights[-2],
+                    self.trainable_weights[-1],
+                ]
+                for batch in choice_dataset.iter_batch(batch_size=-1):
+                    utilities = model.compute_batch_utility(*batch)
+                    probabilities = tf.nn.softmax(utilities, axis=-1)
+                    loss = tf.keras.losses.CategoricalCrossentropy(reduction="sum")(
+                        y_pred=probabilities,
+                        y_true=tf.one_hot(choice_dataset.choices, depth=probabilities.shape[-1]),
+                    )
+            # Compute the Jacobian
+            jacobian = tape_2.jacobian(loss, w)
+        # Compute the Hessian from the Jacobian
+        hessian = tape_1.jacobian(jacobian, w)
+        hessian = tf.linalg.inv(tf.squeeze(hessian))
+        return tf.sqrt([hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
+
+    def compute_report(self, choice_dataset):
+        """Compute a report of the estimated weights.
+
+        Parameters
+        ----------
+        choice_dataset : ChoiceDataset
+            ChoiceDataset used for the estimation of the weights that will be
+            used to compute the Std Err of this estimation.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DF with estimation, Std Err, z_value and p_value for each coefficient.
+        """
+
+        def phi(x):
+            """Cumulative distribution function for the standard normal distribution."""
+            return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
+
+        weights_std = self.get_weights_std(choice_dataset)
+
+        names = []
+        z_values = []
+        estimations = []
+        p_z = []
+        i = 0
+        for weight in self.trainable_weights[:-2]:
+            for j in range(weight.shape[0]):
+                if weight.shape[0] > 1:
+                    names.append(f"{weight.name[:-2]}_{j}")
+                else:
+                    names.append(f"{weight.name[:-2]}")
+                estimations.append(weight.numpy()[j])
+                z_values.append(weight.numpy()[j] / weights_std[i].numpy())
+                p_z.append(2 * (1 - phi(tf.math.abs(z_values[-1]).numpy())))
+                i += 1
+
+        return pd.DataFrame(
+            {
+                "Coefficient Name": names,
+                "Coefficient Estimation": estimations,
+                "Std. Err": weights_std.numpy(),
+                "z_value": z_values,
+                "P(.>z)": p_z,
+            },
+        )
