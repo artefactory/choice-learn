@@ -574,19 +574,23 @@ class ChoiceDatasetIndexer(Indexer):
             for tuple_index in range(len(items_features_by_choice)):
                 if tuple_index in self.choice_dataset.items_features_by_choice_map.keys():
                     if items_features_by_choice[tuple_index].ndim == 1:
-                            mapped_features.append(
-                                self.choice_dataset.items_features_by_choice_map[tuple_index][
-                                    0
-                                ].batch[items_features_by_choice[tuple_index]]
-                            )
+                        mapped_features.append(
+                            self.choice_dataset.items_features_by_choice_map[tuple_index][0].batch[
+                                items_features_by_choice[tuple_index]
+                            ]
+                        )
                     else:
                         feat_ind_min = 0
                         unstacked_feat = []
                         for feature_index in np.sort(
-                            list(self.choice_dataset.items_features_by_choice_map[tuple_index].keys())
+                            list(
+                                self.choice_dataset.items_features_by_choice_map[tuple_index].keys()
+                            )
                         ):
                             unstacked_feat.append(
-                                items_features_by_choice[tuple_index][:, :, feat_ind_min:feature_index]
+                                items_features_by_choice[tuple_index][
+                                    :, :, feat_ind_min:feature_index
+                                ]
                             )
                             unstacked_feat.append(
                                 self.choice_dataset.items_features_by_choice_map[tuple_index][
