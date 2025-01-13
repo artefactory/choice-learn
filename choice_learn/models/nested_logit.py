@@ -133,7 +133,7 @@ class NestedLogit(ChoiceModel):
                 raise ValueError(f"Nest {i_nest} is empty.")
             logging.info(
                 f"""Checking nest specification,
-                         got nest nb {i_nest+1} / {len(items_nests)}
+                         got nest nb {i_nest + 1} / {len(items_nests)}
                          with {len(nest)} items within."""
             )
         flat_items = np.concatenate(items_nests).flatten()
