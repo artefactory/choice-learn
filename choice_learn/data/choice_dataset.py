@@ -1165,9 +1165,14 @@ class ChoiceDataset:
             if self.items_features_by_choice[0] is not None:
                 print(" Items Features by Choice:")
                 print(
-                    f"""{sum([f.shape[2] if f.ndim == 3 else 1
-                              for f in self.items_features_by_choice])
-                        } items features """
+                    f"""{
+                        sum(
+                            [
+                                f.shape[2] if f.ndim == 3 else 1
+                                for f in self.items_features_by_choice
+                            ]
+                        )
+                    } items features """
                 )
                 if self.items_features_by_choice_names is not None:
                     if self.items_features_by_choice_names[0] is not None:
