@@ -84,7 +84,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | RUMnet| [notebook](notebooks/models/rumnet.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/rumnet.ipynb) |Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
 | TasteNet | [notebook](notebooks/models/tastenet.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/tastenet.ipynb) |Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
 | Learning-MNL | [notebook](notebooks/models/learning_mnl.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) |Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
-| ResLogit | [notebook](notebooks/models/reslogit.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) |Wong and Farooq [[12]](#trident-references) | *ResLogit*  | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
+| ResLogit | [notebook](notebooks/models/reslogit.ipynb) |  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) |Wong and Farooq [[12]](#trident-references) | *ResLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
+| SHOPPER | / | / |Ruiz et al. [[16]](#trident-references) | *SHOPPER* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
 
 
 ### Auxiliary tools
@@ -307,6 +308,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)\
 [14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
 [15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)
+[16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)
 
 ### Code and Repositories
 
@@ -316,3 +318,4 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
 [12] [ResLogit](https://github.com/LiTrans/reslogit)\
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)
+[16] [SHOPPER](https://github.com/franrruiz/shopper-src)
