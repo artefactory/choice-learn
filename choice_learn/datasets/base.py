@@ -68,7 +68,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
         names = next(data_file)
         data = []
 
-        for i, ir in enumerate(data_file):
+        for ir in data_file:
             data.append(np.asarray(ir, dtype=np.float64))
     return names, np.stack(data)
 
