@@ -79,6 +79,7 @@ class TripDataset:
         """
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
+        self.n_samples = len(self.transactions())
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -371,6 +372,7 @@ class TripDataset:
         else:
             # Yield batches of size batch_size while going through all the trips
             trip_index = 0
+            outer_break = False
             while trip_index < num_trips:
                 # Fill the buffer with trips' augmented data until it reaches the batch size
                 while len(buffer["items"]) < batch_size:
@@ -387,8 +389,9 @@ class TripDataset:
                         # Yield the batch partially filled
                         yield batch_not_full
 
-                        # Exit the loop when all trips have been considered
-                        break
+                        # Exit the TWO while loops when all trips have been considered
+                        outer_break = True
+                        break  # Exit the inner loop
 
                     else:
                         # Consider a new trip to fill the buffer
@@ -411,6 +414,10 @@ class TripDataset:
                         buffer["prices"] = np.concatenate(
                             (buffer["prices"], additional_trip_data["prices"])
                         )
+
+                if outer_break:
+                    # Exit the outer loop
+                    break
 
                 # Once the buffer is full, get the batch and update the next buffer
                 batch = [

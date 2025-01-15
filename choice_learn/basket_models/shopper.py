@@ -829,7 +829,7 @@ class Shopper:
                         shuffle=False,
                         batch_size=batch_size,
                     ),
-                    total=int(len(trip_dataset) / np.max([batch_size, 1])),
+                    total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=1,
                     leave=False,
                 )
@@ -854,27 +854,17 @@ class Shopper:
                         f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
                     )
 
-            # TODO: decide to keep alternative A or B
-            ################ Alternative A ##################
-            # Take into account last batch that may have a different length into account for
-            # the computation of the epoch loss.
-            # if batch_size != -1:
-            #     last_batch_size = len(trip_batch)
-            #     coefficients = tf.concat(
-            #         [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
-            #     )
-            #     epoch_lossses = tf.multiply(epoch_losses, coefficients)
-            #     epoch_accuracies = tf.multiply(epoch_accuracies, coefficients)
-            #     epoch_loss = tf.reduce_sum(epoch_lossses) / len(trip_dataset)
-            #     epoch_accuracy = tf.reduce_sum(epoch_accuracies) / len(trip_dataset)
-            # else:
-            #     epoch_loss = tf.reduce_mean(epoch_losses)
-            #     epoch_accuracy = tf.reduce_mean(epoch_accuracies)
-            #################################################
-
-            ################ Alternative B ##################
-            epoch_loss = tf.reduce_mean(epoch_losses)
-            #################################################
+            # Take into account the fact that the last batch may have a
+            # different length for the computation of the epoch loss.
+            if batch_size != -1:
+                last_batch_size = len(item_batch[0])
+                coefficients = tf.concat(
+                    [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+                )
+                epoch_losses = tf.multiply(epoch_losses, coefficients)
+                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
+            else:
+                epoch_loss = tf.reduce_mean(epoch_losses)
 
             history["train_loss"].append(epoch_loss)
             history["norm_grads"].append(self.norm_grads)
@@ -952,29 +942,18 @@ class Shopper:
             )[0]
             batch_losses.append(loss)
 
-        # TODO: decide to keep alternative A or B
-        ############### Alternative A ##################
-        # Take into account last batch that may have a different length into account for
-        # the computation of the epoch loss
-        # if batch_size != -1:
-        #     last_batch_size = len(trip_batch)
-        #     coefficients = tf.concat(
-        #         [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
-        #     )
-        #     batch_losses = tf.multiply(batch_losses, coefficients)
-        #     # batch_accuracies = tf.multiply(batch_accuracies, coefficients)
-        #     batch_loss = tf.reduce_sum(batch_losses) / len(trip_dataset)
-        #     # batch_accuracy = tf.reduce_sum(batch_accuracies) / len(trip_dataset)
-        # else:
-        #     batch_loss = tf.reduce_mean(batch_losses)
-        #     # batch_accuracy = tf.reduce_mean(batch_accuracies)
-        #
-        # return batch_loss
-        ################################################
+        # Take into account the fact that the last batch may have a
+        # different length for the computation of the epoch loss.
+        if batch_size != -1:
+            last_batch_size = len(item_batch[0])
+            coefficients = tf.concat(
+                [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+            )
+            batch_losses = tf.multiply(batch_losses, coefficients)
+            return tf.reduce_sum(batch_losses) / trip_dataset.n_samples
 
-        ############### Alternative B ##################
+        # If batch_size == -1 (the whole dataset)
         return tf.reduce_mean(batch_losses)
-        ################################################
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.
