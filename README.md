@@ -307,7 +307,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [12] [ResLogit: A residual neural network logit model for data-driven choice modelling](https://doi.org/10.1016/j.trc.2021.103050), Wong, M.; Farooq, B. (2021)\
 [13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)\
 [14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
-[15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)
+[15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)\
 [16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)
 
 ### Code and Repositories
@@ -317,5 +317,5 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [1] [RUMnet](https://github.com/antoinedesir/rumnet)\
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
 [12] [ResLogit](https://github.com/LiTrans/reslogit)\
-[13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)
+[13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
 [16] [SHOPPER](https://github.com/franrruiz/shopper-src)
