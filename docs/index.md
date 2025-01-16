@@ -56,6 +56,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [TasteNet](./references/models/references_tastenet.md)
         - [Learning MNL](./references/models/references_learning_mnl.md)
         - [ResLogit](./references/models/references_reslogit.md)
+        - [SHOPPER](./references/basket_models/references_shopper.md) (see also [here](./references/basket_models/references_trip_dataset.md) and [here](./references/basket_models/references_base_basket.md))
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)
