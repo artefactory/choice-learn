@@ -534,7 +534,7 @@ class Shopper:
         customer: int,
         week: int,
         prices: np.ndarray,
-    ) -> tf.Tensor:
+    ) -> float:
         """Compute the utility of an ordered basket.
 
         Parameters
@@ -553,15 +553,14 @@ class Shopper:
 
         Returns
         -------
-        likelihood: tf.Tensor
+        likelihood: float
             Likelihood of the ordered basket
-            Shape must be (1,)
         """
         # Prevent unintended side effects from in-place modifications
         availability_matrix_copy = availability_matrix.copy()
 
         # Equation (5) of the paper Shopper
-        ordered_basket_likelihood = tf.constant(1.0)
+        ordered_basket_likelihood = 1.0
         for j in range(0, len(basket)):
             next_item_id = basket[j]
 
@@ -572,7 +571,7 @@ class Shopper:
                 customer=customer,
                 week=week,
                 prices=prices,
-            )[next_item_id]
+            )[next_item_id].numpy()
 
             # This item is not available anymore
             availability_matrix_copy[next_item_id] = 0
@@ -587,7 +586,7 @@ class Shopper:
         week: int,
         prices: np.ndarray,
         verbose: int = 0,
-    ) -> tf.Tensor:
+    ) -> float:
         """Compute the utility of an unordered basket.
 
         Parameters
@@ -609,9 +608,8 @@ class Shopper:
 
         Returns
         -------
-        likelihood: tf.Tensor
+        likelihood: float
             Likelihood of the unordered basket
-            Shape must be (1,)
         """
         if verbose > 0:
             print(
@@ -623,7 +621,7 @@ class Shopper:
         permutation_list = list(permutations(range(len(basket) - 1)))
 
         # Equation (6) of the paper Shopper
-        return tf.reduce_sum(
+        return sum(
             [
                 self.compute_ordered_basket_likelihood(
                     # The last item should always be the checkout item 0

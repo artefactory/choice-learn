@@ -2,7 +2,6 @@
 
 import os
 import sys
-from importlib import resources
 from typing import Union
 
 import numpy as np
@@ -12,12 +11,12 @@ from trip_dataset import Trip, TripDataset
 sys.path.append("../")
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
-DATA_MODULE = "choice_learn.datasets.data"
+DATA_MODULE = "../choice_learn/datasets/data"
 
 # When files are executed on a server, the path is different
 # OS_DATA_MODULE = os.path.join(os.path.abspath(".."),
 #                               "choice-learn", "choice_learn", "datasets", "data")
-# DATA_MODULE = "choice-learn.choice_learn.datasets.data"
+# DATA_MODULE = "../choice-learn/choice_learn/datasets/data"
 
 
 def csv_to_df(
@@ -411,30 +410,3 @@ def from_csv(
     )
 
     return train_trip_dataset, test_trip_dataset, val_trip_dataset, n_items, n_customers, n_trips
-
-
-def get_path_bis(data_file_name: str, module: str = DATA_MODULE) -> str:
-    """Get path toward data file.
-
-    Specifically used to handled Python 3.8 and 3.9+ differences in importlib.resources handling.
-    Modified version of https://github.com/artefactory/choice-learn/blob/main/choice_learn/datasets/base.py.
-
-    Parameters
-    ----------
-    data_file_name: str
-        name of the csv file to load
-    module: str, optional
-        path to directory containing the data file, by default DATA_MODULE
-
-    Returns
-    -------
-    Path
-        path to the data file
-    """
-    import sys
-
-    if sys.version >= "3.9":
-        return resources.files(module) / data_file_name
-
-    with resources.path(module, data_file_name) as path:
-        return path
