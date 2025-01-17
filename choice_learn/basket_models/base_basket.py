@@ -47,7 +47,7 @@ def csv_to_df(
 
 
 def map_indexes(df: pd.DataFrame, column_name: str, index_start: int) -> dict:
-    """Map the values of a column to indexes.
+    """Create the mapping and map the values of a column to indexes.
 
     Parameters
     ----------

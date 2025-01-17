@@ -8,7 +8,15 @@ from .utils.permutation import permutations
 
 
 class Trip:
-    """Class for a trip."""
+    """Class for a trip.
+
+    A trip is a sequence of purchases made by a given customer at a specific time and
+    at a specific location (with given prices).
+    It can be seen as the content of a time-stamped purchase receipt with customer identification.
+
+    Trip = (purchases, customer, week, prices)
+
+    """
 
     def __init__(
         self,

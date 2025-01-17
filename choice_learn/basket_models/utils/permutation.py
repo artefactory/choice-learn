@@ -8,6 +8,11 @@ import numpy as np
 def permutations(iterable: Union[list, np.ndarray, tuple], r: Union[int, None] = None) -> iter:
     """Generate all the r length permutations of an iterable (n factorial possibilities).
 
+    Examples
+    --------
+    permutations('ABCD', 2) → AB AC AD BA BC BD CA CB CD DA DB DC
+    permutations(range(3)) → 012 021 102 120 201 210
+
     Code taken from https://docs.python.org/3/library/itertools.html.
 
     Parameters
@@ -23,9 +28,6 @@ def permutations(iterable: Union[list, np.ndarray, tuple], r: Union[int, None] =
     generator
        Generator of permutations
     """
-    # permutations('ABCD', 2) → AB AC AD BA BC BD CA CB CD DA DB DC
-    # permutations(range(3)) → 012 021 102 120 201 210
-
     pool = tuple(iterable)
     n = len(pool)
     r = n if r is None else r

@@ -31,6 +31,7 @@ class Shopper:
         grad_clip_value: Union[float, None] = None,
         weight_decay: Union[float, None] = None,
         momentum: float = 0.0,
+        epsilon_price: float = 1e-5,
     ) -> None:
         """Initialize the Shopper model.
 
@@ -54,6 +55,8 @@ class Shopper:
             Weight decay, by default None
         momentum: float, optional
             Momentum for the optimizer, by default 0. For SGD only
+        epsilon_price: float, optional
+            Epsilon value to add to prices to avoid NaN values (log(0)), by default 1e-5
         """
         if stage not in range(1, 4):
             raise ValueError("Stage number must be between 1 and 3, inclusive.")
@@ -96,6 +99,8 @@ class Shopper:
         self.grad_clip_value = grad_clip_value
         self.weight_decay = weight_decay
         self.momentum = momentum
+        # Add epsilon to prices to avoid NaN values (log(0))
+        self.epsilon_price = epsilon_price
 
         self.instantiated = False
 
@@ -103,7 +108,7 @@ class Shopper:
         self,
         n_items: int,
         n_customers: int,
-        len_repr: list[int],
+        latent_sizes: dict[str],
         n_negative_samples: int = 2,
     ) -> None:
         """Instantiate the Shopper model.
@@ -115,76 +120,86 @@ class Shopper:
             (includes the checkout item)
         n_customers: int
             Number of customers in the population
-        len_repr: list[int]
+        latent_sizes: dict[str]
             Lengths of the vector representation of the latent parameters
-            len_repr[0]: length of one vector of theta, alpha, rho
-            len_repr[1]: length of one vector of gamma, beta
-            len_repr[2]: length of one vector of delta, mu
+            latent_sizes["preferences"]: length of one vector of theta, alpha, rho
+            latent_sizes["price"]: length of one vector of gamma, beta
+            latent_sizes["season"]: length of one vector of delta, mu
         n_negative_samples: int, optional
             Number of negative samples to draw for each positive sample for the training,
             by default 2
         """
+        if latent_sizes.keys() != {"preferences", "price", "season"}:
+            raise ValueError(
+                "The latent_sizes dictionary must contain the keys 'preferences', 'price' and "
+                "'season'."
+            )
+
         self.n_items = n_items
         self.n_customers = n_customers
-        self.len_repr = len_repr
+        self.latent_sizes = latent_sizes
         self.n_negative_samples = n_negative_samples
 
         self.rho = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items, len_repr[0])  # Dimension for 1 item: len_repr[0]
-            ),
+                shape=(n_items, latent_sizes["preferences"])
+            ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="rho",
         )
         self.alpha = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items, len_repr[0])  # Dimension for 1 item: len_repr[0]
-            ),
+                shape=(n_items, latent_sizes["preferences"])
+            ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="alpha",
         )
-        self.lambda_ = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items,)  # Dimension for 1 item: 1
-            ),
-            trainable=True,
-            name="lambda",
-        )
-        self.beta = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items, len_repr[1])  # Dimension for 1 item: len_repr[1]
-            ),
-            trainable=True,
-            name="beta",
-        )
-        self.mu = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
-                shape=(n_items, len_repr[2])  # Dimension for 1 item: len_repr[2]
-            ),
-            trainable=True,
-            name="mu",
-        )
         self.theta = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_customers, len_repr[0])  # Dimension for 1 customer: len_repr[0]
-            ),
+                shape=(n_customers, latent_sizes["preferences"])
+            ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="theta",
         )
-        self.gamma = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_customers, len_repr[1])  # Dimension for 1 customer: len_repr[1]
-            ),
-            trainable=True,
-            name="gamma",
-        )
-        self.delta = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
-                shape=(52, len_repr[2])  # Dimension for 1 week: len_repr[2]
-            ),
-            trainable=True,
-            name="delta",
-        )
+
+        if self.stage > 1:
+            # In addition to customer preferences: item popularity, price sensitivity
+            # and seasonal effects
+            self.lambda_ = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(n_items,)  # Dimension for 1 item: 1
+                ),
+                trainable=True,
+                name="lambda",
+            )
+            self.beta = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(n_items, latent_sizes["price"])
+                ),  # Dimension for 1 item: latent_sizes["price"]
+                trainable=True,
+                name="beta",
+            )
+            self.mu = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(n_items, latent_sizes["season"])
+                ),  # Dimension for 1 item: latent_sizes["season"]
+                trainable=True,
+                name="mu",
+            )
+            self.gamma = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(n_customers, latent_sizes["price"])
+                ),  # Dimension for 1 item: latent_sizes["price"]
+                trainable=True,
+                name="gamma",
+            )
+            self.delta = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(52, latent_sizes["season"])
+                ),  # Dimension for 1 item: latent_sizes["season"]
+                trainable=True,
+                name="delta",
+            )
 
         self.instantiated = True
 
@@ -197,20 +212,24 @@ class Shopper:
         list[tf.Variable]
             Latent parameters of the model
         """
+        if self.stage == 1:
+            return [self.rho, self.alpha, self.theta]
+
+        # Stage 2 or 3
         return [
             self.rho,
             self.alpha,
+            self.theta,
             self.lambda_,
             self.beta,
             self.mu,
-            self.theta,
             self.gamma,
             self.delta,
         ]
 
     def compute_batch_utility(
         self,
-        item_list: np.ndarray,
+        item_list: Union[np.ndarray, tf.Tensor],
         basket_list: np.ndarray,
         customer_list: np.ndarray,
         week_list: np.ndarray,
@@ -220,7 +239,7 @@ class Shopper:
 
         Parameters
         ----------
-        item_list: np.ndarray
+        item_list: np.ndarray or tf.Tensor
             List of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size * (n_negative_samples + 1),)
             (positive and negative samples concatenated together)
@@ -265,13 +284,11 @@ class Shopper:
 
             gamma_customer = tf.gather(self.gamma, indices=customer_list)
             beta_item = tf.gather(self.beta, indices=item_list)
-            # Add epsilon to avoid NaN values (log(0))
-            epsilon_price = 1e-5
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
                 * tf.reduce_sum(gamma_customer * beta_item, axis=1)
-                * tf.cast(tf.math.log(np.array(price_list) + epsilon_price), dtype=tf.float32)
+                * tf.cast(tf.math.log(np.array(price_list) + self.epsilon_price), dtype=tf.float32)
             )
 
             delta_week = tf.gather(self.delta, indices=week_list)
@@ -385,14 +402,14 @@ class Shopper:
                         theta_customer[idx] * self.alpha, axis=1
                     )
 
-                    # Add epsilon to avoid NaN values (log(0))
-                    epsilon_price = 1e-5
                     hypothetical_price_effects = (
                         -1
                         # Compute the dot product along the last dimension between the embeddings
                         # of the given customer's gamma and beta of all the items
                         * tf.reduce_sum(gamma_customer[idx] * self.beta, axis=1)
-                        * tf.cast(tf.math.log(price_list[idx] + epsilon_price), dtype=tf.float32)
+                        * tf.cast(
+                            tf.math.log(price_list[idx] + self.epsilon_price), dtype=tf.float32
+                        )
                     )
 
                     # Compute the dot product along the last dimension between the embeddings
@@ -417,22 +434,24 @@ class Shopper:
                     for next_item_id in hypothetical_next_purchases:
                         rho_next_item = tf.gather(
                             self.rho, indices=next_item_id
-                        )  # Shape: (len_repr,)
+                        )  # Shape: (latent_size,)
 
                         # Gather the embeddings using a tensor of indices
                         # (before ensure that indices are integers)
                         next_alpha_by_basket = tf.gather(
                             self.alpha, indices=tf.cast(next_basket, dtype=tf.int32)
-                        )  # Shape: (len(next_basket), len_repr)
+                        )  # Shape: (len(next_basket), latent_size)
 
                         # Compute the sum of the alpha embeddings
                         next_alpha_sum = tf.reduce_sum(
                             next_alpha_by_basket, axis=0
-                        )  # Shape: (len_repr,)
+                        )  # Shape: (latent_size,)
 
                         # Divide the sum of alpha embeddings by the number of items
                         # in the basket of the next step (always > 0)
-                        next_alpha_average = next_alpha_sum / len(next_basket)  # Shape: (len_repr,)
+                        next_alpha_average = next_alpha_sum / len(
+                            next_basket
+                        )  # Shape: (latent_size,)
 
                         next_step_products_to_add_to_psi.append(
                             tf.reduce_sum(rho_next_item * next_alpha_average).numpy()
@@ -493,13 +512,13 @@ class Shopper:
             # All items
             item_list=np.array([item_id for item_id in range(self.n_items)]),
             # For each item: same basket/customer/week/prices
-            basket_list=np.array([basket for item_id in range(self.n_items)]),
-            customer_list=np.array([customer for item_id in range(self.n_items)]),
-            week_list=np.array([week for item_id in range(self.n_items)]),
+            basket_list=np.array([basket for _ in range(self.n_items)]),
+            customer_list=np.array([customer for _ in range(self.n_items)]),
+            week_list=np.array([week for _ in range(self.n_items)]),
             price_list=prices,
         )
 
-        # Equation (2) of notes.md, ie softmax on the utilities
+        # Equation (3) of the paper Shopper, ie softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
             available_items_by_choice=availability_matrix_copy,  # Shape: (n_items,)
@@ -541,7 +560,7 @@ class Shopper:
         # Prevent unintended side effects from in-place modifications
         availability_matrix_copy = availability_matrix.copy()
 
-        # Equation (4) of notes.md
+        # Equation (5) of the paper Shopper
         ordered_basket_likelihood = tf.constant(1.0)
         for j in range(0, len(basket)):
             next_item_id = basket[j]
@@ -603,7 +622,7 @@ class Shopper:
         # Permute all the items in the basket except the last one (the checkout item)
         permutation_list = list(permutations(range(len(basket) - 1)))
 
-        # Equation (5) of notes.md
+        # Equation (6) of the paper Shopper
         return tf.reduce_sum(
             [
                 self.compute_ordered_basket_likelihood(
@@ -618,7 +637,7 @@ class Shopper:
             ]
         )
 
-    def negative_sampling(
+    def get_negative_samples(
         self, all_items: np.ndarray, purchased_items: np.ndarray, next_item: int, n_samples: int
     ) -> list[int]:
         """Sample randomly a set of items.
@@ -683,7 +702,7 @@ class Shopper:
         negative_samples = (
             np.concatenate(
                 [
-                    self.negative_sampling(
+                    self.get_negative_samples(
                         # Due to preprocessing, all_items = [0, 1, ... , n_items - 1]
                         # (up to n_items - 1 because the checkout item is counted in n_items)
                         all_items=[item_id for item_id in range(self.n_items)],
@@ -806,11 +825,10 @@ class Shopper:
             if not self.instantiated:
                 raise ValueError("Model not instantiated. Please call .instantiate() first.")
 
-        epochs = self.epochs
         batch_size = self.batch_size
 
         history = {"train_loss": [], "norm_grads": []}
-        t_range = tqdm.trange(epochs, position=0)
+        t_range = tqdm.trange(self.epochs, position=0)
 
         self.callbacks.on_train_begin()
 
@@ -963,12 +981,16 @@ class Shopper:
         path: str
             path to the folder where to save the model
         """
-        # File name with the current date and time
-        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path_bis = path + f"_{current_time}/"
+        if os.path.exists(path):
+            # Add current date and time to the folder name
+            # if the folder already exists
+            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path += f"_{current_time}/"
+        else:
+            path += "/"
 
-        if not os.path.exists(path_bis):
-            Path(path_bis).mkdir(parents=True, exist_ok=True)
+        if not os.path.exists(path):
+            Path(path).mkdir(parents=True, exist_ok=True)
 
         # Save the parameters in a single pickle file
         params = {}
@@ -976,12 +998,12 @@ class Shopper:
             # Save only the JSON-serializable parameters
             if isinstance(v, (int, float, list, str, dict)):
                 params[k] = v
-        json.dump(params, open(os.path.join(path_bis, "params.json"), "w"))
+        json.dump(params, open(os.path.join(path, "params.json"), "w"))
 
         # Save the latent parameters in separate numpy files
         for latent_parameter in self.trainable_weights:
             parameter_name = latent_parameter.name.split(":")[0]
-            np.save(os.path.join(path_bis, parameter_name + ".npy"), latent_parameter)
+            np.save(os.path.join(path, parameter_name + ".npy"), latent_parameter)
 
     @classmethod
     def load_model(cls, path: str) -> object:
@@ -1012,7 +1034,7 @@ class Shopper:
         # Instantiate manually the model
         model.n_items = params["n_items"]
         model.n_customers = params["n_customers"]
-        model.len_repr = params["len_repr"]
+        model.latent_sizes = params["latent_sizes"]
         model.n_negative_samples = params["n_negative_samples"]
         model.instantiated = params["instantiated"]
 
@@ -1021,21 +1043,24 @@ class Shopper:
         model.alpha = tf.Variable(
             np.load(os.path.join(path, "alpha.npy")), trainable=True, name="alpha"
         )
-        model.lambda_ = tf.Variable(
-            np.load(os.path.join(path, "lambda.npy")), trainable=True, name="lambda"
-        )
-        model.beta = tf.Variable(
-            np.load(os.path.join(path, "beta.npy")), trainable=True, name="beta"
-        )
-        model.mu = tf.Variable(np.load(os.path.join(path, "mu.npy")), trainable=True, name="mu")
         model.theta = tf.Variable(
             np.load(os.path.join(path, "theta.npy")), trainable=True, name="theta"
         )
-        model.gamma = tf.Variable(
-            np.load(os.path.join(path, "gamma.npy")), trainable=True, name="gamma"
-        )
-        model.delta = tf.Variable(
-            np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
-        )
+
+        lambda_path = os.path.join(path, "lambda.npy")
+        if os.path.exists(lambda_path):
+            # Then the paths to the saved beta, mu, gamma and delta should also exist
+            # (stage 2 or 3)
+            model.lambda_ = tf.Variable(np.load(lambda_path), trainable=True, name="lambda")
+            model.beta = tf.Variable(
+                np.load(os.path.join(path, "beta.npy")), trainable=True, name="beta"
+            )
+            model.mu = tf.Variable(np.load(os.path.join(path, "mu.npy")), trainable=True, name="mu")
+            model.gamma = tf.Variable(
+                np.load(os.path.join(path, "gamma.npy")), trainable=True, name="gamma"
+            )
+            model.delta = tf.Variable(
+                np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
+            )
 
         return model
