@@ -375,7 +375,13 @@ class TripDataset:
                 )
 
             # Yield the whole dataset
-            yield buffer
+            yield (
+                buffer["items"],
+                buffer["baskets"],
+                buffer["customers"],
+                buffer["weeks"],
+                buffer["prices"],
+            )
 
         else:
             # Yield batches of size batch_size while going through all the trips
@@ -386,16 +392,14 @@ class TripDataset:
                 while len(buffer["items"]) < batch_size:
                     if trip_index >= num_trips:
                         # Then the buffer is not full but there are no more trips to consider
-                        batch_not_full = [
+                        # Yield the batch partially filled
+                        yield (
                             buffer["items"],
                             buffer["baskets"],
                             buffer["customers"],
                             buffer["weeks"],
                             buffer["prices"],
-                        ]
-
-                        # Yield the batch partially filled
-                        yield batch_not_full
+                        )
 
                         # Exit the TWO while loops when all trips have been considered
                         outer_break = True
@@ -428,13 +432,13 @@ class TripDataset:
                     break
 
                 # Once the buffer is full, get the batch and update the next buffer
-                batch = [
-                    buffer["items"][:batch_size],
-                    buffer["baskets"][:batch_size],
-                    buffer["customers"][:batch_size],
-                    buffer["weeks"][:batch_size],
-                    buffer["prices"][:batch_size],
-                ]
+                batch = {
+                    "items": buffer["items"][:batch_size],
+                    "baskets": buffer["baskets"][:batch_size],
+                    "customers": buffer["customers"][:batch_size],
+                    "weeks": buffer["weeks"][:batch_size],
+                    "prices": buffer["prices"][:batch_size],
+                }
                 buffer = {
                     "items": buffer["items"][batch_size:],
                     "baskets": buffer["baskets"][batch_size:],
@@ -444,7 +448,13 @@ class TripDataset:
                 }
 
                 # Yield the batch
-                yield batch
+                yield (
+                    batch["items"],
+                    batch["baskets"],
+                    batch["customers"],
+                    batch["weeks"],
+                    batch["prices"],
+                )
 
     def filter(self, bool_list: list[bool]) -> object:  # TODO: delete this method if never used
         """Filter over sessions indexes following bool.

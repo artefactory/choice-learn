@@ -675,16 +675,36 @@ class Shopper:
 
     def batch_predict(
         self,
-        item_batch: list[np.ndarray],
+        item_batch: np.ndarray,
+        basket_batch: np.ndarray,
+        customer_batch: np.ndarray,
+        week_batch: np.ndarray,
+        price_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Prediction (log-likelihood and loss) for one batch of items.
 
         Parameters
         ----------
-        item_batch: list[np.ndarray]
-            List of purchased items (ie transactions) on which to train the model
-            For each item in the batch: item, basket, customer, week, prices
-            Shape must be (5, batch_size)
+        # item_batch: np.ndarray
+        #     Batch of item ids (integers)
+        #     For each item in the batch: item, basket, customer, week, prices
+        #     Shape must be (5, batch_size)
+
+        item_batch: np.ndarray
+            Batch of purchased items ID (integers)
+            Shape must be (batch_size,)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        customer_batch: np.ndarray
+            Batch of customer ids (integers) for each purchased item
+            Shape must be (batch_size,)
+        week_batch: np.ndarray
+            Batch of week numbers (integers) for each purchased item
+            Shape must be (batch_size,)
+        price_batch: np.ndarray
+            Batch of prices (integers) for each purchased item
+            Shape must be (batch_size,)
 
         Returns
         -------
@@ -696,7 +716,7 @@ class Shopper:
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        batch_size = len(item_batch[0])
+        batch_size = len(item_batch)
 
         # Negative sampling
         negative_samples = (
@@ -708,8 +728,8 @@ class Shopper:
                         all_items=[item_id for item_id in range(self.n_items)],
                         # The items already purchased are the items positioned before
                         # the next item in the basket
-                        purchased_items=item_batch[1][idx],
-                        next_item=item_batch[0][idx],
+                        purchased_items=basket_batch[idx],
+                        next_item=item_batch[idx],
                         n_samples=self.n_negative_samples,
                     )
                     for idx in range(batch_size)
@@ -723,8 +743,8 @@ class Shopper:
             .T.flatten()
         )
 
-        item_list = np.concatenate((item_batch[0], negative_samples)).astype(int)
-        prices_tiled = np.tile(item_batch[4], (self.n_negative_samples + 1, 1))
+        item_list = np.concatenate((item_batch, negative_samples)).astype(int)
+        prices_tiled = np.tile(price_batch, (self.n_negative_samples + 1, 1))
         # Each time, pick only the price of the item in item_list from the
         # corresponding price array
         price_list = np.array([prices_tiled[idx][item_list[idx]] for idx in range(len(item_list))])
@@ -732,9 +752,9 @@ class Shopper:
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_list=item_list,
-            basket_list=np.tile(item_batch[1], (self.n_negative_samples + 1, 1)),
-            customer_list=np.tile(item_batch[2], self.n_negative_samples + 1),
-            week_list=np.tile(item_batch[3], self.n_negative_samples + 1),
+            basket_list=np.tile(basket_batch, (self.n_negative_samples + 1, 1)),
+            customer_list=np.tile(customer_batch, self.n_negative_samples + 1),
+            week_list=np.tile(week_batch, self.n_negative_samples + 1),
             price_list=price_list,
         )
 
@@ -767,16 +787,31 @@ class Shopper:
     # @tf.function # TODO: not working for now
     def train_step(
         self,
-        items: list[np.ndarray],
+        item_batch: np.ndarray,
+        basket_batch: np.ndarray,
+        customer_batch: np.ndarray,
+        week_batch: np.ndarray,
+        price_batch: np.ndarray,
     ) -> tf.Variable:
         """Train the model for one step.
 
         Parameters
         ----------
-        items: list[np.ndarray]
-            List of purchased items (ie transactions) on which to train the model
-            For each item in the batch: item, basket, customer, week, prices
-            Shape must be  (5, batch_size)
+        item_batch: np.ndarray
+            Batch of purchased items ID (integers)
+            Shape must be (batch_size,)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        customer_batch: np.ndarray
+            Batch of customer ids (integers) for each purchased item
+            Shape must be (batch_size,)
+        week_batch: np.ndarray
+            Batch of week numbers (integers) for each purchased item
+            Shape must be (batch_size,)
+        price_batch: np.ndarray
+            Batch of prices (integers) for each purchased item
+            Shape must be (batch_size,)
 
         Returns
         -------
@@ -785,7 +820,11 @@ class Shopper:
         """
         with tf.GradientTape() as tape:
             batch_loss = self.batch_predict(
-                item_batch=items,
+                item_batch=item_batch,
+                basket_batch=basket_batch,
+                customer_batch=customer_batch,
+                week_batch=week_batch,
+                price_batch=price_batch,
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
 
@@ -854,11 +893,21 @@ class Shopper:
             else:
                 inner_range = trip_dataset.iter_batch(shuffle=False, batch_size=batch_size)
 
-            for batch_nb, item_batch in enumerate(inner_range):
+            for batch_nb, (
+                item_batch,
+                basket_batch,
+                customer_batch,
+                week_batch,
+                price_batch,
+            ) in enumerate(inner_range):
                 self.callbacks.on_train_batch_begin(batch_nb)
 
                 neg_loglikelihood = self.train_step(
-                    items=item_batch,
+                    item_batch=item_batch,
+                    basket_batch=basket_batch,
+                    customer_batch=customer_batch,
+                    week_batch=week_batch,
+                    price_batch=price_batch,
                 )
                 train_logs["train_loss"].append(neg_loglikelihood)
                 temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
@@ -875,7 +924,7 @@ class Shopper:
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
             if batch_size != -1:
-                last_batch_size = len(item_batch[0])
+                last_batch_size = len(item_batch)
                 coefficients = tf.concat(
                     [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
                 )
@@ -898,15 +947,23 @@ class Shopper:
             # Test on val_dataset if provided
             if val_dataset is not None:
                 test_losses = []
-                for batch_nb, item_batch in enumerate(
-                    val_dataset.iter_batch(shuffle=False, batch_size=batch_size)
-                ):
+                for batch_nb, (
+                    item_batch,
+                    basket_batch,
+                    customer_batch,
+                    week_batch,
+                    price_batch,
+                ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
                     test_losses.append(
                         self.batch_predict(
                             item_batch=item_batch,
+                            basket_batch=basket_batch,
+                            customer_batch=customer_batch,
+                            week_batch=week_batch,
+                            price_batch=price_batch,
                         )[0]
                     )
                     val_logs["val_loss"].append(test_losses[-1])
@@ -954,16 +1011,26 @@ class Shopper:
             Shape must be (1,)
         """
         batch_losses = []
-        for item_batch in trip_dataset.iter_batch(shuffle=False, batch_size=batch_size):
+        for (
+            item_batch,
+            basket_batch,
+            customer_batch,
+            week_batch,
+            price_batch,
+        ) in trip_dataset.iter_batch(shuffle=False, batch_size=batch_size):
             loss = self.batch_predict(
                 item_batch=item_batch,
+                basket_batch=basket_batch,
+                customer_batch=customer_batch,
+                week_batch=week_batch,
+                price_batch=price_batch,
             )[0]
             batch_losses.append(loss)
 
         # Take into account the fact that the last batch may have a
         # different length for the computation of the epoch loss.
         if batch_size != -1:
-            last_batch_size = len(item_batch[0])
+            last_batch_size = len(item_batch)
             coefficients = tf.concat(
                 [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
             )
