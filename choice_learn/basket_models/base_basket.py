@@ -11,13 +11,13 @@ from trip_dataset import Trip, TripDataset
 
 sys.path.append("../")
 
-OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "basket_models", "data")
-DATA_MODULE = "choice_learn.basket_models.data"
+OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
+DATA_MODULE = "choice_learn.datasets.data"
 
 # When files are executed on a server, the path is different
 # OS_DATA_MODULE = os.path.join(os.path.abspath(".."),
-#                               "choice-learn", "choice_learn", "basket_models", "data")
-# DATA_MODULE = "choice-learn.choice_learn.basket_models.data"
+#                               "choice-learn", "choice_learn", "datasets", "data")
+# DATA_MODULE = "choice-learn.choice_learn.datasets.data"
 
 
 def csv_to_df(
