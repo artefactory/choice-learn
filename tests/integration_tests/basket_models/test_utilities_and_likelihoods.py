@@ -87,11 +87,13 @@ n_customers_2 = trip_dataset_2.n_customers()
 
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
-    model = Shopper(stage=1)
+    model = Shopper(
+        stage=1,
+        latent_sizes={"preferences": 10, "price": 10, "season": 10},
+    )
     model.instantiate(
         n_items=n_items_1,
         n_customers=n_customers_1,
-        latent_sizes={"preferences": 10, "price": 10, "season": 10},
     )
     model.fit(trip_dataset=trip_dataset_1)
 
@@ -118,13 +120,12 @@ def test_item_probabilities_sum_to_1() -> None:
 
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
-    model = Shopper(stage=1)
-    model.instantiate(
-        n_items=n_items_2,
-        n_customers=n_customers_2,
+    model = Shopper(
+        stage=1,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
         n_negative_samples=0,
     )
+    model.instantiate(n_items=n_items_2, n_customers=n_customers_2)
     model.fit(trip_dataset=trip_dataset_2)
 
     # For a basket {1, 2, 3, 0} of size 3:
