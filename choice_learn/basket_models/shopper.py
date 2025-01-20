@@ -23,6 +23,8 @@ class Shopper:
     def __init__(
         self,
         stage: int = 1,
+        latent_sizes: dict[str] = {"preferences": 1, "price": 1, "season": 1},
+        n_negative_samples: int = 2,
         optimizer: str = "adam",
         callbacks: Union[tf.keras.callbacks.CallbackList, None] = None,
         lr: float = 1e-3,
@@ -39,6 +41,14 @@ class Shopper:
         ----------
         stage: int, optional
             Modeling stage of the model (1, 2 or 3), by default 1
+        latent_sizes: dict[str]
+            Lengths of the vector representation of the latent parameters
+            latent_sizes["preferences"]: length of one vector of theta, alpha, rho
+            latent_sizes["price"]: length of one vector of gamma, beta
+            latent_sizes["season"]: length of one vector of delta, mu
+        n_negative_samples: int, optional
+            Number of negative samples to draw for each positive sample for the training,
+            by default 2
         optimizer: str, optional
             Optimizer to use for training, by default "adam"
         callbacks: tf.keras.callbacks.Callbacklist, optional
@@ -61,6 +71,15 @@ class Shopper:
         if stage not in range(1, 4):
             raise ValueError("Stage number must be between 1 and 3, inclusive.")
         self.stage = stage
+
+        if latent_sizes.keys() != {"preferences", "price", "season"}:
+            raise ValueError(
+                "The latent_sizes dictionary must contain the keys 'preferences', 'price' and "
+                "'season'."
+            )
+        self.latent_sizes = latent_sizes
+
+        self.n_negative_samples = n_negative_samples
 
         self.optimizer_name = optimizer
         if optimizer.lower() == "adam":
@@ -91,6 +110,7 @@ class Shopper:
             self.optimizer = tf.keras.optimizers.Adam(
                 learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
             )
+
         self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)
         self.lr = lr
@@ -108,8 +128,6 @@ class Shopper:
         self,
         n_items: int,
         n_customers: int,
-        latent_sizes: dict[str],
-        n_negative_samples: int = 2,
     ) -> None:
         """Instantiate the Shopper model.
 
@@ -120,43 +138,27 @@ class Shopper:
             (includes the checkout item)
         n_customers: int
             Number of customers in the population
-        latent_sizes: dict[str]
-            Lengths of the vector representation of the latent parameters
-            latent_sizes["preferences"]: length of one vector of theta, alpha, rho
-            latent_sizes["price"]: length of one vector of gamma, beta
-            latent_sizes["season"]: length of one vector of delta, mu
-        n_negative_samples: int, optional
-            Number of negative samples to draw for each positive sample for the training,
-            by default 2
         """
-        if latent_sizes.keys() != {"preferences", "price", "season"}:
-            raise ValueError(
-                "The latent_sizes dictionary must contain the keys 'preferences', 'price' and "
-                "'season'."
-            )
-
         self.n_items = n_items
         self.n_customers = n_customers
-        self.latent_sizes = latent_sizes
-        self.n_negative_samples = n_negative_samples
 
         self.rho = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items, latent_sizes["preferences"])
+                shape=(n_items, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="rho",
         )
         self.alpha = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_items, latent_sizes["preferences"])
+                shape=(n_items, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="alpha",
         )
         self.theta = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_customers, latent_sizes["preferences"])
+                shape=(n_customers, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="theta",
@@ -174,28 +176,28 @@ class Shopper:
             )
             self.beta = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                    shape=(n_items, latent_sizes["price"])
+                    shape=(n_items, self.atent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="beta",
             )
             self.mu = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
-                    shape=(n_items, latent_sizes["season"])
+                    shape=(n_items, self.latent_sizes["season"])
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
                 name="mu",
             )
             self.gamma = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                    shape=(n_customers, latent_sizes["price"])
+                    shape=(n_customers, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="gamma",
             )
             self.delta = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
-                    shape=(52, latent_sizes["season"])
+                    shape=(52, self.latent_sizes["season"])
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
                 name="delta",
@@ -858,9 +860,73 @@ class Shopper:
         history: dict
             Different metrics values over epochs
         """
-        if hasattr(self, "instantiated"):
-            if not self.instantiated:
-                raise ValueError("Model not instantiated. Please call .instantiate() first.")
+        if not self.instantiated:
+            # Lazy instantiation
+            self.n_items = TripDataset.n_items()
+            self.n_customers = TripDataset.n_customers()
+
+            self.rho = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(self.n_items, self.latent_sizes["preferences"])
+                ),  # Dimension for 1 item: latent_sizes["preferences"]
+                trainable=True,
+                name="rho",
+            )
+            self.alpha = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(self.n_items, self.latent_sizes["preferences"])
+                ),  # Dimension for 1 item: latent_sizes["preferences"]
+                trainable=True,
+                name="alpha",
+            )
+            self.theta = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(self.n_customers, self.latent_sizes["preferences"])
+                ),  # Dimension for 1 item: latent_sizes["preferences"]
+                trainable=True,
+                name="theta",
+            )
+
+            if self.stage > 1:
+                # In addition to customer preferences: item popularity, price sensitivity
+                # and seasonal effects
+                self.lambda_ = tf.Variable(
+                    tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                        shape=(self.n_items,)  # Dimension for 1 item: 1
+                    ),
+                    trainable=True,
+                    name="lambda",
+                )
+                self.beta = tf.Variable(
+                    tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                        shape=(self.n_items, self.latent_sizes["price"])
+                    ),  # Dimension for 1 item: latent_sizes["price"]
+                    trainable=True,
+                    name="beta",
+                )
+                self.mu = tf.Variable(
+                    tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                        shape=(self.n_items, self.latent_sizes["season"])
+                    ),  # Dimension for 1 item: latent_sizes["season"]
+                    trainable=True,
+                    name="mu",
+                )
+                self.gamma = tf.Variable(
+                    tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                        shape=(self.n_customers, self.latent_sizes["price"])
+                    ),  # Dimension for 1 item: latent_sizes["price"]
+                    trainable=True,
+                    name="gamma",
+                )
+                self.delta = tf.Variable(
+                    tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                        shape=(52, self.latent_sizes["season"])
+                    ),  # Dimension for 1 item: latent_sizes["season"]
+                    trainable=True,
+                    name="delta",
+                )
+
+            self.instantiated = True
 
         batch_size = self.batch_size
 
