@@ -207,8 +207,8 @@ n_customers_2 = trip_dataset_2.n_customers()
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
     model = Shopper(
-        stage=1,
-        latent_sizes={"preferences": 10, "price": 10, "season": 10},
+        stage=3,
+        latent_sizes={"preferences": 2, "price": 2, "season": 2},
     )
     model.instantiate(
         n_items=n_items_1,
@@ -240,7 +240,7 @@ def test_item_probabilities_sum_to_1() -> None:
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
     model = Shopper(
-        stage=1,
+        stage=3,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
         n_negative_samples=0,
     )

@@ -364,12 +364,21 @@ class Shopper:
         false_output = psi
         true_output = psi + product_to_add_to_psi
 
+        # # Print the indices of psi where there are NaN values
+        # nan_indices = tf.where(tf.math.is_nan(psi + product_to_add_to_psi))
+        # print("Indices of psi with NaN values:", nan_indices.numpy())
+
+        # # Print the indices of psi + product_to_add_to_psi where there are NaN values
+        # nan_indices = tf.where(tf.math.is_nan(psi + product_to_add_to_psi))
+        # print("Indices of psi + product_to_add_to_psi with NaN values:", nan_indices.numpy())
+
         # Apply boolean mask for case distinction
         item_utilities = tf.where(
             condition=count_items_in_basket > 0,  # If False: empty basket
             x=true_output,  # Output if condition is True
             y=false_output,  # Output if condition is False
         )
+        print(f"{item_utilities.shape=}")
 
         ##### No thinking ahead #####
         if self.stage < 3:
@@ -394,9 +403,12 @@ class Shopper:
                         if av_matrix_list[idx][item_id] == 1
                     ]
                 )
+                print(f"{next_basket=}")
+                print(f"{assortment=}")
                 hypothetical_next_purchases = np.array(
                     [item_id for item_id in assortment if item_id not in next_basket]
                 )
+                print(f"{hypothetical_next_purchases=}")
 
                 # Check if there are still items to purchase during the next step
                 if len(hypothetical_next_purchases) == 0:
@@ -406,21 +418,25 @@ class Shopper:
                 else:
                     # The effects of item popularity, customer preferences, price sensitivity
                     # and seasonal effects are combined in the per-item per-trip latent variable
-                    hypothetical_item_popularity = tf.gather(self.lambda_, indices=assortment)
+                    # hypothetical_item_popularity = tf.gather(self.lambda_, indices=assortment)
+                    hypothetical_item_popularity = self.lambda_
 
                     # Compute the dot product along the last dimension between the embeddings
                     # of the given customer's theta and alpha of all the items
-                    hypothetical_alpha_item = tf.gather(self.alpha, indices=assortment)
+                    # hypothetical_alpha_item = tf.gather(self.alpha, indices=assortment)
                     hypothetical_customer_preferences = tf.reduce_sum(
-                        theta_customer[idx] * hypothetical_alpha_item, axis=1
+                        # theta_customer[idx] * hypothetical_alpha_item, axis=1
+                        theta_customer[idx] * self.alpha,
+                        axis=1,
                     )
 
-                    hypothetical_beta_item = tf.gather(self.beta, indices=assortment)
+                    # hypothetical_beta_item = tf.gather(self.beta, indices=assortment)
                     hypothetical_price_effects = (
                         -1
                         # Compute the dot product along the last dimension between the embeddings
                         # of the given customer's gamma and beta of all the items
-                        * tf.reduce_sum(gamma_customer[idx] * hypothetical_beta_item, axis=1)
+                        # * tf.reduce_sum(gamma_customer[idx] * hypothetical_beta_item, axis=1)
+                        * tf.reduce_sum(gamma_customer[idx] * self.beta, axis=1)
                         * tf.cast(
                             tf.math.log(price_list[idx] + self.epsilon_price), dtype=tf.float32
                         )
@@ -428,9 +444,11 @@ class Shopper:
 
                     # Compute the dot product along the last dimension between the embeddings
                     # of delta of the given week and mu of all the items
-                    hypothetical_mu_item = tf.gather(self.mu, indices=assortment)
+                    # hypothetical_mu_item = tf.gather(self.mu, indices=assortment)
                     hypothetical_seasonal_effects = tf.reduce_sum(
-                        delta_week[idx] * hypothetical_mu_item, axis=1
+                        # delta_week[idx] * hypothetical_mu_item, axis=1
+                        delta_week[idx] * self.mu,
+                        axis=1,
                     )
 
                     # Shape: (n_items,)
@@ -444,6 +462,7 @@ class Shopper:
                         axis=0,
                     )
                     # Shape: (len(hypothetical_next_purchases),)
+                    print(f"{hypothetical_psi.shape=}")
                     next_psi = tf.gather(hypothetical_psi, indices=hypothetical_next_purchases)
 
                     # Consider hypothetical "next" item one by one
@@ -535,6 +554,9 @@ class Shopper:
             price_list=prices,
             av_matrix_list=np.array([availability_matrix_copy for _ in range(self.n_items)]),
         )
+        # # Print the indices of all_utilities where there are NaN values
+        # nan_indices = tf.where(tf.math.is_nan(all_utilities))
+        # print("Indices of all_utilities with NaN values:", nan_indices.numpy())
 
         # Equation (3) of the paper Shopper, ie softmax on the utilities
         return softmax_with_availabilities(
@@ -708,6 +730,7 @@ class Shopper:
                 if item not in purchased_items and item != next_item:
                     negative_samples.append(item)
 
+        # print(f"{negative_samples=}")
         return negative_samples
 
     def batch_predict(
