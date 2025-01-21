@@ -25,6 +25,7 @@ class Trip:
         customer: int,
         week: int,
         prices: np.ndarray,
+        assortment: int,
     ) -> None:
         """Initialize the trip.
 
@@ -33,7 +34,7 @@ class Trip:
         id: int
             Trip ID
         purchases: np.ndarray
-            List of the id of the purchased items, 0 to n_items - 1 (0-indexed)
+            List of the ID of the purchased items, 0 to n_items - 1 (0-indexed)
             Shape: (len_basket,), the last item is the checkout item 0
         customer: int
             Customer ID, 0 to n_customers - 1 (0-indexed)
@@ -42,6 +43,9 @@ class Trip:
         prices: np.ndarray
             Prices of items
             Shape: (len_basket,)
+        assortment: int
+            Assortment ID (corresponding to the assortment, ie the available items,
+            of a specific store at a given time)
         """
         if week not in range(52):
             raise ValueError("Week number must be between 0 and 51, inclusive.")
@@ -53,6 +57,7 @@ class Trip:
         self.customer = customer
         self.week = week
         self.prices = prices
+        self.assortment = assortment
 
         self.trip_length = len(purchases)
 
@@ -76,7 +81,7 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip]) -> None:
+    def __init__(self, trips: list[Trip], assortments: dict[int, np.ndarray]) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -84,10 +89,15 @@ class TripDataset:
         trips: list[Trip]
             List of trips
             Shape: (n_trips,)
+        assortments: dict[int, np.ndarray]
+            Dictionary of assortments
+            Keys: assortment ID
+            Values: np.ndarray of available items
         """
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.transactions())
+        self.assortments = assortments
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -188,48 +198,17 @@ class TripDataset:
 
         return transactions
 
-    def n_items(self) -> int:
-        """Return the number of items in the dataset.
-
-        Returns
-        -------
-        int
-            Number of items in the dataset
-        """
-        return len(self.all_items())
-
-    def n_customers(self) -> int:
-        """Return the number of customers in the dataset.
-
-        Returns
-        -------
-        int
-            Number of customers in the dataset
-        """
-        return len(self.all_customers())
-
     def all_items(self) -> np.ndarray:
-        """Return the list of all items in the dataset.
+        """Return the list of all items available in the dataset.
 
         Returns
         -------
         np.ndarray
-            List of items in the dataset
+            List of items available in the dataset
         """
-        # If preprocessing working well, equal to [0, 1, ... , n_items - 1]
-        items_list = [self.trips[i].purchases for i in range(len(self.trips))]
+        items_list = list(self.assortments.values())
         items_list_flattened = [item for sublist in items_list for item in sublist]
         return np.unique(items_list_flattened)
-
-    def all_prices(self) -> np.ndarray:
-        """Return the list of all price arrays in the dataset.
-
-        Returns
-        -------
-        np.ndarray
-            List of price arrays in the dataset
-        """
-        return np.array([self.trips[i].prices for i in range(len(self.trips))])
 
     def all_baskets(self) -> np.ndarray:
         """Return the list of all baskets in the dataset.
@@ -263,6 +242,56 @@ class TripDataset:
         # If preprocessing working well, equal to [0, 1, ..., 51 or 52]
         return np.array(list({self.trips[i].week for i in range(len(self))}))
 
+    def all_prices(self) -> np.ndarray:
+        """Return the list of all price arrays in the dataset.
+
+        Returns
+        -------
+        np.ndarray
+            List of price arrays in the dataset
+        """
+        return np.array([self.trips[i].prices for i in range(len(self))])
+
+    def all_assortments(self) -> np.ndarray:
+        """Return the list of all assortments in the dataset.
+
+        Returns
+        -------
+        np.ndarray
+            List of assortments in the dataset
+        """
+        return np.array(list({self.trips[i].assortment for i in range(len(self))}))
+
+    def n_items(self) -> int:
+        """Return the number of items available in the dataset.
+
+        Returns
+        -------
+        int
+            Number of items available in the dataset
+        """
+        return len(self.all_items())
+
+    def n_customers(self) -> int:
+        """Return the number of customers in the dataset.
+
+        Returns
+        -------
+        int
+            Number of customers in the dataset
+        """
+        return len(self.all_customers())
+
+    def n_assortments(self) -> int:
+        """Return the number of assortments in the dataset.
+
+        Returns
+        -------
+        int
+            Number of assortments in the dataset
+        """
+        return len(self.all_assortments())
+
     def get_augmented_data_from_trip_index(
         self,
         trip_index: int,
@@ -274,7 +303,8 @@ class TripDataset:
             - permuted, truncated and padded baskets,
             - customers,
             - weeks,
-            - prices.
+            - prices,
+            - availability matrices.
 
         Parameters
         ----------
@@ -285,7 +315,7 @@ class TripDataset:
         -------
         dict[str, np.ndarray]
             Dictionary of data (ie transactions) from the trip
-            Keys are: "items", "baskets", "customers", "weeks", "prices"
+            Keys are: "items", "baskets", "customers", "weeks", "prices", "av_matrices"
         """
         # Get the trip from the index
         trip = self.trips[trip_index]
@@ -311,13 +341,20 @@ class TripDataset:
             dtype=int,
         )
 
-        # Each item is linked to a basket, a customer, a week and a price
+        # Building the availability matrix based on the assortment ID
+        # The availability matrix is a binary vector of length n_items
+        # where 1 means the item is available and 0 means the item is not available
+        availability_matrix = np.zeros(self.n_items())
+        availability_matrix[self.assortments[trip.assortment]] = 1
+
+        # Each item is linked to a basket, a customer, a week, prices and an assortment
         return {
             "items": permuted_purchases,
             "baskets": padded_truncated_purchases,
             "customers": np.full(length_trip, trip.customer),
             "weeks": np.full(length_trip, trip.week),
             "prices": np.tile(trip.prices, (length_trip, 1)),
+            "av_matrices": np.tile(availability_matrix, (length_trip, 1)),
         }
 
     def iter_batch(
@@ -337,8 +374,8 @@ class TripDataset:
         Yields
         ------
         list[np.ndarray]
-            For each item in the batch: item, basket, customer, week, prices
-            Shape: (5, batch_size)
+            For each item in the batch: item, basket, customer, week, prices, availability matrix
+            Shape: (6, batch_size)
         """
         # Get trip indexes
         num_trips = len(self)
@@ -356,6 +393,7 @@ class TripDataset:
             "customers": np.empty(0, dtype=int),
             "weeks": np.empty(0, dtype=int),
             "prices": np.empty((0, self.n_items()), dtype=int),
+            "av_matrices": np.empty((0, self.n_items()), dtype=int),
         }
 
         if batch_size == -1:
@@ -373,6 +411,9 @@ class TripDataset:
                 buffer["prices"] = np.concatenate(
                     (buffer["prices"], additional_trip_data["prices"])
                 )
+                buffer["av_matrices"] = np.concatenate(
+                    (buffer["av_matrices"], additional_trip_data["av_matrices"])
+                )
 
             # Yield the whole dataset
             yield (
@@ -381,6 +422,7 @@ class TripDataset:
                 buffer["customers"],
                 buffer["weeks"],
                 buffer["prices"],
+                buffer["av_matrices"],
             )
 
         else:
@@ -399,6 +441,7 @@ class TripDataset:
                             buffer["customers"],
                             buffer["weeks"],
                             buffer["prices"],
+                            buffer["av_matrices"],
                         )
 
                         # Exit the TWO while loops when all trips have been considered
@@ -426,6 +469,9 @@ class TripDataset:
                         buffer["prices"] = np.concatenate(
                             (buffer["prices"], additional_trip_data["prices"])
                         )
+                        buffer["av_matrices"] = np.concatenate(
+                            (buffer["av_matrices"], additional_trip_data["av_matrices"])
+                        )
 
                 if outer_break:
                     # Exit the outer loop
@@ -438,6 +484,7 @@ class TripDataset:
                     "customers": buffer["customers"][:batch_size],
                     "weeks": buffer["weeks"][:batch_size],
                     "prices": buffer["prices"][:batch_size],
+                    "av_matrices": buffer["av_matrices"][:batch_size],
                 }
                 buffer = {
                     "items": buffer["items"][batch_size:],
@@ -445,6 +492,7 @@ class TripDataset:
                     "customers": buffer["customers"][batch_size:],
                     "weeks": buffer["weeks"][batch_size:],
                     "prices": buffer["prices"][batch_size:],
+                    "av_matrices": buffer["av_matrices"][batch_size:],
                 }
 
                 # Yield the batch
@@ -454,6 +502,7 @@ class TripDataset:
                     batch["customers"],
                     batch["weeks"],
                     batch["prices"],
+                    batch["av_matrices"],
                 )
 
     def filter(self, bool_list: list[bool]) -> object:  # TODO: delete this method if never used
