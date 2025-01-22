@@ -304,7 +304,7 @@ class TripDataset:
             - customers,
             - weeks,
             - prices,
-            - availability matrices.
+            - item availabilities.
 
         Parameters
         ----------
@@ -315,7 +315,7 @@ class TripDataset:
         -------
         dict[str, np.ndarray]
             Dictionary of data (ie transactions) from the trip
-            Keys are: "items", "baskets", "customers", "weeks", "prices", "av_matrices"
+            Keys are: "items", "baskets", "customers", "weeks", "prices", "item_availabilities"
         """
         # Get the trip from the index
         trip = self.trips[trip_index]
@@ -354,7 +354,7 @@ class TripDataset:
             "customers": np.full(length_trip, trip.customer),
             "weeks": np.full(length_trip, trip.week),
             "prices": np.tile(trip.prices, (length_trip, 1)),
-            "av_matrices": np.tile(availability_matrix, (length_trip, 1)),
+            "item_availabilities": np.tile(availability_matrix, (length_trip, 1)),
         }
 
     def iter_batch(
@@ -374,7 +374,7 @@ class TripDataset:
         Yields
         ------
         list[np.ndarray]
-            For each item in the batch: item, basket, customer, week, prices, availability matrix
+            For each item in the batch: item, basket, customer, week, prices, item availabilities
             Shape: (6, batch_size)
         """
         # Get trip indexes
@@ -393,7 +393,7 @@ class TripDataset:
             "customers": np.empty(0, dtype=int),
             "weeks": np.empty(0, dtype=int),
             "prices": np.empty((0, self.n_items()), dtype=int),
-            "av_matrices": np.empty((0, self.n_items()), dtype=int),
+            "item_availabilities": np.empty((0, self.n_items()), dtype=int),
         }
 
         if batch_size == -1:
@@ -411,8 +411,8 @@ class TripDataset:
                 buffer["prices"] = np.concatenate(
                     (buffer["prices"], additional_trip_data["prices"])
                 )
-                buffer["av_matrices"] = np.concatenate(
-                    (buffer["av_matrices"], additional_trip_data["av_matrices"])
+                buffer["item_availabilities"] = np.concatenate(
+                    (buffer["item_availabilities"], additional_trip_data["item_availabilities"])
                 )
 
             # Yield the whole dataset
@@ -422,7 +422,7 @@ class TripDataset:
                 buffer["customers"],
                 buffer["weeks"],
                 buffer["prices"],
-                buffer["av_matrices"],
+                buffer["item_availabilities"],
             )
 
         else:
@@ -441,7 +441,7 @@ class TripDataset:
                             buffer["customers"],
                             buffer["weeks"],
                             buffer["prices"],
-                            buffer["av_matrices"],
+                            buffer["item_availabilities"],
                         )
 
                         # Exit the TWO while loops when all trips have been considered
@@ -469,8 +469,11 @@ class TripDataset:
                         buffer["prices"] = np.concatenate(
                             (buffer["prices"], additional_trip_data["prices"])
                         )
-                        buffer["av_matrices"] = np.concatenate(
-                            (buffer["av_matrices"], additional_trip_data["av_matrices"])
+                        buffer["item_availabilities"] = np.concatenate(
+                            (
+                                buffer["item_availabilities"],
+                                additional_trip_data["item_availabilities"],
+                            )
                         )
 
                 if outer_break:
@@ -484,7 +487,7 @@ class TripDataset:
                     "customers": buffer["customers"][:batch_size],
                     "weeks": buffer["weeks"][:batch_size],
                     "prices": buffer["prices"][:batch_size],
-                    "av_matrices": buffer["av_matrices"][:batch_size],
+                    "item_availabilities": buffer["item_availabilities"][:batch_size],
                 }
                 buffer = {
                     "items": buffer["items"][batch_size:],
@@ -492,7 +495,7 @@ class TripDataset:
                     "customers": buffer["customers"][batch_size:],
                     "weeks": buffer["weeks"][batch_size:],
                     "prices": buffer["prices"][batch_size:],
-                    "av_matrices": buffer["av_matrices"][batch_size:],
+                    "item_availabilities": buffer["item_availabilities"][batch_size:],
                 }
 
                 # Yield the batch
@@ -502,7 +505,7 @@ class TripDataset:
                     batch["customers"],
                     batch["weeks"],
                     batch["prices"],
-                    batch["av_matrices"],
+                    batch["item_availabilities"],
                 )
 
     def filter(self, bool_list: list[bool]) -> object:  # TODO: delete this method if never used

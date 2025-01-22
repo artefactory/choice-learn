@@ -225,7 +225,7 @@ def test_item_probabilities_sum_to_1() -> None:
                     np.sum(
                         model.compute_item_likelihood(
                             basket=trip.purchases[:step],
-                            availability_matrix=np.ones(n_items_1),
+                            item_availability=np.ones(n_items_1),
                             customer=trip.customer,
                             week=trip.week,
                             prices=trip.prices,
@@ -273,7 +273,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                     [
                         model.compute_ordered_basket_likelihood(
                             basket=trip.purchases,
-                            availability_matrix=availability_matrix,
+                            item_availability=availability_matrix,
                             customer=trip.customer,
                             week=trip.week,
                             prices=trip.prices,
