@@ -1,6 +1,7 @@
 """Classes to handle datasets with baskets of products."""
 
 import random
+from typing import Union
 
 import numpy as np
 
@@ -510,3 +511,24 @@ class TripDataset:
                     batch["prices"],
                     batch["item_availabilities"],
                 )
+
+    def __getitem__(self, index: Union[int, list, np.ndarray, range, slice]) -> Trip:
+        """Return the trip at the given index or a list of trips if index is a list.
+
+        Parameters
+        ----------
+        index: int, list[int], np.ndarray, range or list
+            Index or list of indices of the trip(s) to get
+
+        Returns
+        -------
+        Trip or list[Trip]
+            Trip at the given index or list of trips at the given indices
+        """
+        if isinstance(index, int):
+            return self.trips[index]
+        if isinstance(index, (list, np.ndarray, range)):
+            return [self.trips[i] for i in index]
+        if isinstance(index, slice):
+            return self.trips[index]
+        raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
