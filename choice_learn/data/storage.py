@@ -36,7 +36,7 @@ class Storage(ABC):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -185,7 +185,7 @@ class DictStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -207,7 +207,7 @@ class DictStorage(Storage):
         return len(self.storage)
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -276,7 +276,7 @@ class ArrayStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -295,7 +295,7 @@ class ArrayStorage(Storage):
         return self.shape[0]
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -400,7 +400,7 @@ class OneHotStorage(Storage):
         return len(self.storage)
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -433,7 +433,7 @@ class OneHotStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
