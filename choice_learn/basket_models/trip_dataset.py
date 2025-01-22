@@ -1,4 +1,4 @@
-"""Implementation of the Shopper model."""
+"""Classes to handle datasets with baskets of products."""
 
 import random
 
@@ -129,37 +129,40 @@ class TripDataset:
         """
         return iter(self.trips)
 
-    def add(self, other: object) -> object:
-        """Create a new dataset by adding 2 datasets together.
+    def add(self, other: object, inplace: bool = False) -> object:
+        """Add a dataset to another.
 
         Parameters
         ----------
         other: TripDataset
             Dataset to add
+        inplace: bool
+            Whether to add the dataset in-place or not, by default False
 
         Returns
         -------
         TripDataset
             Concatenated dataset
         """
-        return TripDataset(self.trips + other.trips)
+        if inplace:  # Add another dataset to the current one (in-place)
+            # Add new trips
+            self.trips += other.trips
+            # Update the attributes of the TripDataset
+            self.max_length = max([trip.trip_length for trip in self.trips])
+            self.n_samples = len(self.transactions())
+            # Update the dictionary of assortments (add new keys)
+            # If a key already exists, the value is updated
+            self.assortments = {**self.assortments, **other.assortments}
 
-    def iadd(self, other: object) -> object:
-        """Add another dataset to the current one (in-place).
+            return self
 
-        Parameters
-        ----------
-        other: TripDataset
-            Dataset to add
-
-        Returns
-        -------
-        TripDataset
-            Concatenated dataset
-        """
-        self.trips += other.trips
-        self.max_length = max([trip.trip_length for trip in self.trips])
-        return self
+        # Else: create a new dataset by adding 2 datasets together
+        return TripDataset(
+            trips=self.trips + other.trips,
+            # Update the dictionary of assortments (add new keys)
+            # If a key already exists, the value is updated
+            assortments={**self.assortments, **other.assortments},
+        )
 
     def get_trip(self, index: int) -> Trip:
         """Return the trip at the given index.
@@ -198,7 +201,7 @@ class TripDataset:
 
         return transactions
 
-    def all_items(self) -> np.ndarray:
+    def get_all_items(self) -> np.ndarray:
         """Return the list of all items available in the dataset.
 
         Returns
@@ -210,7 +213,7 @@ class TripDataset:
         items_list_flattened = [item for sublist in items_list for item in sublist]
         return np.unique(items_list_flattened)
 
-    def all_baskets(self) -> np.ndarray:
+    def get_all_baskets(self) -> np.ndarray:
         """Return the list of all baskets in the dataset.
 
         Returns
@@ -220,7 +223,7 @@ class TripDataset:
         """
         return [self.trips[i].purchases for i in range(len(self))]
 
-    def all_customers(self) -> np.ndarray:
+    def get_all_customers(self) -> np.ndarray:
         """Return the list of all customers in the dataset.
 
         Returns
@@ -231,7 +234,7 @@ class TripDataset:
         # If preprocessing working well, equal to [0, 1, ..., n_customers - 1]
         return np.array(list({self.trips[i].customer for i in range(len(self))}))
 
-    def all_weeks(self) -> np.ndarray:
+    def get_all_weeks(self) -> np.ndarray:
         """Return the list of all weeks in the dataset.
 
         Returns
@@ -242,7 +245,7 @@ class TripDataset:
         # If preprocessing working well, equal to [0, 1, ..., 51 or 52]
         return np.array(list({self.trips[i].week for i in range(len(self))}))
 
-    def all_prices(self) -> np.ndarray:
+    def get_all_prices(self) -> np.ndarray:
         """Return the list of all price arrays in the dataset.
 
         Returns
@@ -252,7 +255,7 @@ class TripDataset:
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
 
-    def all_assortments(self) -> np.ndarray:
+    def get_all_assortments(self) -> np.ndarray:
         """Return the list of all assortments in the dataset.
 
         Returns
@@ -270,7 +273,7 @@ class TripDataset:
         int
             Number of items available in the dataset
         """
-        return len(self.all_items())
+        return len(self.get_all_items())
 
     def n_customers(self) -> int:
         """Return the number of customers in the dataset.
@@ -280,7 +283,7 @@ class TripDataset:
         int
             Number of customers in the dataset
         """
-        return len(self.all_customers())
+        return len(self.get_all_customers())
 
     def n_assortments(self) -> int:
         """Return the number of assortments in the dataset.
@@ -290,7 +293,7 @@ class TripDataset:
         int
             Number of assortments in the dataset
         """
-        return len(self.all_assortments())
+        return len(self.get_all_assortments())
 
     def get_augmented_data_from_trip_index(
         self,
@@ -507,20 +510,3 @@ class TripDataset:
                     batch["prices"],
                     batch["item_availabilities"],
                 )
-
-    def filter(self, bool_list: list[bool]) -> object:  # TODO: delete this method if never used
-        """Filter over sessions indexes following bool.
-
-        Parameters
-        ----------
-        bool_list: list of boolean
-            list of booleans of to filter trips.
-            True to keep, False to discard.
-
-        Returns
-        -------
-        TripDataset
-            Filtered dataset
-        """
-        indexes = [i for i, keep in enumerate(bool_list) if keep]
-        return self[indexes]
