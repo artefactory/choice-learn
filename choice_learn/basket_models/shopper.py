@@ -515,6 +515,8 @@ class Shopper:
         count_items_in_basket_expanded = tf.expand_dims(
             tf.cast(count_items_in_basket, dtype=tf.float32), -1
         )
+
+        # Apply boolean mask for case distinction
         alpha_average = tf.where(
             condition=count_items_in_basket_expanded != 0,  # If True: count_items_in_basket > 0
             x=alpha_sum / count_items_in_basket_expanded,  # Output if condition is True
@@ -524,15 +526,7 @@ class Shopper:
         # Compute the dot product along the last dimension
         product_to_add_to_psi = tf.reduce_sum(rho_item * alpha_average, axis=1)
 
-        false_output = psi
-        true_output = psi + product_to_add_to_psi
-
-        # Apply boolean mask for case distinction
-        item_utilities = tf.where(
-            condition=count_items_in_basket > 0,  # If False: empty basket
-            x=true_output,  # Output if condition is True
-            y=false_output,  # Output if condition is False
-        )
+        item_utilities = psi + product_to_add_to_psi
 
         # No thinking ahead
         if self.stage < 3:
