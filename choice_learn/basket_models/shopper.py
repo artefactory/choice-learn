@@ -1197,18 +1197,22 @@ class Shopper:
         # Initialize model
         model = cls(
             stage=params["stage"],
+            latent_sizes=params["latent_sizes"],
+            n_negative_samples=params["n_negative_samples"],
             optimizer=params["optimizer_name"],
+            callbacks=params.get("callbacks", None),  # To avoid KeyError if None
             lr=params["lr"],
             epochs=params["epochs"],
             batch_size=params["batch_size"],
+            grad_clip_value=params.get("grad_clip_value", None),
+            weight_decay=params.get("weight_decay", None),
+            momentum=params["momentum"],
+            epsilon_price=params["epsilon_price"],
         )
 
         # Instantiate manually the model
         model.n_items = params["n_items"]
         model.n_customers = params["n_customers"]
-        model.latent_sizes = params["latent_sizes"]
-        model.n_negative_samples = params["n_negative_samples"]
-        model.instantiated = params["instantiated"]
 
         # Fix manually trainable weights values
         model.rho = tf.Variable(np.load(os.path.join(path, "rho.npy")), trainable=True, name="rho")
@@ -1234,5 +1238,7 @@ class Shopper:
             model.delta = tf.Variable(
                 np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
             )
+
+        model.instantiated = params["instantiated"]
 
         return model
