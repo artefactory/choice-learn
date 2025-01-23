@@ -238,12 +238,13 @@ class Shopper:
             self.delta,
         ]
 
-    def compute_batch_utility(
+    def thinking_ahead(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
-        basket_batch: np.ndarray,
-        customer_batch: np.ndarray,
-        week_batch: np.ndarray,
+        basket_batch_without_padding: list,
+        theta_customer: tf.Tensor,
+        gamma_customer: tf.Tensor,
+        delta_week: tf.Tensor,
         price_batch: np.ndarray,
         item_availability_batch: np.ndarray,
     ) -> tf.Tensor:
@@ -255,15 +256,22 @@ class Shopper:
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size), max_basket_size)
-        customer_batch: np.ndarray
-            Batch of customer IDs (integers) for each purchased item
-            Shape must be (batch_size,)
-        week_batch: np.ndarray
-            Batch of week numbers (integers) for each purchased item
-            Shape must be (batch_size,)
+        basket_batch_without_padding: list
+            Batch of baskets (ID of items already in the baskets) (arrays) without padding
+            for each purchased item
+            Length must be batch_size
+        theta_customer: tf.Tensor
+            Slices from theta embedding gathered according to the indices that correspond
+            to the customer of each purchased item in the batch
+            Shape must be (batch_size, latent_sizes["preferences"])
+        gamma_customer: tf.Tensor
+            Slices from gamma embedding gathered according to the indices that correspond
+            to the customer of each purchased item in the batch
+            Shape must be (batch_size, latent_sizes["price"])
+        delta_week: tf.Tensor
+            Slices from delta embedding gathered according to the indices that correspond
+            to the week of each purchased item in the batch
+            Shape must be (batch_size, latent_sizes["season"])
         price_batch: np.ndarray
             Batch of prices (integers) for each purchased item
             Shape must be (batch_size,)
@@ -274,119 +282,10 @@ class Shopper:
 
         Returns
         -------
-        item_utilities: tf.Tensor
-            Utility of all the items in item_batch
+        tf.Tensor
+            Nex step utility of all the items in item_batch
             Shape must be (batch_size,)
         """
-        # Ensure that item ids are integers
-        item_batch = tf.cast(item_batch, dtype=tf.int32)
-
-        # Psi values
-        if self.stage == 1:
-            theta_customer = tf.gather(self.theta, indices=customer_batch)
-            alpha_item = tf.gather(self.alpha, indices=item_batch)
-            # Compute the dot product along the last dimension
-            psi = tf.reduce_sum(theta_customer * alpha_item, axis=1)
-
-        else:
-            # The effects of item popularity, customer preferences, price sensitivity
-            # and seasonal effects are combined in the per-item per-trip latent variable
-            item_popularity = tf.gather(self.lambda_, indices=item_batch)
-
-            theta_customer = tf.gather(self.theta, indices=customer_batch)
-            alpha_item = tf.gather(self.alpha, indices=item_batch)
-            # Compute the dot product along the last dimension
-            customer_preferences = tf.reduce_sum(theta_customer * alpha_item, axis=1)
-
-            gamma_customer = tf.gather(self.gamma, indices=customer_batch)
-            beta_item = tf.gather(self.beta, indices=item_batch)
-            price_effects = (
-                -1
-                # Compute the dot product along the last dimension
-                * tf.reduce_sum(gamma_customer * beta_item, axis=1)
-                * tf.cast(tf.math.log(np.array(price_batch) + self.epsilon_price), dtype=tf.float32)
-            )
-
-            delta_week = tf.gather(self.delta, indices=week_batch)
-            mu_item = tf.gather(self.mu, indices=item_batch)
-            # Compute the dot product along the last dimension
-            seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
-
-            psi = tf.reduce_sum(
-                [
-                    item_popularity,
-                    customer_preferences,
-                    price_effects,
-                    seasonal_effects,
-                ],
-                axis=0,
-            )
-
-        # Apply boolean mask to mask out the padding value -1
-        masked_tensors = tf.where(
-            condition=tf.constant(basket_batch) > -1,  # If False: padding value -1
-            x=1,  # Output where condition is True
-            y=0,  # Output where condition is False
-        )
-        # Number of items in each basket
-        count_items_in_basket = tf.reduce_sum(masked_tensors, axis=1)
-
-        # Create a RaggedTensor from the indices
-        basket_batch_without_padding = [basket[basket != -1] for basket in basket_batch]
-        item_indices_ragged = tf.ragged.constant(basket_batch_without_padding)
-
-        if tf.size(item_indices_ragged) == 0:
-            # Empty baskets: no alpha embeddings to gather
-            alpha_by_basket = tf.zeros((len(item_batch), 0, self.alpha.shape[1]))
-        else:
-            # Using GPU: gather the embeddings using a tensor of indices
-            if self.on_gpu:
-                # When using GPU, tf.nn.embedding_lookup returns 0 for ids out of bounds
-                # (negative indices or indices >= len(params))
-                # Cf https://github.com/tensorflow/tensorflow/issues/59724
-                # https://github.com/tensorflow/tensorflow/issues/62628
-                alpha_by_basket = tf.nn.embedding_lookup(params=self.alpha, ids=basket_batch)
-
-            # Using CPU: gather the embeddings using a RaggedTensor of indices
-            else:
-                alpha_by_basket = tf.ragged.map_flat_values(
-                    tf.gather, self.alpha, item_indices_ragged
-                )
-
-        # Compute the sum of the alpha embeddings for each basket
-        alpha_sum = tf.reduce_sum(alpha_by_basket, axis=1)
-
-        rho_item = tf.gather(self.rho, indices=item_batch)
-
-        # Divide each sum of alpha embeddings by the number of items in the corresponding basket
-        # Avoid NaN values (division by 0)
-        count_items_in_basket_expanded = tf.expand_dims(
-            tf.cast(count_items_in_basket, dtype=tf.float32), -1
-        )
-        alpha_average = tf.where(
-            condition=count_items_in_basket_expanded != 0,  # If True: count_items_in_basket > 0
-            x=alpha_sum / count_items_in_basket_expanded,  # Output if condition is True
-            y=tf.zeros_like(alpha_sum),  # Output if condition is False
-        )
-
-        # Compute the dot product along the last dimension
-        product_to_add_to_psi = tf.reduce_sum(rho_item * alpha_average, axis=1)
-
-        false_output = psi
-        true_output = psi + product_to_add_to_psi
-
-        # Apply boolean mask for case distinction
-        item_utilities = tf.where(
-            condition=count_items_in_basket > 0,  # If False: empty basket
-            x=true_output,  # Output if condition is True
-            y=false_output,  # Output if condition is False
-        )
-
-        ##### No thinking ahead #####
-        if self.stage < 3:
-            return item_utilities
-
-        ##### Thinking ahead #####
         total_next_step_utilities = []
         # Compute the next step item utility for each element of the batch, one by one
         # TODO: avoid a for loop on basket_batch_without_padding at a later stage
@@ -490,10 +389,165 @@ class Shopper:
 
                     total_next_step_utilities.append(next_step_utility)
 
-        total_next_step_utilities = tf.constant(
+        return tf.constant(
             total_next_step_utilities
         )  # Shape: (batch_size * (n_negative_samples + 1),)
 
+    def compute_batch_utility(
+        self,
+        item_batch: Union[np.ndarray, tf.Tensor],
+        basket_batch: np.ndarray,
+        customer_batch: np.ndarray,
+        week_batch: np.ndarray,
+        price_batch: np.ndarray,
+        item_availability_batch: np.ndarray,
+    ) -> tf.Tensor:
+        """Compute the utility of all the items in item_batch.
+
+        Parameters
+        ----------
+        item_batch: np.ndarray or tf.Tensor
+            Batch of the purchased items ID (integers) for which to compute the utility
+            Shape must be (batch_size,)
+            (positive and negative samples concatenated together)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        customer_batch: np.ndarray
+            Batch of customer IDs (integers) for each purchased item
+            Shape must be (batch_size,)
+        week_batch: np.ndarray
+            Batch of week numbers (integers) for each purchased item
+            Shape must be (batch_size,)
+        price_batch: np.ndarray
+            Batch of prices (integers) for each purchased item
+            Shape must be (batch_size,)
+        item_availability_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
+
+        Returns
+        -------
+        item_utilities: tf.Tensor
+            Utility of all the items in item_batch
+            Shape must be (batch_size,)
+        """
+        # Ensure that item ids are integers
+        item_batch = tf.cast(item_batch, dtype=tf.int32)
+
+        # Psi values
+        theta_customer = tf.gather(self.theta, indices=customer_batch)
+        alpha_item = tf.gather(self.alpha, indices=item_batch)
+        # Compute the dot product along the last dimension
+        customer_preferences = tf.reduce_sum(theta_customer * alpha_item, axis=1)
+
+        if self.stage == 1:
+            psi = customer_preferences
+
+        else:
+            # The effects of item popularity, customer preferences, price sensitivity
+            # and seasonal effects are combined in the per-item per-trip latent variable
+            item_popularity = tf.gather(self.lambda_, indices=item_batch)
+
+            gamma_customer = tf.gather(self.gamma, indices=customer_batch)
+            beta_item = tf.gather(self.beta, indices=item_batch)
+            price_effects = (
+                -1
+                # Compute the dot product along the last dimension
+                * tf.reduce_sum(gamma_customer * beta_item, axis=1)
+                * tf.cast(tf.math.log(np.array(price_batch) + self.epsilon_price), dtype=tf.float32)
+            )
+
+            delta_week = tf.gather(self.delta, indices=week_batch)
+            mu_item = tf.gather(self.mu, indices=item_batch)
+            # Compute the dot product along the last dimension
+            seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
+
+            psi = tf.reduce_sum(
+                [
+                    item_popularity,
+                    customer_preferences,
+                    price_effects,
+                    seasonal_effects,
+                ],
+                axis=0,
+            )
+
+        # Apply boolean mask to mask out the padding value -1
+        masked_baskets = tf.where(
+            condition=tf.constant(basket_batch) > -1,  # If False: padding value -1
+            x=1,  # Output where condition is True
+            y=0,  # Output where condition is False
+        )
+        # Number of items in each basket
+        count_items_in_basket = tf.reduce_sum(masked_baskets, axis=1)
+
+        # Create a RaggedTensor from the indices
+        basket_batch_without_padding = [basket[basket != -1] for basket in basket_batch]
+        item_indices_ragged = tf.ragged.constant(basket_batch_without_padding)
+
+        if tf.size(item_indices_ragged) == 0:
+            # Empty baskets: no alpha embeddings to gather
+            alpha_by_basket = tf.zeros((len(item_batch), 0, self.alpha.shape[1]))
+        else:
+            # Using GPU: gather the embeddings using a tensor of indices
+            if self.on_gpu:
+                # When using GPU, tf.nn.embedding_lookup returns 0 for ids out of bounds
+                # (negative indices or indices >= len(params))
+                # Cf https://github.com/tensorflow/tensorflow/issues/59724
+                # https://github.com/tensorflow/tensorflow/issues/62628
+                alpha_by_basket = tf.nn.embedding_lookup(params=self.alpha, ids=basket_batch)
+
+            # Using CPU: gather the embeddings using a RaggedTensor of indices
+            else:
+                alpha_by_basket = tf.ragged.map_flat_values(
+                    tf.gather, self.alpha, item_indices_ragged
+                )
+
+        # Compute the sum of the alpha embeddings for each basket
+        alpha_sum = tf.reduce_sum(alpha_by_basket, axis=1)
+
+        rho_item = tf.gather(self.rho, indices=item_batch)
+
+        # Divide each sum of alpha embeddings by the number of items in the corresponding basket
+        # Avoid NaN values (division by 0)
+        count_items_in_basket_expanded = tf.expand_dims(
+            tf.cast(count_items_in_basket, dtype=tf.float32), -1
+        )
+        alpha_average = tf.where(
+            condition=count_items_in_basket_expanded != 0,  # If True: count_items_in_basket > 0
+            x=alpha_sum / count_items_in_basket_expanded,  # Output if condition is True
+            y=tf.zeros_like(alpha_sum),  # Output if condition is False
+        )
+
+        # Compute the dot product along the last dimension
+        product_to_add_to_psi = tf.reduce_sum(rho_item * alpha_average, axis=1)
+
+        false_output = psi
+        true_output = psi + product_to_add_to_psi
+
+        # Apply boolean mask for case distinction
+        item_utilities = tf.where(
+            condition=count_items_in_basket > 0,  # If False: empty basket
+            x=true_output,  # Output if condition is True
+            y=false_output,  # Output if condition is False
+        )
+
+        # No thinking ahead
+        if self.stage < 3:
+            return item_utilities
+
+        # Thinking ahead
+        total_next_step_utilities = self.thinking_ahead(
+            item_batch=item_batch,
+            basket_batch_without_padding=basket_batch_without_padding,
+            theta_customer=theta_customer,
+            gamma_customer=gamma_customer,
+            delta_week=delta_week,
+            price_batch=price_batch,
+            item_availability_batch=item_availability_batch,
+        )
         return item_utilities + total_next_step_utilities
 
     def compute_item_likelihood(
