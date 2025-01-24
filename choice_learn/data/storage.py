@@ -36,7 +36,7 @@ class Storage(ABC):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -108,7 +108,7 @@ class FeaturesStorage:
             return ArrayStorage(values=values, values_names=values_names, name=name)
 
         if ids is not None:
-            check_ids = np.in1d(ids, np.arange(len(ids))).all()
+            check_ids = np.isin(ids, np.arange(len(ids))).all()
             if check_ids:
                 values = np.array(values)[np.argsort(ids)]
                 return ArrayStorage(values=values, values_names=values_names, name=name)
@@ -185,7 +185,7 @@ class DictStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -207,7 +207,7 @@ class DictStorage(Storage):
         return len(self.storage)
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -276,7 +276,7 @@ class ArrayStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------
@@ -295,7 +295,7 @@ class ArrayStorage(Storage):
         return self.shape[0]
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -400,7 +400,7 @@ class OneHotStorage(Storage):
         return len(self.storage)
 
     def __getitem__(self, id_keys):
-        """Subset FeaturesStorage, keeping only features which id is in keys.
+        """Subset FeaturesStorage, keeping only the features whose id is in keys.
 
         Parameters
         ----------
@@ -433,7 +433,7 @@ class OneHotStorage(Storage):
     def get_element_from_index(self, index):
         """Getter method with index (int).
 
-        Returns the features stored witg the index-th ID.
+        Returns the features stored with the index-th ID.
 
         Parameters
         ----------

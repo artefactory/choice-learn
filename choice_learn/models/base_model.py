@@ -379,15 +379,15 @@ class ChoiceModel:
                             f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
                         )
 
-            # Take into account last batch that may have a differnt length into account for
-            # the computation of the epoch loss.
+            # Take into account the fact that the last batch may have a
+            # different length for the computation of the epoch loss.
             if batch_size != -1:
                 last_batch_size = available_items_batch.shape[0]
                 coefficients = tf.concat(
                     [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
                 )
-                epoch_lossses = tf.multiply(epoch_losses, coefficients)
-                epoch_loss = tf.reduce_sum(epoch_lossses) / len(choice_dataset)
+                epoch_losses = tf.multiply(epoch_losses, coefficients)
+                epoch_loss = tf.reduce_sum(epoch_losses) / len(choice_dataset)
             else:
                 epoch_loss = tf.reduce_mean(epoch_losses)
             losses_history["train_loss"].append(epoch_loss)

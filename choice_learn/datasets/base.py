@@ -23,10 +23,10 @@ def get_path(data_file_name, module=DATA_MODULE):
 
     Parameters
     ----------
-    module : str, optional
-        path to directory containing the data file, by default DATA_MODULE
-    data_file_name : str
+    data_file_name: str
         name of the csv file to load
+    module: str, optional
+        path to directory containing the data file, by default DATA_MODULE
 
     Returns
     -------
@@ -68,7 +68,7 @@ def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
         names = next(data_file)
         data = []
 
-        for i, ir in enumerate(data_file):
+        for ir in data_file:
             data.append(np.asarray(ir, dtype=np.float64))
     return names, np.stack(data)
 
@@ -590,6 +590,7 @@ def load_modecanada(
 
      Christophier V. Forinash and Frank S. Koppelman (1993) “Application and interpretation of
      nested logit models of intercity mode choice,” Transportation Research Record 1413, 98-106. """
+
     _ = to_wide
     data_file_name = "ModeCanada.csv.gz"
     # names, data = load_gzip(data_file_name)
@@ -909,6 +910,7 @@ def load_train(
     desc += """Ben-Akiva M, Bolduc D, Bradley M(1993).
     “Estimation of Travel Choice Models with Randomly Distributed Values of Time.
     ”Papers 9303, Laval-Recherche en Energie. https://ideas.repec.org/p/fth/lavaen/9303.html."""
+
     _ = to_wide
     data_file_name = "train_data.csv.gz"
 
