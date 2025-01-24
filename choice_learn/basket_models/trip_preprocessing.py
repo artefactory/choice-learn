@@ -27,13 +27,13 @@ def csv_to_df(
     Parameters
     ----------
     data_file_name: str
-        name of the csv file to load
+        Name of the csv file to load
     data_module: str, optional
-        path to directory containing the data file, by default DATA_MODULE
+        Path to directory containing the data file, by default DATA_MODULE
     encoding: str, optional
-        encoding method of file, by default "utf-8"
+        Encoding method of file, by default "utf-8"
     sep: str, optional
-        separator used in the csv file, by default ''
+        Separator used in the csv file, by default ''
 
     Returns
     -------
@@ -71,9 +71,7 @@ def map_indexes(df: pd.DataFrame, column_name: str, index_start: int) -> dict:
 
 
 def from_csv(
-    train_file: str,
-    test_file: Union[str, None] = None,
-    val_file: Union[str, None] = None,
+    data_file_name: str,
     nrows: Union[int, None] = None,
     sep: str = None,
     user_id_col: str = "user_id",
@@ -96,12 +94,8 @@ def from_csv(
 
     Parameters
     ----------
-    train_file: str
-        Name of the train dataset file
-    test_file: str, optional
-        Name of the test dataset file, by default None
-    val_file: str, optional
-        Name of the validation dataset file, by default None
+    data_file_name: str
+        Name of the csv file to load
     nrows: int, optional
         Number of rows to load, by default None
     user_id_col: str, optional
@@ -119,294 +113,256 @@ def from_csv(
 
     Returns
     -------
-    TripDataset
-        Training TripDataset built from the csv files (with preprocessing)
-    TripDataset
-        Test TripDataset built from the csv files (with preprocessing)
-    TripDataset
-        Validation TripDataset built from the csv files (with preprocessing)
+    trip_dataset: TripDataset
+        TripDataset built from the csv files (with preprocessing)
+    n_items: int
+        Number of distinct items in the dataset
+    n_customers: int
+        Number of distinct customers in the dataset
+    n_trips: int
+        Number of distinct trips in the dataset
+
+    trip_dataset, n_items, n_customers, n_trips
     """
     # Load the data and select the first nrows
+    dataset = csv_to_df(data_file_name=data_file_name, data_module=OS_DATA_MODULE, sep=sep)
     print(
-        "Number of transactions in the training set: ",
-        f"{csv_to_df(data_file_name=train_file, data_module=OS_DATA_MODULE, sep=sep).shape[0]}",
+        "Number of transactions in the total dataset: ",
+        f"{dataset.shape[0]}",
     )
-    train_dataset = csv_to_df(data_file_name=train_file, data_module=OS_DATA_MODULE, sep=sep).iloc[
-        :nrows
-    ]
-    print(
-        "Number of transactions in the test set: ",
-        f"{csv_to_df(data_file_name=test_file, data_module=OS_DATA_MODULE, sep=sep).shape[0]}",
-    )
-    test_dataset = (
-        csv_to_df(data_file_name=test_file, data_module=OS_DATA_MODULE, sep=sep).iloc[:nrows]
-        if test_file
-        else None
-    )
-    print(
-        "Number of transactions in the validation set: ",
-        f"{csv_to_df(data_file_name=val_file, data_module=OS_DATA_MODULE, sep=sep).shape[0]}",
-    )
-    val_dataset = (
-        csv_to_df(data_file_name=val_file, data_module=OS_DATA_MODULE, sep=sep).iloc[:nrows]
-        if val_file
-        else None
-    )
+    dataset = dataset.iloc[:nrows]
 
-    train_set_grouped_by_item = csv_to_df(
-        data_file_name=train_file, data_module=OS_DATA_MODULE, sep=sep
+    # Print some statistics about the dataset
+    dataset_grouped_by_item = csv_to_df(
+        data_file_name=data_file_name, data_module=OS_DATA_MODULE, sep=sep
     ).groupby(["item_id"])
-    train_set_grouped_by_trip = csv_to_df(
-        data_file_name=train_file, data_module=OS_DATA_MODULE, sep=sep
+    dataset_grouped_by_trip = csv_to_df(
+        data_file_name=data_file_name, data_module=OS_DATA_MODULE, sep=sep
     ).groupby(["session_id", "user_id"])
-    print(f"Nb of items in the total train set: {train_set_grouped_by_item.ngroups}")
-    print(f"Nb of trips in the total train set: {train_set_grouped_by_trip.ngroups}")
+    print(f"Nb of items in the total dataset: {dataset_grouped_by_item.ngroups}")
+    print(f"Nb of trips in the total dataset: {dataset_grouped_by_trip.ngroups}")
     print(
-        "Average number of items per trip in the total train set: ",
-        f"{train_set_grouped_by_trip.size().mean()}",
+        "Average number of items per trip in the total dataset: ",
+        f"{dataset_grouped_by_trip.size().mean()}",
     )
     print(
-        "Min and max number of items per trip in the total train set: "
-        f"{train_set_grouped_by_trip.size().min()}, {train_set_grouped_by_trip.size().max()}"
+        "Min and max number of items per trip in the total dataset: "
+        f"{dataset_grouped_by_trip.size().min()}, {dataset_grouped_by_trip.size().max()}"
     )
-
-    print(f"Before mapping the item ids: {train_dataset['item_id'].unique()=}\n")
 
     # Rename columns
-    for dataset in [train_dataset, test_dataset, val_dataset]:
-        dataset = dataset.rename(
-            columns={
-                user_id_col: "user_id",
-                item_id_col: "item_id",
-                session_id_col: "session_id",
-                quantity_col: "quantity",
-                price_col: "price",
-                week_id_col: "week_id",
-            }
-        )
+    dataset = dataset.rename(
+        columns={
+            user_id_col: "user_id",
+            item_id_col: "item_id",
+            session_id_col: "session_id",
+            quantity_col: "quantity",
+            price_col: "price",
+            week_id_col: "week_id",
+        }
+    )
+
+    print(f"Before mapping the item ids: {dataset['item_id'].unique()=}\n")
 
     # Map the indexes
-    for dataset in [train_dataset, test_dataset, val_dataset]:
-        for column in dataset.columns:
-            if column[-3:] == "_id":
-                print(f"Remapping {column}")
-                if column == "item_id":
-                    # 1-index mapping (the checkout item 0 is counted in n_items)
-                    map_indexes(dataset, column, index_start=1)
-                else:
-                    # O-index mapping
-                    map_indexes(dataset, column, index_start=0)
+    for column in dataset.columns:
+        if column[-3:] == "_id":
+            print(f"Remapping {column}")
+            if column == "item_id":
+                # 1-index mapping (the checkout item 0 is counted in n_items)
+                map_indexes(dataset, column, index_start=1)
+            else:
+                # O-index mapping
+                map_indexes(dataset, column, index_start=0)
     # /!\ TODO: the same ids accross datasets are not necessarily mapped to the same index
     # --> The remapping should be done on the whole dataset after having merged the
     # different subsets?
 
-    print(f"After mapping the item ids: {train_dataset['item_id'].unique()=}\n")
+    print(f"After mapping the item ids: {dataset['item_id'].unique()=}\n")
 
     # Normalize the raw prices (the price for a given trip is divided by the per-item mean price)
-    for dataset in [train_dataset, test_dataset, val_dataset]:
-        # Drop rows with NaN values in the price column
-        dataset = dataset.dropna(subset=["price"])
+    # Drop rows with NaN values in the price column
+    dataset = dataset.dropna(subset=["price"])
 
-        # Division by the mean of the prices of the given item in the different trips
-        dataset["price"] = dataset["price"] / dataset.groupby("item_id")["price"].transform("mean")
-        # Other possibility : division by the mean of the prices of the items in the given trip
-        # dataset["price"] = dataset["price"] / dataset.groupby("session_id")["price"].transform(
-        #     "mean"
-        # )
+    # Division by the mean of the prices of the given item in the different trips
+    dataset["price"] = dataset["price"] / dataset.groupby("item_id")["price"].transform("mean")
+    # Other possibility : division by the mean of the prices of the items in the given trip
+    # dataset["price"] = dataset["price"] / dataset.groupby("session_id")["price"].transform(
+    #     "mean"
+    # )
 
     # Divide the data into trips
-    dataset_trips = [[], [], []]
-    for i, dataset in enumerate([train_dataset, test_dataset, val_dataset]):
-        # The different datasets can have different values for n_items
-        specific_n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
+    dataset_trips = []
+    # The different datasets can have different values for n_items
+    specific_n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
 
-        count = 0
-        grouped_sessions = list(dataset.groupby("session_id"))
-        for trip_idx, (trip_id, trip_data) in enumerate(dataset.groupby("session_id")):
-            purchases = trip_data["item_id"].tolist()
-            customer = trip_data["user_id"].tolist()
-            # All the trips of a given session have the same week_id
-            week = trip_data["week_id"].tolist()[0]
+    count = 0
+    grouped_sessions = list(dataset.groupby("session_id"))
+    for trip_idx, (trip_id, trip_data) in enumerate(dataset.groupby("session_id")):
+        purchases = trip_data["item_id"].tolist()
+        customer = trip_data["user_id"].tolist()
+        # All the trips of a given session have the same week_id
+        week = trip_data["week_id"].tolist()[0]
 
-            if len(purchases) != len(set(purchases)) and i != 1:
-                # Remove duplicates while preserving order
-                purchases = list(dict.fromkeys(purchases))
+        if len(purchases) != len(set(purchases)):
+            # Remove duplicates while preserving order
+            purchases = list(dict.fromkeys(purchases))
 
-            # Create price array with error handling
-            # (Price of checkout item 0: 1 or another default value > 0)
-            # (-1 means that the price has not already been set)
-            prices = np.array([1] + [-1] * (specific_n_items - 1))
+        # Create price array with error handling
+        # (Price of checkout item 0: 1 or another default value > 0)
+        # (-1 means that the price has not already been set)
+        prices = np.array([1] + [-1] * (specific_n_items - 1))
 
-            # 1. Get the price of each item in the trip
-            for item_id, session_id in zip(purchases, trip_data["session_id"]):
-                try:
-                    if isinstance(
+        # 1. Get the price of each item in the trip
+        for item_id, session_id in zip(purchases, trip_data["session_id"]):
+            try:
+                if isinstance(
+                    dataset.set_index(["item_id", "session_id"]).loc[(item_id, session_id)][
+                        "price"
+                    ],
+                    pd.Series,
+                ):
+                    # Then the price is a Pandas series (same value repeated)
+                    if (
+                        (
+                            dataset.set_index(["item_id", "session_id"])
+                            .loc[(item_id, session_id)]["price"]
+                            .to_numpy()[0]
+                        )
+                        == (
+                            dataset.set_index(["item_id", "session_id"])
+                            .loc[(item_id, session_id)]["price"]
+                            .to_numpy()[0]
+                        )
+                    ):
+                        # Ensure that the price is not NaN
+                        # (The price is NaN when there is no item_id in session_id)
+                        prices[item_id] = (
+                            dataset.set_index(["item_id", "session_id"])
+                            .loc[(item_id, session_id)]["price"]
+                            .to_numpy()[0]
+                        )
+                    else:
+                        prices[item_id] = 1  # Or another default value > 0
+                else:
+                    # Then the price is a scalar
+                    if (
                         dataset.set_index(["item_id", "session_id"]).loc[(item_id, session_id)][
                             "price"
-                        ],
-                        pd.Series,
+                        ]
+                        == dataset.set_index(["item_id", "session_id"]).loc[(item_id, session_id)][
+                            "price"
+                        ]
                     ):
-                        # Then the price is a Pandas series (same value repeated)
-                        if (
-                            (
-                                dataset.set_index(["item_id", "session_id"])
-                                .loc[(item_id, session_id)]["price"]
-                                .to_numpy()[0]
-                            )
-                            == (
-                                dataset.set_index(["item_id", "session_id"])
-                                .loc[(item_id, session_id)]["price"]
-                                .to_numpy()[0]
-                            )
-                        ):
-                            # Ensure that the price is not NaN
-                            # (The price is NaN when there is no item_id in session_id)
-                            prices[item_id] = (
-                                dataset.set_index(["item_id", "session_id"])
-                                .loc[(item_id, session_id)]["price"]
-                                .to_numpy()[0]
-                            )
-                        else:
-                            prices[item_id] = 1  # Or another default value > 0
+                        # Ensure that the price is not NaN
+                        # (The price is NaN when there is no item_id in session_id)
+                        prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
+                            (item_id, session_id)
+                        ]["price"]
                     else:
-                        # Then the price is a scalar
-                        if (
-                            dataset.set_index(["item_id", "session_id"]).loc[(item_id, session_id)][
-                                "price"
-                            ]
-                            == dataset.set_index(["item_id", "session_id"]).loc[
-                                (item_id, session_id)
-                            ]["price"]
-                        ):
-                            # Ensure that the price is not NaN
-                            # (The price is NaN when there is no item_id in session_id)
-                            prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
-                                (item_id, session_id)
-                            ]["price"]
-                        else:
-                            prices[item_id] = 1  # Or another default value > 0
-
-                except KeyError:
-                    prices[item_id] = 1  # Or another default value > 0
-
-            # 2. Approximate the price of the items not in the trip with
-            # the price of the same item in the previous or next trip
-            for item_id in range(specific_n_items):
-                if prices[item_id] == -1:
-                    found_price = False
-                    step = 1
-                    while not found_price:
-                        # Proceed step by step to find the price of the item
-                        # in the k-th previous or the k-th next trip
-                        prev_session_id, prev_session_data = None, None
-                        next_session_id, next_session_data = None, None
-
-                        if trip_idx - step >= 0:
-                            prev_session_id, prev_session_data = grouped_sessions[trip_idx - step]
-                        if trip_idx + step < len(grouped_sessions):
-                            next_session_id, next_session_data = grouped_sessions[trip_idx + step]
-
-                        if (
-                            prev_session_data is not None
-                            and item_id in prev_session_data["item_id"].tolist()
-                        ):
-                            # If item_id is in the previous trip, take the
-                            # price of the item in the previous trip
-                            if isinstance(
-                                dataset.set_index(["item_id", "session_id"]).loc[
-                                    (item_id, prev_session_id)
-                                ]["price"],
-                                pd.Series,
-                            ):
-                                # Then the price is a Pandas series (same value repeated)
-                                prices[item_id] = (
-                                    dataset.set_index(["item_id", "session_id"])
-                                    .loc[(item_id, prev_session_id)]["price"]
-                                    .to_numpy()[0]
-                                )
-                            else:
-                                # Then the price is a scalar
-                                prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
-                                    (item_id, prev_session_id)
-                                ]["price"]
-                            found_price = True
-
-                        elif (
-                            next_session_data is not None
-                            and item_id in next_session_data["item_id"].tolist()
-                        ):
-                            # If item_id is in the next session, take the
-                            # price of the item in the next trip
-                            if isinstance(
-                                dataset.set_index(["item_id", "session_id"]).loc[
-                                    (item_id, next_session_id)
-                                ]["price"],
-                                pd.Series,
-                            ):
-                                # Then the price is a Pandas series (same value repeated)
-                                prices[item_id] = (
-                                    dataset.set_index(["item_id", "session_id"])
-                                    .loc[(item_id, next_session_id)]["price"]
-                                    .to_numpy()[0]
-                                )
-                            else:
-                                # Then the price is a scalar
-                                prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
-                                    (item_id, next_session_id)
-                                ]["price"]
-                            found_price = True
-
-                        if trip_idx - step < 0 and trip_idx + step >= len(grouped_sessions):
-                            # Then we have checked all possible previous and next trips
-                            break
-
-                        step += 1
-
-                    if not found_price:
                         prices[item_id] = 1  # Or another default value > 0
 
-            for customer_id in customer:
-                purchases_customer = trip_data[trip_data["user_id"] == customer_id][
-                    "item_id"
-                ].tolist()
-                dataset_trips[i].append(
-                    Trip(
-                        id=count,
-                        purchases=purchases_customer + [0],  # Add the checkout item 0 at the end
-                        customer=customer_id,
-                        week=week,
-                        prices=prices,
-                    )
+            except KeyError:
+                prices[item_id] = 1  # Or another default value > 0
+
+        # 2. Approximate the price of the items not in the trip with
+        # the price of the same item in the previous or next trip
+        for item_id in range(specific_n_items):
+            if prices[item_id] == -1:
+                found_price = False
+                step = 1
+                while not found_price:
+                    # Proceed step by step to find the price of the item
+                    # in the k-th previous or the k-th next trip
+                    prev_session_id, prev_session_data = None, None
+                    next_session_id, next_session_data = None, None
+
+                    if trip_idx - step >= 0:
+                        prev_session_id, prev_session_data = grouped_sessions[trip_idx - step]
+                    if trip_idx + step < len(grouped_sessions):
+                        next_session_id, next_session_data = grouped_sessions[trip_idx + step]
+
+                    if (
+                        prev_session_data is not None
+                        and item_id in prev_session_data["item_id"].tolist()
+                    ):
+                        # If item_id is in the previous trip, take the
+                        # price of the item in the previous trip
+                        if isinstance(
+                            dataset.set_index(["item_id", "session_id"]).loc[
+                                (item_id, prev_session_id)
+                            ]["price"],
+                            pd.Series,
+                        ):
+                            # Then the price is a Pandas series (same value repeated)
+                            prices[item_id] = (
+                                dataset.set_index(["item_id", "session_id"])
+                                .loc[(item_id, prev_session_id)]["price"]
+                                .to_numpy()[0]
+                            )
+                        else:
+                            # Then the price is a scalar
+                            prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
+                                (item_id, prev_session_id)
+                            ]["price"]
+                        found_price = True
+
+                    elif (
+                        next_session_data is not None
+                        and item_id in next_session_data["item_id"].tolist()
+                    ):
+                        # If item_id is in the next session, take the
+                        # price of the item in the next trip
+                        if isinstance(
+                            dataset.set_index(["item_id", "session_id"]).loc[
+                                (item_id, next_session_id)
+                            ]["price"],
+                            pd.Series,
+                        ):
+                            # Then the price is a Pandas series (same value repeated)
+                            prices[item_id] = (
+                                dataset.set_index(["item_id", "session_id"])
+                                .loc[(item_id, next_session_id)]["price"]
+                                .to_numpy()[0]
+                            )
+                        else:
+                            # Then the price is a scalar
+                            prices[item_id] = dataset.set_index(["item_id", "session_id"]).loc[
+                                (item_id, next_session_id)
+                            ]["price"]
+                        found_price = True
+
+                    if trip_idx - step < 0 and trip_idx + step >= len(grouped_sessions):
+                        # Then we have checked all possible previous and next trips
+                        break
+
+                    step += 1
+
+                if not found_price:
+                    prices[item_id] = 1  # Or another default value > 0
+
+        for customer_id in customer:
+            purchases_customer = trip_data[trip_data["user_id"] == customer_id]["item_id"].tolist()
+            dataset_trips.append(
+                Trip(
+                    id=count,
+                    purchases=purchases_customer + [0],  # Add the checkout item 0 at the end
+                    customer=customer_id,
+                    week=week,
+                    prices=prices,
+                    assortment=0,  # TODO: Add the assortment
                 )
-                count += 1
+            )
+            count += 1
 
     # Build the TripDatasets
-    train_trip_dataset = TripDataset(trips=dataset_trips[0])
-    test_trip_dataset = TripDataset(trips=dataset_trips[1])
-    val_trip_dataset = TripDataset(trips=dataset_trips[2])
+    assortments = {0: np.arange(dataset["item_id"].nunique() + 1)}  # TODO: Add the assortments
+    trip_dataset = TripDataset(trips=dataset_trips, assortments=assortments)
 
-    n_items = train_dataset["item_id"].nunique() + 1  # +1 for the checkout item
-    n_customers = train_dataset["user_id"].nunique()
-    n_trips = {
-        "train": len(train_trip_dataset),
-        "test": len(test_trip_dataset),
-        "val": len(val_trip_dataset),
-    }
+    n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
+    n_customers = dataset["user_id"].nunique()
+    n_trips = len(trip_dataset)
 
-    print(
-        "Training dataset:",
-        f"n_items={train_dataset['item_id'].nunique()}, ",
-        f"n_customers={train_dataset['user_id'].nunique()}",
-    )
-    print(
-        "Validation dataset:",
-        f"n_items={val_dataset['item_id'].nunique()}, ",
-        f"n_customers={val_dataset['user_id'].nunique()}",
-    )
-    print(
-        "Test dataset:",
-        f"n_items={test_dataset['item_id'].nunique()}, ",
-        f"n_customers={test_dataset['user_id'].nunique()}",
-    )
+    print(f"{n_items=}, {n_customers=} and {n_trips=}")
 
-    return train_trip_dataset, test_trip_dataset, val_trip_dataset, n_items, n_customers, n_trips
+    return trip_dataset, n_items, n_customers, n_trips
