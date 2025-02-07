@@ -8,12 +8,11 @@ import numpy as np
 import pandas as pd
 from trip_dataset import Trip, TripDataset
 
-sys.path.append("../")
-
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
 DATA_MODULE = "../choice_learn/datasets/data"
 
 # When files are executed on a server, the path is different
+sys.path.append("../")
 # OS_DATA_MODULE = os.path.join(os.path.abspath(".."),
 #                               "choice-learn", "choice_learn", "datasets", "data")
 # DATA_MODULE = "../choice-learn/choice_learn/datasets/data"
