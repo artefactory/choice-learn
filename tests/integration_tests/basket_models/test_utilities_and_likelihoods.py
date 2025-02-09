@@ -214,7 +214,7 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
         n_customers=n_customers_1,
     )
-    model.fit(trip_dataset=trip_dataset_1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -285,3 +285,19 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
             )
             < 1e-4
         )
+
+
+def test_evaluate_load_and_save() -> None:
+    """Test evaluate endpoint."""
+    model = Shopper(
+        stage=3,
+        latent_sizes={"preferences": 2, "price": 2, "season": 2},
+    )
+    model.instantiate(
+        n_items=n_items_1,
+        n_customers=n_customers_1,
+    )
+    model.evaluate(trip_dataset=trip_dataset_1)
+    model.save_model("test_model")
+    _ = Shopper.load_model("test_model")
+    return True
