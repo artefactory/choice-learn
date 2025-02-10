@@ -15,8 +15,7 @@ class Trip:
     at a specific location (with given prices).
     It can be seen as the content of a time-stamped purchase receipt with customer identification.
 
-    Trip = (purchases, customer, week, prices)
-
+    Trip = (trip id, purchases, customer, week, prices, assortment)
     """
 
     def __init__(
@@ -26,7 +25,7 @@ class Trip:
         customer: int,
         week: int,
         prices: np.ndarray,
-        assortment: int,
+        assortment: Union[int, np.ndarray],
     ) -> None:
         """Initialize the trip.
 
@@ -36,17 +35,19 @@ class Trip:
             Trip ID
         purchases: np.ndarray
             List of the ID of the purchased items, 0 to n_items - 1 (0-indexed)
-            Shape: (len_basket,), the last item is the checkout item 0
+            Shape must be (len_basket,), the last item is the checkout item 0
         customer: int
             Customer ID, 0 to n_customers - 1 (0-indexed)
         week: int
             Week number, 0 to 51 (0-indexed)
         prices: np.ndarray
             Prices of items
-            Shape: (len_basket,)
-        assortment: int
-            Assortment ID (corresponding to the assortment, ie the available items,
-            of a specific store at a given time)
+            Shape must be (len_basket,)
+        assortment: int or np.ndarray
+            Assortment ID (int) corresponding to the assortment (ie its index in self.assortments)
+            OR availability matrix (np.ndarray) of the assortment (binary vector of length n_items
+            where 1 means the item is available and 0 means the item is not available)
+            An assortment is the list of available items of a specific store at a given time
         """
         if week not in range(52):
             raise ValueError("Week number must be between 0 and 51, inclusive.")
@@ -62,7 +63,7 @@ class Trip:
 
         self.trip_length = len(purchases)
 
-    def get_items_up_to_i(self, i: int) -> np.ndarray:
+    def get_items_up_to_index(self, i: int) -> np.ndarray:
         """Get items up to index i.
 
         Parameters
@@ -74,7 +75,7 @@ class Trip:
         -------
         np.ndarray
             List of items up to index i (excluded)
-            Shape: (i,)
+            Shape must be (i,)
         """
         return self.purchases[:i]
 
@@ -82,22 +83,24 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip], assortments: dict[int, np.ndarray]) -> None:
+    def __init__(self, trips: list[Trip], assortments: np.ndarray) -> None:
         """Initialize the dataset.
 
         Parameters
         ----------
         trips: list[Trip]
             List of trips
-            Shape: (n_trips,)
-        assortments: dict[int, np.ndarray]
-            Dictionary of assortments
-            Keys: assortment ID
-            Values: np.ndarray of available items
+            Length must be n_trips
+        assortments: np.ndarray
+            Array of assortments
+            assortments[i]: availability matrix of the assortment whose ID is i
+            (The availability matrix is a binary vector of length n_items
+            where 1 means the item is available and 0 means the item is not available)
+            Shape must be (n_assortments, n_items)
         """
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
-        self.n_samples = len(self.transactions())
+        self.n_samples = len(self.get_transactions())
         self.assortments = assortments
 
     def __len__(self) -> int:
@@ -130,7 +133,7 @@ class TripDataset:
         """
         return iter(self.trips)
 
-    def add(self, other: object, inplace: bool = False) -> object:
+    def concatenate(self, other: object, inplace: bool = False) -> object:
         """Add a dataset to another.
 
         Parameters
@@ -146,23 +149,25 @@ class TripDataset:
             Concatenated dataset
         """
         if inplace:  # Add another dataset to the current one (in-place)
-            # Add new trips
+            # Concatenate the list of trips
             self.trips += other.trips
             # Update the attributes of the TripDataset
             self.max_length = max([trip.trip_length for trip in self.trips])
-            self.n_samples = len(self.transactions())
-            # Update the dictionary of assortments (add new keys)
-            # If a key already exists, the value is updated
-            self.assortments = {**self.assortments, **other.assortments}
-
+            self.n_samples = len(self.get_transactions())
+            # Concatenate the arrays of assortments
+            # /!\ When concatenating 2 TripDatasets, the indices of the assortments
+            # changes
+            self.assortments = np.concatenate((self.assortments, other.assortments), axis=0)
             return self
 
         # Else: create a new dataset by adding 2 datasets together
         return TripDataset(
+            # Concatenate the list of trips
             trips=self.trips + other.trips,
-            # Update the dictionary of assortments (add new keys)
-            # If a key already exists, the value is updated
-            assortments={**self.assortments, **other.assortments},
+            # Concatenate the arrays of assortments
+            # /!\ When concatenating 2 TripDatasets, the indices of the assortments
+            # changes
+            assortments=np.concatenate((self.assortments, other.assortments), axis=0),
         )
 
     def get_trip(self, index: int) -> Trip:
@@ -180,7 +185,7 @@ class TripDataset:
         """
         return self.trips[index]
 
-    def transactions(self) -> np.ndarray:
+    def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
 
         One transaction is a triplet (customer, trip, item).
@@ -210,9 +215,7 @@ class TripDataset:
         np.ndarray
             List of items available in the dataset
         """
-        items_list = list(self.assortments.values())
-        items_list_flattened = [item for sublist in items_list for item in sublist]
-        return np.unique(items_list_flattened)
+        return np.arange(self.n_items)
 
     def get_all_baskets(self) -> np.ndarray:
         """Return the list of all baskets in the dataset.
@@ -256,16 +259,7 @@ class TripDataset:
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
 
-    def get_all_assortments(self) -> np.ndarray:
-        """Return the list of all assortments in the dataset.
-
-        Returns
-        -------
-        np.ndarray
-            List of assortments in the dataset
-        """
-        return np.array(list({self.trips[i].assortment for i in range(len(self))}))
-
+    @property
     def n_items(self) -> int:
         """Return the number of items available in the dataset.
 
@@ -274,8 +268,9 @@ class TripDataset:
         int
             Number of items available in the dataset
         """
-        return len(self.get_all_items())
+        return self.assortments.shape[1]
 
+    @property
     def n_customers(self) -> int:
         """Return the number of customers in the dataset.
 
@@ -286,6 +281,7 @@ class TripDataset:
         """
         return len(self.get_all_customers())
 
+    @property
     def n_assortments(self) -> int:
         """Return the number of assortments in the dataset.
 
@@ -294,21 +290,22 @@ class TripDataset:
         int
             Number of assortments in the dataset
         """
-        return len(self.get_all_assortments())
+        return self.assortments.shape[0]
 
     def get_augmented_data_from_trip_index(
         self,
         trip_index: int,
-    ) -> dict[str, np.ndarray]:
+    ) -> tuple[np.ndarray]:
         """Get augmented data from a trip index.
 
         Augmented data includes all the transactions obtained sequentially from the trip:
             - permuted items,
             - permuted, truncated and padded baskets,
+            - padded future purchases based on the baskets,
             - customers,
             - weeks,
             - prices,
-            - item availabilities.
+            - available items.
 
         Parameters
         ----------
@@ -317,9 +314,10 @@ class TripDataset:
 
         Returns
         -------
-        dict[str, np.ndarray]
-            Dictionary of data (ie transactions) from the trip
-            Keys are: "items", "baskets", "customers", "weeks", "prices", "item_availabilities"
+        tuple[np.ndarray]
+            For each sample (ie transaction) from the trip:
+            item, basket, future purchases, customer, week, prices, available items
+            Length must be 7
         """
         # Get the trip from the index
         trip = self.trips[trip_index]
@@ -345,21 +343,41 @@ class TripDataset:
             dtype=int,
         )
 
-        # Building the availability matrix based on the assortment ID
-        # The availability matrix is a binary vector of length n_items
-        # where 1 means the item is available and 0 means the item is not available
-        availability_matrix = np.zeros(self.n_items())
-        availability_matrix[self.assortments[trip.assortment]] = 1
+        # padded_future_purchases are the complements of padded_truncated_purchases, ie the
+        # items that are not yet in the (permuted) basket but that we know will be purchased
+        # during the next steps of the trip
+        # Pad the future purchases with -1 to have the same length
+        padded_future_purchases = np.array(
+            [
+                np.concatenate(
+                    (
+                        permuted_purchases[i + 1 :],
+                        -1 * np.ones(self.max_length - len(permuted_purchases) + i + 1),
+                    )
+                )
+                for i in range(0, length_trip)
+            ],
+            dtype=int,
+        )
 
-        # Each item is linked to a basket, a customer, a week, prices and an assortment
-        return {
-            "items": permuted_purchases,
-            "baskets": padded_truncated_purchases,
-            "customers": np.full(length_trip, trip.customer),
-            "weeks": np.full(length_trip, trip.week),
-            "prices": np.tile(trip.prices, (length_trip, 1)),
-            "item_availabilities": np.tile(availability_matrix, (length_trip, 1)),
-        }
+        if isinstance(trip.assortment, int):
+            # Then it is the assortment ID (ie its index in self.assortments)
+            assortment = self.assortments[trip.assortment]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            assortment = trip.assortment
+
+        # Each item is linked to a basket, the future purchases,
+        # a customer, a week, prices and an assortment
+        return (
+            permuted_purchases,  # Items
+            padded_truncated_purchases,  # Baskets
+            padded_future_purchases,  # Future purchases
+            np.full(length_trip, trip.customer),  # Customers
+            np.full(length_trip, trip.week),  # Weeks
+            np.tile(trip.prices, (length_trip, 1)),  # Prices
+            np.tile(assortment, (length_trip, 1)),  # Available items
+        )
 
     def iter_batch(
         self,
@@ -377,9 +395,10 @@ class TripDataset:
 
         Yields
         ------
-        list[np.ndarray]
-            For each item in the batch: item, basket, customer, week, prices, item availabilities
-            Shape: (6, batch_size)
+        tuple[np.ndarray]
+            For each item in the batch: item, basket, future purchases,
+            customer, week, prices, available items
+            Length must 7
         """
         # Get trip indexes
         num_trips = len(self)
@@ -388,132 +407,71 @@ class TripDataset:
         # Shuffle trip indexes
         # TODO: shuffling on the trip indexes or on the item indexes?
         if shuffle:
-            trip_indexes = np.random.default_rng(seed=42).permutation(trip_indexes)
+            trip_indexes = np.random.default_rng().permutation(trip_indexes)
 
         # Initialize the buffer
-        buffer = {
-            "items": np.empty(0, dtype=int),
-            "baskets": np.empty((0, self.max_length), dtype=int),
-            "customers": np.empty(0, dtype=int),
-            "weeks": np.empty(0, dtype=int),
-            "prices": np.empty((0, self.n_items()), dtype=int),
-            "item_availabilities": np.empty((0, self.n_items()), dtype=int),
-        }
+        buffer = (
+            np.empty(0, dtype=int),  # Items
+            np.empty((0, self.max_length), dtype=int),  # Baskets
+            np.empty((0, self.max_length), dtype=int),  # Future purchases
+            np.empty(0, dtype=int),  # Customers
+            np.empty(0, dtype=int),  # Weeks
+            np.empty((0, self.n_items), dtype=int),  # Prices
+            np.empty((0, self.n_items), dtype=int),  # Available items
+        )
 
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
                 additional_trip_data = self.get_augmented_data_from_trip_index(trip_index)
-                buffer["items"] = np.concatenate((buffer["items"], additional_trip_data["items"]))
-                buffer["baskets"] = np.concatenate(
-                    (buffer["baskets"], additional_trip_data["baskets"])
-                )
-                buffer["customers"] = np.concatenate(
-                    (buffer["customers"], additional_trip_data["customers"])
-                )
-                buffer["weeks"] = np.concatenate((buffer["weeks"], additional_trip_data["weeks"]))
-                buffer["prices"] = np.concatenate(
-                    (buffer["prices"], additional_trip_data["prices"])
-                )
-                buffer["item_availabilities"] = np.concatenate(
-                    (buffer["item_availabilities"], additional_trip_data["item_availabilities"])
+                buffer = tuple(
+                    np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
                 )
 
             # Yield the whole dataset
-            yield (
-                buffer["items"],
-                buffer["baskets"],
-                buffer["customers"],
-                buffer["weeks"],
-                buffer["prices"],
-                buffer["item_availabilities"],
-            )
+            yield buffer
 
         else:
             # Yield batches of size batch_size while going through all the trips
-            trip_index = 0
+            index = 0
             outer_break = False
-            while trip_index < num_trips:
+            while index < num_trips:
                 # Fill the buffer with trips' augmented data until it reaches the batch size
-                while len(buffer["items"]) < batch_size:
-                    if trip_index >= num_trips:
+                while len(buffer[0]) < batch_size:
+                    if index >= num_trips:
                         # Then the buffer is not full but there are no more trips to consider
                         # Yield the batch partially filled
-                        yield (
-                            buffer["items"],
-                            buffer["baskets"],
-                            buffer["customers"],
-                            buffer["weeks"],
-                            buffer["prices"],
-                            buffer["item_availabilities"],
-                        )
+                        yield buffer
 
                         # Exit the TWO while loops when all trips have been considered
                         outer_break = True
-                        break  # Exit the inner loop
+                        break
 
                     else:
                         # Consider a new trip to fill the buffer
-                        additional_trip_data = self.get_augmented_data_from_trip_index(trip_index)
-                        trip_index += 1
+                        additional_trip_data = self.get_augmented_data_from_trip_index(
+                            trip_indexes[index]
+                        )
+                        index += 1
 
                         # Fill the buffer with the new trip
-                        buffer["items"] = np.concatenate(
-                            (buffer["items"], additional_trip_data["items"])
-                        )
-                        buffer["baskets"] = np.concatenate(
-                            (buffer["baskets"], additional_trip_data["baskets"])
-                        )
-                        buffer["customers"] = np.concatenate(
-                            (buffer["customers"], additional_trip_data["customers"])
-                        )
-                        buffer["weeks"] = np.concatenate(
-                            (buffer["weeks"], additional_trip_data["weeks"])
-                        )
-                        buffer["prices"] = np.concatenate(
-                            (buffer["prices"], additional_trip_data["prices"])
-                        )
-                        buffer["item_availabilities"] = np.concatenate(
-                            (
-                                buffer["item_availabilities"],
-                                additional_trip_data["item_availabilities"],
-                            )
+                        buffer = tuple(
+                            np.concatenate((buffer[i], additional_trip_data[i]))
+                            for i in range(len(buffer))
                         )
 
                 if outer_break:
-                    # Exit the outer loop
                     break
 
                 # Once the buffer is full, get the batch and update the next buffer
-                batch = {
-                    "items": buffer["items"][:batch_size],
-                    "baskets": buffer["baskets"][:batch_size],
-                    "customers": buffer["customers"][:batch_size],
-                    "weeks": buffer["weeks"][:batch_size],
-                    "prices": buffer["prices"][:batch_size],
-                    "item_availabilities": buffer["item_availabilities"][:batch_size],
-                }
-                buffer = {
-                    "items": buffer["items"][batch_size:],
-                    "baskets": buffer["baskets"][batch_size:],
-                    "customers": buffer["customers"][batch_size:],
-                    "weeks": buffer["weeks"][batch_size:],
-                    "prices": buffer["prices"][batch_size:],
-                    "item_availabilities": buffer["item_availabilities"][batch_size:],
-                }
+                batch = tuple(buffer[i][:batch_size] for i in range(len(buffer)))
+                buffer = tuple(buffer[i][batch_size:] for i in range(len(buffer)))
 
                 # Yield the batch
-                yield (
-                    batch["items"],
-                    batch["baskets"],
-                    batch["customers"],
-                    batch["weeks"],
-                    batch["prices"],
-                    batch["item_availabilities"],
-                )
+                yield batch
 
-    def __getitem__(self, index: Union[int, list, np.ndarray, range, slice]) -> Trip:
-        """Return the trip at the given index or a list of trips if index is a list.
+    def __getitem__(self, index: Union[int, list, np.ndarray, range, slice]) -> object:
+        """Return a TripDataset object populated with the trips at index.
 
         Parameters
         ----------
@@ -526,9 +484,19 @@ class TripDataset:
             Trip at the given index or list of trips at the given indices
         """
         if isinstance(index, int):
-            return self.trips[index]
+            return TripDataset(
+                trips=[self.trips[index]],
+                assortments=self.assortments,
+            )
         if isinstance(index, (list, np.ndarray, range)):
-            return [self.trips[i] for i in index]
+            return TripDataset(
+                trips=[self.trips[i] for i in index],
+                assortments=self.assortments,
+            )
         if isinstance(index, slice):
-            return self.trips[index]
+            return TripDataset(
+                trips=self.trips[index],
+                assortments=self.assortments,
+            )
+
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")

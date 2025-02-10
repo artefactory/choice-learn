@@ -22,7 +22,10 @@ class Shopper:
 
     def __init__(
         self,
-        stage: int = 1,
+        item_popularity: bool = True,
+        price_effects: bool = True,
+        seasonal_effects: bool = True,
+        think_ahead: bool = False,
         latent_sizes: dict[str] = {"preferences": 1, "price": 1, "season": 1},
         n_negative_samples: int = 2,
         optimizer: str = "adam",
@@ -39,8 +42,14 @@ class Shopper:
 
         Parameters
         ----------
-        stage: int, optional
-            Modeling stage of the model (1, 2 or 3), by default 1
+        item_popularity: bool, optional
+            Whether to include item popularity in the model, by default True
+        price_effects: bool, optional
+            Whether to include price effects in the model, by default True
+        seasonal_effects: bool, optional
+            Whether to include seasonal effects in the model, by default True
+        think_ahead: bool, optional
+            Whether to include "thinking ahead" in the model, by default False
         latent_sizes: dict[str]
             Lengths of the vector representation of the latent parameters
             latent_sizes["preferences"]: length of one vector of theta, alpha, rho
@@ -49,6 +58,7 @@ class Shopper:
         n_negative_samples: int, optional
             Number of negative samples to draw for each positive sample for the training,
             by default 2
+            Must be > 0
         optimizer: str, optional
             Optimizer to use for training, by default "adam"
         callbacks: tf.keras.callbacks.Callbacklist, optional
@@ -68,15 +78,20 @@ class Shopper:
         epsilon_price: float, optional
             Epsilon value to add to prices to avoid NaN values (log(0)), by default 1e-5
         """
-        if stage not in range(1, 4):
-            raise ValueError("Stage number must be between 1 and 3, inclusive.")
-        self.stage = stage
+        self.item_popularity = item_popularity
+        self.price_effects = price_effects
+        self.seasonal_effects = seasonal_effects
+        self.think_ahead = think_ahead
 
         if latent_sizes.keys() != {"preferences", "price", "season"}:
             raise ValueError(
                 "The latent_sizes dictionary must contain the keys 'preferences', 'price' and "
                 "'season'."
             )
+
+        if n_negative_samples <= 0:
+            raise ValueError("n_negative_samples must be > 0.")
+
         self.latent_sizes = latent_sizes
 
         self.n_negative_samples = n_negative_samples
@@ -88,7 +103,10 @@ class Shopper:
             )
         elif optimizer.lower() == "amsgrad":
             self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr, amsgrad=True, clipvalue=grad_clip_value, weight_decay=weight_decay
+                learning_rate=lr,
+                amsgrad=True,
+                clipvalue=grad_clip_value,
+                weight_decay=weight_decay,
             )
         elif optimizer.lower() == "adamax":
             self.optimizer = tf.keras.optimizers.Adamax(
@@ -173,9 +191,8 @@ class Shopper:
             name="theta",
         )
 
-        if self.stage > 1:
-            # In addition to customer preferences: item popularity, price sensitivity
-            # and seasonal effects
+        if self.item_popularity:
+            # Add item popularity
             self.lambda_ = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     shape=(n_items,)  # Dimension for 1 item: 1
@@ -183,6 +200,14 @@ class Shopper:
                 trainable=True,
                 name="lambda",
             )
+            # Manually enforce the lambda of the checkout item to be 0
+            # (equivalent to translating the lambda values)
+            self.lambda_.assign(
+                tf.tensor_scatter_nd_update(tensor=self.lambda_, indices=[[0]], updates=[0])
+            )
+
+        if self.price_effects:
+            # Add price sensitivity
             self.beta = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     shape=(n_items, self.latent_sizes["price"])
@@ -190,19 +215,22 @@ class Shopper:
                 trainable=True,
                 name="beta",
             )
-            self.mu = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
-                    shape=(n_items, self.latent_sizes["season"])
-                ),  # Dimension for 1 item: latent_sizes["season"]
-                trainable=True,
-                name="mu",
-            )
             self.gamma = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     shape=(n_customers, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="gamma",
+            )
+
+        if self.seasonal_effects:
+            # Add seasonal effects
+            self.mu = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(n_items, self.latent_sizes["season"])
+                ),  # Dimension for 1 item: latent_sizes["season"]
+                trainable=True,
+                name="mu",
             )
             self.delta = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
@@ -223,30 +251,28 @@ class Shopper:
         list[tf.Variable]
             Latent parameters of the model
         """
-        if self.stage == 1:
-            return [self.rho, self.alpha, self.theta]
+        weights = [self.rho, self.alpha, self.theta]
 
-        # Stage 2 or 3
-        return [
-            self.rho,
-            self.alpha,
-            self.theta,
-            self.lambda_,
-            self.beta,
-            self.mu,
-            self.gamma,
-            self.delta,
-        ]
+        if self.item_popularity:
+            weights.append(self.lambda_)
+
+        if self.price_effects:
+            weights.extend([self.beta, self.gamma])
+
+        if self.seasonal_effects:
+            weights.extend([self.mu, self.delta])
+
+        return weights
 
     def thinking_ahead(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
         basket_batch_without_padding: list,
+        price_batch: np.ndarray,
+        available_item_batch: np.ndarray,
         theta_customer: tf.Tensor,
         gamma_customer: tf.Tensor,
         delta_week: tf.Tensor,
-        price_batch: np.ndarray,
-        item_availability_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
 
@@ -260,6 +286,13 @@ class Shopper:
             Batch of baskets (ID of items already in the baskets) (arrays) without padding
             for each purchased item
             Length must be batch_size
+        price_batch: np.ndarray
+            Batch of prices (integers) for each purchased item
+            Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
         theta_customer: tf.Tensor
             Slices from theta embedding gathered according to the indices that correspond
             to the customer of each purchased item in the batch
@@ -272,13 +305,6 @@ class Shopper:
             Slices from delta embedding gathered according to the indices that correspond
             to the week of each purchased item in the batch
             Shape must be (batch_size, latent_sizes["season"])
-        price_batch: np.ndarray
-            Batch of prices (integers) for each purchased item
-            Shape must be (batch_size,)
-        item_availability_batch: np.ndarray
-            Batch of availability matrices (indicating the availability (1) or not (0)
-            of the products) (arrays) for each purchased item
-            Shape must be (batch_size, n_items)
 
         Returns
         -------
@@ -293,105 +319,117 @@ class Shopper:
             if len(basket) and basket[-1] == 0:
                 # No thinking ahead when the basket ends already with the checkout item 0
                 total_next_step_utilities.append(0)
+
             else:
                 # Basket with the hypothetical current item
                 next_basket = np.append(basket, item_batch[idx])
-
                 assortment = np.array(
                     [
                         item_id
                         for item_id in range(self.n_items)
-                        if item_availability_batch[idx][item_id] == 1
+                        if available_item_batch[idx][item_id] == 1
                     ]
                 )
                 hypothetical_next_purchases = np.array(
                     [item_id for item_id in assortment if item_id not in next_basket]
                 )
-
                 # Check if there are still items to purchase during the next step
                 if len(hypothetical_next_purchases) == 0:
                     # No more items to purchase: next step impossible
                     total_next_step_utilities.append(0)
-
                 else:
-                    # The effects of item popularity, customer preferences, price sensitivity
-                    # and seasonal effects are combined in the per-item per-trip latent variable
-                    hypothetical_item_popularity = self.lambda_
-
                     # Compute the dot product along the last dimension between the embeddings
                     # of the given customer's theta and alpha of all the items
                     hypothetical_customer_preferences = tf.reduce_sum(
                         theta_customer[idx] * self.alpha, axis=1
                     )
 
-                    hypothetical_price_effects = (
-                        -1
-                        # Compute the dot product along the last dimension between the embeddings
-                        # of the given customer's gamma and beta of all the items
-                        * tf.reduce_sum(gamma_customer[idx] * self.beta, axis=1)
-                        * tf.cast(
-                            tf.math.log(price_batch[idx] + self.epsilon_price), dtype=tf.float32
+                    if self.item_popularity:
+                        hypothetical_item_popularity = self.lambda_
+                    else:
+                        hypothetical_item_popularity = tf.zeros_like(
+                            hypothetical_customer_preferences
                         )
-                    )
 
-                    # Compute the dot product along the last dimension between the embeddings
-                    # of delta of the given week and mu of all the items
-                    hypothetical_seasonal_effects = tf.reduce_sum(delta_week[idx] * self.mu, axis=1)
+                    if self.price_effects:
+                        hypothetical_price_effects = (
+                            -1
+                            # Compute the dot product along the last dimension between
+                            # the embeddings of the given customer's gamma and beta
+                            # of all the items
+                            * tf.reduce_sum(gamma_customer[idx] * self.beta, axis=1)
+                            * tf.cast(
+                                tf.math.log(price_batch[idx] + self.epsilon_price),
+                                dtype=tf.float32,
+                            )
+                        )
+                    else:
+                        hypothetical_price_effects = tf.zeros_like(
+                            hypothetical_customer_preferences
+                        )
 
-                    # Shape: (n_items,)
+                    if self.seasonal_effects:
+                        # Compute the dot product along the last dimension between the embeddings
+                        # of delta of the given week and mu of all the items
+                        hypothetical_seasonal_effects = tf.reduce_sum(
+                            delta_week[idx] * self.mu, axis=1
+                        )
+                    else:
+                        hypothetical_seasonal_effects = tf.zeros_like(
+                            hypothetical_customer_preferences
+                        )
+
+                    # The effects of item popularity, customer preferences, price sensitivity
+                    # and seasonal effects are combined in the per-item per-trip latent variable
                     hypothetical_psi = tf.reduce_sum(
                         [
-                            hypothetical_item_popularity,
+                            hypothetical_item_popularity,  # 0 if self.item_popularity is False
                             hypothetical_customer_preferences,
-                            hypothetical_price_effects,
-                            hypothetical_seasonal_effects,
+                            hypothetical_price_effects,  # 0 if self.price_effects is False
+                            hypothetical_seasonal_effects,  # 0 if self.seasonal_effects is False
                         ],
                         axis=0,
-                    )
+                    )  # Shape: (n_items,)
+
                     # Shape: (len(hypothetical_next_purchases),)
                     next_psi = tf.gather(hypothetical_psi, indices=hypothetical_next_purchases)
 
                     # Consider hypothetical "next" item one by one
-                    next_step_products_to_add_to_psi = []
+                    next_step_basket_interaction_utilities = []
                     for next_item_id in hypothetical_next_purchases:
                         rho_next_item = tf.gather(
                             self.rho, indices=next_item_id
                         )  # Shape: (latent_size,)
-
                         # Gather the embeddings using a tensor of indices
                         # (before ensure that indices are integers)
                         next_alpha_by_basket = tf.gather(
                             self.alpha, indices=tf.cast(next_basket, dtype=tf.int32)
                         )  # Shape: (len(next_basket), latent_size)
-
                         # Compute the sum of the alpha embeddings
                         next_alpha_sum = tf.reduce_sum(
                             next_alpha_by_basket, axis=0
                         )  # Shape: (latent_size,)
-
                         # Divide the sum of alpha embeddings by the number of items
                         # in the basket of the next step (always > 0)
                         next_alpha_average = next_alpha_sum / len(
                             next_basket
                         )  # Shape: (latent_size,)
-
-                        next_step_products_to_add_to_psi.append(
+                        next_step_basket_interaction_utilities.append(
                             tf.reduce_sum(rho_next_item * next_alpha_average).numpy()
                         )  # Shape: (1,)
-
                     # Shape: (len(hypothetical_next_purchases),)
-                    next_step_products_to_add_to_psi = tf.constant(next_step_products_to_add_to_psi)
+                    next_step_basket_interaction_utilities = tf.constant(
+                        next_step_basket_interaction_utilities
+                    )
 
                     # Optimal next step: take the maximum utility among all possible next purchases
                     next_step_utility = tf.reduce_max(
-                        next_psi + next_step_products_to_add_to_psi, axis=0
+                        next_psi + next_step_basket_interaction_utilities, axis=0
                     ).numpy()  # Shape: (1,)
 
                     total_next_step_utilities.append(next_step_utility)
 
-        return tf.constant(
-            total_next_step_utilities
-        )  # Shape: (batch_size * (n_negative_samples + 1),)
+        return tf.constant(total_next_step_utilities)  # Shape: (batch_size,)
 
     def compute_batch_utility(
         self,
@@ -400,7 +438,7 @@ class Shopper:
         customer_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
-        item_availability_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
 
@@ -422,7 +460,7 @@ class Shopper:
         price_batch: np.ndarray
             Batch of prices (integers) for each purchased item
             Shape must be (batch_size,)
-        item_availability_batch: np.ndarray
+        available_item_batch: np.ndarray
             Batch of availability matrices (indicating the availability (1) or not (0)
             of the products) (arrays) for each purchased item
             Shape must be (batch_size, n_items)
@@ -436,43 +474,53 @@ class Shopper:
         # Ensure that item ids are integers
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
-        # Psi values
         theta_customer = tf.gather(self.theta, indices=customer_batch)
         alpha_item = tf.gather(self.alpha, indices=item_batch)
         # Compute the dot product along the last dimension
         customer_preferences = tf.reduce_sum(theta_customer * alpha_item, axis=1)
 
-        if self.stage == 1:
-            psi = customer_preferences
-
-        else:
-            # The effects of item popularity, customer preferences, price sensitivity
-            # and seasonal effects are combined in the per-item per-trip latent variable
+        if self.item_popularity:
             item_popularity = tf.gather(self.lambda_, indices=item_batch)
+        else:
+            item_popularity = tf.zeros_like(customer_preferences)
 
+        if self.price_effects:
             gamma_customer = tf.gather(self.gamma, indices=customer_batch)
             beta_item = tf.gather(self.beta, indices=item_batch)
+            # Add epsilon to avoid NaN values (log(0))
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
                 * tf.reduce_sum(gamma_customer * beta_item, axis=1)
-                * tf.cast(tf.math.log(np.array(price_batch) + self.epsilon_price), dtype=tf.float32)
+                * tf.cast(
+                    tf.math.log(np.array(price_batch) + self.epsilon_price),
+                    dtype=tf.float32,
+                )
             )
+        else:
+            gamma_customer = tf.zeros_like(customer_batch)
+            price_effects = tf.zeros_like(customer_preferences)
 
+        if self.seasonal_effects:
             delta_week = tf.gather(self.delta, indices=week_batch)
             mu_item = tf.gather(self.mu, indices=item_batch)
             # Compute the dot product along the last dimension
             seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
+        else:
+            delta_week = tf.zeros_like(week_batch)
+            seasonal_effects = tf.zeros_like(customer_preferences)
 
-            psi = tf.reduce_sum(
-                [
-                    item_popularity,
-                    customer_preferences,
-                    price_effects,
-                    seasonal_effects,
-                ],
-                axis=0,
-            )
+        # The effects of item popularity, customer preferences, price sensitivity
+        # and seasonal effects are combined in the per-item per-trip latent variable
+        psi = tf.reduce_sum(
+            [
+                item_popularity,
+                customer_preferences,
+                price_effects,
+                seasonal_effects,
+            ],
+            axis=0,
+        )  # Shape: (batch_size,)
 
         # Apply boolean mask to mask out the padding value -1
         masked_baskets = tf.where(
@@ -524,30 +572,31 @@ class Shopper:
         )
 
         # Compute the dot product along the last dimension
-        product_to_add_to_psi = tf.reduce_sum(rho_item * alpha_average, axis=1)
+        basket_interaction_utility = tf.reduce_sum(rho_item * alpha_average, axis=1)
 
-        item_utilities = psi + product_to_add_to_psi
+        item_utilities = psi + basket_interaction_utility
 
         # No thinking ahead
-        if self.stage < 3:
+        if not self.think_ahead:
             return item_utilities
 
         # Thinking ahead
-        total_next_step_utilities = self.thinking_ahead(
+        next_step_utilities = self.thinking_ahead(
             item_batch=item_batch,
             basket_batch_without_padding=basket_batch_without_padding,
-            theta_customer=theta_customer,
-            gamma_customer=gamma_customer,
-            delta_week=delta_week,
             price_batch=price_batch,
-            item_availability_batch=item_availability_batch,
+            available_item_batch=available_item_batch,
+            theta_customer=theta_customer,
+            gamma_customer=gamma_customer,  # 0 if self.price_effects is False
+            delta_week=delta_week,  # 0 if self.seasonal_effects is False
         )
-        return item_utilities + total_next_step_utilities
+
+        return item_utilities + next_step_utilities
 
     def compute_item_likelihood(
         self,
         basket: np.ndarray,
-        item_availability: np.ndarray,
+        available_items: np.ndarray,
         customer: int,
         week: int,
         prices: np.ndarray,
@@ -558,7 +607,7 @@ class Shopper:
         ----------
         basket: np.ndarray
             ID the of items already in the basket
-        item_availability: np.ndarray
+        available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
         customer: int
@@ -576,24 +625,24 @@ class Shopper:
             Shape must be (n_items,)
         """
         # Prevent unintended side effects from in-place modifications
-        item_availability_copy = item_availability.copy()
+        available_items_copy = available_items.copy()
 
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.array([item_id for item_id in range(self.n_items)]),
-            # For each item: same basket / customer / week / prices / item availabilities
+            # For each item: same basket / customer / week / prices / available items
             basket_batch=np.array([basket for _ in range(self.n_items)]),
             customer_batch=np.array([customer for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
-            item_availability_batch=np.array([item_availability_copy for _ in range(self.n_items)]),
+            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
         )
 
-        # Equation (3) of the paper Shopper, ie softmax on the utilities
+        # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
-            available_items_by_choice=item_availability_copy,  # Shape: (n_items,)
+            available_items_by_choice=available_items_copy,  # Shape: (n_items,)
             axis=-1,
             normalize_exit=False,
             eps=None,
@@ -602,7 +651,7 @@ class Shopper:
     def compute_ordered_basket_likelihood(
         self,
         basket: np.ndarray,
-        item_availability: np.ndarray,
+        available_items: np.ndarray,
         customer: int,
         week: int,
         prices: np.ndarray,
@@ -613,7 +662,7 @@ class Shopper:
         ----------
         basket: np.ndarray
             ID the of items already in the basket
-        item_availability: np.ndarray
+        available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
         customer: int
@@ -629,9 +678,8 @@ class Shopper:
             Likelihood of the ordered basket
         """
         # Prevent unintended side effects from in-place modifications
-        item_availability_copy = item_availability.copy()
+        available_items_copy = available_items.copy()
 
-        # Equation (5) of the paper Shopper
         ordered_basket_likelihood = 1.0
         for j in range(0, len(basket)):
             next_item_id = basket[j]
@@ -639,24 +687,25 @@ class Shopper:
             # Compute the likelihood of the j-th item of the basket
             ordered_basket_likelihood *= self.compute_item_likelihood(
                 basket=basket[:j],
-                item_availability=item_availability_copy,
+                available_items=available_items_copy,
                 customer=customer,
                 week=week,
                 prices=prices,
             )[next_item_id].numpy()
 
             # This item is not available anymore
-            item_availability_copy[next_item_id] = 0
+            available_items_copy[next_item_id] = 0
 
         return ordered_basket_likelihood
 
     def compute_unordered_basket_likelihood(
         self,
         basket: np.ndarray,
-        item_availability: np.ndarray,
+        available_items: np.ndarray,
         customer: int,
         week: int,
         prices: np.ndarray,
+        n_permutations: int = 1,
         verbose: int = 0,
     ) -> float:
         """Compute the utility of an unordered basket.
@@ -665,7 +714,7 @@ class Shopper:
         ----------
         basket: np.ndarray
             ID the of items already in the basket
-        item_availability: np.ndarray
+        available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
         customer: int
@@ -674,6 +723,8 @@ class Shopper:
             Week number
         prices: np.ndarray
             Prices of all the items in the dataset
+        n_permutations: int, optional
+            Number of permutations to average over, by default 1
         verbose: int, optional
             print level, for debugging, by default 0
             (0: no print, 1: print)
@@ -691,26 +742,39 @@ class Shopper:
 
         # Permute all the items in the basket except the last one (the checkout item)
         permutation_list = list(permutations(range(len(basket) - 1)))
+        total_n_permutations = len(permutation_list)  # = n!
 
-        # Equation (6) of the paper Shopper
-        return np.sum(
-            [
-                self.compute_ordered_basket_likelihood(
-                    # The last item should always be the checkout item 0
-                    basket=[basket[i] for i in permutation] + [0],
-                    item_availability=item_availability,
-                    customer=customer,
-                    week=week,
-                    prices=prices,
-                )
-                for permutation in permutation_list
-            ]
-        )
+        # Limit the number of permutations to n!
+        if n_permutations <= total_n_permutations:
+            permutation_list = random.sample(permutation_list, n_permutations)
+        else:
+            print(
+                "Warning: n_permutations > n! (all permutations). ",
+                "Taking all permutations instead of n_permutations",
+            )
+
+        return (
+            np.mean(
+                [
+                    self.compute_ordered_basket_likelihood(
+                        # The last item should always be the checkout item 0
+                        basket=[basket[i] for i in permutation] + [0],
+                        available_items=available_items,
+                        customer=customer,
+                        week=week,
+                        prices=prices,
+                    )
+                    for permutation in permutation_list
+                ]
+            )
+            * total_n_permutations
+        )  # Rescale the mean to the total number of permutations
 
     def get_negative_samples(
         self,
-        item_availability: np.ndarray,
+        available_items: np.ndarray,
         purchased_items: np.ndarray,
+        future_purchases: np.ndarray,
         next_item: int,
         n_samples: int,
     ) -> list[int]:
@@ -720,11 +784,13 @@ class Shopper:
 
         Parameters
         ----------
-        item_availability: np.ndarray
+        available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
         purchased_items: np.ndarray
             List of items already purchased (already in the basket)
+        future_purchases: np.ndarray
+            List of items to be purchased in the future (not yet in the basket)
         next_item: int
             Next item (to be added in the basket)
         n_samples: int
@@ -736,50 +802,55 @@ class Shopper:
             Random sample of items, each of them distinct from
             the next item and from the items already in the basket
         """
-        # Build the assortment based on the availability matrix
-        assortment = [item_id for item_id in range(self.n_items) if item_availability[item_id] == 1]
+        # Build the assortment based on the item availabilities
+        assortment = [item_id for item_id in range(self.n_items) if available_items[item_id] == 1]
+
+        not_to_be_chosen = np.unique(
+            np.concatenate([purchased_items, future_purchases, [next_item]])
+        )
+
+        # Ensure that the checkout item 0 can be picked as a negative sample
+        # if it is not the next item
+        # (otherwise 0 is always in not_to_be_chosen because it's in future_purchases)
+        if next_item:
+            not_to_be_chosen = np.setdiff1d(not_to_be_chosen, [0])
+
+        # Items that can be picked as negative samples
+        possible_items = np.setdiff1d(assortment, not_to_be_chosen)
 
         # Ensure that the while loop will not run indefinitely
-        n_available_items = len(
-            [item for item in assortment if item not in purchased_items and item != next_item]
-        )
-        if n_samples > n_available_items:
+        if n_samples > len(possible_items):
             raise ValueError(
                 "The number of samples to draw must be less than the "
                 "number of available items not already purchased and "
                 "distinct from the next item."
             )
 
-        negative_samples = []
-        while len(negative_samples) < n_samples:
-            # Sample a random item
-            item = random.sample(assortment, 1)[0]
-            if item not in negative_samples:
-                # Check that the sample is distinct from the next item
-                # and from the items already in the basket
-                if item not in purchased_items and item != next_item:
-                    negative_samples.append(item)
+        return random.sample(list(possible_items), n_samples)
 
-        return negative_samples
-
-    def batch_predict(
+    def compute_batch_loss(
         self,
         item_batch: np.ndarray,
         basket_batch: np.ndarray,
+        future_batch: np.ndarray,
         customer_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
-        item_availability_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
-        """Prediction (log-likelihood and loss) for one batch of items.
+        """Compute log-likelihood and loss for one batch of items.
 
         Parameters
         ----------
         item_batch: np.ndarray
-            Batch of purchased item IDs (integers)
+            Batch of purchased items ID (integers)
             Shape must be (batch_size,)
         basket_batch: np.ndarray
             Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        future_batch: np.ndarray
+            Batch of items to be purchased in the future (ID of items not yet in the
+            basket) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
         customer_batch: np.ndarray
             Batch of customer IDs (integers) for each purchased item
@@ -790,7 +861,7 @@ class Shopper:
         price_batch: np.ndarray
             Batch of prices (integers) for each purchased item
             Shape must be (batch_size,)
-        item_availability_batch: np.ndarray
+        available_item_batch: np.ndarray
             List of availability matrices (indicating the availability (1) or not (0)
             of the products) (arrays) for each purchased item
             Shape must be (batch_size, n_items)
@@ -798,7 +869,7 @@ class Shopper:
         Returns
         -------
         batch_loss: tf.Variable
-            Value of the loss for the batch,
+            Value of the loss for the batch (normalized negative log-likelihood),
             Shape must be (1,)
         loglikelihood: tf.Variable
             Computed log-likelihood of the batch of items
@@ -812,8 +883,9 @@ class Shopper:
             np.concatenate(
                 [
                     self.get_negative_samples(
-                        item_availability=item_availability_batch[idx],
+                        available_items=available_item_batch[idx],
                         purchased_items=basket_batch[idx],
+                        future_purchases=future_batch[idx],
                         next_item=item_batch[idx],
                         n_samples=self.n_negative_samples,
                     )
@@ -846,16 +918,13 @@ class Shopper:
             customer_batch=np.tile(customer_batch, self.n_negative_samples + 1),
             week_batch=np.tile(week_batch, self.n_negative_samples + 1),
             price_batch=augmented_price_batch,
-            item_availability_batch=np.tile(
-                item_availability_batch, (self.n_negative_samples + 1, 1)
-            ),
+            available_item_batch=np.tile(available_item_batch, (self.n_negative_samples + 1, 1)),
         )
 
         positive_samples_utilities = all_utilities[:batch_size]
         negative_samples_utilities = all_utilities[batch_size:]
 
-        # Equation (29) of the paper Shopper
-        # Loglikelihood of a batch = sum of loglikelihoods of its samples
+        # Log-likelihood of a batch = sum of log-likelihoods of its samples
         # Add a small epsilon to gain numerical stability (avoid log(0))
         epsilon = 0.0  # No epsilon added for now
         loglikelihood = tf.reduce_sum(
@@ -882,10 +951,11 @@ class Shopper:
         self,
         item_batch: np.ndarray,
         basket_batch: np.ndarray,
+        future_batch: np.ndarray,
         customer_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
-        item_availability_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tf.Variable:
         """Train the model for one step.
 
@@ -897,6 +967,10 @@ class Shopper:
         basket_batch: np.ndarray
             Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
+        future_batch: np.ndarray
+            Batch of items to be purchased in the future (ID of items not yet in the
+            basket) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
         customer_batch: np.ndarray
             Batch of customer ids (integers) for each purchased item
             Shape must be (batch_size,)
@@ -906,7 +980,7 @@ class Shopper:
         price_batch: np.ndarray
             Batch of prices (integers) for each purchased item
             Shape must be (batch_size,)
-        item_availability_batch: np.ndarray
+        available_item_batch: np.ndarray
             List of availability matrices (indicating the availability (1) or not (0)
             of the products) (arrays) for each purchased item
             Shape must be (batch_size, n_items)
@@ -917,21 +991,31 @@ class Shopper:
             Value of the loss for the batch
         """
         with tf.GradientTape() as tape:
-            batch_loss = self.batch_predict(
+            batch_loss = self.compute_batch_loss(
                 item_batch=item_batch,
                 basket_batch=basket_batch,
+                future_batch=future_batch,
                 customer_batch=customer_batch,
                 week_batch=week_batch,
                 price_batch=price_batch,
-                item_availability_batch=item_availability_batch,
+                available_item_batch=available_item_batch,
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
 
-        # Filter out None gradients
-        non_none_grads = [grad for grad in grads if grad is not None]
-
-        # Compute the norm of the gradients
-        self.norm_grads = [float(tf.norm(grad).numpy()) for grad in non_none_grads]
+        # Set the gradient of self.lambda_[0] to 0 to prevent updates
+        # so that the lambda of the checkout item remains 0
+        # (equivalent to translating the lambda values)
+        if self.item_popularity:
+            # Find the index of the lambda_ variable in the trainable weights
+            # Cannot use list.index() method on a GPU, use next() instead
+            # (ie compare object references instead of tensor values)
+            lambda_grads = grads[
+                next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)
+            ]
+            lambda_grads = tf.tensor_scatter_nd_update(lambda_grads, indices=[[0]], updates=[0])
+            grads[next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)] = (
+                lambda_grads
+            )
 
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
 
@@ -961,11 +1045,11 @@ class Shopper:
         """
         if not self.instantiated:
             # Lazy instantiation
-            self.instantiate(n_items=TripDataset.n_items(), n_customers=TripDataset.n_customers())
+            self.instantiate(n_items=trip_dataset.n_items, n_customers=trip_dataset.n_customers)
 
         batch_size = self.batch_size
 
-        history = {"train_loss": [], "norm_grads": []}
+        history = {"train_loss": [], "val_loss": []}
         t_range = tqdm.trange(self.epochs, position=0)
 
         self.callbacks.on_train_begin()
@@ -981,8 +1065,7 @@ class Shopper:
             if verbose > 0:
                 inner_range = tqdm.tqdm(
                     trip_dataset.iter_batch(
-                        # TODO: shuffle or not?
-                        shuffle=False,
+                        shuffle=True,
                         batch_size=batch_size,
                     ),
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
@@ -990,32 +1073,34 @@ class Shopper:
                     leave=False,
                 )
             else:
-                inner_range = trip_dataset.iter_batch(shuffle=False, batch_size=batch_size)
+                inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
 
             for batch_nb, (
                 item_batch,
                 basket_batch,
+                future_batch,
                 customer_batch,
                 week_batch,
                 price_batch,
-                item_availability_batch,
+                available_item_batch,
             ) in enumerate(inner_range):
                 self.callbacks.on_train_batch_begin(batch_nb)
 
-                neg_loglikelihood = self.train_step(
+                batch_loss = self.train_step(
                     item_batch=item_batch,
                     basket_batch=basket_batch,
+                    future_batch=future_batch,
                     customer_batch=customer_batch,
                     week_batch=week_batch,
                     price_batch=price_batch,
-                    item_availability_batch=item_availability_batch,
+                    available_item_batch=available_item_batch,
                 )
-                train_logs["train_loss"].append(neg_loglikelihood)
+                train_logs["train_loss"].append(batch_loss)
                 temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
                 self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                 # Optimization Steps
-                epoch_losses.append(neg_loglikelihood)
+                epoch_losses.append(batch_loss)
 
                 if verbose > 0:
                     inner_range.set_description(
@@ -1027,7 +1112,8 @@ class Shopper:
             if batch_size != -1:
                 last_batch_size = len(item_batch)
                 coefficients = tf.concat(
-                    [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+                    [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]],
+                    axis=0,
                 )
                 epoch_losses = tf.multiply(epoch_losses, coefficients)
                 epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
@@ -1035,7 +1121,6 @@ class Shopper:
                 epoch_loss = tf.reduce_mean(epoch_losses)
 
             history["train_loss"].append(epoch_loss)
-            history["norm_grads"].append(self.norm_grads)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
             if verbose > 1:
@@ -1047,37 +1132,39 @@ class Shopper:
 
             # Test on val_dataset if provided
             if val_dataset is not None:
-                test_losses = []
+                val_losses = []
                 for batch_nb, (
                     item_batch,
                     basket_batch,
+                    future_batch,
                     customer_batch,
                     week_batch,
                     price_batch,
-                    item_availability_batch,
-                ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
+                    available_item_batch,
+                ) in enumerate(val_dataset.iter_batch(shuffle=True, batch_size=batch_size)):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
-                    test_losses.append(
-                        self.batch_predict(
+                    val_losses.append(
+                        self.compute_batch_loss(
                             item_batch=item_batch,
                             basket_batch=basket_batch,
+                            future_batch=future_batch,
                             customer_batch=customer_batch,
                             week_batch=week_batch,
                             price_batch=price_batch,
-                            item_availability_batch=item_availability_batch,
+                            available_item_batch=available_item_batch,
                         )[0]
                     )
-                    val_logs["val_loss"].append(test_losses[-1])
+                    val_logs["val_loss"].append(val_losses[-1])
                     temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
 
-                test_loss = tf.reduce_mean(test_losses)
+                val_loss = tf.reduce_mean(val_losses)
                 if verbose > 1:
-                    print("Test Negative-LogLikelihood:", test_loss.numpy())
-                    desc += f", Test Loss {np.round(test_loss.numpy(), 4)}"
-                history["test_loss"] = history.get("test_loss", []) + [test_loss.numpy()]
+                    print("Test Negative-LogLikelihood:", val_loss.numpy())
+                    desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
+                history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
                 train_logs = {**train_logs, **val_logs}
 
             temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
@@ -1093,57 +1180,68 @@ class Shopper:
     def evaluate(
         self,
         trip_dataset: TripDataset,
-        batch_size: int = -1,
+        n_permutations: int = 1,
     ) -> tf.Tensor:
         """Evaluate the model for each trip (unordered basket) in the dataset.
 
-        Predicts the probabilities according to the model and computes the loss
-        from the actual unordered baskets distribution.
+        Predicts the probabilities according to the model and then computes the
+        mean negative log-likelihood (nll) for the dataset
+
+        N.B.: Some randomness is involved in the evaluation through random sampling
+        of permutations at 2 levels:
+        - During batch processing: random permutation of the items in the basket
+        when creating augmented data from a trip index
+        - During the computation of the likelihood of an unordered basket: approximation
+        by the average of the likelihoods of several permutations of the basket
 
         Parameters
         ----------
         trip_dataset: TripDataset
             Dataset on which to apply to prediction
-        batch_size: int, optional
-            Batch size to set, by default -1 (the whole dataset)
+        n_permutations: int, optional
+            Number of permutations to average over, by default 1
 
         Returns
         -------
-        batch_loss: tf.Tensor
-            Value of the loss for the batch,
+        loss: tf.Tensor
+            Value of the mean loss (nll) for the dataset,
             Shape must be (1,)
         """
-        batch_losses = []
-        for (
-            item_batch,
+        (
+            _,
             basket_batch,
+            _,
             customer_batch,
             week_batch,
             price_batch,
-            item_availability_batch,
-        ) in trip_dataset.iter_batch(shuffle=False, batch_size=batch_size):
-            loss = self.batch_predict(
-                item_batch=item_batch,
-                basket_batch=basket_batch,
-                customer_batch=customer_batch,
-                week_batch=week_batch,
-                price_batch=price_batch,
-                item_availability_batch=item_availability_batch,
-            )[0]
-            batch_losses.append(loss)
+            available_item_batch,
+        ) = list(  # Convert the generator to a list (of 1 element here)
+            trip_dataset.iter_batch(shuffle=True, batch_size=-1)
+        )[0]
 
-        # Take into account the fact that the last batch may have a
-        # different length for the computation of the epoch loss.
-        if batch_size != -1:
-            last_batch_size = len(item_batch)
-            coefficients = tf.concat(
-                [tf.ones(len(batch_losses) - 1) * batch_size, [last_batch_size]], axis=0
+        batch_size = len(basket_batch)  # Here: batch = whole TripDataset
+
+        # Sum of the log-likelihoods of all the unordered baskets
+        sum_loglikelihoods = np.sum(
+            np.log(
+                [
+                    self.compute_unordered_basket_likelihood(
+                        basket=basket,
+                        available_items=available_items,
+                        customer=customer,
+                        week=week,
+                        prices=prices,
+                        n_permutations=n_permutations,
+                    )
+                    for basket, available_items, customer, week, prices in zip(
+                        basket_batch, available_item_batch, customer_batch, week_batch, price_batch
+                    )
+                ]
             )
-            batch_losses = tf.multiply(batch_losses, coefficients)
-            return tf.reduce_sum(batch_losses) / trip_dataset.n_samples
+        )
 
-        # If batch_size == -1 (the whole dataset)
-        return tf.reduce_mean(batch_losses)
+        # Predicted mean negative log-likelihood
+        return -1 * sum_loglikelihoods / batch_size
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.
@@ -1196,7 +1294,10 @@ class Shopper:
 
         # Initialize model
         model = cls(
-            stage=params["stage"],
+            item_popularity=params["item_popularity"],
+            price_effects=params["price_effects"],
+            seasonal_effects=params["seasonal_effects"],
+            think_ahead=params["think_ahead"],
             latent_sizes=params["latent_sizes"],
             n_negative_samples=params["n_negative_samples"],
             optimizer=params["optimizer_name"],
@@ -1225,16 +1326,20 @@ class Shopper:
 
         lambda_path = os.path.join(path, "lambda.npy")
         if os.path.exists(lambda_path):
-            # Then the paths to the saved beta, mu, gamma and delta should also exist
-            # (stage 2 or 3)
             model.lambda_ = tf.Variable(np.load(lambda_path), trainable=True, name="lambda")
-            model.beta = tf.Variable(
-                np.load(os.path.join(path, "beta.npy")), trainable=True, name="beta"
-            )
-            model.mu = tf.Variable(np.load(os.path.join(path, "mu.npy")), trainable=True, name="mu")
+
+        beta_path = os.path.join(path, "beta.npy")
+        if os.path.exists(beta_path):
+            # Then the paths to the saved gamma should also exist (price effects)
+            model.beta = tf.Variable(np.load(beta_path), trainable=True, name="beta")
             model.gamma = tf.Variable(
                 np.load(os.path.join(path, "gamma.npy")), trainable=True, name="gamma"
             )
+
+        mu_path = os.path.join(path, "mu.npy")
+        if os.path.exists(mu_path):
+            # Then the paths to the saved delta should also exist (price effects)
+            model.mu = tf.Variable(np.load(mu_path), trainable=True, name="mu")
             model.delta = tf.Variable(
                 np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
             )

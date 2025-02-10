@@ -190,10 +190,11 @@ def from_csv(
     #     "mean"
     # )
 
+    n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
+    n_customers = dataset["user_id"].nunique()
+
     # Divide the data into trips
     dataset_trips = []
-    # The different datasets can have different values for n_items
-    specific_n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
 
     count = 0
     grouped_sessions = list(dataset.groupby("session_id"))
@@ -210,7 +211,7 @@ def from_csv(
         # Create price array with error handling
         # (Price of checkout item 0: 1 or another default value > 0)
         # (-1 means that the price has not already been set)
-        prices = np.array([1] + [-1] * (specific_n_items - 1))
+        prices = np.array([1] + [-1] * (n_items - 1))
 
         # 1. Get the price of each item in the trip
         for item_id, session_id in zip(purchases, trip_data["session_id"]):
@@ -266,7 +267,7 @@ def from_csv(
 
         # 2. Approximate the price of the items not in the trip with
         # the price of the same item in the previous or next trip
-        for item_id in range(specific_n_items):
+        for item_id in range(n_items):
             if prices[item_id] == -1:
                 found_price = False
                 step = 1
@@ -355,11 +356,9 @@ def from_csv(
             count += 1
 
     # Build the TripDatasets
-    assortments = {0: np.arange(dataset["item_id"].nunique() + 1)}  # TODO: Add the assortments
+    assortments = np.expand_dims(np.ones(n_items), axis=0)  # TODO: Add the assortments
     trip_dataset = TripDataset(trips=dataset_trips, assortments=assortments)
 
-    n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
-    n_customers = dataset["user_id"].nunique()
     n_trips = len(trip_dataset)
 
     print(f"{n_items=}, {n_customers=} and {n_trips=}")
