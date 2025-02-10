@@ -323,4 +323,4 @@ def test_evaluate_load_and_save() -> None:
     model.evaluate(trip_dataset=trip_dataset_1)
     model.save_model("test_model")
     _ = Shopper.load_model("test_model")
-    return True
+    assert True
