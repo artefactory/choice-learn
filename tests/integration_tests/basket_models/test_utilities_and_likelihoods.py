@@ -229,7 +229,7 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
         n_customers=n_customers_1,
     )
-    model.fit(trip_dataset=trip_dataset_1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
