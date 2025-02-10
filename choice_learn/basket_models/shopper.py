@@ -1181,6 +1181,7 @@ class Shopper:
         self,
         trip_dataset: TripDataset,
         n_permutations: int = 1,
+        epsilon_eval: float = 1e-6,
     ) -> tf.Tensor:
         """Evaluate the model for each trip (unordered basket) in the dataset.
 
@@ -1196,10 +1197,13 @@ class Shopper:
 
         Parameters
         ----------
-        trip_dataset: TripDataset
+        trip_dataset: TripDataset‡‡
             Dataset on which to apply to prediction
         n_permutations: int, optional
             Number of permutations to average over, by default 1
+        epsilon_eval: float, optional
+            Small value to avoid log(0) in the computation of the log-likelihood,
+            by default 1e-6
 
         Returns
         -------
@@ -1233,6 +1237,7 @@ class Shopper:
                         prices=prices,
                         n_permutations=n_permutations,
                     )
+                    + epsilon_eval
                     for basket, available_items, customer, week, prices in zip(
                         basket_batch, available_item_batch, customer_batch, week_batch, price_batch
                     )
