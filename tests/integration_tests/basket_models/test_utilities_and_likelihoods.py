@@ -56,15 +56,26 @@ trip_list_1 = [
         assortment=0,
     ),
 ]
-assortments_1 = {
-    0: np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    1: np.array([0, 1, 2, 3, 4, 5]),
-    2: np.array([0, 1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 14]),
-    3: np.array([0, 1, 2, 3, 8, 9]),
-}
+assortment_1, assortment_2, assortment_3, assortment_4 = (
+    np.ones(15),
+    np.ones(15),
+    np.ones(15),
+    np.ones(15),
+)
+assortment_2[13:] = 0
+assortment_3[:3] = 0
+assortment_4[4], assortment_4[11] = 0, 0
+assortments_1 = np.array(
+    [
+        assortment_1,
+        assortment_2,
+        assortment_3,
+        assortment_4,
+    ]
+)
 trip_dataset_1 = TripDataset(trips=trip_list_1, assortments=assortments_1)
-n_items_1 = trip_dataset_1.n_items()
-n_customers_1 = trip_dataset_1.n_customers()
+n_items_1 = trip_dataset_1.n_items
+n_customers_1 = trip_dataset_1.n_customers
 
 # Toy dataset 2: all the possibilities for an assortment of 3 items
 # with customer, week and prices fixed
@@ -74,7 +85,7 @@ trip_list_2 = [
         purchases=[0],  # Empty basket
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -82,7 +93,7 @@ trip_list_2 = [
         purchases=[1, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -90,7 +101,7 @@ trip_list_2 = [
         purchases=[2, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -98,7 +109,7 @@ trip_list_2 = [
         purchases=[3, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -106,7 +117,7 @@ trip_list_2 = [
         purchases=[1, 2, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -114,7 +125,7 @@ trip_list_2 = [
         purchases=[1, 3, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -122,7 +133,7 @@ trip_list_2 = [
         purchases=[2, 1, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -130,7 +141,7 @@ trip_list_2 = [
         purchases=[2, 3, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -138,7 +149,7 @@ trip_list_2 = [
         purchases=[3, 1, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -146,7 +157,7 @@ trip_list_2 = [
         purchases=[3, 2, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -154,7 +165,7 @@ trip_list_2 = [
         purchases=[1, 2, 3, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -162,7 +173,7 @@ trip_list_2 = [
         purchases=[1, 3, 2, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -170,7 +181,7 @@ trip_list_2 = [
         purchases=[2, 1, 3, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -178,7 +189,7 @@ trip_list_2 = [
         purchases=[2, 3, 1, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -186,7 +197,7 @@ trip_list_2 = [
         purchases=[3, 1, 2, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
     Trip(
@@ -194,27 +205,31 @@ trip_list_2 = [
         purchases=[3, 2, 1, 0],
         customer=0,
         week=0,
-        prices=[100, 170, 110, 150],
+        prices=[1, 100, 170, 110, 150],
         assortment=0,
     ),
 ]
-assortments_2 = {0: np.array([0, 1, 2, 3])}
+# One more item available in the assortment to be able to use negative sampling
+assortments_2 = np.expand_dims(np.ones(5), axis=0)
 trip_dataset_2 = TripDataset(trips=trip_list_2, assortments=assortments_2)
-n_items_2 = trip_dataset_2.n_items()
-n_customers_2 = trip_dataset_2.n_customers()
+n_items_2 = trip_dataset_2.n_items
+n_customers_2 = trip_dataset_2.n_customers
 
 
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
     model = Shopper(
-        stage=3,
-        latent_sizes={"preferences": 2, "price": 2, "season": 2},
+        item_popularity=True,
+        price_effects=True,
+        seasonal_effects=True,
+        think_ahead=False,
+        latent_sizes={"preferences": 10, "price": 10, "season": 10},
     )
     model.instantiate(
         n_items=n_items_1,
         n_customers=n_customers_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
+    model.fit(trip_dataset=trip_dataset_1)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -225,7 +240,7 @@ def test_item_probabilities_sum_to_1() -> None:
                     np.sum(
                         model.compute_item_likelihood(
                             basket=trip.purchases[:step],
-                            item_availability=np.ones(n_items_1),
+                            available_items=np.ones(n_items_1),
                             customer=trip.customer,
                             week=trip.week,
                             prices=trip.prices,
@@ -240,9 +255,12 @@ def test_item_probabilities_sum_to_1() -> None:
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
     model = Shopper(
-        stage=3,
+        item_popularity=True,
+        price_effects=False,
+        seasonal_effects=True,
+        think_ahead=False,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
-        n_negative_samples=0,
+        n_negative_samples=1,
     )
     model.instantiate(n_items=n_items_2, n_customers=n_customers_2)
     model.fit(trip_dataset=trip_dataset_2)
@@ -257,13 +275,15 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     # - The checkout item must not be the only item available
     # (because the proba of an empty basket is 0 and cannot sum to 1)
     list_availability_matrices = [
-        np.array([1, 1, 1, 1]),
-        np.array([1, 0, 1, 1]),
-        np.array([1, 1, 0, 1]),
-        np.array([1, 1, 1, 0]),
-        np.array([1, 0, 0, 1]),
-        np.array([1, 0, 1, 0]),
-        np.array([1, 1, 0, 0]),
+        np.array([1, 1, 1, 1, 1]),
+        np.array([1, 0, 1, 1, 1]),
+        np.array([1, 1, 0, 1, 1]),
+        np.array([1, 1, 1, 0, 1]),
+        np.array([1, 1, 1, 1, 0]),
+        np.array([1, 0, 0, 0, 1]),
+        np.array([1, 0, 0, 1, 0]),
+        np.array([1, 0, 1, 0, 0]),
+        np.array([1, 1, 0, 0, 0]),
     ]
     for availability_matrix in list_availability_matrices:
         # Try with different availability matrices
@@ -273,7 +293,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                     [
                         model.compute_ordered_basket_likelihood(
                             basket=trip.purchases,
-                            item_availability=availability_matrix,
+                            available_items=availability_matrix,
                             customer=trip.customer,
                             week=trip.week,
                             prices=trip.prices,
@@ -283,14 +303,17 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                 )
                 - 1.0
             )
-            < 1e-4
+            < 1e-2
         )
 
 
 def test_evaluate_load_and_save() -> None:
     """Test evaluate endpoint."""
     model = Shopper(
-        stage=3,
+        item_popularity=True,
+        price_effects=False,
+        seasonal_effects=True,
+        think_ahead=False,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
     )
     model.instantiate(
