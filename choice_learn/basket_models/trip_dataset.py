@@ -49,7 +49,7 @@ class Trip:
             where 1 means the item is available and 0 means the item is not available)
             An assortment is the list of available items of a specific store at a given time
         """
-        if week not in range(52):
+        if week not in range(52) and week is not None:
             raise ValueError("Week number must be between 0 and 51, inclusive.")
 
         self.id = id

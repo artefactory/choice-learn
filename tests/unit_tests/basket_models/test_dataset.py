@@ -87,7 +87,9 @@ def test_getitem():
 def test_errors():
     """Test various raised errors."""
     with pytest.raises(ValueError):
-        Trip(id=0, week=100)
+        Trip(
+            id=0, week=100, purchases=np.array([0, 1, 2]), prices=np.array([1, 2, 3]), assortment=0
+        )
 
 
 def test_trip_dataset_methods():
@@ -109,9 +111,9 @@ def test_trip_dataset_concat():
     """Test the concat operation."""
     global trip_dataset_1
 
-    trip_dataset_2 = trip_dataset_1.copy()
+    trip_dataset_2 = TripDataset(trips=trip_list_1, assortments=assortments_1)
     trip_dataset_3 = trip_dataset_1.concatenate(trip_dataset_2)
     assert len(trip_dataset_3) == 2 * len(trip_dataset_1)
 
     trip_dataset_2.concatenate(trip_dataset_1, inplace=True)
-    assert len(trip_dataset_2) == 2 * len(trip_dataset_1)
+    assert len(trip_dataset_2) == len(trip_dataset_3)

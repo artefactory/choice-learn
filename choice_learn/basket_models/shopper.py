@@ -1,6 +1,7 @@
 """Implementation of the Shopper model."""
 
 import json
+import logging
 import os
 import random
 import time
@@ -23,8 +24,8 @@ class Shopper:
     def __init__(
         self,
         item_popularity: bool = True,
-        price_effects: bool = True,
-        seasonal_effects: bool = True,
+        price_effects: bool = False,
+        seasonal_effects: bool = False,
         think_ahead: bool = False,
         latent_sizes: dict[str] = {"preferences": 1, "price": 1, "season": 1},
         n_negative_samples: int = 2,
@@ -83,11 +84,25 @@ class Shopper:
         self.seasonal_effects = seasonal_effects
         self.think_ahead = think_ahead
 
-        if latent_sizes.keys() != {"preferences", "price", "season"}:
-            raise ValueError(
-                "The latent_sizes dictionary must contain the keys 'preferences', 'price' and "
-                "'season'."
+        if "preferences" not in latent_sizes.keys() and self.item_popularity:
+            logging.warning(
+                "No latent size value has been specified for preferences,\
+                switching to default value, 4."
             )
+        if "price" not in latent_sizes.keys() and self.price_effects:
+            logging.warning(
+                "No latent size value has been specified for price_effects,\
+                    switching to default value, 4."
+            )
+        if "seasons" not in latent_sizes.keys() and self.seasonal_effects:
+            logging.warning(
+                "No latent size value has been specified for seasonal_effects,\
+                    switching to default value, 4."
+            )
+
+        for val in latent_sizes.keys():
+            if val not in ["preferences", "price", "season"]:
+                raise ValueError(f"Unknwown value for laten_sizes dict: {val}.")
 
         if n_negative_samples <= 0:
             raise ValueError("n_negative_samples must be > 0.")
@@ -154,7 +169,7 @@ class Shopper:
     def instantiate(
         self,
         n_items: int,
-        n_customers: int,
+        n_customers: int = 0,
     ) -> None:
         """Instantiate the Shopper model.
 
