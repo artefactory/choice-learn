@@ -22,10 +22,10 @@ class Trip:
         self,
         id: int,
         purchases: np.ndarray,
-        customer: int,
-        week: int,
         prices: np.ndarray,
         assortment: Union[int, np.ndarray],
+        customer: int = 0,
+        week: int = 0,
     ) -> None:
         """Initialize the trip.
 
