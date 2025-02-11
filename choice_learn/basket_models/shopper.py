@@ -27,7 +27,7 @@ class Shopper:
         price_effects: bool = False,
         seasonal_effects: bool = False,
         think_ahead: bool = False,
-        latent_sizes: dict[str] = {"preferences": 1, "price": 1, "season": 1},
+        latent_sizes: dict[str] = {"preferences": 4, "price": 4, "season": 4},
         n_negative_samples: int = 2,
         optimizer: str = "adam",
         callbacks: Union[tf.keras.callbacks.CallbackList, None] = None,
@@ -56,6 +56,7 @@ class Shopper:
             latent_sizes["preferences"]: length of one vector of theta, alpha, rho
             latent_sizes["price"]: length of one vector of gamma, beta
             latent_sizes["season"]: length of one vector of delta, mu
+            by default {"preferences": 4, "price": 4, "season": 4}
         n_negative_samples: int, optional
             Number of negative samples to draw for each positive sample for the training,
             by default 2
@@ -84,7 +85,7 @@ class Shopper:
         self.seasonal_effects = seasonal_effects
         self.think_ahead = think_ahead
 
-        if "preferences" not in latent_sizes.keys() and self.item_popularity:
+        if "preferences" not in latent_sizes.keys():
             logging.warning(
                 "No latent size value has been specified for preferences,\
                 switching to default value, 4."
@@ -102,7 +103,7 @@ class Shopper:
 
         for val in latent_sizes.keys():
             if val not in ["preferences", "price", "season"]:
-                raise ValueError(f"Unknwown value for laten_sizes dict: {val}.")
+                raise ValueError(f"Unknown value for latent_sizes dict: {val}.")
 
         if n_negative_samples <= 0:
             raise ValueError("n_negative_samples must be > 0.")
@@ -183,6 +184,9 @@ class Shopper:
         """
         self.n_items = n_items
         if n_customers == 0 and self.price_effects:
+            # To take into account the price effects, the number of customers must be > 0
+            # to have a gamma embedding
+            # (By default, the customer id is 0)
             n_customers = 1
         self.n_customers = n_customers
 
