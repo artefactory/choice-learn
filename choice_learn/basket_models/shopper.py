@@ -182,6 +182,8 @@ class Shopper:
             Number of customers in the population
         """
         self.n_items = n_items
+        if n_customers == 0 and self.price_effects:
+            n_customers = 1
         self.n_customers = n_customers
 
         self.rho = tf.Variable(

@@ -24,8 +24,8 @@ class Trip:
         purchases: np.ndarray,
         prices: np.ndarray,
         assortment: Union[int, np.ndarray],
-        customer: int = None,
-        week: int = None,
+        customer: int = 0,
+        week: int = 0,
     ) -> None:
         """Initialize the trip.
 
