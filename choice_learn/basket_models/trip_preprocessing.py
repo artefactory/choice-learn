@@ -196,7 +196,6 @@ def from_csv(
     # Divide the data into trips
     dataset_trips = []
 
-    count = 0
     grouped_sessions = list(dataset.groupby("session_id"))
     for trip_idx, (trip_id, trip_data) in enumerate(dataset.groupby("session_id")):
         purchases = trip_data["item_id"].tolist()
@@ -345,7 +344,6 @@ def from_csv(
             purchases_store = trip_data[trip_data["store_id"] == store_id]["item_id"].tolist()
             dataset_trips.append(
                 Trip(
-                    id=count,
                     purchases=purchases_store + [0],  # Add the checkout item 0 at the end
                     store=store_id,
                     week=week,
@@ -353,7 +351,6 @@ def from_csv(
                     assortment=0,  # TODO: Add the assortment
                 )
             )
-            count += 1
 
     # Build the TripDatasets
     assortments = np.expand_dims(np.ones(n_items), axis=0)  # TODO: Add the assortments

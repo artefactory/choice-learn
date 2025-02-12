@@ -15,12 +15,11 @@ class Trip:
     at a specific store with given prices and a specific assortment.
     It can be seen as the content of a time-stamped purchase receipt with store identification.
 
-    Trip = (trip id, purchases, store, week, prices, assortment)
+    Trip = (purchases, store, week, prices, assortment)
     """
 
     def __init__(
         self,
-        id: int,
         purchases: np.ndarray,
         prices: np.ndarray,
         assortment: Union[int, np.ndarray],
@@ -31,8 +30,6 @@ class Trip:
 
         Parameters
         ----------
-        id: int
-            Trip ID
         purchases: np.ndarray
             List of the ID of the purchased items, 0 to n_items - 1 (0-indexed)
             Shape must be (len_basket,), the last item is the checkout item 0
@@ -52,8 +49,6 @@ class Trip:
         """
         if week not in range(52):
             raise ValueError("Week number must be between 0 and 51, inclusive.")
-
-        self.id = id
 
         # Constitutive elements of a trip
         self.purchases = purchases

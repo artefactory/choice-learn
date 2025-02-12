@@ -8,7 +8,6 @@ from choice_learn.basket_models.trip_dataset import Trip, TripDataset
 # Toy dataset 1: different items between trips
 trip_list_1 = [
     Trip(
-        id=0,
         purchases=[7, 4, 8, 0],
         store=0,
         week=0,
@@ -16,7 +15,6 @@ trip_list_1 = [
         assortment=0,
     ),
     Trip(
-        id=1,
         purchases=[2, 1, 3, 0],
         store=3,
         week=5,
@@ -24,7 +22,6 @@ trip_list_1 = [
         assortment=1,
     ),
     Trip(
-        id=2,
         purchases=[1, 7, 3, 0],
         store=1,
         week=2,
@@ -32,7 +29,6 @@ trip_list_1 = [
         assortment=0,
     ),
     Trip(
-        id=3,
         purchases=[5, 6, 2, 0],
         store=2,
         week=19,
@@ -40,7 +36,6 @@ trip_list_1 = [
         assortment=2,
     ),
     Trip(
-        id=4,
         purchases=[8, 1, 9, 0],
         store=3,
         week=34,
@@ -48,7 +43,6 @@ trip_list_1 = [
         assortment=3,
     ),
     Trip(
-        id=5,
         purchases=[10, 4, 11, 0],
         store=1,
         week=51,
@@ -87,9 +81,8 @@ def test_getitem():
 def test_errors():
     """Test various raised errors."""
     with pytest.raises(ValueError):
-        Trip(
-            id=0, week=100, purchases=np.array([0, 1, 2]), prices=np.array([1, 2, 3]), assortment=0
-        )
+        # 'store' argument is missing
+        Trip(week=100, purchases=np.array([0, 1, 2]), prices=np.array([1, 2, 3]), assortment=0)
 
 
 def test_trip_dataset_methods():

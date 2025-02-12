@@ -8,7 +8,6 @@ from choice_learn.basket_models.trip_dataset import Trip, TripDataset
 # Toy dataset 1: different items between trips
 trip_list_1 = [
     Trip(
-        id=0,
         purchases=[7, 4, 8, 0],
         store=0,
         week=0,
@@ -16,7 +15,6 @@ trip_list_1 = [
         assortment=0,
     ),
     Trip(
-        id=1,
         purchases=[2, 1, 3, 0],
         store=3,
         week=5,
@@ -24,7 +22,6 @@ trip_list_1 = [
         assortment=1,
     ),
     Trip(
-        id=2,
         purchases=[1, 7, 3, 0],
         store=1,
         week=2,
@@ -32,7 +29,6 @@ trip_list_1 = [
         assortment=0,
     ),
     Trip(
-        id=3,
         purchases=[5, 6, 2, 0],
         store=2,
         week=19,
@@ -40,7 +36,6 @@ trip_list_1 = [
         assortment=2,
     ),
     Trip(
-        id=4,
         purchases=[8, 1, 9, 0],
         store=3,
         week=34,
@@ -48,7 +43,6 @@ trip_list_1 = [
         assortment=3,
     ),
     Trip(
-        id=5,
         purchases=[10, 4, 11, 0],
         store=1,
         week=51,
@@ -81,7 +75,6 @@ n_stores_1 = trip_dataset_1.n_stores
 # with store, week and prices fixed
 trip_list_2 = [
     Trip(
-        id=0,
         purchases=[0],  # Empty basket
         store=0,
         week=0,
@@ -89,7 +82,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=1,
         purchases=[1, 0],
         store=0,
         week=0,
@@ -97,7 +89,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=2,
         purchases=[2, 0],
         store=0,
         week=0,
@@ -105,7 +96,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=3,
         purchases=[3, 0],
         store=0,
         week=0,
@@ -113,7 +103,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=4,
         purchases=[1, 2, 0],
         store=0,
         week=0,
@@ -121,7 +110,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=5,
         purchases=[1, 3, 0],
         store=0,
         week=0,
@@ -129,7 +117,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=6,
         purchases=[2, 1, 0],
         store=0,
         week=0,
@@ -137,7 +124,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=7,
         purchases=[2, 3, 0],
         store=0,
         week=0,
@@ -145,7 +131,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=8,
         purchases=[3, 1, 0],
         store=0,
         week=0,
@@ -153,7 +138,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=9,
         purchases=[3, 2, 0],
         store=0,
         week=0,
@@ -161,7 +145,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=10,
         purchases=[1, 2, 3, 0],
         store=0,
         week=0,
@@ -169,7 +152,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=11,
         purchases=[1, 3, 2, 0],
         store=0,
         week=0,
@@ -177,7 +159,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=12,
         purchases=[2, 1, 3, 0],
         store=0,
         week=0,
@@ -185,7 +166,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=13,
         purchases=[2, 3, 1, 0],
         store=0,
         week=0,
@@ -193,7 +173,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=14,
         purchases=[3, 1, 2, 0],
         store=0,
         week=0,
@@ -201,7 +180,6 @@ trip_list_2 = [
         assortment=0,
     ),
     Trip(
-        id=15,
         purchases=[3, 2, 1, 0],
         store=0,
         week=0,
