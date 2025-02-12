@@ -81,7 +81,7 @@ def test_getitem():
 def test_errors():
     """Test various raised errors."""
     with pytest.raises(ValueError):
-        # 'store' argument is missing
+        # Week number must be between 0 and 51, inclusive.
         Trip(week=100, purchases=np.array([0, 1, 2]), prices=np.array([1, 2, 3]), assortment=0)
 
 
