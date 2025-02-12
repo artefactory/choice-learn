@@ -720,7 +720,7 @@ class Shopper:
 
         return ordered_basket_likelihood
 
-    def compute_unordered_basket_likelihood(
+    def compute_basket_likelihood(
         self,
         basket: np.ndarray,
         available_items: np.ndarray,
@@ -730,7 +730,7 @@ class Shopper:
         n_permutations: int = 1,
         verbose: int = 0,
     ) -> float:
-        """Compute the utility of an unordered basket.
+        """Compute the utility of an (unordered) basket.
 
         Parameters
         ----------
@@ -754,7 +754,7 @@ class Shopper:
         Returns
         -------
         likelihood: float
-            Likelihood of the unordered basket
+            Likelihood of the (unordered) basket
         """
         if verbose > 0:
             print(
@@ -1214,7 +1214,7 @@ class Shopper:
         of permutations at 2 levels:
         - During batch processing: random permutation of the items in the basket
         when creating augmented data from a trip index
-        - During the computation of the likelihood of an unordered basket: approximation
+        - During the computation of the likelihood of an (unordered) basket: approximation
         by the average of the likelihoods of several permutations of the basket
 
         Parameters
@@ -1247,11 +1247,11 @@ class Shopper:
 
         batch_size = len(basket_batch)  # Here: batch = whole TripDataset
 
-        # Sum of the log-likelihoods of all the unordered baskets
+        # Sum of the log-likelihoods of all the (unordered) baskets
         sum_loglikelihoods = np.sum(
             np.log(
                 [
-                    self.compute_unordered_basket_likelihood(
+                    self.compute_basket_likelihood(
                         basket=basket,
                         available_items=available_items,
                         customer=customer,
