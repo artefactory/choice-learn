@@ -23,7 +23,7 @@ class Shopper:
 
     def __init__(
         self,
-        item_popularity: bool = True,
+        item_intercept: bool = True,
         price_effects: bool = False,
         seasonal_effects: bool = False,
         think_ahead: bool = False,
@@ -43,8 +43,9 @@ class Shopper:
 
         Parameters
         ----------
-        item_popularity: bool, optional
-            Whether to include item popularity in the model, by default True
+        item_intercept: bool, optional
+            Whether to include item intercept in the model, by default True
+            Corresponds to the item intercept
         price_effects: bool, optional
             Whether to include price effects in the model, by default True
         seasonal_effects: bool, optional
@@ -80,7 +81,7 @@ class Shopper:
         epsilon_price: float, optional
             Epsilon value to add to prices to avoid NaN values (log(0)), by default 1e-5
         """
-        self.item_popularity = item_popularity
+        self.item_intercept = item_intercept
         self.price_effects = price_effects
         self.seasonal_effects = seasonal_effects
         self.think_ahead = think_ahead
@@ -212,8 +213,8 @@ class Shopper:
             name="theta",
         )
 
-        if self.item_popularity:
-            # Add item popularity
+        if self.item_intercept:
+            # Add item intercept
             self.lambda_ = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     shape=(n_items,)  # Dimension for 1 item: 1
@@ -274,7 +275,7 @@ class Shopper:
         """
         weights = [self.rho, self.alpha, self.theta]
 
-        if self.item_popularity:
+        if self.item_intercept:
             weights.append(self.lambda_)
 
         if self.price_effects:
@@ -365,10 +366,10 @@ class Shopper:
                         theta_customer[idx] * self.alpha, axis=1
                     )
 
-                    if self.item_popularity:
-                        hypothetical_item_popularity = self.lambda_
+                    if self.item_intercept:
+                        hypothetical_item_intercept = self.lambda_
                     else:
-                        hypothetical_item_popularity = tf.zeros_like(
+                        hypothetical_item_intercept = tf.zeros_like(
                             hypothetical_customer_preferences
                         )
 
@@ -400,11 +401,11 @@ class Shopper:
                             hypothetical_customer_preferences
                         )
 
-                    # The effects of item popularity, customer preferences, price sensitivity
+                    # The effects of item intercept, customer preferences, price sensitivity
                     # and seasonal effects are combined in the per-item per-trip latent variable
                     hypothetical_psi = tf.reduce_sum(
                         [
-                            hypothetical_item_popularity,  # 0 if self.item_popularity is False
+                            hypothetical_item_intercept,  # 0 if self.item_intercept is False
                             hypothetical_customer_preferences,
                             hypothetical_price_effects,  # 0 if self.price_effects is False
                             hypothetical_seasonal_effects,  # 0 if self.seasonal_effects is False
@@ -500,10 +501,10 @@ class Shopper:
         # Compute the dot product along the last dimension
         customer_preferences = tf.reduce_sum(theta_customer * alpha_item, axis=1)
 
-        if self.item_popularity:
-            item_popularity = tf.gather(self.lambda_, indices=item_batch)
+        if self.item_intercept:
+            item_intercept = tf.gather(self.lambda_, indices=item_batch)
         else:
-            item_popularity = tf.zeros_like(customer_preferences)
+            item_intercept = tf.zeros_like(customer_preferences)
 
         if self.price_effects:
             gamma_customer = tf.gather(self.gamma, indices=customer_batch)
@@ -531,11 +532,11 @@ class Shopper:
             delta_week = tf.zeros_like(week_batch)
             seasonal_effects = tf.zeros_like(customer_preferences)
 
-        # The effects of item popularity, customer preferences, price sensitivity
+        # The effects of item intercept, customer preferences, price sensitivity
         # and seasonal effects are combined in the per-item per-trip latent variable
         psi = tf.reduce_sum(
             [
-                item_popularity,
+                item_intercept,
                 customer_preferences,
                 price_effects,
                 seasonal_effects,
@@ -1026,7 +1027,7 @@ class Shopper:
         # Set the gradient of self.lambda_[0] to 0 to prevent updates
         # so that the lambda of the checkout item remains 0
         # (equivalent to translating the lambda values)
-        if self.item_popularity:
+        if self.item_intercept:
             # Find the index of the lambda_ variable in the trainable weights
             # Cannot use list.index() method on a GPU, use next() instead
             # (ie compare object references instead of tensor values)
@@ -1320,7 +1321,7 @@ class Shopper:
 
         # Initialize model
         model = cls(
-            item_popularity=params["item_popularity"],
+            item_intercept=params["item_intercept"],
             price_effects=params["price_effects"],
             seasonal_effects=params["seasonal_effects"],
             think_ahead=params["think_ahead"],

@@ -219,7 +219,7 @@ n_customers_2 = trip_dataset_2.n_customers
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
     model = Shopper(
-        item_popularity=True,
+        item_intercept=True,
         price_effects=True,
         seasonal_effects=True,
         think_ahead=False,
@@ -255,7 +255,7 @@ def test_item_probabilities_sum_to_1() -> None:
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
     model = Shopper(
-        item_popularity=True,
+        item_intercept=True,
         price_effects=False,
         seasonal_effects=True,
         think_ahead=False,
@@ -310,7 +310,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
 def test_evaluate_load_and_save() -> None:
     """Test evaluate endpoint."""
     model = Shopper(
-        item_popularity=True,
+        item_intercept=True,
         price_effects=False,
         seasonal_effects=True,
         think_ahead=False,
