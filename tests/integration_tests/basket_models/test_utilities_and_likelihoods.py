@@ -10,7 +10,7 @@ trip_list_1 = [
     Trip(
         id=0,
         purchases=[7, 4, 8, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[120, 130, 140, 150, 140, 160, 170, 100, 200, 180, 190, 210, 220, 230, 240],
         assortment=0,
@@ -18,7 +18,7 @@ trip_list_1 = [
     Trip(
         id=1,
         purchases=[2, 1, 3, 0],
-        customer=3,
+        store=3,
         week=5,
         prices=[200, 140, 110, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
         assortment=1,
@@ -26,7 +26,7 @@ trip_list_1 = [
     Trip(
         id=2,
         purchases=[1, 7, 3, 0],
-        customer=1,
+        store=1,
         week=2,
         prices=[100, 110, 120, 200, 130, 140, 150, 170, 180, 190, 200, 210, 150, 140, 170],
         assortment=0,
@@ -34,7 +34,7 @@ trip_list_1 = [
     Trip(
         id=3,
         purchases=[5, 6, 2, 0],
-        customer=2,
+        store=2,
         week=19,
         prices=[110, 120, 150, 130, 140, 100, 140, 150, 160, 170, 180, 190, 90, 110, 140],
         assortment=2,
@@ -42,7 +42,7 @@ trip_list_1 = [
     Trip(
         id=4,
         purchases=[8, 1, 9, 0],
-        customer=3,
+        store=3,
         week=34,
         prices=[100, 140, 150, 160, 170, 180, 190, 200, 85, 200, 210, 220, 150, 170, 130],
         assortment=3,
@@ -50,7 +50,7 @@ trip_list_1 = [
     Trip(
         id=5,
         purchases=[10, 4, 11, 0],
-        customer=1,
+        store=1,
         week=51,
         prices=[130, 140, 150, 160, 170, 180, 190, 200, 220, 100, 210, 240, 170, 110, 90],
         assortment=0,
@@ -75,15 +75,15 @@ available_items_1 = np.array(
 )
 trip_dataset_1 = TripDataset(trips=trip_list_1, available_items=available_items_1)
 n_items_1 = trip_dataset_1.n_items
-n_customers_1 = trip_dataset_1.n_customers
+n_stores_1 = trip_dataset_1.n_stores
 
 # Toy dataset 2: all the possibilities for an assortment of 3 items
-# with customer, week and prices fixed
+# with store, week and prices fixed
 trip_list_2 = [
     Trip(
         id=0,
         purchases=[0],  # Empty basket
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -91,7 +91,7 @@ trip_list_2 = [
     Trip(
         id=1,
         purchases=[1, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -99,7 +99,7 @@ trip_list_2 = [
     Trip(
         id=2,
         purchases=[2, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -107,7 +107,7 @@ trip_list_2 = [
     Trip(
         id=3,
         purchases=[3, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -115,7 +115,7 @@ trip_list_2 = [
     Trip(
         id=4,
         purchases=[1, 2, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -123,7 +123,7 @@ trip_list_2 = [
     Trip(
         id=5,
         purchases=[1, 3, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -131,7 +131,7 @@ trip_list_2 = [
     Trip(
         id=6,
         purchases=[2, 1, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -139,7 +139,7 @@ trip_list_2 = [
     Trip(
         id=7,
         purchases=[2, 3, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -147,7 +147,7 @@ trip_list_2 = [
     Trip(
         id=8,
         purchases=[3, 1, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -155,7 +155,7 @@ trip_list_2 = [
     Trip(
         id=9,
         purchases=[3, 2, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -163,7 +163,7 @@ trip_list_2 = [
     Trip(
         id=10,
         purchases=[1, 2, 3, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -171,7 +171,7 @@ trip_list_2 = [
     Trip(
         id=11,
         purchases=[1, 3, 2, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -179,7 +179,7 @@ trip_list_2 = [
     Trip(
         id=12,
         purchases=[2, 1, 3, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -187,7 +187,7 @@ trip_list_2 = [
     Trip(
         id=13,
         purchases=[2, 3, 1, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -195,7 +195,7 @@ trip_list_2 = [
     Trip(
         id=14,
         purchases=[3, 1, 2, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -203,7 +203,7 @@ trip_list_2 = [
     Trip(
         id=15,
         purchases=[3, 2, 1, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[1, 100, 170, 110, 150],
         assortment=0,
@@ -213,7 +213,7 @@ trip_list_2 = [
 available_items_2 = np.expand_dims(np.ones(5), axis=0)
 trip_dataset_2 = TripDataset(trips=trip_list_2, available_items=available_items_2)
 n_items_2 = trip_dataset_2.n_items
-n_customers_2 = trip_dataset_2.n_customers
+n_stores_2 = trip_dataset_2.n_stores
 
 
 def test_item_probabilities_sum_to_1() -> None:
@@ -227,7 +227,7 @@ def test_item_probabilities_sum_to_1() -> None:
     )
     model.instantiate(
         n_items=n_items_1,
-        n_customers=n_customers_1,
+        n_stores=n_stores_1,
     )
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
 
@@ -241,7 +241,7 @@ def test_item_probabilities_sum_to_1() -> None:
                         model.compute_item_likelihood(
                             basket=trip.purchases[:step],
                             available_items=np.ones(n_items_1),
-                            customer=trip.customer,
+                            store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
                         )
@@ -262,7 +262,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
         n_negative_samples=1,
     )
-    model.instantiate(n_items=n_items_2, n_customers=n_customers_2)
+    model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
     model.fit(trip_dataset=trip_dataset_2)
 
     # For a basket {1, 2, 3, 0} of size 3:
@@ -294,7 +294,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                         model.compute_ordered_basket_likelihood(
                             basket=trip.purchases,
                             available_items=availability_matrix,
-                            customer=trip.customer,
+                            store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
                         )
@@ -318,7 +318,7 @@ def test_evaluate_load_and_save() -> None:
     )
     model.instantiate(
         n_items=n_items_1,
-        n_customers=n_customers_1,
+        n_stores=n_stores_1,
     )
     model.evaluate(trip_dataset=trip_dataset_1)
     model.save_model("test_model")

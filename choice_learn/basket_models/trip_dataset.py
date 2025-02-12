@@ -11,11 +11,11 @@ from .utils.permutation import permutations
 class Trip:
     """Class for a trip.
 
-    A trip is a sequence of purchases made by a given customer at a specific time and
-    at a specific location (with given prices).
-    It can be seen as the content of a time-stamped purchase receipt with customer identification.
+    A trip is a sequence of purchases made at a specific time and
+    at a specific store with given prices and a specific assortment.
+    It can be seen as the content of a time-stamped purchase receipt with store identification.
 
-    Trip = (trip id, purchases, customer, week, prices, assortment)
+    Trip = (trip id, purchases, store, week, prices, assortment)
     """
 
     def __init__(
@@ -24,7 +24,7 @@ class Trip:
         purchases: np.ndarray,
         prices: np.ndarray,
         assortment: Union[int, np.ndarray],
-        customer: int = 0,
+        store: int = 0,
         week: int = 0,
     ) -> None:
         """Initialize the trip.
@@ -36,8 +36,8 @@ class Trip:
         purchases: np.ndarray
             List of the ID of the purchased items, 0 to n_items - 1 (0-indexed)
             Shape must be (len_basket,), the last item is the checkout item 0
-        customer: int
-            Customer ID, 0 to n_customers - 1 (0-indexed)
+        store: int
+            Store ID, 0 to n_stores - 1 (0-indexed)
         week: int
             Week number, 0 to 51 (0-indexed)
         prices: np.ndarray
@@ -57,7 +57,7 @@ class Trip:
 
         # Constitutive elements of a trip
         self.purchases = purchases
-        self.customer = customer
+        self.store = store
         self.week = week
         self.prices = prices
         self.assortment = assortment
@@ -191,21 +191,21 @@ class TripDataset:
     def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
 
-        One transaction is a triplet (customer, trip, item).
+        One transaction is a triplet (store, trip, item).
 
         Returns
         -------
         dict
             Transactions of the TripDataset
             keys: trans_id
-            values: (customer, trip, item)
+            values: (store, trip, item)
         """
         transactions = {}
 
         trans_id = 0
         for i, trip in enumerate(self.trips):
             for item in trip.purchases:
-                transactions[trans_id] = (trip.customer, i, item)
+                transactions[trans_id] = (trip.store, i, item)
                 trans_id += 1
 
         return transactions
@@ -230,16 +230,16 @@ class TripDataset:
         """
         return [self.trips[i].purchases for i in range(len(self))]
 
-    def get_all_customers(self) -> np.ndarray:
-        """Return the list of all customers in the dataset.
+    def get_all_stores(self) -> np.ndarray:
+        """Return the list of all stores in the dataset.
 
         Returns
         -------
         np.ndarray
-            List of customers in the dataset
+            List of stores in the dataset
         """
-        # If preprocessing working well, equal to [0, 1, ..., n_customers - 1]
-        return np.array(list({self.trips[i].customer for i in range(len(self))}))
+        # If preprocessing working well, equal to [0, 1, ..., n_stores - 1]
+        return np.array(list({self.trips[i].store for i in range(len(self))}))
 
     def get_all_weeks(self) -> np.ndarray:
         """Return the list of all weeks in the dataset.
@@ -274,15 +274,15 @@ class TripDataset:
         return self.available_items.shape[1]
 
     @property
-    def n_customers(self) -> int:
-        """Return the number of customers in the dataset.
+    def n_stores(self) -> int:
+        """Return the number of stores in the dataset.
 
         Returns
         -------
         int
-            Number of customers in the dataset
+            Number of stores in the dataset
         """
-        return len(self.get_all_customers())
+        return len(self.get_all_stores())
 
     @property
     def n_assortments(self) -> int:
@@ -305,7 +305,7 @@ class TripDataset:
             - permuted items,
             - permuted, truncated and padded baskets,
             - padded future purchases based on the baskets,
-            - customers,
+            - stores,
             - weeks,
             - prices,
             - available items.
@@ -319,7 +319,7 @@ class TripDataset:
         -------
         tuple[np.ndarray]
             For each sample (ie transaction) from the trip:
-            item, basket, future purchases, customer, week, prices, available items
+            item, basket, future purchases, store, week, prices, available items
             Length must be 7
         """
         # Get the trip from the index
@@ -371,12 +371,12 @@ class TripDataset:
             assortment = trip.assortment
 
         # Each item is linked to a basket, the future purchases,
-        # a customer, a week, prices and an assortment
+        # a store, a week, prices and an assortment
         return (
             permuted_purchases,  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
-            np.full(length_trip, trip.customer),  # Customers
+            np.full(length_trip, trip.store),  # Customers
             np.full(length_trip, trip.week),  # Weeks
             np.tile(trip.prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
@@ -400,7 +400,7 @@ class TripDataset:
         ------
         tuple[np.ndarray]
             For each item in the batch: item, basket, future purchases,
-            customer, week, prices, available items
+            store, week, prices, available items
             Length must 7
         """
         # Get trip indexes

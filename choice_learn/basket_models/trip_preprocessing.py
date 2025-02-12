@@ -73,7 +73,7 @@ def from_csv(
     data_file_name: str,
     nrows: Union[int, None] = None,
     sep: str = None,
-    user_id_col: str = "user_id",
+    store_id_col: str = "store_id",
     item_id_col: str = "item_id",
     session_id_col: str = "session_id",
     quantity_col: str = "quantity",
@@ -83,7 +83,7 @@ def from_csv(
     """Build a TripDataset from a csv file (with preprocessing).
 
     The csv file should contain the following columns:
-    - user_id
+    - store_id
     - item_id
     - session_id
     - quantity
@@ -97,8 +97,8 @@ def from_csv(
         Name of the csv file to load
     nrows: int, optional
         Number of rows to load, by default None
-    user_id_col: str, optional
-        Name of the user id column, by default "user_id"
+    store_id_col: str, optional
+        Name of the store id column, by default "store_id"
     item_id_col: str, optional
         Name of the item id column, by default "item_id"
     session_id_col: str, optional
@@ -116,12 +116,12 @@ def from_csv(
         TripDataset built from the csv files (with preprocessing)
     n_items: int
         Number of distinct items in the dataset
-    n_customers: int
-        Number of distinct customers in the dataset
+    n_stores: int
+        Number of distinct stores in the dataset
     n_trips: int
         Number of distinct trips in the dataset
 
-    trip_dataset, n_items, n_customers, n_trips
+    trip_dataset, n_items, n_stores, n_trips
     """
     # Load the data and select the first nrows
     dataset = csv_to_df(data_file_name=data_file_name, data_module=OS_DATA_MODULE, sep=sep)
@@ -137,7 +137,7 @@ def from_csv(
     ).groupby(["item_id"])
     dataset_grouped_by_trip = csv_to_df(
         data_file_name=data_file_name, data_module=OS_DATA_MODULE, sep=sep
-    ).groupby(["session_id", "user_id"])
+    ).groupby(["session_id", "store_id"])
     print(f"Nb of items in the total dataset: {dataset_grouped_by_item.ngroups}")
     print(f"Nb of trips in the total dataset: {dataset_grouped_by_trip.ngroups}")
     print(
@@ -152,7 +152,7 @@ def from_csv(
     # Rename columns
     dataset = dataset.rename(
         columns={
-            user_id_col: "user_id",
+            store_id_col: "store_id",
             item_id_col: "item_id",
             session_id_col: "session_id",
             quantity_col: "quantity",
@@ -191,7 +191,7 @@ def from_csv(
     # )
 
     n_items = dataset["item_id"].nunique() + 1  # +1 for the checkout item
-    n_customers = dataset["user_id"].nunique()
+    n_stores = dataset["store_id"].nunique()
 
     # Divide the data into trips
     dataset_trips = []
@@ -200,7 +200,7 @@ def from_csv(
     grouped_sessions = list(dataset.groupby("session_id"))
     for trip_idx, (trip_id, trip_data) in enumerate(dataset.groupby("session_id")):
         purchases = trip_data["item_id"].tolist()
-        customer = trip_data["user_id"].tolist()
+        store = trip_data["store_id"].tolist()
         # All the trips of a given session have the same week_id
         week = trip_data["week_id"].tolist()[0]
 
@@ -341,13 +341,13 @@ def from_csv(
                 if not found_price:
                     prices[item_id] = 1  # Or another default value > 0
 
-        for customer_id in customer:
-            purchases_customer = trip_data[trip_data["user_id"] == customer_id]["item_id"].tolist()
+        for store_id in store:
+            purchases_store = trip_data[trip_data["store_id"] == store_id]["item_id"].tolist()
             dataset_trips.append(
                 Trip(
                     id=count,
-                    purchases=purchases_customer + [0],  # Add the checkout item 0 at the end
-                    customer=customer_id,
+                    purchases=purchases_store + [0],  # Add the checkout item 0 at the end
+                    store=store_id,
                     week=week,
                     prices=prices,
                     assortment=0,  # TODO: Add the assortment
@@ -361,6 +361,6 @@ def from_csv(
 
     n_trips = len(trip_dataset)
 
-    print(f"{n_items=}, {n_customers=} and {n_trips=}")
+    print(f"{n_items=}, {n_stores=} and {n_trips=}")
 
-    return trip_dataset, n_items, n_customers, n_trips
+    return trip_dataset, n_items, n_stores, n_trips

@@ -171,7 +171,7 @@ class Shopper:
     def instantiate(
         self,
         n_items: int,
-        n_customers: int = 0,
+        n_stores: int = 0,
     ) -> None:
         """Instantiate the Shopper model.
 
@@ -180,16 +180,16 @@ class Shopper:
         n_items: int
             Number of items to consider, i.e. the number of items in the dataset
             (includes the checkout item)
-        n_customers: int
-            Number of customers in the population
+        n_stores: int
+            Number of stores in the population
         """
         self.n_items = n_items
-        if n_customers == 0 and self.price_effects:
-            # To take into account the price effects, the number of customers must be > 0
+        if n_stores == 0 and self.price_effects:
+            # To take into account the price effects, the number of stores must be > 0
             # to have a gamma embedding
-            # (By default, the customer id is 0)
-            n_customers = 1
-        self.n_customers = n_customers
+            # (By default, the store id is 0)
+            n_stores = 1
+        self.n_stores = n_stores
 
         self.rho = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
@@ -207,7 +207,7 @@ class Shopper:
         )
         self.theta = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                shape=(n_customers, self.latent_sizes["preferences"])
+                shape=(n_stores, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="theta",
@@ -239,7 +239,7 @@ class Shopper:
             )
             self.gamma = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                    shape=(n_customers, self.latent_sizes["price"])
+                    shape=(n_stores, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="gamma",
@@ -292,8 +292,8 @@ class Shopper:
         basket_batch_without_padding: list,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
-        theta_customer: tf.Tensor,
-        gamma_customer: tf.Tensor,
+        theta_store: tf.Tensor,
+        gamma_store: tf.Tensor,
         delta_week: tf.Tensor,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
@@ -315,13 +315,13 @@ class Shopper:
             Batch of availability matrices (indicating the availability (1) or not (0)
             of the products) (arrays) for each purchased item
             Shape must be (batch_size, n_items)
-        theta_customer: tf.Tensor
+        theta_store: tf.Tensor
             Slices from theta embedding gathered according to the indices that correspond
-            to the customer of each purchased item in the batch
+            to the store of each purchased item in the batch
             Shape must be (batch_size, latent_sizes["preferences"])
-        gamma_customer: tf.Tensor
+        gamma_store: tf.Tensor
             Slices from gamma embedding gathered according to the indices that correspond
-            to the customer of each purchased item in the batch
+            to the store of each purchased item in the batch
             Shape must be (batch_size, latent_sizes["price"])
         delta_week: tf.Tensor
             Slices from delta embedding gathered according to the indices that correspond
@@ -361,34 +361,30 @@ class Shopper:
                     total_next_step_utilities.append(0)
                 else:
                     # Compute the dot product along the last dimension between the embeddings
-                    # of the given customer's theta and alpha of all the items
-                    hypothetical_customer_preferences = tf.reduce_sum(
-                        theta_customer[idx] * self.alpha, axis=1
+                    # of the given store's theta and alpha of all the items
+                    hypothetical_store_preferences = tf.reduce_sum(
+                        theta_store[idx] * self.alpha, axis=1
                     )
 
                     if self.item_intercept:
                         hypothetical_item_intercept = self.lambda_
                     else:
-                        hypothetical_item_intercept = tf.zeros_like(
-                            hypothetical_customer_preferences
-                        )
+                        hypothetical_item_intercept = tf.zeros_like(hypothetical_store_preferences)
 
                     if self.price_effects:
                         hypothetical_price_effects = (
                             -1
                             # Compute the dot product along the last dimension between
-                            # the embeddings of the given customer's gamma and beta
+                            # the embeddings of the given store's gamma and beta
                             # of all the items
-                            * tf.reduce_sum(gamma_customer[idx] * self.beta, axis=1)
+                            * tf.reduce_sum(gamma_store[idx] * self.beta, axis=1)
                             * tf.cast(
                                 tf.math.log(price_batch[idx] + self.epsilon_price),
                                 dtype=tf.float32,
                             )
                         )
                     else:
-                        hypothetical_price_effects = tf.zeros_like(
-                            hypothetical_customer_preferences
-                        )
+                        hypothetical_price_effects = tf.zeros_like(hypothetical_store_preferences)
 
                     if self.seasonal_effects:
                         # Compute the dot product along the last dimension between the embeddings
@@ -398,15 +394,15 @@ class Shopper:
                         )
                     else:
                         hypothetical_seasonal_effects = tf.zeros_like(
-                            hypothetical_customer_preferences
+                            hypothetical_store_preferences
                         )
 
-                    # The effects of item intercept, customer preferences, price sensitivity
+                    # The effects of item intercept, store preferences, price sensitivity
                     # and seasonal effects are combined in the per-item per-trip latent variable
                     hypothetical_psi = tf.reduce_sum(
                         [
                             hypothetical_item_intercept,  # 0 if self.item_intercept is False
-                            hypothetical_customer_preferences,
+                            hypothetical_store_preferences,
                             hypothetical_price_effects,  # 0 if self.price_effects is False
                             hypothetical_seasonal_effects,  # 0 if self.seasonal_effects is False
                         ],
@@ -457,7 +453,7 @@ class Shopper:
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
         basket_batch: np.ndarray,
-        customer_batch: np.ndarray,
+        store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
@@ -473,8 +469,8 @@ class Shopper:
         basket_batch: np.ndarray
             Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
-        customer_batch: np.ndarray
-            Batch of customer IDs (integers) for each purchased item
+        store_batch: np.ndarray
+            Batch of store IDs (integers) for each purchased item
             Shape must be (batch_size,)
         week_batch: np.ndarray
             Batch of week numbers (integers) for each purchased item
@@ -496,32 +492,32 @@ class Shopper:
         # Ensure that item ids are integers
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
-        theta_customer = tf.gather(self.theta, indices=customer_batch)
+        theta_store = tf.gather(self.theta, indices=store_batch)
         alpha_item = tf.gather(self.alpha, indices=item_batch)
         # Compute the dot product along the last dimension
-        customer_preferences = tf.reduce_sum(theta_customer * alpha_item, axis=1)
+        store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
 
         if self.item_intercept:
             item_intercept = tf.gather(self.lambda_, indices=item_batch)
         else:
-            item_intercept = tf.zeros_like(customer_preferences)
+            item_intercept = tf.zeros_like(store_preferences)
 
         if self.price_effects:
-            gamma_customer = tf.gather(self.gamma, indices=customer_batch)
+            gamma_store = tf.gather(self.gamma, indices=store_batch)
             beta_item = tf.gather(self.beta, indices=item_batch)
             # Add epsilon to avoid NaN values (log(0))
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
-                * tf.reduce_sum(gamma_customer * beta_item, axis=1)
+                * tf.reduce_sum(gamma_store * beta_item, axis=1)
                 * tf.cast(
                     tf.math.log(np.array(price_batch) + self.epsilon_price),
                     dtype=tf.float32,
                 )
             )
         else:
-            gamma_customer = tf.zeros_like(customer_batch)
-            price_effects = tf.zeros_like(customer_preferences)
+            gamma_store = tf.zeros_like(store_batch)
+            price_effects = tf.zeros_like(store_preferences)
 
         if self.seasonal_effects:
             delta_week = tf.gather(self.delta, indices=week_batch)
@@ -530,14 +526,14 @@ class Shopper:
             seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
         else:
             delta_week = tf.zeros_like(week_batch)
-            seasonal_effects = tf.zeros_like(customer_preferences)
+            seasonal_effects = tf.zeros_like(store_preferences)
 
-        # The effects of item intercept, customer preferences, price sensitivity
+        # The effects of item intercept, store preferences, price sensitivity
         # and seasonal effects are combined in the per-item per-trip latent variable
         psi = tf.reduce_sum(
             [
                 item_intercept,
-                customer_preferences,
+                store_preferences,
                 price_effects,
                 seasonal_effects,
             ],
@@ -608,8 +604,8 @@ class Shopper:
             basket_batch_without_padding=basket_batch_without_padding,
             price_batch=price_batch,
             available_item_batch=available_item_batch,
-            theta_customer=theta_customer,
-            gamma_customer=gamma_customer,  # 0 if self.price_effects is False
+            theta_store=theta_store,
+            gamma_store=gamma_store,  # 0 if self.price_effects is False
             delta_week=delta_week,  # 0 if self.seasonal_effects is False
         )
 
@@ -619,7 +615,7 @@ class Shopper:
         self,
         basket: np.ndarray,
         available_items: np.ndarray,
-        customer: int,
+        store: int,
         week: int,
         prices: np.ndarray,
     ) -> tf.Tensor:
@@ -632,7 +628,7 @@ class Shopper:
         available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
-        customer: int
+        store: int
             Customer id
         week: int
             Week number
@@ -653,9 +649,9 @@ class Shopper:
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.array([item_id for item_id in range(self.n_items)]),
-            # For each item: same basket / customer / week / prices / available items
+            # For each item: same basket / store / week / prices / available items
             basket_batch=np.array([basket for _ in range(self.n_items)]),
-            customer_batch=np.array([customer for _ in range(self.n_items)]),
+            store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
             available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
@@ -674,7 +670,7 @@ class Shopper:
         self,
         basket: np.ndarray,
         available_items: np.ndarray,
-        customer: int,
+        store: int,
         week: int,
         prices: np.ndarray,
     ) -> float:
@@ -687,7 +683,7 @@ class Shopper:
         available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
-        customer: int
+        store: int
             Customer id
         week: int
             Week number
@@ -710,7 +706,7 @@ class Shopper:
             ordered_basket_likelihood *= self.compute_item_likelihood(
                 basket=basket[:j],
                 available_items=available_items_copy,
-                customer=customer,
+                store=store,
                 week=week,
                 prices=prices,
             )[next_item_id].numpy()
@@ -724,7 +720,7 @@ class Shopper:
         self,
         basket: np.ndarray,
         available_items: np.ndarray,
-        customer: int,
+        store: int,
         week: int,
         prices: np.ndarray,
         n_permutations: int = 1,
@@ -739,7 +735,7 @@ class Shopper:
         available_items: np.ndarray
             Matrix indicating the availability (1) or not (0) of the products
             Shape must be (n_items,)
-        customer: int
+        store: int
             Customer id
         week: int
             Week number
@@ -782,7 +778,7 @@ class Shopper:
                         # The last item should always be the checkout item 0
                         basket=[basket[i] for i in permutation] + [0],
                         available_items=available_items,
-                        customer=customer,
+                        store=store,
                         week=week,
                         prices=prices,
                     )
@@ -855,7 +851,7 @@ class Shopper:
         item_batch: np.ndarray,
         basket_batch: np.ndarray,
         future_batch: np.ndarray,
-        customer_batch: np.ndarray,
+        store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
@@ -874,8 +870,8 @@ class Shopper:
             Batch of items to be purchased in the future (ID of items not yet in the
             basket) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
-        customer_batch: np.ndarray
-            Batch of customer IDs (integers) for each purchased item
+        store_batch: np.ndarray
+            Batch of store IDs (integers) for each purchased item
             Shape must be (batch_size,)
         week_batch: np.ndarray
             Batch of week numbers (integers) for each purchased item
@@ -937,7 +933,7 @@ class Shopper:
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
             basket_batch=np.tile(basket_batch, (self.n_negative_samples + 1, 1)),
-            customer_batch=np.tile(customer_batch, self.n_negative_samples + 1),
+            store_batch=np.tile(store_batch, self.n_negative_samples + 1),
             week_batch=np.tile(week_batch, self.n_negative_samples + 1),
             price_batch=augmented_price_batch,
             available_item_batch=np.tile(available_item_batch, (self.n_negative_samples + 1, 1)),
@@ -974,7 +970,7 @@ class Shopper:
         item_batch: np.ndarray,
         basket_batch: np.ndarray,
         future_batch: np.ndarray,
-        customer_batch: np.ndarray,
+        store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
@@ -993,8 +989,8 @@ class Shopper:
             Batch of items to be purchased in the future (ID of items not yet in the
             basket) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
-        customer_batch: np.ndarray
-            Batch of customer ids (integers) for each purchased item
+        store_batch: np.ndarray
+            Batch of store ids (integers) for each purchased item
             Shape must be (batch_size,)
         week_batch: np.ndarray
             Batch of week numbers (integers) for each purchased item
@@ -1017,7 +1013,7 @@ class Shopper:
                 item_batch=item_batch,
                 basket_batch=basket_batch,
                 future_batch=future_batch,
-                customer_batch=customer_batch,
+                store_batch=store_batch,
                 week_batch=week_batch,
                 price_batch=price_batch,
                 available_item_batch=available_item_batch,
@@ -1067,7 +1063,7 @@ class Shopper:
         """
         if not self.instantiated:
             # Lazy instantiation
-            self.instantiate(n_items=trip_dataset.n_items, n_customers=trip_dataset.n_customers)
+            self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
 
         batch_size = self.batch_size
 
@@ -1101,7 +1097,7 @@ class Shopper:
                 item_batch,
                 basket_batch,
                 future_batch,
-                customer_batch,
+                store_batch,
                 week_batch,
                 price_batch,
                 available_item_batch,
@@ -1112,7 +1108,7 @@ class Shopper:
                     item_batch=item_batch,
                     basket_batch=basket_batch,
                     future_batch=future_batch,
-                    customer_batch=customer_batch,
+                    store_batch=store_batch,
                     week_batch=week_batch,
                     price_batch=price_batch,
                     available_item_batch=available_item_batch,
@@ -1159,7 +1155,7 @@ class Shopper:
                     item_batch,
                     basket_batch,
                     future_batch,
-                    customer_batch,
+                    store_batch,
                     week_batch,
                     price_batch,
                     available_item_batch,
@@ -1172,7 +1168,7 @@ class Shopper:
                             item_batch=item_batch,
                             basket_batch=basket_batch,
                             future_batch=future_batch,
-                            customer_batch=customer_batch,
+                            store_batch=store_batch,
                             week_batch=week_batch,
                             price_batch=price_batch,
                             available_item_batch=available_item_batch,
@@ -1237,7 +1233,7 @@ class Shopper:
             _,
             basket_batch,
             _,
-            customer_batch,
+            store_batch,
             week_batch,
             price_batch,
             available_item_batch,
@@ -1254,14 +1250,14 @@ class Shopper:
                     self.compute_basket_likelihood(
                         basket=basket,
                         available_items=available_items,
-                        customer=customer,
+                        store=store,
                         week=week,
                         prices=prices,
                         n_permutations=n_permutations,
                     )
                     + epsilon_eval
-                    for basket, available_items, customer, week, prices in zip(
-                        basket_batch, available_item_batch, customer_batch, week_batch, price_batch
+                    for basket, available_items, store, week, prices in zip(
+                        basket_batch, available_item_batch, store_batch, week_batch, price_batch
                     )
                 ]
             )
@@ -1340,7 +1336,7 @@ class Shopper:
 
         # Instantiate manually the model
         model.n_items = params["n_items"]
-        model.n_customers = params["n_customers"]
+        model.n_stores = params["n_stores"]
 
         # Fix manually trainable weights values
         model.rho = tf.Variable(np.load(os.path.join(path, "rho.npy")), trainable=True, name="rho")

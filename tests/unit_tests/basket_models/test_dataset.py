@@ -10,7 +10,7 @@ trip_list_1 = [
     Trip(
         id=0,
         purchases=[7, 4, 8, 0],
-        customer=0,
+        store=0,
         week=0,
         prices=[120, 130, 140, 150, 140, 160, 170, 100, 200, 180, 190, 210, 220, 230, 240],
         assortment=0,
@@ -18,7 +18,7 @@ trip_list_1 = [
     Trip(
         id=1,
         purchases=[2, 1, 3, 0],
-        customer=3,
+        store=3,
         week=5,
         prices=[200, 140, 110, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
         assortment=1,
@@ -26,7 +26,7 @@ trip_list_1 = [
     Trip(
         id=2,
         purchases=[1, 7, 3, 0],
-        customer=1,
+        store=1,
         week=2,
         prices=[100, 110, 120, 200, 130, 140, 150, 170, 180, 190, 200, 210, 150, 140, 170],
         assortment=0,
@@ -34,7 +34,7 @@ trip_list_1 = [
     Trip(
         id=3,
         purchases=[5, 6, 2, 0],
-        customer=2,
+        store=2,
         week=19,
         prices=[110, 120, 150, 130, 140, 100, 140, 150, 160, 170, 180, 190, 90, 110, 140],
         assortment=2,
@@ -42,7 +42,7 @@ trip_list_1 = [
     Trip(
         id=4,
         purchases=[8, 1, 9, 0],
-        customer=3,
+        store=3,
         week=34,
         prices=[100, 140, 150, 160, 170, 180, 190, 200, 85, 200, 210, 220, 150, 170, 130],
         assortment=3,
@@ -50,7 +50,7 @@ trip_list_1 = [
     Trip(
         id=5,
         purchases=[10, 4, 11, 0],
-        customer=1,
+        store=1,
         week=51,
         prices=[130, 140, 150, 160, 170, 180, 190, 200, 220, 100, 210, 240, 170, 110, 90],
         assortment=0,
