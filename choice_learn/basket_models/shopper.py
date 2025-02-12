@@ -824,7 +824,7 @@ class Shopper:
             Random sample of items, each of them distinct from
             the next item and from the items already in the basket
         """
-        # Build the assortment based on the item availabilities
+        # Get the list of available items based on the availability matrix
         assortment = [item_id for item_id in range(self.n_items) if available_items[item_id] == 1]
 
         not_to_be_chosen = np.unique(

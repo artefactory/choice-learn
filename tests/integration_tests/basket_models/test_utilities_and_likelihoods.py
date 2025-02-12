@@ -65,7 +65,7 @@ assortment_1, assortment_2, assortment_3, assortment_4 = (
 assortment_2[13:] = 0
 assortment_3[:3] = 0
 assortment_4[4], assortment_4[11] = 0, 0
-assortments_1 = np.array(
+available_items_1 = np.array(
     [
         assortment_1,
         assortment_2,
@@ -73,7 +73,7 @@ assortments_1 = np.array(
         assortment_4,
     ]
 )
-trip_dataset_1 = TripDataset(trips=trip_list_1, assortments=assortments_1)
+trip_dataset_1 = TripDataset(trips=trip_list_1, available_items=available_items_1)
 n_items_1 = trip_dataset_1.n_items
 n_customers_1 = trip_dataset_1.n_customers
 
@@ -210,8 +210,8 @@ trip_list_2 = [
     ),
 ]
 # One more item available in the assortment to be able to use negative sampling
-assortments_2 = np.expand_dims(np.ones(5), axis=0)
-trip_dataset_2 = TripDataset(trips=trip_list_2, assortments=assortments_2)
+available_items_2 = np.expand_dims(np.ones(5), axis=0)
+trip_dataset_2 = TripDataset(trips=trip_list_2, available_items=available_items_2)
 n_items_2 = trip_dataset_2.n_items
 n_customers_2 = trip_dataset_2.n_customers
 

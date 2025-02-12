@@ -44,9 +44,10 @@ class Trip:
             Prices of items
             Shape must be (len_basket,)
         assortment: int or np.ndarray
-            Assortment ID (int) corresponding to the assortment (ie its index in self.assortments)
-            OR availability matrix (np.ndarray) of the assortment (binary vector of length n_items
-            where 1 means the item is available and 0 means the item is not available)
+            Assortment ID (int) corresponding to the assortment (ie its index in
+            self.available_items) OR availability matrix (np.ndarray) of the
+            assortment (binary vector of length n_items where 1 means the item
+            is available and 0 means the item is not available)
             An assortment is the list of available items of a specific store at a given time
         """
         if week not in range(52):
@@ -83,7 +84,7 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip], assortments: np.ndarray) -> None:
+    def __init__(self, trips: list[Trip], available_items: np.ndarray) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -91,9 +92,9 @@ class TripDataset:
         trips: list[Trip]
             List of trips
             Length must be n_trips
-        assortments: np.ndarray
-            Array of assortments
-            assortments[i]: availability matrix of the assortment whose ID is i
+        available_items: np.ndarray
+            Array of availability matrices
+            available_items[i]: availability matrix of the assortment whose ID is i
             (The availability matrix is a binary vector of length n_items
             where 1 means the item is available and 0 means the item is not available)
             Shape must be (n_assortments, n_items)
@@ -101,7 +102,7 @@ class TripDataset:
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
-        self.assortments = assortments
+        self.available_items = available_items
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -154,20 +155,22 @@ class TripDataset:
             # Update the attributes of the TripDataset
             self.max_length = max([trip.trip_length for trip in self.trips])
             self.n_samples = len(self.get_transactions())
-            # Concatenate the arrays of assortments
-            # /!\ When concatenating 2 TripDatasets, the indices of the assortments
+            # Concatenate the arrays of availability matrices
+            # /!\ When concatenating 2 TripDatasets, the indices of the availability matrices
             # changes
-            self.assortments = np.concatenate((self.assortments, other.assortments), axis=0)
+            self.available_items = np.concatenate(
+                (self.available_items, other.available_items), axis=0
+            )
             return self
 
         # Else: create a new dataset by adding 2 datasets together
         return TripDataset(
             # Concatenate the list of trips
             trips=self.trips + other.trips,
-            # Concatenate the arrays of assortments
-            # /!\ When concatenating 2 TripDatasets, the indices of the assortments
+            # Concatenate the arrays of availability matrices
+            # /!\ When concatenating 2 TripDatasets, the indices of the availability matrices
             # changes
-            assortments=np.concatenate((self.assortments, other.assortments), axis=0),
+            available_items=np.concatenate((self.available_items, other.available_items), axis=0),
         )
 
     def get_trip(self, index: int) -> Trip:
@@ -268,7 +271,7 @@ class TripDataset:
         int
             Number of items available in the dataset
         """
-        return self.assortments.shape[1]
+        return self.available_items.shape[1]
 
     @property
     def n_customers(self) -> int:
@@ -290,7 +293,7 @@ class TripDataset:
         int
             Number of assortments in the dataset
         """
-        return self.assortments.shape[0]
+        return self.available_items.shape[0]
 
     def get_augmented_data_from_trip_index(
         self,
@@ -361,8 +364,8 @@ class TripDataset:
         )
 
         if isinstance(trip.assortment, int):
-            # Then it is the assortment ID (ie its index in self.assortments)
-            assortment = self.assortments[trip.assortment]
+            # Then it is the assortment ID (ie its index in self.available_items)
+            assortment = self.available_items[trip.assortment]
         else:  # np.ndarray
             # Then it is directly the availability matrix
             assortment = trip.assortment
@@ -486,17 +489,17 @@ class TripDataset:
         if isinstance(index, int):
             return TripDataset(
                 trips=[self.trips[index]],
-                assortments=self.assortments,
+                available_items=self.available_items,
             )
         if isinstance(index, (list, np.ndarray, range)):
             return TripDataset(
                 trips=[self.trips[i] for i in index],
-                assortments=self.assortments,
+                available_items=self.available_items,
             )
         if isinstance(index, slice):
             return TripDataset(
                 trips=self.trips[index],
-                assortments=self.assortments,
+                available_items=self.available_items,
             )
 
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
