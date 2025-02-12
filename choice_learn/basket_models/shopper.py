@@ -14,7 +14,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
-from .trip_dataset import TripDataset
+from .trip_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
 
@@ -613,28 +613,36 @@ class Shopper:
 
     def compute_item_likelihood(
         self,
-        basket: np.ndarray,
-        available_items: np.ndarray,
-        store: int,
-        week: int,
-        prices: np.ndarray,
+        basket: Union[None, np.ndarray] = None,
+        available_items: Union[None, np.ndarray] = None,
+        store: Union[None, int] = None,
+        week: Union[None, int] = None,
+        prices: Union[None, np.ndarray] = None,
+        trip: Union[None, Trip] = None,
     ) -> tf.Tensor:
         """Compute the likelihood of all items for a given trip.
 
+        Take as input directly a Trip object or separately basket, available_items,
+        store, week and prices.
+
         Parameters
         ----------
-        basket: np.ndarray
-            ID the of items already in the basket
-        available_items: np.ndarray
-            Matrix indicating the availability (1) or not (0) of the products
+        basket: np.ndarray or None, optional
+            ID the of items already in the basket, by default None
+        available_items: np.ndarray or None, optional
+            Matrix indicating the availability (1) or not (0) of the products,
+            by default None
             Shape must be (n_items,)
-        store: int
-            Customer id
-        week: int
-            Week number
-        prices: np.ndarray
-            Prices of all the items in the dataset
+        store: int or None, optional
+            Store id, by default None
+        week: int or None, optional
+            Week number, by default None
+        prices: np.ndarray or None, optional
+            Prices of all the items in the dataset, by default None
             Shape must be (n_items,)
+        trip: Trip or None, optional
+            Trip object containing basket, available_items, store,
+            week and prices, by default None
 
         Returns
         -------
@@ -642,6 +650,41 @@ class Shopper:
             Likelihood of all items for a given trip
             Shape must be (n_items,)
         """
+        if trip is None:
+            # Trip not provided as an argument
+            # Then basket, available_items, store, week and prices must be provided
+            if (
+                basket is None
+                or available_items is None
+                or store is None
+                or week is None
+                or prices is None
+            ):
+                raise ValueError(
+                    "If trip is None, then basket, available_items, store, week, and "
+                    "prices must be provided as arguments."
+                )
+
+        else:
+            # Trip directly provided as an argument
+            basket = trip.purchases
+
+            if isinstance(trip.assortment, int):
+                # Then it is the assortment ID (ie its index in the attribute
+                # available_items of the TripDataset), but we do not have the
+                # the TripDataset as input here
+                raise ValueError(
+                    "The assortment ID is not enough to compute the likelihood. "
+                    "Please provide the availability matrix directly (array of shape (n_items,) "
+                    "indicating the availability (1) or not (0) of the products)."
+                )
+            # Else: np.ndarray
+            available_items = trip.assortment
+
+            store = trip.store
+            week = trip.week
+            prices = trip.prices
+
         # Prevent unintended side effects from in-place modifications
         available_items_copy = available_items.copy()
 
@@ -668,33 +711,77 @@ class Shopper:
 
     def compute_ordered_basket_likelihood(
         self,
-        basket: np.ndarray,
-        available_items: np.ndarray,
-        store: int,
-        week: int,
-        prices: np.ndarray,
+        basket: Union[None, np.ndarray] = None,
+        available_items: Union[None, np.ndarray] = None,
+        store: Union[None, int] = None,
+        week: Union[None, int] = None,
+        prices: Union[None, np.ndarray] = None,
+        trip: Union[None, Trip] = None,
     ) -> float:
         """Compute the utility of an ordered basket.
 
+        Take as input directly a Trip object or separately basket, available_items,
+        store, week and prices.
+
         Parameters
         ----------
-        basket: np.ndarray
-            ID the of items already in the basket
-        available_items: np.ndarray
-            Matrix indicating the availability (1) or not (0) of the products
+        basket: np.ndarray or None, optional
+            ID the of items already in the basket, by default None
+        available_items: np.ndarray or None, optional
+            Matrix indicating the availability (1) or not (0) of the products,
+            by default None
             Shape must be (n_items,)
-        store: int
-            Customer id
-        week: int
-            Week number
-        prices: np.ndarray
-            Prices of all the items in the dataset
+        store: int or None, optional
+            Store id, by default None
+        week: int or None, optional
+            Week number, by default None
+        prices: np.ndarray or None, optional
+            Prices of all the items in the dataset, by default None
+            Shape must be (n_items,)
+        trip: Trip or None, optional
+            Trip object containing basket, available_items, store,
+            week and prices, by default None
 
         Returns
         -------
         likelihood: float
             Likelihood of the ordered basket
         """
+        if trip is None:
+            # Trip not provided as an argument
+            # Then basket, available_items, store, week and prices must be provided
+            if (
+                basket is None
+                or available_items is None
+                or store is None
+                or week is None
+                or prices is None
+            ):
+                raise ValueError(
+                    "If trip is None, then basket, available_items, store, week, and "
+                    "prices must be providedas arguments."
+                )
+
+        else:
+            # Trip directly provided as an argument
+            basket = trip.purchases
+
+            if isinstance(trip.assortment, int):
+                # Then it is the assortment ID (ie its index in the attribute
+                # available_items of the TripDataset), but we do not have the
+                # the TripDataset as input here
+                raise ValueError(
+                    "The assortment ID is not enough to compute the likelihood. "
+                    "Please provide the availability matrix directly (array of shape (n_items,) "
+                    "indicating the availability (1) or not (0) of the products)."
+                )
+            # Else: np.ndarray
+            available_items = trip.assortment
+
+            store = trip.store
+            week = trip.week
+            prices = trip.prices
+
         # Prevent unintended side effects from in-place modifications
         available_items_copy = available_items.copy()
 
@@ -718,29 +805,38 @@ class Shopper:
 
     def compute_basket_likelihood(
         self,
-        basket: np.ndarray,
-        available_items: np.ndarray,
-        store: int,
-        week: int,
-        prices: np.ndarray,
+        basket: Union[None, np.ndarray] = None,
+        available_items: Union[None, np.ndarray] = None,
+        store: Union[None, int] = None,
+        week: Union[None, int] = None,
+        prices: Union[None, np.ndarray] = None,
+        trip: Union[None, Trip] = None,
         n_permutations: int = 1,
         verbose: int = 0,
     ) -> float:
         """Compute the utility of an (unordered) basket.
 
+        Take as input directly a Trip object or separately basket, available_items,
+        store, week and prices.
+
         Parameters
         ----------
-        basket: np.ndarray
-            ID the of items already in the basket
-        available_items: np.ndarray
-            Matrix indicating the availability (1) or not (0) of the products
+        basket: np.ndarray or None, optional
+            ID the of items already in the basket, by default None
+        available_items: np.ndarray or None, optional
+            Matrix indicating the availability (1) or not (0) of the products,
+            by default None
             Shape must be (n_items,)
-        store: int
-            Customer id
-        week: int
-            Week number
-        prices: np.ndarray
-            Prices of all the items in the dataset
+        store: int or None, optional
+            Store id, by default None
+        week: int or None, optional
+            Week number, by default None
+        prices: np.ndarray or None, optional
+            Prices of all the items in the dataset, by default None
+            Shape must be (n_items,)
+        trip: Trip or None, optional
+            Trip object containing basket, available_items, store,
+            week and prices, by default None
         n_permutations: int, optional
             Number of permutations to average over, by default 1
         verbose: int, optional
@@ -752,6 +848,41 @@ class Shopper:
         likelihood: float
             Likelihood of the (unordered) basket
         """
+        if trip is None:
+            # Trip not provided as an argument
+            # Then basket, available_items, store, week and prices must be provided
+            if (
+                basket is None
+                or available_items is None
+                or store is None
+                or week is None
+                or prices is None
+            ):
+                raise ValueError(
+                    "If trip is None, then basket, available_items, store, week, and "
+                    "prices must be provided as arguments."
+                )
+
+        else:
+            # Trip directly provided as an argument
+            basket = trip.purchases
+
+            if isinstance(trip.assortment, int):
+                # Then it is the assortment ID (ie its index in the attribute
+                # available_items of the TripDataset), but we do not have the
+                # the TripDataset as input here
+                raise ValueError(
+                    "The assortment ID is not enough to compute the likelihood. "
+                    "Please provide the availability matrix directly (array of shape (n_items,) "
+                    "indicating the availability (1) or not (0) of the products)."
+                )
+            # Else: np.ndarray
+            available_items = trip.assortment
+
+            store = trip.store
+            week = trip.week
+            prices = trip.prices
+
         if verbose > 0:
             print(
                 f"Nb of items to be permuted = basket size - 1 = {len(basket) - 1}",

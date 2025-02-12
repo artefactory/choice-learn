@@ -38,8 +38,9 @@ class Trip:
         week: int
             Week number, 0 to 51 (0-indexed)
         prices: np.ndarray
-            Prices of items
-            Shape must be (len_basket,)
+            Prices of all the items in the dataset
+            Shape must be (n_items,) with n_items the number of items in
+            the TripDataset
         assortment: int or np.ndarray
             Assortment ID (int) corresponding to the assortment (ie its index in
             self.available_items) OR availability matrix (np.ndarray) of the
@@ -371,7 +372,7 @@ class TripDataset:
             permuted_purchases,  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
-            np.full(length_trip, trip.store),  # Customers
+            np.full(length_trip, trip.store),  # Stores
             np.full(length_trip, trip.week),  # Weeks
             np.tile(trip.prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
@@ -412,7 +413,7 @@ class TripDataset:
             np.empty(0, dtype=int),  # Items
             np.empty((0, self.max_length), dtype=int),  # Baskets
             np.empty((0, self.max_length), dtype=int),  # Future purchases
-            np.empty(0, dtype=int),  # Customers
+            np.empty(0, dtype=int),  # Stores
             np.empty(0, dtype=int),  # Weeks
             np.empty((0, self.n_items), dtype=int),  # Prices
             np.empty((0, self.n_items), dtype=int),  # Available items
