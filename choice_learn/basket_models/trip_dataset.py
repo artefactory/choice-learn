@@ -60,6 +60,19 @@ class Trip:
 
         self.trip_length = len(purchases)
 
+    def __str__(self) -> str:
+        """Return short representation of the trip.
+
+        Returns
+        -------
+        str
+            Representation of the trip
+        """
+        desc = f"Trip with {self.trip_length} purchases {self.purchases}"
+        desc += f" at store {self.store} in week {self.week}"
+        desc += f" with prices {self.prices} and assortment {self.assortment}"
+        return desc
+
     def get_items_up_to_index(self, i: int) -> np.ndarray:
         """Get items up to index i.
 
