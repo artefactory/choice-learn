@@ -59,7 +59,7 @@ assortment_1, assortment_2, assortment_3, assortment_4 = (
 assortment_2[13:] = 0
 assortment_3[:3] = 0
 assortment_4[4], assortment_4[11] = 0, 0
-assortments_1 = np.array(
+available_items_1 = np.array(
     [
         assortment_1,
         assortment_2,
@@ -67,7 +67,7 @@ assortments_1 = np.array(
         assortment_4,
     ]
 )
-trip_dataset_1 = TripDataset(trips=trip_list_1, assortments=assortments_1)
+trip_dataset_1 = TripDataset(trips=trip_list_1, available_items=available_items_1)
 
 
 def test_getitem():
@@ -104,7 +104,7 @@ def test_trip_dataset_concat():
     """Test the concat operation."""
     global trip_dataset_1
 
-    trip_dataset_2 = TripDataset(trips=trip_list_1, assortments=assortments_1)
+    trip_dataset_2 = TripDataset(trips=trip_list_1, available_items=available_items_1)
     trip_dataset_3 = trip_dataset_1.concatenate(trip_dataset_2)
     assert len(trip_dataset_3) == 2 * len(trip_dataset_1)
 
