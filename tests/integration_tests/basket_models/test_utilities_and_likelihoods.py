@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from choice_learn.basket_models.shopper import Shopper
-from choice_learn.basket_models.trip_dataset import Trip, TripDataset
+from choice_learn.basket_models import Shopper
+from choice_learn.basket_models.dataset import Trip, TripDataset
 
 # Toy dataset 1: different items between trips
 trip_list_1 = [
