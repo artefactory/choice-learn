@@ -5,14 +5,13 @@ import numpy as np
 from choice_learn.basket_models import Trip, TripDataset
 
 
-def get_dataset(num_baskets=100):
+def get_dataset(num_baskets: int = 100) -> TripDataset:
     """Return synthetic dataset.
 
     Parameters
     ----------
     num_baskets: int
         Number of baskets to generate.
-
 
     Returns
     -------
@@ -30,33 +29,34 @@ def get_dataset(num_baskets=100):
 
     trips_list = []
 
-    for i in range(num_baskets):
-        trip = Trip(
-            purchases=purchases_stores_1[0],
-            # Let's consider here totally random prices for the products
-            prices=np.random.uniform(1, 10, n_items),
-            assortment=0,
-        )
-        trips_list.append(trip)
-
-        trip = Trip(
-            purchases=purchases_stores_1[1], prices=np.random.uniform(1, 10, n_items), assortment=0
-        )
-        trips_list.append(trip)
-
-        trip = Trip(
-            purchases=purchases_stores_1[2], prices=np.random.uniform(1, 10, n_items), assortment=0
-        )
-        trips_list.append(trip)
-
-        trip = Trip(
-            purchases=purchases_stores_2[0], prices=np.random.uniform(1, 10, n_items), assortment=1
-        )
-        trips_list.append(trip)
-
-        trip = Trip(
-            purchases=purchases_stores_2[1], prices=np.random.uniform(1, 10, n_items), assortment=1
-        )
-        trips_list.append(trip)
+    for _ in range(num_baskets):
+        trips_list += [
+            Trip(
+                purchases=purchases_stores_1[0],
+                # Let's consider here totally random prices for the products
+                prices=np.random.uniform(1, 10, n_items),
+                assortment=0,
+            ),
+            Trip(
+                purchases=purchases_stores_1[1],
+                prices=np.random.uniform(1, 10, n_items),
+                assortment=0,
+            ),
+            Trip(
+                purchases=purchases_stores_1[2],
+                prices=np.random.uniform(1, 10, n_items),
+                assortment=0,
+            ),
+            Trip(
+                purchases=purchases_stores_2[0],
+                prices=np.random.uniform(1, 10, n_items),
+                assortment=1,
+            ),
+            Trip(
+                purchases=purchases_stores_2[1],
+                prices=np.random.uniform(1, 10, n_items),
+                assortment=1,
+            ),
+        ]
 
     return TripDataset(trips=trips_list, available_items=available_items)
