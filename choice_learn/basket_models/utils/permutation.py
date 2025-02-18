@@ -10,8 +10,10 @@ def permutations(iterable: Union[list, np.ndarray, tuple], r: Union[int, None] =
 
     Examples
     --------
-    permutations('ABCD', 2) → AB AC AD BA BC BD CA CB CD DA DB DC
-    permutations(range(3)) → 012 021 102 120 201 210
+        >>> permutations('ABCD', 2)
+    'AB', 'AC', 'AD', 'BA', 'BC', 'BD', 'CA', 'CB', 'CD', 'DA', 'DB', 'DC'
+        >>> permutations(range(3))
+    '012', '021', '102', '120', '201', '210'
 
     Code taken from https://docs.python.org/3/library/itertools.html.
 

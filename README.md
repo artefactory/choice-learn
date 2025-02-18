@@ -88,7 +88,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 | Basket Model | Example | Colab | Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
-| Deterministic SHOPPER| [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| SHOPPER| [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
 
 
 ### Auxiliary tools

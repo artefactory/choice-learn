@@ -78,6 +78,10 @@ nav:
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
       - Model Finetuning and general hyperparamters: notebooks/models/models_finetuning.md
       - SHOPPER model Usage: notebooks/basket_models/shopper.md
+      - TasteNet model Usage: notebooks/models/tastenet.md
+      - HaloMNL model Usage: notebooks/models/halo_mnl.md
+      - Learning MNL model Usage: notebooks/models/learning_mnl.md
+      - ResLogit model Usage: notebooks/models/reslogit.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
@@ -95,12 +99,13 @@ nav:
       - SimpleMNL Model: references/models/references_simple_mnl.md
       - Conditional Logit: references/models/references_clogit.md
       - Nested Logit: references/models/references_nested_logit.md
-      - Latent Class BaseModel: reference/models/references_latent_class_base_model.md
+      - Latent Class BaseModel: references/models/references_latent_class_base_model.md
       - Latent Class MNL: references/models/references_latent_class_mnl.md
       - RUMnet: references/models/references_rumnet.md
-      - TasteNet: references/models/references_tasetnet.md
+      - TasteNet: references/models/references_tastenet.md
       - Learning MNL: references/models/references_learning_mnl.md
       - ResLogit: references/models/references_reslogit.md
+      - HaloMNL: references/models/references_halo_mnl.md
     - Basket Models:
       - Shopper: references/basket_models/references_shopper.md
       - Trip and TripDataset: references/basket_models/references_dataset.md
