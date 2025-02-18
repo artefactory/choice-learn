@@ -67,6 +67,7 @@ nav:
       - Intoduction to data handling: notebooks/introduction/2_data_handling.md
       - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
       - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
+      - Basket Data Handling: notebooks/basket_models/basket_data_handling.md
     - Modeling:
       - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
       - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
@@ -76,6 +77,7 @@ nav:
       - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
       - Model Finetuning and general hyperparamters: notebooks/models/models_finetuning.md
+      - SHOPPER model Usage: notebooks/basket_models/shopper.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
@@ -99,6 +101,11 @@ nav:
       - TasteNet: references/models/references_tasetnet.md
       - Learning MNL: references/models/references_learning_mnl.md
       - ResLogit: references/models/references_reslogit.md
+    - Basket Models:
+      - Shopper: references/basket_models/references_shopper.md
+      - Trip and TripDataset: references/basket_models/references_dataset.md
+      - Basket preprocessing: references/basket_models/references_preprocessing.md
+      - Permutation: references/basket_models/utils/references_permutation.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
   - explanations.md
