@@ -237,7 +237,7 @@ class TripDataset:
         np.ndarray
             List of baskets in the dataset
         """
-        return [self.trips[i].purchases for i in range(len(self))]
+        return np.array([self.trips[i].purchases for i in range(len(self))])
 
     def get_all_stores(self) -> np.ndarray:
         """Return the list of all stores in the dataset.

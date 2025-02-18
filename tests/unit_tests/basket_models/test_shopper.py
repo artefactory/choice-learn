@@ -1,4 +1,4 @@
-"""Integration tests for the utility and likelihood computation of a Shopper model."""
+"""Unit tests for the Shopper model."""
 
 import logging
 
@@ -7,7 +7,7 @@ import pytest
 from choice_learn.basket_models import Shopper
 
 
-def test_init(caplog):
+def test_init_errors_warnings(caplog):
     """Test raised errors and warnings when initializing a Shopper object with wrong parameters."""
     with caplog.at_level(logging.WARNING):
         # No "preferences" key in latent_sizes dict
@@ -31,3 +31,17 @@ def test_init(caplog):
     with pytest.raises(ValueError):
         # Unknown key in latent_sizes dict.
         Shopper(n_negative_samples=0)
+
+
+def test_optimizers(caplog):
+    """Test the different optimizers available for the Shopper model."""
+    Shopper(optimizer="amsgrad")
+    Shopper(optimizer="adamax")
+    Shopper(optimizer="rmsprop")
+    Shopper(optimizer="sgd")
+
+    with caplog.at_level(logging.WARNING):
+        Shopper(optimizer="not_implemented")
+        assert (
+            "Optimizer not_implemented not implemented, switching for default Adam" in caplog.text
+        )

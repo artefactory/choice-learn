@@ -1,4 +1,4 @@
-"""Integration tests for the utility and likelihood computation of a Shopper model."""
+"""Unit tests for the Trip and TripDataset classes."""
 
 import numpy as np
 import pytest
@@ -76,6 +76,9 @@ def test_getitem():
     assert isinstance(trip_dataset_1[0], TripDataset)
     assert isinstance(trip_dataset_1[0:2], TripDataset)
     assert isinstance(trip_dataset_1[[0, 1, 2]], TripDataset)
+    with pytest.raises(TypeError):
+        # Type of index must be int, list, np.ndarray, range or slice
+        trip_dataset_1["a"]
 
 
 def test_errors():
@@ -110,3 +113,56 @@ def test_trip_dataset_concat():
 
     trip_dataset_2.concatenate(trip_dataset_1, inplace=True)
     assert len(trip_dataset_2) == len(trip_dataset_3)
+
+
+def test_str():
+    """Test the str method."""
+    global trip_dataset_1
+
+    assert isinstance(str(trip_dataset_1), str)
+
+
+def test_get_trip():
+    """Test the get_trip method."""
+    global trip_dataset_1
+
+    assert isinstance(trip_dataset_1.get_trip(0), Trip)
+
+
+def test_get_all():
+    """Test the different get_all_... methods."""
+    global trip_dataset_1
+
+    assert isinstance(trip_dataset_1.get_all_items(), np.ndarray)
+    assert isinstance(trip_dataset_1.get_all_baskets(), np.ndarray)
+    assert isinstance(trip_dataset_1.get_all_stores(), np.ndarray)
+    assert isinstance(trip_dataset_1.get_all_weeks(), np.ndarray)
+    assert isinstance(trip_dataset_1.get_all_prices(), np.ndarray)
+
+
+def test_n():
+    """Test the n_... methods."""
+    global trip_dataset_1
+
+    assert isinstance(trip_dataset_1.n_items, int)
+    assert isinstance(trip_dataset_1.n_stores, int)
+    assert isinstance(trip_dataset_1.n_assortments, int)
+
+
+def test_get_augmented_data_from_trip_index():
+    """Test the get_augmented_data_from_trip_index method."""
+    trip_dataset = TripDataset(
+        trips=[
+            Trip(
+                purchases=[1, 2, 0],
+                store=0,
+                week=0,
+                prices=[1, 2, 3, 4],
+                # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            )
+        ],
+        available_items=np.array([[1, 1, 1, 1]]),
+    )
+
+    assert isinstance(trip_dataset.get_augmented_data_from_trip_index(0), tuple)

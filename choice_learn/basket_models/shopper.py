@@ -141,7 +141,7 @@ class Shopper:
                 momentum=momentum,
             )
         else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
+            logging.warning(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(
                 learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
             )
@@ -897,9 +897,9 @@ class Shopper:
         if n_permutations <= total_n_permutations:
             permutation_list = random.sample(permutation_list, n_permutations)
         else:
-            print(
-                "Warning: n_permutations > n! (all permutations). ",
-                "Taking all permutations instead of n_permutations",
+            logging.warning(
+                "Warning: n_permutations > n! (all permutations). \
+                Taking all permutations instead of n_permutations"
             )
 
         return (
@@ -1186,6 +1186,7 @@ class Shopper:
             Validation dataset, by default None
         verbose: int, optional
             print level, for debugging, by default 0
+            (0: no print, 1: print)
 
         Returns
         -------

@@ -1,6 +1,9 @@
-"""Integration tests for the utility and likelihood computation of a Shopper model."""
+"""Integration tests for Shopper model and TripDataset."""
+
+import logging
 
 import numpy as np
+import pytest
 
 from choice_learn.basket_models import Shopper
 from choice_learn.basket_models.dataset import Trip, TripDataset
@@ -283,6 +286,188 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
             )
             < 1e-2
         )
+
+
+def test_thinking_ahead() -> None:
+    """Test the Shopper model with thinking ahead."""
+    model = Shopper(think_ahead=True)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    batch_size = 4
+    model.compute_batch_utility(
+        item_batch=np.array([4, 5, 6, 0]),
+        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        store_batch=np.array([0] * batch_size),
+        week_batch=np.array([0] * batch_size),
+        price_batch=np.random.uniform(1, 10, batch_size),
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+    )
+
+
+def test_no_intercept() -> None:
+    """Test the Shopper model without item intercepts."""
+    model = Shopper(item_intercept=False)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    batch_size = 4
+    model.compute_batch_utility(
+        item_batch=np.array([4, 5, 6, 0]),
+        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        store_batch=np.array([0] * batch_size),
+        week_batch=np.array([0] * batch_size),
+        price_batch=np.random.uniform(1, 10, batch_size),
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+    )
+
+
+def test_compute_item_likelihood() -> None:
+    """Test the compute_item_likelihood method."""
+    model = Shopper()
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    with pytest.raises(ValueError):
+        # Trip not provided as an argument
+        # Then basket, available_items, store, week and prices must be provided
+        model.compute_item_likelihood(
+            basket=np.array([1, 2, 3]),
+            available_items=np.ones(n_items_1),
+            store=0,
+            week=0,
+        )
+
+    with pytest.raises(ValueError):
+        # Trip directly provided as an argument
+        # Then trip.assortment must be an np.ndarray
+        trip = Trip(
+            purchases=[1, 2, 3],
+            store=0,
+            week=0,
+            prices=np.random.uniform(1, 10, n_items_1),
+            assortment=0,
+        )
+        model.compute_item_likelihood(trip=trip)
+
+
+def test_compute_ordered_basket_likelihood() -> None:
+    """Test the compute_ordered_basket_likelihood method."""
+    model = Shopper()
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    with pytest.raises(ValueError):
+        # Trip not provided as an argument
+        # Then basket, available_items, store, week and prices must be provided
+        model.compute_ordered_basket_likelihood(
+            basket=np.array([1, 2, 0]),
+            available_items=np.ones(n_items_1),
+            store=0,
+            week=0,
+        )
+
+    with pytest.raises(ValueError):
+        # Trip directly provided as an argument
+        # Then trip.assortment must be an np.ndarray
+        trip = Trip(
+            purchases=[1, 2, 0],
+            store=0,
+            week=0,
+            prices=np.random.uniform(1, 10, n_items_1),
+            assortment=0,
+        )
+        model.compute_ordered_basket_likelihood(trip=trip)
+
+
+def test_compute_basket_likelihood(caplog) -> None:
+    """Test the compute_basket_likelihood method."""
+    model = Shopper()
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    with pytest.raises(ValueError):
+        # Trip not provided as an argument
+        # Then basket, available_items, store, week and prices must be provided
+        model.compute_basket_likelihood(
+            basket=np.array([1, 2, 0]),
+            available_items=np.ones(n_items_1),
+            store=0,
+            week=0,
+        )
+
+    with pytest.raises(ValueError):
+        # Trip directly provided as an argument
+        # Then trip.assortment must be an np.ndarray
+        trip = Trip(
+            purchases=[1, 2, 0],
+            store=0,
+            week=0,
+            prices=np.random.uniform(1, 10, n_items_1),
+            assortment=0,
+        )
+        model.compute_basket_likelihood(trip=trip)
+
+    # With verbose
+    model.compute_basket_likelihood(
+        basket=np.array([1, 2, 0]),
+        available_items=np.ones(n_items_1),
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        verbose=1,
+    )
+
+    # Too many permutations
+    with caplog.at_level(logging.WARNING):
+        model.compute_basket_likelihood(
+            basket=np.array([1, 2, 0]),
+            available_items=np.ones(n_items_1),
+            store=0,
+            week=0,
+            prices=np.random.uniform(1, 10, n_items_1),
+            n_permutations=3,  # > 2! = 2
+        )
+        assert "Warning: n_permutations > n! (all permutations)." in caplog.text
+
+
+def test_get_negative_samples() -> None:
+    """Test the get_negative_samples method."""
+    model = Shopper()
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    with pytest.raises(ValueError):
+        model.get_negative_samples(
+            available_items=np.ones(n_items_1),
+            purchased_items=np.array([1, 2]),
+            future_purchases=np.array([3, 0]),
+            next_item=0,
+            n_samples=n_items_1,  # Too many samples
+        )
+
+
+def test_fit() -> None:
+    """Test the fit method."""
+    model = Shopper(batch_size=-1)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+    # Test lazy instantiation + verbose + batch_size=-1
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
 
 
 def test_evaluate_load_and_save() -> None:
