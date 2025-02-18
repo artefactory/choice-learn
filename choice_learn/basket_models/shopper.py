@@ -96,7 +96,7 @@ class Shopper:
                 "No latent size value has been specified for price_effects,\
                     switching to default value, 4."
             )
-        if "seasons" not in latent_sizes.keys() and self.seasonal_effects:
+        if "season" not in latent_sizes.keys() and self.seasonal_effects:
             logging.warning(
                 "No latent size value has been specified for seasonal_effects,\
                     switching to default value, 4."
