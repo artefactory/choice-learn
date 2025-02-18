@@ -886,7 +886,7 @@ class Shopper:
         if verbose > 0:
             print(
                 f"Nb of items to be permuted = basket size - 1 = {len(basket) - 1}",
-                f"Nb of permutations = n! = {np.math.factorial(len(basket) - 1)}",
+                f"Nb of permutations = {len(basket) - 1}!",
             )
 
         # Permute all the items in the basket except the last one (the checkout item)
