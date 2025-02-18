@@ -8,7 +8,7 @@ def softmax_with_availabilities(
 ):
     """Compute softmax probabilities from utilities.
 
-    Takes into account availabilties (1 if the product is available, 0 otherwise) to set
+    Takes into account availabilities (1 if the product is available, 0 otherwise) to set
     probabilities to 0 for unavailable products and to renormalize the probabilities of
     available products.
 
@@ -17,7 +17,7 @@ def softmax_with_availabilities(
     items_logit_by_choice : np.ndarray (n_choices, n_items)
         Utilities / Logits on which to compute the softmax
     available_items_by_choice : np.ndarray (n_choices, n_items)
-        Matrix indicating the availabitily (1) or not (0) of the products
+        Matrix indicating the availability (1) or not (0) of the products
     axis : int, optional
         Axis of items_logit_by_choice on which to apply the softmax, by default -1
     normalize_exit : bool, optional
@@ -29,7 +29,7 @@ def softmax_with_availabilities(
 
     Returns
     -------
-    tf.Tensor (n_chocies, n_items)
+    tf.Tensor (n_choices, n_items)
         Probabilities of each product for each choice computed from Logits
     """
     # Substract max utility to avoid overflow
@@ -44,7 +44,7 @@ def softmax_with_availabilities(
     # Add 1 to the denominator to take into account the exit choice
     if normalize_exit:
         denominator += tf.exp(-normalizer)
-    # Avoir division by 0 when only unavailable items have highest utilities
+    # Avoid division by 0 when only unavailable items have highest utilities
     elif eps:
         denominator += eps
 
