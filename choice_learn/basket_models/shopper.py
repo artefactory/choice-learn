@@ -1331,6 +1331,7 @@ class Shopper:
         self,
         trip_dataset: TripDataset,
         n_permutations: int = 1,
+        batch_size: int = 32,
         epsilon_eval: float = 1e-6,
     ) -> tf.Tensor:
         """Evaluate the model for each trip (unordered basket) in the dataset.
@@ -1347,10 +1348,12 @@ class Shopper:
 
         Parameters
         ----------
-        trip_dataset: TripDataset‡‡
+        trip_dataset: TripDataset
             Dataset on which to apply to prediction
         n_permutations: int, optional
             Number of permutations to average over, by default 1
+        batch_size: int, optional
+            Batch size, by default 32
         epsilon_eval: float, optional
             Small value to avoid log(0) in the computation of the log-likelihood,
             by default 1e-6
@@ -1361,7 +1364,10 @@ class Shopper:
             Value of the mean loss (nll) for the dataset,
             Shape must be (1,)
         """
-        (
+        sum_loglikelihoods = 0.0
+
+        inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
+        for (
             _,
             basket_batch,
             _,
@@ -1369,34 +1375,36 @@ class Shopper:
             week_batch,
             price_batch,
             available_item_batch,
-        ) = list(  # Convert the generator to a list (of 1 element here)
-            trip_dataset.iter_batch(shuffle=True, batch_size=-1)
-        )[0]
-
-        batch_size = len(basket_batch)  # Here: batch = whole TripDataset
-
-        # Sum of the log-likelihoods of all the (unordered) baskets
-        sum_loglikelihoods = np.sum(
-            np.log(
-                [
-                    self.compute_basket_likelihood(
-                        basket=basket,
-                        available_items=available_items,
-                        store=store,
-                        week=week,
-                        prices=prices,
-                        n_permutations=n_permutations,
-                    )
-                    + epsilon_eval
-                    for basket, available_items, store, week, prices in zip(
-                        basket_batch, available_item_batch, store_batch, week_batch, price_batch
-                    )
-                ]
+        ) in inner_range:
+            # Sum of the log-likelihoods of all the (unordered) baskets in the batch
+            sum_loglikelihoods += np.sum(
+                np.log(
+                    [
+                        self.compute_basket_likelihood(
+                            basket=basket,
+                            available_items=available_items,
+                            store=store,
+                            week=week,
+                            prices=prices,
+                            n_permutations=n_permutations,
+                        )
+                        + epsilon_eval
+                        for basket, available_items, store, week, prices in zip(
+                            basket_batch, available_item_batch, store_batch, week_batch, price_batch
+                        )
+                    ]
+                )
             )
-        )
 
-        # Predicted mean negative log-likelihood
-        return -1 * sum_loglikelihoods / batch_size
+        # Obliged to recall iter_batch because a generator is exhausted once iterated over
+        # or once transformed into a list
+        n_batches = len(list(trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)))
+        # Total number of samples processed: sum of the batch sizes
+        # (last batch may have a different size if incomplete)
+        n_elements = batch_size * (n_batches - 1) + len(basket_batch)
+
+        # Predicted mean negative log-likelihood over all the batches
+        return -1 * sum_loglikelihoods / n_elements
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.
