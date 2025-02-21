@@ -217,15 +217,11 @@ class Shopper:
             # Add item intercept
             self.lambda_ = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                    shape=(n_items,)  # Dimension for 1 item: 1
+                    # No lambda for the checkout item (set to 0 later)
+                    shape=(n_items - 1,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
                 name="lambda",
-            )
-            # Manually enforce the lambda of the checkout item to be 0
-            # (equivalent to translating the lambda values)
-            self.lambda_.assign(
-                tf.tensor_scatter_nd_update(tensor=self.lambda_, indices=[[0]], updates=[0])
             )
 
         if self.price_effects:
@@ -367,7 +363,9 @@ class Shopper:
                     )
 
                     if self.item_intercept:
-                        hypothetical_item_intercept = self.lambda_
+                        # Manually enforce the lambda of the checkout item to be 0
+                        # (equivalent to translating the lambda values)
+                        hypothetical_item_intercept = tf.concat([[0.0], self.lambda_], axis=0)
                     else:
                         hypothetical_item_intercept = tf.zeros_like(hypothetical_store_preferences)
 
@@ -498,7 +496,9 @@ class Shopper:
         store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
 
         if self.item_intercept:
-            item_intercept = tf.gather(self.lambda_, indices=item_batch)
+            # Manually enforce the lambda of the checkout item to be 0
+            # (equivalent to translating the lambda values)
+            item_intercept = tf.gather(tf.concat([[0.0], self.lambda_], axis=0), indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
 
@@ -1150,21 +1150,6 @@ class Shopper:
                 available_item_batch=available_item_batch,
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
-
-        # Set the gradient of self.lambda_[0] to 0 to prevent updates
-        # so that the lambda of the checkout item remains 0
-        # (equivalent to translating the lambda values)
-        if self.item_intercept:
-            # Find the index of the lambda_ variable in the trainable weights
-            # Cannot use list.index() method on a GPU, use next() instead
-            # (ie compare object references instead of tensor values)
-            lambda_grads = grads[
-                next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)
-            ]
-            lambda_grads = tf.tensor_scatter_nd_update(lambda_grads, indices=[[0]], updates=[0])
-            grads[next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)] = (
-                lambda_grads
-            )
 
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
 

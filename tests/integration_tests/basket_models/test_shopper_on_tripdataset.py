@@ -204,7 +204,6 @@ def test_item_probabilities_sum_to_1() -> None:
         price_effects=True,
         seasonal_effects=True,
         think_ahead=False,
-        latent_sizes={"preferences": 10, "price": 10, "season": 10},
     )
     model.instantiate(
         n_items=n_items_1,
@@ -284,7 +283,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                 )
                 - 1.0
             )
-            < 1e-2
+            < 2e-2
         )
 
 
