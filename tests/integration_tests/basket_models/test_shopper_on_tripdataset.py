@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from choice_learn.basket_models import Shopper
 from choice_learn.basket_models.dataset import Trip, TripDataset
@@ -448,7 +449,7 @@ def test_get_negative_samples() -> None:
         n_stores=n_stores_1,
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(tf.errors.InvalidArgumentError):
         model.get_negative_samples(
             available_items=np.ones(n_items_1),
             purchased_items=np.array([1, 2]),
