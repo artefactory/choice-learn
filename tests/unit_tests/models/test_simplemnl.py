@@ -110,6 +110,7 @@ def test_save_load():
     nll_b = model.evaluate(test_dataset)
     model.save_model("test_save")
     loaded_model = SimpleMNL.load_model("test_save")
+    print(loaded_model.indexes)
     nll_a = loaded_model.evaluate(test_dataset)
 
     assert nll_a == nll_b

@@ -558,7 +558,7 @@ class ChoiceModel:
 
         i = 0
         weight_path = f"weight_{i}.npy"
-        while weight_path in Path.iterdir(Path(path)):
+        while weight_path in Path(path).iterdir():
             obj._trainable_weights.append(tf.Variable(np.load(Path(path) / weight_path)))
             i += 1
             weight_path = f"weight_{i}.npy"
