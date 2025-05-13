@@ -88,19 +88,22 @@ class Shopper:
 
         if "preferences" not in latent_sizes.keys():
             logging.warning(
-                "No latent size value has been specified for preferences,\
-                switching to default value, 4."
+                "No latent size value has been specified for preferences, "
+                "switching to default value 4."
             )
+            latent_sizes["preferences"] = 4
         if "price" not in latent_sizes.keys() and self.price_effects:
             logging.warning(
-                "No latent size value has been specified for price_effects,\
-                    switching to default value, 4."
+                "No latent size value has been specified for price_effects, "
+                "switching to default value 4."
             )
-        if "seasons" not in latent_sizes.keys() and self.seasonal_effects:
+            latent_sizes["price"] = 4
+        if "season" not in latent_sizes.keys() and self.seasonal_effects:
             logging.warning(
-                "No latent size value has been specified for seasonal_effects,\
-                    switching to default value, 4."
+                "No latent size value has been specified for seasonal_effects, "
+                "switching to default value 4."
             )
+            latent_sizes["season"] = 4
 
         for val in latent_sizes.keys():
             if val not in ["preferences", "price", "season"]:
@@ -217,15 +220,11 @@ class Shopper:
             # Add item intercept
             self.lambda_ = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
-                    shape=(n_items,)  # Dimension for 1 item: 1
+                    # No lambda for the checkout item (set to 0 later)
+                    shape=(n_items - 1,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
                 name="lambda",
-            )
-            # Manually enforce the lambda of the checkout item to be 0
-            # (equivalent to translating the lambda values)
-            self.lambda_.assign(
-                tf.tensor_scatter_nd_update(tensor=self.lambda_, indices=[[0]], updates=[0])
             )
 
         if self.price_effects:
@@ -289,7 +288,7 @@ class Shopper:
     def thinking_ahead(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
-        basket_batch_without_padding: list,
+        ragged_basket_batch: tf.RaggedTensor,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
         theta_store: tf.Tensor,
@@ -304,10 +303,10 @@ class Shopper:
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
-        basket_batch_without_padding: list
+        ragged_basket_batch: tf.RaggedTensor
             Batch of baskets (ID of items already in the baskets) (arrays) without padding
             for each purchased item
-            Length must be batch_size
+            Shape must be (batch_size, None)
         price_batch: np.ndarray
             Batch of prices (integers) for each purchased item
             Shape must be (batch_size,)
@@ -330,35 +329,40 @@ class Shopper:
 
         Returns
         -------
-        tf.Tensor
+        total_next_step_utilities: tf.Tensor
             Nex step utility of all the items in item_batch
             Shape must be (batch_size,)
         """
-        total_next_step_utilities = []
+        total_next_step_utilities = tf.zeros_like(item_batch, dtype=tf.float32)
         # Compute the next step item utility for each element of the batch, one by one
-        # TODO: avoid a for loop on basket_batch_without_padding at a later stage
-        for idx, basket in enumerate(basket_batch_without_padding):
-            if len(basket) and basket[-1] == 0:
+        # TODO: avoid a for loop on ragged_basket_batch at a later stage
+        for idx in tf.range(ragged_basket_batch.shape[0]):
+            basket = tf.gather(ragged_basket_batch, idx)
+            if len(basket) != 0 and basket[-1] == 0:
                 # No thinking ahead when the basket ends already with the checkout item 0
-                total_next_step_utilities.append(0)
+                total_next_step_utilities = tf.tensor_scatter_nd_update(
+                    tensor=total_next_step_utilities, indices=[[idx]], updates=[0]
+                )
 
             else:
                 # Basket with the hypothetical current item
-                next_basket = np.append(basket, item_batch[idx])
-                assortment = np.array(
-                    [
-                        item_id
-                        for item_id in range(self.n_items)
-                        if available_item_batch[idx][item_id] == 1
-                    ]
-                )
-                hypothetical_next_purchases = np.array(
-                    [item_id for item_id in assortment if item_id not in next_basket]
+                next_basket = tf.concat([basket, [item_batch[idx]]], axis=0)
+                # Get the list of available items based on the availability matrix
+                item_ids = tf.range(self.n_items)
+                available_mask = tf.equal(available_item_batch[idx], 1)
+                assortment = tf.boolean_mask(item_ids, available_mask)
+                hypothetical_next_purchases = tf.boolean_mask(
+                    assortment,
+                    ~tf.reduce_any(
+                        tf.equal(tf.expand_dims(assortment, axis=1), next_basket), axis=1
+                    ),
                 )
                 # Check if there are still items to purchase during the next step
                 if len(hypothetical_next_purchases) == 0:
                     # No more items to purchase: next step impossible
-                    total_next_step_utilities.append(0)
+                    total_next_step_utilities = tf.tensor_scatter_nd_update(
+                        tensor=total_next_step_utilities, indices=[[idx]], updates=[0]
+                    )
                 else:
                     # Compute the dot product along the last dimension between the embeddings
                     # of the given store's theta and alpha of all the items
@@ -367,7 +371,9 @@ class Shopper:
                     )
 
                     if self.item_intercept:
-                        hypothetical_item_intercept = self.lambda_
+                        # Manually enforce the lambda of the checkout item to be 0
+                        # (equivalent to translating the lambda values)
+                        hypothetical_item_intercept = tf.concat([[0.0], self.lambda_], axis=0)
                     else:
                         hypothetical_item_intercept = tf.zeros_like(hypothetical_store_preferences)
 
@@ -378,10 +384,7 @@ class Shopper:
                             # the embeddings of the given store's gamma and beta
                             # of all the items
                             * tf.reduce_sum(gamma_store[idx] * self.beta, axis=1)
-                            * tf.cast(
-                                tf.math.log(price_batch[idx] + self.epsilon_price),
-                                dtype=tf.float32,
-                            )
+                            * tf.math.log(price_batch[idx] + self.epsilon_price)
                         )
                     else:
                         hypothetical_price_effects = tf.zeros_like(hypothetical_store_preferences)
@@ -413,8 +416,11 @@ class Shopper:
                     next_psi = tf.gather(hypothetical_psi, indices=hypothetical_next_purchases)
 
                     # Consider hypothetical "next" item one by one
-                    next_step_basket_interaction_utilities = []
-                    for next_item_id in hypothetical_next_purchases:
+                    next_step_basket_interaction_utilities = tf.zeros(
+                        (len(hypothetical_next_purchases),), dtype=tf.float32
+                    )
+                    for inner_idx in tf.range(len(hypothetical_next_purchases)):
+                        next_item_id = tf.gather(hypothetical_next_purchases, inner_idx)
                         rho_next_item = tf.gather(
                             self.rho, indices=next_item_id
                         )  # Shape: (latent_size,)
@@ -423,31 +429,29 @@ class Shopper:
                         next_alpha_by_basket = tf.gather(
                             self.alpha, indices=tf.cast(next_basket, dtype=tf.int32)
                         )  # Shape: (len(next_basket), latent_size)
-                        # Compute the sum of the alpha embeddings
-                        next_alpha_sum = tf.reduce_sum(
-                            next_alpha_by_basket, axis=0
-                        )  # Shape: (latent_size,)
                         # Divide the sum of alpha embeddings by the number of items
                         # in the basket of the next step (always > 0)
-                        next_alpha_average = next_alpha_sum / len(
-                            next_basket
+                        next_alpha_average = tf.reduce_sum(next_alpha_by_basket, axis=0) / tf.cast(
+                            len(next_basket), dtype=tf.float32
                         )  # Shape: (latent_size,)
-                        next_step_basket_interaction_utilities.append(
-                            tf.reduce_sum(rho_next_item * next_alpha_average).numpy()
-                        )  # Shape: (1,)
-                    # Shape: (len(hypothetical_next_purchases),)
-                    next_step_basket_interaction_utilities = tf.constant(
-                        next_step_basket_interaction_utilities
-                    )
+                        next_step_basket_interaction_utilities = tf.tensor_scatter_nd_update(
+                            tensor=next_step_basket_interaction_utilities,
+                            indices=[[inner_idx]],
+                            # Compute the dot product along the last dimension, shape: (1,)
+                            updates=[tf.reduce_sum(rho_next_item * next_alpha_average)],
+                        )
 
                     # Optimal next step: take the maximum utility among all possible next purchases
                     next_step_utility = tf.reduce_max(
                         next_psi + next_step_basket_interaction_utilities, axis=0
-                    ).numpy()  # Shape: (1,)
+                    )  # Shape: (1,)
+                    total_next_step_utilities = tf.tensor_scatter_nd_update(
+                        tensor=total_next_step_utilities,
+                        indices=[[idx]],
+                        updates=[next_step_utility],
+                    )
 
-                    total_next_step_utilities.append(next_step_utility)
-
-        return tf.constant(total_next_step_utilities)  # Shape: (batch_size,)
+        return total_next_step_utilities  # Shape: (batch_size,)
 
     def compute_batch_utility(
         self,
@@ -489,8 +493,12 @@ class Shopper:
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
-        # Ensure that item ids are integers
         item_batch = tf.cast(item_batch, dtype=tf.int32)
+        basket_batch = tf.cast(basket_batch, dtype=tf.int32)
+        store_batch = tf.cast(store_batch, dtype=tf.int32)
+        week_batch = tf.cast(week_batch, dtype=tf.int32)
+        price_batch = tf.cast(price_batch, dtype=tf.float32)
+        available_item_batch = tf.cast(available_item_batch, dtype=tf.int32)
 
         theta_store = tf.gather(self.theta, indices=store_batch)
         alpha_item = tf.gather(self.alpha, indices=item_batch)
@@ -498,7 +506,9 @@ class Shopper:
         store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
 
         if self.item_intercept:
-            item_intercept = tf.gather(self.lambda_, indices=item_batch)
+            # Manually enforce the lambda of the checkout item to be 0
+            # (equivalent to translating the lambda values)
+            item_intercept = tf.gather(tf.concat([[0.0], self.lambda_], axis=0), indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
 
@@ -510,10 +520,7 @@ class Shopper:
                 -1
                 # Compute the dot product along the last dimension
                 * tf.reduce_sum(gamma_store * beta_item, axis=1)
-                * tf.cast(
-                    tf.math.log(np.array(price_batch) + self.epsilon_price),
-                    dtype=tf.float32,
-                )
+                * tf.math.log(price_batch + self.epsilon_price)
             )
         else:
             gamma_store = tf.zeros_like(store_batch)
@@ -542,34 +549,29 @@ class Shopper:
 
         # Apply boolean mask to mask out the padding value -1
         masked_baskets = tf.where(
-            condition=tf.constant(basket_batch) > -1,  # If False: padding value -1
+            condition=basket_batch > -1,  # If False: padding value -1
             x=1,  # Output where condition is True
             y=0,  # Output where condition is False
         )
         # Number of items in each basket
         count_items_in_basket = tf.reduce_sum(masked_baskets, axis=1)
 
-        # Create a RaggedTensor from the indices
-        basket_batch_without_padding = [basket[basket != -1] for basket in basket_batch]
-        item_indices_ragged = tf.ragged.constant(basket_batch_without_padding)
+        # Create a RaggedTensor from the indices with padding removed
+        item_indices_ragged = tf.cast(
+            tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
+            dtype=tf.int32,
+        )
 
         if tf.size(item_indices_ragged) == 0:
             # Empty baskets: no alpha embeddings to gather
-            alpha_by_basket = tf.zeros((len(item_batch), 0, self.alpha.shape[1]))
+            # (It must be a ragged tensor here because TF's GraphMode requires the same
+            # nested structure to be returned from all branches of a conditional)
+            alpha_by_basket = tf.RaggedTensor.from_tensor(
+                tf.zeros((len(item_batch), 0, self.alpha.shape[1]))
+            )
         else:
-            # Using GPU: gather the embeddings using a tensor of indices
-            if self.on_gpu:
-                # When using GPU, tf.nn.embedding_lookup returns 0 for ids out of bounds
-                # (negative indices or indices >= len(params))
-                # Cf https://github.com/tensorflow/tensorflow/issues/59724
-                # https://github.com/tensorflow/tensorflow/issues/62628
-                alpha_by_basket = tf.nn.embedding_lookup(params=self.alpha, ids=basket_batch)
-
-            # Using CPU: gather the embeddings using a RaggedTensor of indices
-            else:
-                alpha_by_basket = tf.ragged.map_flat_values(
-                    tf.gather, self.alpha, item_indices_ragged
-                )
+            # Gather the embeddings using a ragged tensor of indices
+            alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
 
         # Compute the sum of the alpha embeddings for each basket
         alpha_sum = tf.reduce_sum(alpha_by_basket, axis=1)
@@ -601,7 +603,7 @@ class Shopper:
         # Thinking ahead
         next_step_utilities = self.thinking_ahead(
             item_batch=item_batch,
-            basket_batch_without_padding=basket_batch_without_padding,
+            ragged_basket_batch=item_indices_ragged,
             price_batch=price_batch,
             available_item_batch=available_item_batch,
             theta_store=theta_store,
@@ -803,6 +805,7 @@ class Shopper:
 
         return ordered_basket_likelihood
 
+    # @tf.function  # TODO: make it work with tf.function
     def compute_basket_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -951,32 +954,53 @@ class Shopper:
             Random sample of items, each of them distinct from
             the next item and from the items already in the basket
         """
-        # Get the list of available items based on the availability matrix
-        assortment = [item_id for item_id in range(self.n_items) if available_items[item_id] == 1]
+        # Convert inputs to tensors
+        available_items = tf.cast(tf.convert_to_tensor(available_items), dtype=tf.int32)
+        purchased_items = tf.cast(tf.convert_to_tensor(purchased_items), dtype=tf.int32)
+        future_purchases = tf.cast(tf.convert_to_tensor(future_purchases), dtype=tf.int32)
+        next_item = tf.cast(tf.convert_to_tensor(next_item), dtype=tf.int32)
 
-        not_to_be_chosen = np.unique(
-            np.concatenate([purchased_items, future_purchases, [next_item]])
+        # Get the list of available items based on the availability matrix
+        item_ids = tf.range(self.n_items)
+        available_mask = tf.equal(available_items, 1)
+        assortment = tf.boolean_mask(item_ids, available_mask)
+
+        not_to_be_chosen = tf.concat(
+            [purchased_items, future_purchases, tf.expand_dims(next_item, axis=0)], axis=0
         )
 
         # Ensure that the checkout item 0 can be picked as a negative sample
         # if it is not the next item
         # (otherwise 0 is always in not_to_be_chosen because it's in future_purchases)
-        if next_item:
-            not_to_be_chosen = np.setdiff1d(not_to_be_chosen, [0])
+        if not tf.equal(next_item, 0):
+            not_to_be_chosen = tf.boolean_mask(not_to_be_chosen, not_to_be_chosen != 0)
 
-        # Items that can be picked as negative samples
-        possible_items = np.setdiff1d(assortment, not_to_be_chosen)
+        # Sample negative items from the assortment excluding not_to_be_chosen
+        negative_samples = tf.boolean_mask(
+            tensor=assortment,
+            # Reduce the 2nd dimension of the boolean mask to get a 1D mask
+            mask=~tf.reduce_any(
+                tf.equal(tf.expand_dims(assortment, axis=1), not_to_be_chosen), axis=1
+            ),
+        )
 
-        # Ensure that the while loop will not run indefinitely
-        if n_samples > len(possible_items):
-            raise ValueError(
-                "The number of samples to draw must be less than the "
-                "number of available items not already purchased and "
-                "distinct from the next item."
-            )
+        error_message = (
+            "The number of negative samples to draw must be less than "
+            "the number of available items not already purchased and "
+            "distinct from the next item."
+        )
+        # Raise an error if n_samples > tf.size(negative_samples)
+        tf.debugging.assert_greater_equal(
+            tf.size(negative_samples), n_samples, message=error_message
+        )
 
-        return random.sample(list(possible_items), n_samples)
+        # Randomize the sampling
+        negative_samples = tf.random.shuffle(negative_samples)
 
+        # Keep only n_samples
+        return negative_samples[:n_samples]
+
+    @tf.function  # Graph mode
     def compute_batch_loss(
         self,
         item_batch: np.ndarray,
@@ -1026,52 +1050,63 @@ class Shopper:
             Shape must be (1,)
         """
         batch_size = len(item_batch)
+        item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
-        negative_samples = (
-            np.concatenate(
-                [
-                    self.get_negative_samples(
-                        available_items=available_item_batch[idx],
-                        purchased_items=basket_batch[idx],
-                        future_purchases=future_batch[idx],
-                        next_item=item_batch[idx],
-                        n_samples=self.n_negative_samples,
-                    )
-                    for idx in range(batch_size)
-                ],
-                axis=0,
-                # Reshape to have at the beginning of the array all the first negative samples
-                # of all positive samples, then all the second negative samples, etc.
-                # (same logic as for the calls to np.tile)
-            )
-            .reshape(batch_size, self.n_negative_samples)
-            .T.flatten()
+        negative_samples = tf.reshape(
+            tf.transpose(
+                tf.reshape(
+                    tf.concat(
+                        [
+                            self.get_negative_samples(
+                                available_items=available_item_batch[idx],
+                                purchased_items=basket_batch[idx],
+                                future_purchases=future_batch[idx],
+                                next_item=item_batch[idx],
+                                n_samples=self.n_negative_samples,
+                            )
+                            for idx in range(batch_size)
+                        ],
+                        axis=0,
+                    ),
+                    # Reshape to have at the beginning of the array all the first negative samples
+                    # of all positive samples, then all the second negative samples, etc.
+                    # (same logic as for the calls to np.tile)
+                    [batch_size, self.n_negative_samples],
+                ),
+            ),
+            # Flatten 2D --> 1D
+            shape=[-1],
         )
 
-        augmented_item_batch = np.concatenate((item_batch, negative_samples)).astype(int)
-        prices_tiled = np.tile(price_batch, (self.n_negative_samples + 1, 1))
+        augmented_item_batch = tf.cast(
+            tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
+        )
+        prices_tiled = tf.tile(price_batch, [self.n_negative_samples + 1, 1])
         # Each time, pick only the price of the item in augmented_item_batch from the
         # corresponding price array
-        augmented_price_batch = np.array(
-            [
-                prices_tiled[idx][augmented_item_batch[idx]]
-                for idx in range(len(augmented_item_batch))
-            ]
+        augmented_price_batch = tf.gather(
+            params=prices_tiled,
+            indices=augmented_item_batch,
+            # batch_dims=1 is equivalent to having an outer loop over
+            # the first axis of params and indices
+            batch_dims=1,
         )
 
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
-            basket_batch=np.tile(basket_batch, (self.n_negative_samples + 1, 1)),
-            store_batch=np.tile(store_batch, self.n_negative_samples + 1),
-            week_batch=np.tile(week_batch, self.n_negative_samples + 1),
+            basket_batch=tf.tile(basket_batch, [self.n_negative_samples + 1, 1]),
+            store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
+            week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,
-            available_item_batch=np.tile(available_item_batch, (self.n_negative_samples + 1, 1)),
+            available_item_batch=tf.tile(available_item_batch, [self.n_negative_samples + 1, 1]),
         )
 
-        positive_samples_utilities = all_utilities[:batch_size]
-        negative_samples_utilities = all_utilities[batch_size:]
+        positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
+        negative_samples_utilities = tf.gather(
+            all_utilities, tf.range(batch_size, tf.shape(all_utilities)[0])
+        )
 
         # Log-likelihood of a batch = sum of log-likelihoods of its samples
         # Add a small epsilon to gain numerical stability (avoid log(0))
@@ -1095,7 +1130,7 @@ class Shopper:
 
         return batch_loss, loglikelihood
 
-    # @tf.function # TODO: not working for now
+    @tf.function  # Graph mode
     def train_step(
         self,
         item_batch: np.ndarray,
@@ -1150,21 +1185,6 @@ class Shopper:
                 available_item_batch=available_item_batch,
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
-
-        # Set the gradient of self.lambda_[0] to 0 to prevent updates
-        # so that the lambda of the checkout item remains 0
-        # (equivalent to translating the lambda values)
-        if self.item_intercept:
-            # Find the index of the lambda_ variable in the trainable weights
-            # Cannot use list.index() method on a GPU, use next() instead
-            # (ie compare object references instead of tensor values)
-            lambda_grads = grads[
-                next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)
-            ]
-            lambda_grads = tf.tensor_scatter_nd_update(lambda_grads, indices=[[0]], updates=[0])
-            grads[next(i for i, v in enumerate(self.trainable_weights) if v is self.lambda_)] = (
-                lambda_grads
-            )
 
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
 
@@ -1331,6 +1351,7 @@ class Shopper:
         self,
         trip_dataset: TripDataset,
         n_permutations: int = 1,
+        batch_size: int = 32,
         epsilon_eval: float = 1e-6,
     ) -> tf.Tensor:
         """Evaluate the model for each trip (unordered basket) in the dataset.
@@ -1347,10 +1368,12 @@ class Shopper:
 
         Parameters
         ----------
-        trip_dataset: TripDataset‡‡
+        trip_dataset: TripDataset
             Dataset on which to apply to prediction
         n_permutations: int, optional
             Number of permutations to average over, by default 1
+        batch_size: int, optional
+            Batch size, by default 32
         epsilon_eval: float, optional
             Small value to avoid log(0) in the computation of the log-likelihood,
             by default 1e-6
@@ -1361,7 +1384,10 @@ class Shopper:
             Value of the mean loss (nll) for the dataset,
             Shape must be (1,)
         """
-        (
+        sum_loglikelihoods = 0.0
+
+        inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
+        for (
             _,
             basket_batch,
             _,
@@ -1369,34 +1395,36 @@ class Shopper:
             week_batch,
             price_batch,
             available_item_batch,
-        ) = list(  # Convert the generator to a list (of 1 element here)
-            trip_dataset.iter_batch(shuffle=True, batch_size=-1)
-        )[0]
-
-        batch_size = len(basket_batch)  # Here: batch = whole TripDataset
-
-        # Sum of the log-likelihoods of all the (unordered) baskets
-        sum_loglikelihoods = np.sum(
-            np.log(
-                [
-                    self.compute_basket_likelihood(
-                        basket=basket,
-                        available_items=available_items,
-                        store=store,
-                        week=week,
-                        prices=prices,
-                        n_permutations=n_permutations,
-                    )
-                    + epsilon_eval
-                    for basket, available_items, store, week, prices in zip(
-                        basket_batch, available_item_batch, store_batch, week_batch, price_batch
-                    )
-                ]
+        ) in inner_range:
+            # Sum of the log-likelihoods of all the (unordered) baskets in the batch
+            sum_loglikelihoods += np.sum(
+                np.log(
+                    [
+                        self.compute_basket_likelihood(
+                            basket=basket,
+                            available_items=available_items,
+                            store=store,
+                            week=week,
+                            prices=prices,
+                            n_permutations=n_permutations,
+                        )
+                        + epsilon_eval
+                        for basket, available_items, store, week, prices in zip(
+                            basket_batch, available_item_batch, store_batch, week_batch, price_batch
+                        )
+                    ]
+                )
             )
-        )
 
-        # Predicted mean negative log-likelihood
-        return -1 * sum_loglikelihoods / batch_size
+        # Obliged to recall iter_batch because a generator is exhausted once iterated over
+        # or once transformed into a list
+        n_batches = len(list(trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)))
+        # Total number of samples processed: sum of the batch sizes
+        # (last batch may have a different size if incomplete)
+        n_elements = batch_size * (n_batches - 1) + len(basket_batch)
+
+        # Predicted mean negative log-likelihood over all the batches
+        return -1 * sum_loglikelihoods / n_elements
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.
