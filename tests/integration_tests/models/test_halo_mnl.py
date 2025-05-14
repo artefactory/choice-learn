@@ -31,6 +31,6 @@ def test_halo():
 
 def test_low_rank():
     """Very basic test to check that the model runs."""
-    model = LowRankHaloMNL(halo_latent_dim=2, intercept=None)
+    model = LowRankHaloMNL(halo_latent_dim=2, intercept=None, optimizer="lbfgs")
     _ = model.fit(dataset, verbose=0, get_report=True)
     assert True
