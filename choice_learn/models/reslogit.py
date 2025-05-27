@@ -267,8 +267,8 @@ class ResLogit(ChoiceModel):
             indexes["intercept"] = len(mnl_weights) - 1
 
         # Create the residual layer
-        input = tf.keras.layers.Input(shape=(n_items,))
-        output = input
+        resnet_input = tf.keras.layers.Input(shape=(n_items,))
+        resnet_output = tf.keras.layers.Identity()(resnet_input)
 
         if self.res_layers_width is None:
             # Common width by default for all the residual layers: n_items
@@ -300,10 +300,10 @@ class ResLogit(ChoiceModel):
 
         # Build the residual layers
         for layer in layers:
-            output = layer(output)
+            resnet_output = layer(resnet_output)
 
         resnet_model = tf.keras.Model(
-            inputs=input, outputs=output, name=f"resnet_with_{self.n_layers}_layers"
+            inputs=resnet_input, outputs=resnet_output, name=f"resnet_with_{self.n_layers}_layers"
         )
 
         self.instantiated = True
