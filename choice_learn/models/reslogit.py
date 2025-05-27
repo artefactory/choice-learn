@@ -268,7 +268,6 @@ class ResLogit(ChoiceModel):
 
         # Create the residual layer
         resnet_input = tf.keras.layers.Input(shape=(n_items,))
-        resnet_output = resnet_input
 
         if self.res_layers_width is None:
             # Common width by default for all the residual layers: n_items
@@ -300,8 +299,11 @@ class ResLogit(ChoiceModel):
                     )
 
         # Build the residual layers
-        for layer in layers:
-            resnet_output = layer(resnet_output)
+        for i, layer in enumerate(layers):
+            if i == 0:
+                resnet_output = layer(resnet_input)
+            else:
+                resnet_output = layer(resnet_output)
 
         resnet_model = tf.keras.Model(
             inputs=resnet_input, outputs=resnet_output, name=f"resnet_with_{self.n_layers}_layers"
