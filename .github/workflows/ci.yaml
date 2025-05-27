@@ -31,7 +31,7 @@ jobs:
           cat pytest-coverage.txt
 
       - name: Pytest coverage comment
-        uses: VincentAuriau/pytest-coverage-comment@test-build
+        uses: VincentAuriau/pytest-coverage-comment@main
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
