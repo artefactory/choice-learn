@@ -287,6 +287,7 @@ class ResLogit(ChoiceModel):
             # Initialize the residual layers
             if self.n_layers == 0:
                 layers = []
+                output = tf.identity(input, name="output_layer")
             else:
                 # The first layer has the same width as the input
                 layers = [ResLayer(activation=self.activation)]
