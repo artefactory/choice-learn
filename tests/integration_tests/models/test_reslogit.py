@@ -210,11 +210,9 @@ def test_reslogit_different_n_layers():
     global dataset
 
     for n_layers in [0, 1, 3]:
-        print(n_layers)
         model = ResLogit(
             n_layers=n_layers, lr=lr, epochs=epochs, optimizer="Adam", batch_size=batch_size
         )
-        print(model)
         # The model can fit
         model.instantiate(n_items, n_shared_features, n_items_features)
         eval_before = model.evaluate(dataset, mode="optim")

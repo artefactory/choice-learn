@@ -299,11 +299,8 @@ class ResLogit(ChoiceModel):
                     )
 
         # Build the residual layers
-        for i, layer in enumerate(layers):
-            if i == 0:
-                resnet_output = layer(resnet_input)
-            else:
-                resnet_output = layer(resnet_output)
+        for layer in layers:
+            resnet_output = layer(resnet_output)
 
         resnet_model = tf.keras.Model(
             inputs=resnet_input, outputs=resnet_output, name=f"resnet_with_{self.n_layers}_layers"
