@@ -88,7 +88,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 | Basket Model | Example | Colab | Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
-| SHOPPER| [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Shopper | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Alea Carta | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)]() | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#]() |
 
 
 ### Auxiliary tools
@@ -233,7 +234,7 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 ## :trident: Citation
 
-If you consider this package and any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899).
+If you consider this package or any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899):
 
 <a href="https://joss.theoj.org/papers/10.21105/joss.06899">
 <img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
@@ -253,6 +254,25 @@ If you consider this package and any of its feature useful for your research, co
   journal = {Journal of Open Source Software} }
 ```
 
+If you make use of the *AleaCarta* model [[17]](#trident-references), consider citing the corresponding [paper]():
+
+<a href="https://joss.theoj.org/papers/10.21105/joss.06899">
+<img align="left" width="100"src="https://d1u5q3vcv714vh.cloudfront.net/eyJidWNrZXQiOiJlY21scGtkZC1zdG9yYWdlIiwia2V5IjoiRUNNTF8xX2UwMTIwMDhkNDEucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2MSwiaGVpZ2h0Ijo2MSwiZml0IjoiY29udGFpbiIsImJhY2tncm91bmQiOiJ3aGl0ZSJ9fX0=" />
+</a>
+
+```bash
+@article{
+  doi = {},
+  url = {},
+  year = {},
+  publisher = {},
+  volume = {},
+  number = {},
+  pages = {},
+  author = {},
+  title = {},
+  journal = {} }
+```
 ### License
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
