@@ -9,10 +9,10 @@
 </p>
 
 
-<div class="center-table" markdown>
+<div class="choice-learn-table-container" markdown>
 
 | | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) | |
-|-|-|-|-|
+|---|---|---|---|
 | | [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://joss.theoj.org/papers/10.21105/joss.06899) | You can also read our [academic paper](https://joss.theoj.org/papers/10.21105/joss.06899) ! | |
 </div>
 
