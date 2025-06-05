@@ -27,6 +27,7 @@ theme:
   favicon: logo_choice_learn.png
 
 markdown_extensions:
+  - tables
   - attr_list
   - pymdownx.highlight:
       anchor_linenums: true
@@ -36,6 +37,10 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - mdx_math
+  - md_in_html
+
+extra_css:
+  - docs/.overrides/assets/stylesheets/extra.css
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
@@ -46,7 +51,6 @@ plugins:
       python:
         options:
           docstring_style: numpy
-        rendering:
           show_source: true
 - search
 - nbconvert:

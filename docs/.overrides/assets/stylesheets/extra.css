@@ -1,3 +1,12 @@
 .md-typeset figure img {
     display: inline;
 }
+
+center-table {
+    text-align: center;
+}
+
+.md-typeset .center-table :is(td,th):not([align]) {
+    /* Reset alignment for table cells */
+    text-align: initial;
+}
