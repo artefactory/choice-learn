@@ -2,5 +2,5 @@ numpy>=1.24
 pandas>=1.5
 tensorflow>=2.18, <2.19
 tensorflow_probability>=0.22
-tf_keras<3
+tf_keras>=2.18, <2.19
 tqdm>=4.0

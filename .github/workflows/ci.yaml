@@ -24,15 +24,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-developer.txt
+          pip list
 
       - name: Build coverage file
         run: |
-          set -e
-          echo before: $?
-          python -m pytest tests/
-          echo exit_code btw: $?
           pytest -n auto --junitxml=pytest.xml --cov-report=term-missing --cov=choice_learn tests/ | tee pytest-coverage.txt
-          echo exit_code: $?
           cat pytest-coverage.txt
 
       - name: Pytest coverage comment
