@@ -97,6 +97,7 @@ def test_modecanada_loader_2():
     canada = load_modecanada(preprocessing="tutorial", add_items_one_hot=True)
     assert isinstance(canada, ChoiceDataset)
 
+
 def test_electricity_loader():
     """Test loading the Electricity dataset."""
     electricity = load_electricity(as_frame=True)
@@ -395,6 +396,7 @@ def test_description():
     _ = load_hc(return_desc=True)
     _ = load_londonpassenger(return_desc=True)
     _ = load_tafeng(return_desc=True)
+
 
 def test_load_csv():
     """Test csv file loader."""
