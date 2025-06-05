@@ -257,7 +257,7 @@ If you consider this package or any of its feature useful for your research, con
 If you make use of the *AleaCarta* model [[17]](#trident-references), consider citing the corresponding [paper]():
 
 <a href="https://joss.theoj.org/papers/10.21105/joss.06899">
-<img align="left" width="100"src="https://d1u5q3vcv714vh.cloudfront.net/eyJidWNrZXQiOiJlY21scGtkZC1zdG9yYWdlIiwia2V5IjoiRUNNTF8xX2UwMTIwMDhkNDEucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2MSwiaGVpZ2h0Ijo2MSwiZml0IjoiY29udGFpbiIsImJhY2tncm91bmQiOiJ3aGl0ZSJ9fX0=" />
+<img align="left" width="100"src="https://ecmlpkdd-storage.s3.eu-central-1.amazonaws.com/ECML_1_e012008d41.png" />
 </a>
 
 ```bash
