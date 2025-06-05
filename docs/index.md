@@ -1,22 +1,20 @@
 # Welcome to the Choice-Learn documentation!
 
-<center>
-<img src="illustrations/logos/logo_choice_learn.png" width="300">
-</center>
+<p align="center">
+    <img src="illustrations/logos/logo_choice_learn.png" width="300">
+</p>
 
-<center>
+<p align="center">
+    <i> Large-scale choice modeling through the lens of machine learning </i>
+</p>
 
-*Large-scale choice modeling through the lens of machine learning*
 
-</center>
+<div class="choice-learn-table-container" markdown>
 
-<center>
-
-| [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) |
-|-|-|
-| [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://joss.theoj.org/papers/10.21105/joss.06899) | You can also read our [academic paper](https://joss.theoj.org/papers/10.21105/joss.06899) ! |
-
-</center>
+| | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) | |
+|---|---|---|---|
+| | [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://joss.theoj.org/papers/10.21105/joss.06899) | You can also read our [academic paper](https://joss.theoj.org/papers/10.21105/joss.06899) ! | |
+</div>
 
 <br>
 
@@ -145,19 +143,24 @@ The use of this software is under the MIT license, with no limitation of usage, 
 
 Choice-Learn has been developed through a collaboration between researchers at the Artefact Research Center and the laboratory MICS from CentraleSupélec, Université Paris Saclay.
 
-<center>
-[![ARC](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png){: style="height:60px"}](https://www.artefact.com/data-consulting-transformation/artefact-research-center/)
-&nbsp;&nbsp;&nbsp;&nbsp;
-[![FNG](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png){: style="height:65px"}](https://www.artefact.com/)
+<p align="center">
+   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" width="230">
 
-[![PS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png){: style="height:60px"}](https://www.universite-paris-saclay.fr/)
-&nbsp;&nbsp;&nbsp;&nbsp;
-[![CS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png){: style="height:65px"}](https://mics.centralesupelec.fr/)
-&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;
-[![LBS](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg){: style="height:60px"}](https://www.london.edu/)
-&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;
-[![INSEAD](https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png){: style="height:65px"}](https://www.insead.edu/)
+   <a href="https://www.artefact.com/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_atf.png" width="200">
+</p>
 
-</center>
+<p align="center">
+   <a href="https://www.universite-paris-saclay.fr/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_paris_saclay.png" width="150">
+
+   <a href="https://mics.centralesupelec.fr/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_CS.png" width="130">
+
+   <a href="https://www.london.edu/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_lbs.jpeg" width="70">
+
+   <a href="https://www.insead.edu/">
+    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" width="150">
+</p>
