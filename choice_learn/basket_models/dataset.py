@@ -304,7 +304,91 @@ class TripDataset:
         """
         return self.available_items.shape[0]
 
-    def get_augmented_data_from_trip_index(
+    def get_one_vs_all_augmented_data_from_trip_index(
+        self,
+        trip_index: int,
+    ) -> tuple[np.ndarray]:
+        """Get augmented data from a trip index.
+
+        Augmented data includes all the transactions obtained sequentially from the trip:
+            - permuted items,
+            - permuted and padded baskets with an item removed,
+            - stores,
+            - weeks,
+            - prices,
+            - available items.
+
+        Parameters
+        ----------
+        trip_index: int
+            Index of the trip from which to get the data
+
+        Returns
+        -------
+        tuple[np.ndarray]
+            For each sample (ie transaction) from the trip:
+            item, basket, store, week, prices, available items
+            Length must be 6
+        """
+        # Get the trip from the index
+        trip = self.trips[trip_index]
+        length_trip = len(trip.purchases)
+
+        # Draw a random permutation of the items in the basket
+        # TODO at a later stage: improve by sampling several permutations here
+        # permutation_list = list(permutations(range(length_trip)))
+        # permutation = random.sample(permutation_list, 1)[0]
+
+        # Permute the basket
+        # permuted_purchases = np.array([trip.purchases[j] for j in permutation])
+        permuted_purchases = np.array(trip.purchases)
+
+        # Create new baskets with one item removed for each position in the basket
+        # (len(basket) new baskets created)
+        # And pad the truncated baskets with -1 to have the same length (because we need
+        # numpy arrays for tiling and numpy arrays must have the same length)
+        padded_purchases_lacking_one_item = np.array(
+            [
+                np.concatenate(
+                    (
+                        permuted_purchases[:i],
+                        # Pad the removed item with -1
+                        [-1],
+                        permuted_purchases[i + 1 :],
+                        # Pad to have the same length
+                        -1 * np.ones(self.max_length - length_trip),
+                    )
+                )
+                for i in range(0, length_trip)
+            ],
+            dtype=int,
+        )
+
+        if not (isinstance(trip.assortment, np.ndarray) or isinstance(trip.assortment, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            assortment = self.available_items[trip.assortment]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            assortment = trip.assortment
+
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            prices = trip.prices
+
+        # Each item is linked to a basket, a store, a week, prices and an assortment
+        return (
+            permuted_purchases,  # Items
+            padded_purchases_lacking_one_item,  # Baskets
+            np.full(length_trip, trip.store),  # Stores
+            np.full(length_trip, trip.week),  # Weeks
+            np.tile(prices, (length_trip, 1)),  # Prices
+            np.tile(assortment, (length_trip, 1)),  # Available items
+        )
+
+    def get_subbaskets_augmented_data_from_trip_index(
         self,
         trip_index: int,
     ) -> tuple[np.ndarray]:
@@ -395,6 +479,7 @@ class TripDataset:
         self,
         batch_size: int,
         shuffle: bool = False,
+        data_method: str = "shopper",
     ) -> object:
         """Iterate over a TripDataset to return batches of items of length batch_size.
 
@@ -435,7 +520,16 @@ class TripDataset:
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
-                additional_trip_data = self.get_augmented_data_from_trip_index(trip_index)
+                if data_method == "shopper":
+                    additional_trip_data = self.get_subbaskets_augmented_data_from_trip_index(
+                        trip_index
+                    )
+                elif data_method == "aleacarta":
+                    additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
+                        trip_index
+                    )
+                else:
+                    raise ValueError(f"Unknown data method: {data_method}")
                 buffer = tuple(
                     np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
                 )
@@ -461,9 +555,16 @@ class TripDataset:
 
                     else:
                         # Consider a new trip to fill the buffer
-                        additional_trip_data = self.get_augmented_data_from_trip_index(
-                            trip_indexes[index]
-                        )
+                        if data_method == "shopper":
+                            additional_trip_data = (
+                                self.get_subbaskets_augmented_data_from_trip_index(trip_index)
+                            )
+                        elif data_method == "aleacarta":
+                            additional_trip_data = (
+                                self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
+                            )
+                        else:
+                            raise ValueError(f"Unknown data method: {data_method}")
                         index += 1
 
                         # Fill the buffer with the new trip
