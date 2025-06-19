@@ -17,8 +17,8 @@ from .utils.combination import get_combinations_variable_size
 from .utils.softmax_with_av import softmax_with_availabilities
 
 
-class Shopper:
-    """Class for the Shopper model."""
+class AleaCart:
+    """Class for the AleaCarta model."""
 
     def __init__(
         self,
