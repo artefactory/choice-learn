@@ -992,18 +992,22 @@ class AleaCarta:
                     trip_dataset.iter_batch(
                         shuffle=True,
                         batch_size=batch_size,
+                        data_method="aleacarta",
                     ),
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=0,
                     leave=False,
                 )
             else:
-                inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
+                inner_range = trip_dataset.iter_batch(
+                    shuffle=True, batch_size=batch_size, data_method="aleacarta"
+                )
 
             # print("start iter batch")
             for batch_nb, (
                 item_batch,
                 basket_batch,
+                _,
                 store_batch,
                 week_batch,
                 price_batch,

@@ -382,6 +382,7 @@ class TripDataset:
         return (
             permuted_purchases,  # Items
             padded_purchases_lacking_one_item,  # Baskets
+            np.empty((0, self.max_length), dtype=int),  # Future purchases
             np.full(length_trip, trip.store),  # Stores
             np.full(length_trip, trip.week),  # Weeks
             np.tile(prices, (length_trip, 1)),  # Prices
@@ -557,11 +558,11 @@ class TripDataset:
                         # Consider a new trip to fill the buffer
                         if data_method == "shopper":
                             additional_trip_data = (
-                                self.get_subbaskets_augmented_data_from_trip_index(trip_index)
+                                self.get_subbaskets_augmented_data_from_trip_index(index)
                             )
                         elif data_method == "aleacarta":
                             additional_trip_data = (
-                                self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
+                                self.get_one_vs_all_augmented_data_from_trip_index(index)
                             )
                         else:
                             raise ValueError(f"Unknown data method: {data_method}")
