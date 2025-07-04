@@ -111,6 +111,9 @@ You can find the following tutorials to help you getting started with the packag
 ### User installation
 
 To install the required packages in a virtual environment, run the following command:
+```bash
+make install
+```
 
 The easiest is to pip-install the package:
 ```bash
