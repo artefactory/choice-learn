@@ -1065,6 +1065,7 @@ class AleaCarta:
                 for batch_nb, (
                     item_batch,
                     basket_batch,
+                    _,
                     store_batch,
                     week_batch,
                     price_batch,
@@ -1143,6 +1144,7 @@ class AleaCarta:
         for (
             _,
             basket_batch,
+            _,
             store_batch,
             week_batch,
             price_batch,
