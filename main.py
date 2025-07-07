@@ -1,5 +1,5 @@
-from model import BaseModel
-from data import SyntheticDataGenerator
+from python.model import BaseModel
+from python.data import SyntheticDataGenerator
 
 dataset_genrator = SyntheticDataGenerator()
 dataset = dataset_genrator.generate_synthetic_dataset(n_baskets=100)
