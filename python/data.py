@@ -114,7 +114,7 @@ class SyntheticDataGenerator:
             n_baskets = self.n_baskets
 
         baskets = []
-        for _ in range(self.n_baskets):
+        for _ in range(n_baskets):
             baskets.append(self.generate_basket())
         return baskets
 
