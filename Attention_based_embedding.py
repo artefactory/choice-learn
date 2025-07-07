@@ -6,108 +6,44 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import trange
 
-
-class BaseModel:
-    def __init__(self,
-                 n_items             : int = 8, 
-                 embedding_dim       : int =  4, 
-                 k_noise             : int =  8,
-                 lr                  : float = 0.01,
-                 epochs              : int = 30,
+class DataGenerator:
+    def __init__(self, 
+                 n_items : int = 8, 
+                 min_items_basket : int = 2,
+                 n_baskets_training : int = 400,
+                 n_baskets_testing : int = 1000,
                  batch_size          : int = 20,
-                 optimizer_name      : str = 'adam',
-                 loss_type           : str = "bad",
-                 min_items_basket    : int = 2,
-                 n_baskets_training  : int = 400,
-                 n_baskets_testing   : int = 1000,
                  proba_complementary_items : float = 0.7,
                  proba_neutral_items : float = 0.3,
-                 noise_proba         : float = 0.15,
-                 dict_items          : dict = None,
-                 assortment          :  set = None,
-                 Q                   : int =None
-                 ) -> None:
+                 noise_proba : float = 0.15,
+                 dict_items : dict = None) -> None:
         
 
-        self.n_items       : int = n_items
-        self.embedding_dim : int = embedding_dim
-        self.K_noise       : int = k_noise
-        self.lr            : int = lr
-        self.epochs        : int = epochs
+        self.n_items = n_items
+    
+        self.min_items_basket = min_items_basket
+        self.n_baskets_training = n_baskets_training
+        self.n_baskets_testing = n_baskets_testing
         self.batch_size    : int = batch_size
 
-        self.optimizer_name : str = optimizer_name
 
-        if self.optimizer_name == 'adam':
-            self.optimizer = tf.keras.optimizers.Adam(self.lr)
-        else:
-            print(f"Optimizer {optimizer_name} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr
-            )
-        self.loss_type = loss_type
-        
+        self.proba_complementary_items = proba_complementary_items
+        self.proba_neutral_items = proba_neutral_items
+        self.noise_proba = noise_proba
 
-        self.min_items_basket          : int = min_items_basket
-        self.n_baskets_training        : int = n_baskets_training
-        self.n_baskets_testing         : int = n_baskets_testing
+        self.dict_items = dict_items if dict_items else {
+            "nest0": ({0,1,2}, [-1, 1, 0, 0]) ,
+            "nest1": ({3,4,5}, [1, -1, 0, 0]),
+            "nest2": ({6}, [0, 0, -1, 0]),
+            "nest3": ({7}, [0, 0, 0, -1])
+        }
 
-        self.proba_complementary_items : float = proba_complementary_items
-        self.proba_neutral_items       : float = proba_neutral_items
-        self.noise_proba               : float = noise_proba
-        self.dict_items                : dict = dict_items
-
-        if self.dict_items is None:
-            self.dict_items = {
-                "nest0": ({0,1,2}, [-1, 1, 0, 0]) ,
-                "nest1": ({3,4,5}, [1, -1, 0, 0]),
-                "nest2": ({6}, [0, 0, -1, 0]),
-                "nest3": ({7}, [0, 0, 0, -1])
-            }
-
-        self.assortment : set = assortment
-        if self.assortment is None:
-            self.assortment = {0, 1, 2, 3, 4, 5, 6, 7}
+        self.assortment = {0, 1, 2, 3, 4, 5, 6, 7}
         self.available_sets = list(key for key, value in self.dict_items.items() if value[0].intersection(self.assortment))
 
 
-
-        self.Wi    : tf.Tensor = None
-        self.Wo    : tf.Tensor = None
-        self.wa    : tf.Tensor = None
-        self.bo    : tf.Tensor = None
-        self.Theta : list = [self.Wi, self.wa, self.Wo]
-
-        self.is_initialized : bool = False
-        self.is_trained     : bool = None
-        self.loss_history   : list = None
-
-        if Q is None:
-            self.Q = tf.constant([1.0/(n_items-1)]*n_items, dtype=tf.float32)
-        else:
-            self.Q = tf.constant(Q, dtype=tf.float32)
-
-        if not self.is_initialized:
-            self.init_model()
-
-
-
-
-
-    def init_model(self) -> None:
-        """Initializes the model parameters."""
-        
-        self.Wi = tf.Variable(tf.random.normal((self.embedding_dim, self.n_items), stddev=0.1), name='Wi')
-        self.Wo = tf.Variable(tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name='Wo')
-        self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name='wa')
-        self.bo = tf.Variable(tf.zeros((self.n_items,)), name='bo')
-        self.Theta = [self.Wi, self.wa, self.Wo]
-        self.is_trained = False
-        self.loss_history = []
-        
-
-        
     def generate_basket(self) -> list:
+
         """Generates a basket of items based on the defined item sets and their relations."""
 
         def select_first_item() -> tuple:
@@ -131,7 +67,7 @@ class BaseModel:
                     basket.add(random.choice(list(nest)))
             return basket
         
-        def add_noise(basket : list) -> list:
+        def add_noise(basket : set) -> list:
             """Adds noise items to the basket based on the defined noise probability."""
             
             noise_proba = self.noise_proba
@@ -151,13 +87,13 @@ class BaseModel:
         basket = add_noise(basket)
         
         return basket
-    
-    def generate_dummy_dataset(self, 
-                       batch_size : int = None) -> list:
-        """Generates a dataset of baskets."""
 
-        if batch_size is None:
-            batch_size = self.n_baskets_training
+
+    def generate_dummy_dataset(self) -> list:
+            
+        """Generates a dataset of baskets."""
+        
+        batch_size = self.n_baskets_training
         
         baskets = []
         count = 0
@@ -167,7 +103,7 @@ class BaseModel:
                 baskets.append(basket)
                 count += 1
         return baskets
-
+    
     def get_batches(self, 
                     dataset : list ) -> list:
         """Generates batches of baskets for training or testing."""
@@ -178,6 +114,69 @@ class BaseModel:
         for i in range(0, len(indices), self.batch_size):
             batch_indices = indices[i:i+self.batch_size]
             yield [dataset[j] for j in batch_indices]
+
+
+
+class BaseModel:
+    def __init__(self,
+                 n_items             : int = 8, 
+                 embedding_dim       : int =  4, 
+
+                 k_noise             : int =  8,
+                 lr                  : float = 0.01,
+                 epochs              : int = 30,
+                 optimizer_name      : str = 'adam',
+                 loss_type           : str = "bad",
+
+                 Q_distribution      : int =None
+                 ) -> None:
+        
+
+        self.n_items       : int = n_items
+        self.embedding_dim : int = embedding_dim
+        self.K_noise       : int = k_noise
+        self.lr            : float = lr
+        self.epochs        : int = epochs
+
+        self.optimizer_name : str = optimizer_name
+
+        if self.optimizer_name == 'adam':
+            self.optimizer = tf.keras.optimizers.Adam(self.lr)
+        else:
+            print(f"Optimizer {optimizer_name} not implemented, switching for default Adam")
+            self.optimizer = tf.keras.optimizers.Adam(
+                learning_rate=lr
+            )
+        self.loss_type = loss_type
+        
+        self.data_generator = DataGenerator()
+        self.instantiate()
+
+
+
+        if Q_distribution is None:
+            assert n_items > 1, "n_items must be greater than 1 to define a uniform distribution."
+
+            self.Q_distribution = tf.constant([1.0/(n_items-1)]*n_items, dtype=tf.float32)
+        else:
+            self.Q_distribution = tf.constant(Q, dtype=tf.float32)
+
+        
+
+
+
+
+
+    def instantiate(self) -> None:
+        """Initializes the model parameters."""
+        
+        self.Wi = tf.Variable(tf.random.normal((self.embedding_dim, self.n_items), stddev=0.1), name='Wi')
+        self.Wo = tf.Variable(tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name='Wo')
+        self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name='wa')
+        self.bo = tf.Variable(tf.zeros((self.n_items,)), name='bo')
+        self.is_trained = False
+        self.loss_history = []
+        
 
 
     def context_embed(self, context_items : list) -> tf.Tensor:
@@ -219,12 +218,12 @@ class BaseModel:
         neg_pool = tf.boolean_mask(all_items, mask)
         neg_items = tf.random.shuffle(neg_pool)[:self.K_noise]
         # NCE probabilities
-        KQ = self.K_noise * self.Q[target_item]
+        KQ = self.K_noise * self.Q_distribution[target_item]
         P_1 = tf.exp(pos_score) / (tf.exp(pos_score) + KQ)
         loss = -tf.math.log(P_1 )
         for i in neg_items:
             neg_score = self.score(context_vec, i)
-            KQ_neg = self.K_noise * self.Q[i]
+            KQ_neg = self.K_noise * self.Q_distribution[i]
             P_0 = 1-(tf.exp(neg_score) / (tf.exp(neg_score) + KQ_neg))
             loss -= tf.math.log(P_0 )
         return loss
@@ -273,22 +272,21 @@ class BaseModel:
             epochs : int = None
             ) -> None:
         """Trains the model for a specified number of epochs."""
-        self.init_model()
         self.is_trained = True
         self.loss_type = loss_type
         if epochs == None:
             epochs = self.epochs
 
         
-        dataset = self.generate_dummy_dataset(self.n_baskets_training)
+        dataset = self.data_generator.generate_dummy_dataset()
         print(f"Generated dataset with {len(dataset)} baskets.")
-        print(f"Training with batch size: {self.batch_size}, epochs: {epochs}")
+        print(f"Training with batch size: {batch_size}, epochs: {epochs}")
 
         
         iterable = trange(epochs, desc="Training Epochs")
         for epoch in iterable:
             epoch_loss = 0
-            for batch in self.get_batches(dataset):
+            for batch in self.data_generator.get_batches(dataset):
                 loss = self.train_step(batch, loss_type)
                 epoch_loss += loss
             self.loss_history.append(epoch_loss)
@@ -301,19 +299,16 @@ class BaseModel:
     
     
     def evaluate(self,
-                 dataset : list,
-                 batch_size : int = None) -> np.ndarray:
+                 dataset : list) -> np.ndarray:
         """Evaluates the model on the provided dataset."""
         
         if not self.is_trained:
             raise ValueError("Model must be trained before evaluation. Call fit() first.")
-        
-        if batch_size is None:
-            batch_size = self.n_baskets_testing
+
         
         correct_predictions = 0
 
-        for batch in self.get_batches(dataset, batch_size):
+        for batch in self.data_generator.get_batches(dataset):
             for basket in batch:
                 target_item = random.choice(list(basket))
                 context_items = [item for item in basket if item != target_item]
@@ -330,7 +325,7 @@ class BaseModel:
 
     def model_distribution_matrix(self) -> list:
         P = []
-        for i in range(8):
+        for i in range(self.n_items):
             P.append(tf.nn.softmax(self.predict(np.array([i]))).numpy())
         return P
     
@@ -347,7 +342,7 @@ class BaseModel:
         axes[0].set_title("Model P(i|j) on elementary baskets")
         plt.colorbar(im1, ax = axes[0])
 
-        im2 = axes[1].plot(self.loss_history, label='Training Loss')
+        line_plot = axes[1].plot(self.loss_history, label='Training Loss')
         axes[1].set_xlabel('Training Steps')
         axes[1].set_ylabel('Loss')
         axes[1].set_title('Training Loss History')
@@ -368,7 +363,6 @@ class BaseModel:
             print(f"{'Epochs':20}: {self.epochs}")
             print(f"{'Optimizer':20}: {self.optimizer_name}")
             print(f"{'Loss type':20}: {self.loss_type}")
-            print(f"{'N_baskets_training':20}: {self.n_baskets_training}")
             print("="*30)
                 
 
