@@ -1,4 +1,4 @@
-"""Implementation of the Shopper model."""
+"""Implementation of the AleaCarta model."""
 
 import json
 import logging
