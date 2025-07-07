@@ -67,9 +67,13 @@ class BaseModel:
         self.wa = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
         )
-        self.bo = tf.Variable(tf.zeros((self.n_items,)), name="bo")
+        self.bo = tf.Variable(tf.zeros((self.n_items,)), name="bo") # Shouldn't it be a tf.constant ?
         self.is_trained = False
         self.loss_history = []
+
+    @property
+    def trainable_weights(self):
+        return [elf.Wi, self.wa, self.Wo]
 
     def context_embed(self, context_items: list) -> tf.Tensor:
         """Returns the context embedding matrix. [self.embedding_dim]"""
@@ -136,8 +140,8 @@ class BaseModel:
             for basket in batch:
                 total_loss += basket_loss(basket)
 
-        grads = tape.gradient(total_loss, [self.Wi, self.wa, self.Wo])
-        self.optimizer.apply_gradients(zip(grads, [self.Wi, self.wa, self.Wo]))
+        grads = tape.gradient(total_loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return float(total_loss.numpy())
 
     def predict(self, context_items: list) -> np.ndarray:
