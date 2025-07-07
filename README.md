@@ -89,7 +89,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Basket Model | Example | Colab | Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
 | Shopper | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
-| Alea Carta | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)]() | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#]() |
+| Alea Carta | [notebook](notebooks/basket_models/alea_carta.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#]() |
 
 
 ### Auxiliary tools
