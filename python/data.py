@@ -13,7 +13,6 @@ class SyntheticDataGenerator:
         n_items: int = 8, # Redundant with items_nest ?
         # min_items_basket: int = 2, # Isn't part of the data generation algorithm
         n_baskets: int = 400, # The algo should generate baskets, the train / test split is done afterwards
-        # batch_size: int = 20, # Isn't part of the data generation
         proba_complementary_items: float = 0.7,
         proba_neutral_items: float = 0.3,
         noise_proba: float = 0.15,
@@ -22,7 +21,6 @@ class SyntheticDataGenerator:
 
         self.n_items = n_items
 
-        self.min_items_basket = min_items_basket
         self.n_baskets = n_baskets
 
         self.proba_complementary_items = proba_complementary_items
@@ -45,7 +43,7 @@ class SyntheticDataGenerator:
         self.assortment = {0, 1, 2, 3, 4, 5, 6, 7} # Should be a function of items_nest
         self.available_sets = list( # Not sure what it is supposed to do
             key
-            for key, value in self.dict_items.items()
+            for key, value in self.items_nest.items()
             if value[0].intersection(self.assortment)
         )
 
@@ -56,16 +54,16 @@ class SyntheticDataGenerator:
             """Selects the first item and its nest randomly from the available sets."""
 
             chosen_nest = random.choice(self.available_sets) # Why not use items_nest ?
-            chosen_item = random.choice(list(self.dict_items[chosen_nest][0]))
+            chosen_item = random.choice(list(self.items_nest[chosen_nest][0]))
             return chosen_item, chosen_nest
 
         def complete_basket(first_item: int, first_nest: str) -> set:
             """Completes the basket by adding items based on the relations of the first item."""
 
             basket = {first_item} # Why a set and not a list ?
-            first_key_index = int(first_nest[-1])
+            first_key_index = first_nest
             for key in self.available_sets:
-                nest, relations = self.dict_items[key]
+                nest, relations = self.items_nest[key]
                 if (
                     relations[first_key_index] == 1 # At this point you may use "complementary" (e.g.) instead of an int to make it more understandable
                     and random.random() < self.proba_complementary_items
@@ -99,7 +97,7 @@ class SyntheticDataGenerator:
 
         return basket
 
-    def generate_synthetic_dataset(self) -> list:
+    def generate_synthetic_dataset(self, n_baskets = None) -> list:
         """Generates a dataset of baskets."""
 
         # batch_size = self.n_baskets_training # ? why should that be the case ? Why is there a batch_size attribute then ?
@@ -112,10 +110,13 @@ class SyntheticDataGenerator:
         #         count += 1
         
         # Should more be something like:
+        if n_baskets is None:
+            n_baskets = self.n_baskets
+
         baskets = []
         for _ in range(self.n_baskets):
-            baskets.append(self.generate_baskets())
-        return np.stack(baskets, dtype=object)
+            baskets.append(self.generate_basket())
+        return baskets
 
     # Should not be in a data generator
 

@@ -5,6 +5,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import tqdm
+from data import SyntheticDataGenerator
 
 
 class BaseModel:
@@ -13,9 +14,10 @@ class BaseModel:
         n_items: int = 8,
         embedding_dim: int = 4,
         k_noise: int = 8,
-        lr: float = 0.01,
+        lr: float = 0.005,
         epochs: int = 30,
         optimizer: str = "Adam",
+        batch_size: str = 8,
         loss: str = "bad", # maybe you can find a clearer word than "bad"
         Q_distribution: int = None,
     ) -> None:
@@ -25,6 +27,7 @@ class BaseModel:
         self.K_noise: int = k_noise
         self.lr: float = lr
         self.epochs: int = epochs
+        self.batch_size: int = batch_size
 
         # Useless with what happens in the following lines
         # self.optimizer: str = optimizer
@@ -33,7 +36,7 @@ class BaseModel:
             self.optimizer = tf.keras.optimizers.Adam(self.lr)
         else:
             print(
-                f"Optimizer {optimizer_name} not implemented, switching for default Adam"
+                f"Optimizer {optimizer} not implemented, switching for default Adam"
             )
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
         self.loss = loss
@@ -69,15 +72,26 @@ class BaseModel:
         )
         self.bo = tf.Variable(tf.zeros((self.n_items,)), name="bo") # Shouldn't it be a tf.constant ?
         self.is_trained = False
+        self.loss_type = "nce"
         self.loss_history = []
+
+    def get_batches(self, dataset: list) -> list:
+        """Generates batches of baskets for training or testing."""
+
+        indices = list(range(len(dataset)))
+        random.shuffle(indices)
+        for i in range(0, len(indices), self.batch_size):
+            batch_indices = indices[i : i + self.batch_size]
+            yield [dataset[j] for j in batch_indices]
 
     @property
     def trainable_weights(self):
-        return [elf.Wi, self.wa, self.Wo]
+        return [self.Wi, self.wa, self.Wo]
 
     def context_embed(self, context_items: list) -> tf.Tensor:
         """Returns the context embedding matrix. [self.embedding_dim]"""
 
+        context_items = tf.convert_to_tensor(context_items, dtype=tf.int32)
         context_emb = tf.gather(self.Wi, context_items, axis=1)
         attn_logits = tf.tensordot(self.wa, context_emb, axes=1)
         attn_weights = tf.nn.softmax(attn_logits)
@@ -100,6 +114,7 @@ class BaseModel:
 
     def nce_loss(self, context_items: list, target_item: int) -> tf.Tensor:
         """Calculates the loss using Noise Contrastive Estimation (NCE)."""
+        context_items = tf.convert_to_tensor(context_items, dtype=tf.int32)
 
         context_vec = self.context_embed(context_items)
         pos_score = self.score(context_vec, target_item)
@@ -121,7 +136,7 @@ class BaseModel:
             loss -= tf.math.log(P_0)
         return loss
 
-    def train_step(self, batch: list, loss_type: str = "bad") -> tf.Tensor:
+    def train_step(self, batch: list) -> tf.Tensor:
         """Performs a single training step on the batch of baskets."""
 
         def basket_loss(basket: list) -> tf.Tensor:
@@ -130,9 +145,9 @@ class BaseModel:
             target_item = random.choice(basket)
             context_items = [i for i in basket if i != target_item]
 
-            if loss_type == "softmax":
+            if self.loss_type == "softmax":
                 return self.bad_loss(context_items, target_item)
-            elif loss_type == "nce":
+            elif self.loss_type == "nce":
                 return self.nce_loss(context_items, target_item)
 
         with tf.GradientTape() as tape:
@@ -153,14 +168,12 @@ class BaseModel:
 
     def fit(
         self,
-        dataset, # The most important ! =)
-        # loss_type: str = "softmax", # Is already an attribute
-        batch_size: int = None,
+        dataset,
         repr: bool = False,
-        # epochs: int = None, # Is already an attribute
+
     ) -> None:
         """Trains the model for a specified number of epochs."""
-        self.is_trained = True # Should be at the end of the training
+        # Should be at the end of the training
         # self.loss_type = loss_type
         # if epochs == None:
         #     epochs = self.epochs
@@ -169,16 +182,17 @@ class BaseModel:
         # print(f"Generated dataset with {len(dataset)} baskets.")
         # print(f"Training with batch size: {batch_size}, epochs: {epochs}")
 
-        iterable = tqdm.trange(epochs, desc="Training Epochs")
+        iterable = tqdm.trange(self.epochs, desc="Training Epochs")
         for epoch in iterable:
             epoch_loss = 0
-            for batch in self.data_generator.get_batches(dataset):
-                loss = self.train_step(batch, loss_type)
+            for batch in self.get_batches(dataset):
+                loss = self.train_step(batch)
                 epoch_loss += loss
             self.loss_history.append(epoch_loss)
             iterable.set_postfix({"epoch_loss": epoch_loss})
 
         print(f"Training completed. Final loss: {self.loss_history[-1]}")
+        self.is_trained = True
         if repr:
             self.represent()
 
@@ -232,7 +246,9 @@ class BaseModel:
         axes[1].set_ylabel("Loss")
         axes[1].set_title("Training Loss History")
 
+
         plt.tight_layout()
+        plt.savefig("model_representation.png")
         plt.show()
 
         if hyperparams:
@@ -243,6 +259,6 @@ class BaseModel:
             print(f"{'K_noise':20}: {self.K_noise}")
             print(f"{'Learning_rate':20}: {self.lr}")
             print(f"{'Epochs':20}: {self.epochs}")
-            print(f"{'Optimizer':20}: {self.optimizer_name}")
+            print(f"{'Optimizer':20}: {self.optimizer._name}")
             print(f"{'Loss type':20}: {self.loss_type}")
             print("=" * 30)
