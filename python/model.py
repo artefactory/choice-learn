@@ -5,7 +5,6 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import tqdm
-from data import SyntheticDataGenerator
 
 
 class BaseModel:
@@ -50,7 +49,7 @@ class BaseModel:
             ), "n_items must be greater than 1 to define a uniform distribution."
 
             self.Q_distribution = tf.constant(
-                [1.0 / (n_items - 1)] * n_items, dtype=tf.float32
+                [1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32
             )
         else:
             self.Q_distribution = tf.constant(Q, dtype=tf.float32)
@@ -88,7 +87,7 @@ class BaseModel:
     def trainable_weights(self):
         return [self.Wi, self.wa, self.Wo]
 
-    def context_embed(self, context_items: list) -> tf.Tensor:
+    def context_embed(self, context_items: list, target_item) -> tf.Tensor:
         """Returns the context embedding matrix. [self.embedding_dim]"""
 
         context_items = tf.convert_to_tensor(context_items, dtype=tf.int32)
@@ -115,13 +114,14 @@ class BaseModel:
     def nce_loss(self, context_items: list, target_item: int) -> tf.Tensor:
         """Calculates the loss using Noise Contrastive Estimation (NCE)."""
         context_items = tf.convert_to_tensor(context_items, dtype=tf.int32)
+        target_item = tf.convert_to_tensor(target_item, dtype=tf.int32)
 
         context_vec = self.context_embed(context_items)
         pos_score = self.score(context_vec, target_item)
         # Negative sampling: exclude basket items
         all_items = tf.range(self.n_items, dtype=tf.int32)
         mask = ~tf.reduce_any(
-            tf.equal(all_items[:, None], tf.expand_dims(context_items, 0)), axis=1
+            tf.equal(all_items[:, None], tf.expand_dims(np.concatenate([context_items, [target_item]]), 0)), axis=1
         )
         neg_pool = tf.boolean_mask(all_items, mask)
         neg_items = tf.random.shuffle(neg_pool)[: self.K_noise]
@@ -139,12 +139,8 @@ class BaseModel:
     def train_step(self, batch: list) -> tf.Tensor:
         """Performs a single training step on the batch of baskets."""
 
-        def basket_loss(basket: list) -> tf.Tensor:
+        def basket_loss(target_item, context_items: list) -> tf.Tensor:
             """Calculates the loss for a single basket."""
-
-            target_item = random.choice(basket)
-            context_items = [i for i in basket if i != target_item]
-
             if self.loss_type == "softmax":
                 return self.bad_loss(context_items, target_item)
             elif self.loss_type == "nce":
@@ -153,7 +149,9 @@ class BaseModel:
         with tf.GradientTape() as tape:
             total_loss = 0
             for basket in batch:
-                total_loss += basket_loss(basket)
+                for item in basket:
+                    ctx = [k for k in basket if k != item]
+                    total_loss += basket_loss(item, ctx)
 
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -164,6 +162,7 @@ class BaseModel:
 
         context_vec = self.context_embed(context_items)
         scores = tf.tensordot(self.Wo, context_vec, axes=1)
+        scores = [self.score(context_vec, i) for i in range(8)]
         return tf.nn.softmax(scores).numpy()
 
     def fit(
@@ -237,7 +236,7 @@ class BaseModel:
 
         fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-        im1 = axes[0].imshow(np.stack(self.model_distribution_matrix()))
+        im1 = axes[0].imshow(np.stack(self.model_distribution_matrix()), vmin=0.0, vmax=1.0, cmap="Spectral")
         axes[0].set_title("Model P(i|j) on elementary baskets")
         plt.colorbar(im1, ax=axes[0])
 
@@ -259,6 +258,5 @@ class BaseModel:
             print(f"{'K_noise':20}: {self.K_noise}")
             print(f"{'Learning_rate':20}: {self.lr}")
             print(f"{'Epochs':20}: {self.epochs}")
-            print(f"{'Optimizer':20}: {self.optimizer._name}")
             print(f"{'Loss type':20}: {self.loss_type}")
             print("=" * 30)
