@@ -111,6 +111,7 @@ class SyntheticDataGenerator:
 DG = SyntheticDataGenerator()
 print("Generating synthetic dataset...")
 baskets = DG.generate_synthetic_dataset(10)
+print(baskets)
 Wi = tf.Variable(
             tf.random.normal((3, 8), stddev=0.1), name="Wi"
         )
@@ -120,4 +121,4 @@ print("Wi:")
 print(Wi)
 new_baskets = tf.gather(Wi, baskets, axis=1)
 print("New baskets after gathering:")
-print(baskets)
+print(new_baskets)
