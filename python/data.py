@@ -113,8 +113,12 @@ print("Generating synthetic dataset...")
 baskets = DG.generate_synthetic_dataset(10)
 print(baskets)
 Wi = tf.Variable(
-            tf.random.normal((3, 8), stddev=0.1), name="Wi"
-        )
+    [[1, 2, 3, 4, 5, 6, 7, 8],
+     [10, 20, 30, 40, 50, 60, 70, 80],
+     [0, 0, 0, 0, 0, 0, 0, 0]],  # You had shape (3, 8), so keep a third row if needed
+    dtype=tf.int32,
+    name="Wi"
+)
 print("Wi:")
 
 
