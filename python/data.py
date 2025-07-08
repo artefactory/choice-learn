@@ -22,7 +22,7 @@ class SyntheticDataGenerator:
                 2: ({6}, [0, 0, -1, 0]),
                 3: ({7}, [0, 0, 0, -1]),
             },
-        assortment: set = {0, 1, 2, 3, 4, 5, 6, 7}, #argument d'entrée
+        default_assortment: set = {0, 1, 2, 3, 4, 5, 6, 7},
     ) -> None:
 
 
@@ -35,7 +35,12 @@ class SyntheticDataGenerator:
   
         self.items_nest = items_nest
 
-        self.assortment = assortment
+        self.assortment = default_assortment
+        
+
+    def get_available_sets(self) -> list:
+        """Returns the available sets based on the current assortment."""
+
         self.available_sets = list( # Not sure what it is supposed to do
             key
             for key, value in self.items_nest.items()
@@ -44,6 +49,7 @@ class SyntheticDataGenerator:
 
     def generate_basket(self) -> list:
         """Generates a basket of items based on the defined item sets and their relations."""
+
 
         def select_first_item() -> tuple:
             """Selects the first item and its nest randomly from the available sets."""
@@ -86,9 +92,13 @@ class SyntheticDataGenerator:
 
         return basket
 
-    def generate_synthetic_dataset(self, n_baskets = None) -> list:
+    def generate_synthetic_dataset(self, n_baskets = None, assortment = None) -> list:
         """Generates a dataset of baskets."""
 
+        if assortment is not None:
+            self.assortment = assortment
+
+        self.get_available_sets()
 
         if n_baskets is None:
             n_baskets = self.n_baskets_default
@@ -96,7 +106,7 @@ class SyntheticDataGenerator:
         baskets = []
         for _ in range(n_baskets):
             baskets.append(self.generate_basket())
-        return baskets
+        return tf.ragged.constant(baskets, dtype=tf.int32)
 
 DG = SyntheticDataGenerator()
 baskets = DG.generate_synthetic_dataset(100)
