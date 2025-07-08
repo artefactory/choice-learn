@@ -126,3 +126,7 @@ print(Wi)
 new_baskets = tf.gather(Wi, baskets, axis=1)
 print("New baskets after gathering:")
 print(new_baskets)
+
+wa = tf.Variable(
+    [1,1,1,1,1,1,1,1], dtype=tf.int32, name="wa")
+attn_logits = tf.tensordot(wa, new_baskets, axes=1)
