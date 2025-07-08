@@ -111,7 +111,7 @@ class SyntheticDataGenerator:
 DG = SyntheticDataGenerator()
 baskets = DG.generate_synthetic_dataset(10)
 Wi = tf.Variable(
-            tf.random.normal((self.embedding_dim, self.n_items), stddev=0.1), name="Wi"
+            tf.random.normal((3, 8), stddev=0.1), name="Wi"
         )
 tf.gather(Wi, baskets, axis=1)
 print(baskets)
