@@ -1,6 +1,6 @@
 """Data generation related stuff."""
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import tensorflow as tf
 import numpy as np
@@ -99,5 +99,5 @@ class SyntheticDataGenerator:
         return baskets
 
 DG = SyntheticDataGenerator()
-baskets = DG.generate_synthetic_dataset(1)
+baskets = DG.generate_synthetic_dataset(10)
 print(baskets)
