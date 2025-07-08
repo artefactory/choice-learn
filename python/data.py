@@ -92,7 +92,7 @@ class SyntheticDataGenerator:
 
         return basket
 
-    def generate_synthetic_dataset(self, n_baskets = None, assortment = None) -> list:
+    def generate_synthetic_dataset(self, n_baskets = None, assortment = None) -> tf.Tensor:
         """Generates a dataset of baskets."""
 
         if assortment is not None:
@@ -109,5 +109,9 @@ class SyntheticDataGenerator:
         return tf.ragged.constant(baskets, dtype=tf.int32)
 
 DG = SyntheticDataGenerator()
-baskets = DG.generate_synthetic_dataset(100)
+baskets = DG.generate_synthetic_dataset(10)
+Wi = tf.Variable(
+            tf.random.normal((self.embedding_dim, self.n_items), stddev=0.1), name="Wi"
+        )
+tf.gather(Wi, baskets, axis=1)
 print(baskets)
