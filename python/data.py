@@ -99,5 +99,5 @@ class SyntheticDataGenerator:
         return baskets
 
 DG = SyntheticDataGenerator()
-baskets = DG.generate_synthetic_dataset(100)
+baskets = DG.generate_synthetic_dataset(1)
 print(baskets)
