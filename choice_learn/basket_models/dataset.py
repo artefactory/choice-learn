@@ -558,11 +558,15 @@ class TripDataset:
                         # Consider a new trip to fill the buffer
                         if data_method == "shopper":
                             additional_trip_data = (
-                                self.get_subbaskets_augmented_data_from_trip_index(index)
+                                self.get_subbaskets_augmented_data_from_trip_index(
+                                    trip_indexes[index]
+                                )
                             )
                         elif data_method == "aleacarta":
                             additional_trip_data = (
-                                self.get_one_vs_all_augmented_data_from_trip_index(index)
+                                self.get_one_vs_all_augmented_data_from_trip_index(
+                                    trip_indexes[index]
+                                )
                             )
                         else:
                             raise ValueError(f"Unknown data method: {data_method}")
