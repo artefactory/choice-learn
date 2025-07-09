@@ -107,26 +107,5 @@ class SyntheticDataGenerator:
         for _ in range(n_baskets):
             baskets.append(self.generate_basket())
         return tf.ragged.constant(baskets, dtype=tf.int32)
-
-DG = SyntheticDataGenerator()
-print("Generating synthetic dataset...")
-baskets = DG.generate_synthetic_dataset(10)
-print(baskets)
-Wi = tf.Variable(
-    [[1, 2, 3, 4, 5, 6, 7, 8],
-     [10, 20, 30, 40, 50, 60, 70, 80],
-     [0, 0, 0, 0, 0, 0, 0, 0]],  # You had shape (3, 8), so keep a third row if needed
-    dtype=tf.int32,
-    name="Wi"
-)
-print("Wi:")
-
-
-print(Wi)
-new_baskets = tf.gather(Wi, baskets, axis=1)
-print("New baskets after gathering:")
-print(new_baskets)
-
-wa = tf.Variable(
-    [1,1,1,1,1,1,1,1], dtype=tf.int32, name="wa")
-attn_logits = tf.tensordot(wa, new_baskets, axes=1)
+    
+    
