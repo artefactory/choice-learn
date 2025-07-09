@@ -8,7 +8,7 @@ You are more than welcome to propose and contribute to new developments. You can
 - fixing typos, improving code quality, comments, etc...
 - developing additional tests to improve the coverage
 
-We encourage you to open an [issue](https://github.com/artefactory/choice-learn-private/issues) so that we can discuss your different ideas.
+We encourage you to open an [issue](https://github.com/artefactory/choice-learn/issues) so that we can discuss your different ideas.
 
 # Workflow
 
