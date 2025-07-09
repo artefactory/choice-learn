@@ -165,4 +165,5 @@ def test_get_augmented_data_from_trip_index():
         available_items=np.array([[1, 1, 1, 1]]),
     )
 
-    assert isinstance(trip_dataset.get_augmented_data_from_trip_index(0), tuple)
+    assert isinstance(trip_dataset.get_subbaskets_augmented_data_from_trip_index(0), tuple)
+    assert isinstance(trip_dataset.get_subbaskets_augmented_data_from_trip_index(0), tuple)
