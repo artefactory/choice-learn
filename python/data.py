@@ -8,6 +8,7 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import trange
 
+# sets -> list or ndarray
 
 class SyntheticDataGenerator:
     def __init__(
@@ -81,9 +82,11 @@ class SyntheticDataGenerator:
             """Adds noise items to the basket based on the defined noise probability."""
 
             noise_proba = self.noise_proba
+            
             for item in self.assortment:
                 if item not in basket and random.random() < noise_proba:
                     basket.append(item)
+
             return basket
 
         first_chosen_item, first_chosen_nest = select_first_item()

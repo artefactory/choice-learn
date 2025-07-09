@@ -198,7 +198,7 @@ class BaseModel:
 
         context_vec = self.context_embed(context_items)
         scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        return tf.nn.softmax(scores, axis = 0).numpy()
+        return tf.nn.softmax(scores, axis = 1).numpy()
 
     def fit(
         self,
