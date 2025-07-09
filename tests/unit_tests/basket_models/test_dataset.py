@@ -166,4 +166,4 @@ def test_get_augmented_data_from_trip_index():
     )
 
     assert isinstance(trip_dataset.get_subbaskets_augmented_data_from_trip_index(0), tuple)
-    assert isinstance(trip_dataset.get_subbaskets_augmented_data_from_trip_index(0), tuple)
+    assert isinstance(trip_dataset.get_one_vs_all_augmented_data_from_trip_index(0), tuple)

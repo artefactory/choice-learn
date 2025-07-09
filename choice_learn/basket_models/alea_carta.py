@@ -1,4 +1,4 @@
-"""Implementation of the Shopper model."""
+"""Implementation of the AleaCarta model."""
 
 import json
 import logging
@@ -1000,7 +1000,9 @@ class AleaCarta:
                 )
             else:
                 inner_range = trip_dataset.iter_batch(
-                    shuffle=True, batch_size=batch_size, data_method="aleacarta"
+                    shuffle=True,
+                    batch_size=batch_size,
+                    data_method="aleacarta",
                 )
 
             # print("start iter batch")
@@ -1065,11 +1067,16 @@ class AleaCarta:
                 for batch_nb, (
                     item_batch,
                     basket_batch,
+                    _,
                     store_batch,
                     week_batch,
                     price_batch,
                     available_item_batch,
-                ) in enumerate(val_dataset.iter_batch(shuffle=True, batch_size=batch_size)):
+                ) in enumerate(
+                    val_dataset.iter_batch(
+                        shuffle=True, batch_size=batch_size, data_method="aleacarta"
+                    )
+                ):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
@@ -1138,11 +1145,14 @@ class AleaCarta:
         """
         sum_loglikelihoods = 0.0
 
-        inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
+        inner_range = trip_dataset.iter_batch(
+            shuffle=True, batch_size=batch_size, data_method="aleacarta"
+        )
         n_batches = 0
         for (
             _,
             basket_batch,
+            _,
             store_batch,
             week_batch,
             price_batch,
@@ -1176,7 +1186,10 @@ class AleaCarta:
 
         # Obliged to recall iter_batch because a generator is exhausted once iterated over
         # or once transformed into a list
-        # n_batches = len(list(trip_dataset.iter_batch(shuffle=False, batch_size=batch_size)))
+        # n_batches = len(list(trip_dataset.iter_batch(
+        #     shuffle=False, batch_size=batch_size, data_method="aleacarta"
+        #     )
+        # ))
         # Total number of samples processed: sum of the batch sizes
         # (last batch may have a different size if incomplete)
         n_elements = batch_size * (n_batches - 1) + len(basket_batch)
