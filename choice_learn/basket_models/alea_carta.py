@@ -384,18 +384,6 @@ class AleaCarta:
         basket_interaction_utility = tf.reduce_sum(
             basket_interaction_utility, axis=-1
         )  # Shape: (batch_size,)
-        ############################################################
-        # # Count items in baskets
-        # count_items_in_basket = tf.cast(item_indices_ragged.row_lengths(), dtype=tf.float32)
-
-        # # Divide each basket interaction term by the number of items in the corresponding basket
-        # # Apply boolean mask for case distinction to avoid NaN values (division by 0)
-        # basket_interaction_utility = tf.where(
-        #     condition=count_items_in_basket != 0,  # If True: count_items_in_basket > 0
-        #     x=basket_interaction_utility / count_items_in_basket,  # Output if condition is True
-        #     y=tf.zeros_like(self.batch_size, dtype=tf.float32),  # Output if condition is False
-        # )
-        ############################################################
 
         return psi + basket_interaction_utility
 

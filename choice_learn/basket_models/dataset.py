@@ -310,9 +310,10 @@ class TripDataset:
     ) -> tuple[np.ndarray]:
         """Get augmented data from a trip index.
 
-        Augmented data includes all the transactions obtained sequentially from the trip:
-            - permuted items,
-            - permuted and padded baskets with an item removed,
+        Augmented data consists in removing one item from the basket that will be used
+        as a target from the remaining items. It is done for all items, leading to returning:
+            - items,
+            - padded baskets with an item removed,
             - stores,
             - weeks,
             - prices,
@@ -333,17 +334,9 @@ class TripDataset:
         # Get the trip from the index
         trip = self.trips[trip_index]
         length_trip = len(trip.purchases)
-
-        # Draw a random permutation of the items in the basket
-        # TODO at a later stage: improve by sampling several permutations here
-        # permutation_list = list(permutations(range(length_trip)))
-        # permutation = random.sample(permutation_list, 1)[0]
-
-        # Permute the basket
-        # permuted_purchases = np.array([trip.purchases[j] for j in permutation])
         permuted_purchases = np.array(trip.purchases)
 
-        # Create new baskets with one item removed for each position in the basket
+        # Create new baskets with one item removed that will be used as target
         # (len(basket) new baskets created)
         # And pad the truncated baskets with -1 to have the same length (because we need
         # numpy arrays for tiling and numpy arrays must have the same length)
@@ -395,7 +388,9 @@ class TripDataset:
     ) -> tuple[np.ndarray]:
         """Get augmented data from a trip index.
 
-        Augmented data includes all the transactions obtained sequentially from the trip:
+        Augmented data includes all the transactions obtained sequentially from the trip.
+        In particular, items in the basket are shuffled and sub-baskets are built iteratively
+        with the next item that will be used as a target. In particular, it leads to:
             - permuted items,
             - permuted, truncated and padded baskets,
             - padded future purchases based on the baskets,
