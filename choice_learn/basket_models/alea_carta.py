@@ -12,7 +12,6 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
-# from .utils.combination import get_combinations_variable_size
 from ..tf_ops import softmax_with_availabilities
 from .dataset import Trip, TripDataset
 
@@ -552,130 +551,6 @@ class AleaCarta:
             normalize_exit=False,
             eps=None,
         )
-
-    # # @tf.function  # TODO: make it work with tf.function
-    # def compute_basket_likelihood(
-    #     self,
-    #     basket: Union[None, np.ndarray] = None,
-    #     available_items: Union[None, np.ndarray] = None,
-    #     store: Union[None, int] = None,
-    #     week: Union[None, int] = None,
-    #     prices: Union[None, np.ndarray] = None,
-    #     trip: Union[None, Trip] = None,
-    # ) -> float:
-    #     """Compute the likelihood of an (unordered) basket.
-
-    #     Take as input directly a Trip object or separately basket, available_items,
-    #     store, week and prices.
-
-    #     Parameters
-    #     ----------
-    #     basket: np.ndarray or None, optional
-    #         ID the of items already in the basket, by default None
-    #     available_items: np.ndarray or None, optional
-    #         Matrix indicating the availability (1) or not (0) of the products,
-    #         by default None
-    #         Shape must be (n_items,)
-    #     store: int or None, optional
-    #         Store id, by default None
-    #     week: int or None, optional
-    #         Week number, by default None
-    #     prices: np.ndarray or None, optional
-    #         Prices of all the items in the dataset, by default None
-    #         Shape must be (n_items,)
-    #     trip: Trip or None, optional
-    #         Trip object containing basket, available_items, store,
-    #         week and prices, by default None
-
-    #     Returns
-    #     -------
-    #     basket_likelihood: float
-    #         Likelihood of the (unordered) basket
-    #     """
-    #     if trip is None:
-    #         # Trip not provided as an argument
-    #         # Then basket, available_items, store, week and prices must be provided
-    #         if (
-    #             basket is None
-    #             or available_items is None
-    #             or store is None
-    #             or week is None
-    #             or prices is None
-    #         ):
-    #             raise ValueError(
-    #                 "If trip is None, then basket, available_items, store, week, and "
-    #                 "prices must be providedas arguments."
-    #             )
-
-    #     else:
-    #         # Trip directly provided as an argument
-    #         basket = trip.purchases
-
-    #         if isinstance(trip.assortment, int):
-    #             # Then it is the assortment ID (ie its index in the attribute
-    #             # available_items of the TripDataset), but we do not have the
-    #             # the TripDataset as input here
-    #             raise ValueError(
-    #                 "The assortment ID is not enough to compute the likelihood. "
-    #                 "Please provide the availability matrix directly (array of shape (n_items,) "
-    #                 "indicating the availability (1) or not (0) of the products)."
-    #             )
-    #         # Else: np.ndarray
-    #         available_items = trip.assortment
-
-    #         store = trip.store
-    #         week = trip.week
-    #         prices = trip.prices
-
-    #     basket = tf.cast(tf.convert_to_tensor(basket), dtype=tf.int32)
-
-    #     # Get the list of available items based on the availability matrix
-    #     item_ids = tf.range(self.n_items)
-    #     available_mask = tf.equal(available_items, 1)
-    #     assortment = tf.boolean_mask(item_ids, available_mask)
-
-    #     # Check if the basket contains only available items
-    #     available_mask = tf.reduce_all(tf.gather(available_items, basket) == 1)
-    #     if not available_mask:
-    #         # 0 likelihood if the basket contains unavailable items
-    #         return 0.0
-
-    #     # Consider all the possible baskets and the corresponding price lists
-    #     # TODO: implement an approximation to avoid high computing costs for large datasets
-    #     all_possible_baskets = get_combinations_variable_size(assortment)
-    #     all_possible_prices = [
-    #         [prices[item_id] for item_id in basket] for basket in all_possible_baskets
-    #     ]
-
-    #     basket_utility = self.compute_basket_utility(
-    #         basket=basket,
-    #         store=store,
-    #         week=week,
-    #         prices=[prices[item_id] for item_id in basket],
-    #     )
-
-    #     all_baskets_utilities = np.array(
-    #         [
-    #             self.compute_basket_utility(
-    #                 basket=all_possible_baskets[i],
-    #                 store=store,
-    #                 week=week,
-    #                 prices=all_possible_prices[i],
-    #             )
-    #             for i in range(len(all_possible_baskets))
-    #         ]
-    #     )
-
-    #     # Softmax on the utilities of all the possible baskets
-    #     basket_likelihood = np.exp(basket_utility) / np.sum(np.exp(all_baskets_utilities))
-
-    #     # Check if the basket likelihood is NaN
-    #     if np.isnan(basket_likelihood):
-    #         logging.warning("Basket likelihood is NaN due to extremely low value,
-    # setting it to 0.")
-    #         return 0.0
-
-    #     return basket_likelihood
 
     def get_negative_samples(
         self,
