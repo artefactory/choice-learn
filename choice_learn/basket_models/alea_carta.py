@@ -1217,7 +1217,7 @@ class AleaCarta:
             np.save(os.path.join(path, parameter_name + ".npy"), latent_parameter)
 
     @classmethod
-    def load_model(cls, path: str) -> object:
+    def load_model(cls, path: str) -> "AleaCarta":
         """Load a model previously saved with save_model().
 
         Parameters
