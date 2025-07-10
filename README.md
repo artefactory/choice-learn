@@ -335,6 +335,7 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
 [15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)\
 [16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)
+[17] Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling, Désir, J.; Auriaut, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD Applied Data Science
 
 ### Code and Repositories
 
@@ -344,4 +345,5 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
 [12] [ResLogit](https://github.com/LiTrans/reslogit)\
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
-[16] [SHOPPER](https://github.com/franrruiz/shopper-src)
+[16] [Shopper](https://github.com/franrruiz/shopper-src)\
+[17] [AleaCarta](https://github.com/artefactory/alea-carta-est)
