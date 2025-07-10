@@ -248,7 +248,6 @@ class AleaCarta:
             )
 
         self.instantiated = True
-        # print("INSTANTIATED")
 
     @property
     def trainable_weights(self) -> list[tf.Variable]:
@@ -530,6 +529,9 @@ class AleaCarta:
 
         # Prevent unintended side effects from in-place modifications
         available_items_copy = available_items.copy()
+        for basket_item in basket:
+            if basket_item != -1:
+                available_items_copy[basket_item] = 0.0
 
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
@@ -958,7 +960,6 @@ class AleaCarta:
         if not self.instantiated:
             # Lazy instantiation
             self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
-        # print("Instantiated from fit")
         batch_size = self.batch_size
 
         history = {"train_loss": [], "val_loss": []}
@@ -968,7 +969,6 @@ class AleaCarta:
 
         # Iterate of epochs
         for epoch_nb in t_range:
-            # print("start epoch 1")
             self.callbacks.on_epoch_begin(epoch_nb)
             t_start = time.time()
             train_logs = {"train_loss": []}
@@ -993,7 +993,6 @@ class AleaCarta:
                     data_method="aleacarta",
                 )
 
-            # print("start iter batch")
             for batch_nb, (
                 item_batch,
                 basket_batch,
@@ -1134,11 +1133,11 @@ class AleaCarta:
         sum_loglikelihoods = 0.0
 
         inner_range = trip_dataset.iter_batch(
-            shuffle=True, batch_size=batch_size, data_method="aleacarta"
+            shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
         n_batches = 0
         for (
-            _,
+            item_batch,
             basket_batch,
             _,
             store_batch,
@@ -1152,7 +1151,7 @@ class AleaCarta:
             sum_loglikelihoods += np.sum(
                 np.log(
                     [
-                        self.compute_basket_likelihood(
+                        self.compute_item_likelihood(
                             basket=basket,
                             available_items=available_items,
                             store=store,
