@@ -122,6 +122,24 @@ class BaseModel:
                                tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1))
         
         return tf.reduce_sum(tf.math.log(target_items_scores + 1))
+    
+    def get_neg_items_iterative(self, context, target, n_items, K_noise):
+        context_set = set(context.numpy().tolist())
+        context_set.add(target.numpy().item())
+        all_items = set(range(n_items))
+        neg_pool = list(all_items - context_set)
+        if len(neg_pool) < K_noise:
+            pass
+        else:
+            neg_items = np.random.choice(neg_pool, size=K_noise, replace=False)
+        return np.array(neg_items, dtype=np.int32)
+
+    def get_neg_items_py(self, context, target):
+        return tf.py_function(
+            func=self.get_neg_items_iterative(context, target, self.n_items, self.K_noise)
+            inp=[context, target, self.n_items, self.K_noise],
+            Tout=tf.int32
+        )
 
     def nce_loss(self, context_items: tf.Tensor, target_items_idx: tf.Tensor) -> tf.Tensor:
         """Calculates the loss using Noise Contrastive Estimation (NCE)."""
@@ -130,21 +148,21 @@ class BaseModel:
         context_vec = self.context_embed(context_items)  
         pos_score = self.score(context_vec, target_items_idx)  
 
-       
-        all_items = tf.range(self.n_items, dtype=tf.int32) 
-
+        """
+         all_items = tf.range(self.n_items, dtype=tf.int32) 
         def get_neg_items(context, target):
             exclude = tf.concat([context, [target]], axis=0)
             mask = ~tf.reduce_any(tf.equal(all_items[:, None], exclude[None, :]), axis=1)
             neg_pool = tf.boolean_mask(all_items, mask)
             neg_items = tf.random.shuffle(neg_pool)[:self.K_noise]
             return neg_items
-
+        """
         neg_items = tf.map_fn(
-            lambda x: get_neg_items(x[0], x[1]),
+            lambda x: self.get_neg_items_py(x[0], x[1]),
             (context_items, target_items_idx),
             fn_output_signature=tf.TensorSpec(shape=(self.K_noise,), dtype=tf.int32)
-        )  
+        )
+
 
         KQ = self.K_noise * tf.gather(self.Q_distribution, target_items_idx)  
         P_1 = tf.exp(pos_score) / (tf.exp(pos_score) + KQ)
