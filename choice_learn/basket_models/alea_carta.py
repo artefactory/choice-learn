@@ -662,9 +662,7 @@ class AleaCarta:
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        # print("Start Compute Batch")
         batch_size = len(item_batch)
-        # tf.print(batch_size, item_batch.shape)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
@@ -747,11 +745,8 @@ class AleaCarta:
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
-        # tf.print(positive_samples_utilities, negative_samples_utilities)
-        # tf.print(bce)
 
         # Normalize by the batch size and the number of negative samples
-        # print("End Compute Batch")
         return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
 
     @tf.function  # Graph mode
@@ -793,7 +788,6 @@ class AleaCarta:
         batch_loss: tf.Tensor
             Value of the loss for the batch
         """
-        # print("Start train_step")
         with tf.GradientTape() as tape:
             batch_loss = self.compute_batch_loss(
                 item_batch=item_batch,
@@ -807,7 +801,6 @@ class AleaCarta:
 
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
 
-        # print("End train_step")
         return batch_loss
 
     def fit(
