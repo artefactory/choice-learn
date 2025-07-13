@@ -6,8 +6,10 @@ authors = [
   { name = "Vincent Auriau", email = "vincent.auriau.dev@gmail.com" },
   { name = "artefactory", email = "vincent.auriau@artefact.com" },
   ]
-homepage = "https://github.com/artefactory/choice-learn"
-documentation = "https://artefactory.github.io/choice-learn"
+maintainers = [
+  { name = "Vincent Auriau", email = "vincent.auriau.dev@gmail.com" },
+  { name = "artefactory", email = "vincent.auriau@artefact.com" },
+]
 license = "MIT"
 readme = "README.md"
 keywords = ["discrete", "choice", "model", "machine", "learning", "assortment", "pricing", "retail", "supermarket"]
@@ -20,6 +22,12 @@ classifiers = [
     "Topic :: Software Development"
 ]
 requires-python = ">=3.9"
+
+[project.urls]
+homepage = "https://github.com/artefactory/choice-learn"
+repository = "https://github.com/artefactory/choice-learn"
+documentation = "https://artefactory.github.io/choice-learn"
+"Bug Tracker" = "https://github.com/artefactory/choice-learn/issues"
 
 [tool.ruff]
 select = [
