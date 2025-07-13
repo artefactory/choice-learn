@@ -13,10 +13,13 @@ maintainers = [
 license = "MIT"
 readme = "README.md"
 keywords = ["discrete", "choice", "model", "machine", "learning", "assortment", "pricing", "retail", "supermarket"]
-packages = [{include = "choice_learn"}]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Mathematics",
     "Topic :: Software Development"
@@ -113,6 +116,9 @@ mkdocstrings-python = ">=1.10.8"
 python-markdown-math = ">=0.8"
 bandit = ">=1.7.5"
 nbstripout = ">=0.7"
+
+[tool.setuptools]
+packages = ["choice_learn"]
 
 [build-system]
 requires = ["poetry-core"]
