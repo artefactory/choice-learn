@@ -24,9 +24,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
     "Topic :: Software Development"
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 dependencies = [
-  "python >=3.9, <3.13",
   "numpy>=1.24",
   "pandas>=1.5.3",
   "tensorflow >=2.14, <2.17.0",
