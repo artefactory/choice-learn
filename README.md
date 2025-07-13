@@ -88,7 +88,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 | Basket Model | Example | Colab | Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
-| SHOPPER| [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Shopper | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Alea Carta | [notebook](notebooks/basket_models/alea_carta.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#]() |
 
 
 ### Auxiliary tools
@@ -110,6 +111,9 @@ You can find the following tutorials to help you getting started with the packag
 ### User installation
 
 To install the required packages in a virtual environment, run the following command:
+```bash
+make install
+```
 
 The easiest is to pip-install the package:
 ```bash
@@ -233,7 +237,7 @@ We recommend to first open an [issue](https://github.com/artefactory/choice-lear
 
 ## :trident: Citation
 
-If you consider this package and any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899).
+If you consider this package or any of its feature useful for your research, consider citing our [paper](https://joss.theoj.org/papers/10.21105/joss.06899):
 
 <a href="https://joss.theoj.org/papers/10.21105/joss.06899">
 <img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
@@ -253,6 +257,25 @@ If you consider this package and any of its feature useful for your research, co
   journal = {Journal of Open Source Software} }
 ```
 
+If you make use of the *AleaCarta* model [[17]](#trident-references), consider citing the corresponding [paper]():
+
+<a href="https://ecmlpkdd.org/">
+<img align="left" width="100"src="https://ecmlpkdd-storage.s3.eu-central-1.amazonaws.com/ECML_1_e012008d41.png" />
+</a>
+
+```bash
+@article{
+  doi = {},
+  url = {},
+  year = {},
+  publisher = {},
+  volume = {},
+  number = {},
+  pages = {},
+  author = {},
+  title = {},
+  journal = {} }
+```
 ### License
 
 The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
@@ -311,7 +334,8 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [13] [Enhancing Discrete Choice Models with Representation Learning](https://arxiv.org/abs/1812.09747), Sifringer, B.; Lurkin, V.; Alahi, A. (2018)\
 [14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
 [15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)\
-[16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)
+[16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)\
+[17] Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling, Désir, J.; Auriaut, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD Applied Data Science
 
 ### Code and Repositories
 
@@ -321,4 +345,5 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [7] TasteNet [[Repo1](https://github.com/YafeiHan-MIT/TasteNet-MNL)] [[Repo2](https://github.com/deborahmit/TasteNet-MNL)]\
 [12] [ResLogit](https://github.com/LiTrans/reslogit)\
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
-[16] [SHOPPER](https://github.com/franrruiz/shopper-src)
+[16] [Shopper](https://github.com/franrruiz/shopper-src)\
+[17] [AleaCarta](https://github.com/artefactory/alea-carta-est)
