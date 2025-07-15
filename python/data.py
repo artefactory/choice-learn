@@ -1,14 +1,16 @@
 """Data generation related stuff."""
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-import tensorflow as tf
 import numpy as np
 import random
-import matplotlib.pyplot as plt
-from tqdm import trange
+import tensorflow as tf
 
-# sets -> list or ndarray
+np.random.seed(42)
+random.seed(42)
+
+# sets -> list or ndarray (Not so important right now, will change it later and compare runtimes)
+
+
 
 class SyntheticDataGenerator:
     def __init__(
@@ -59,10 +61,10 @@ class SyntheticDataGenerator:
             chosen_item = random.choice(list(self.items_nest[chosen_nest][0]))
             return chosen_item, chosen_nest
 
-        def complete_basket(first_item: int, first_nest: str) -> list:
+        def complete_basket(first_item: int, first_nest: str) -> set:
             """Completes the basket by adding items based on the relations of the first item."""
 
-            basket = [first_item]
+            basket = {first_item}
             first_key_index = first_nest
             for key in self.available_sets:
                 nest, relations = self.items_nest[key]
@@ -70,22 +72,20 @@ class SyntheticDataGenerator:
                     relations[first_key_index] == 1 # At this point you may use "complementary" (e.g.) instead of an int to make it more understandable
                     and random.random() < self.proba_complementary_items
                 ):
-                    basket.append(random.choice(list(nest)))
+                    basket.add(random.choice(list(nest)))
                 elif (
                     relations[first_key_index] == 0
                     and random.random() < self.proba_neutral_items
                 ):
-                    basket.append(random.choice(list(nest)))
+                    basket.add(random.choice(list(nest)))
             return basket
 
-        def add_noise(basket: list) -> list:
+        def add_noise(basket: set) -> list:
             """Adds noise items to the basket based on the defined noise probability."""
 
-            noise_proba = self.noise_proba
-            
-            for item in self.assortment:
-                if item not in basket and random.random() < noise_proba:
-                    basket.append(item)
+            if random.random() < self.noise_proba:
+                basket.add(random.choice(list(self.assortment.difference(basket))))
+
 
             return basket
 
@@ -93,9 +93,9 @@ class SyntheticDataGenerator:
         basket = complete_basket(first_chosen_item, first_chosen_nest)
         basket = add_noise(basket)
 
-        return basket
+        return list(basket)
 
-    def generate_synthetic_dataset(self, n_baskets = None, assortment = None) -> tf.Tensor:
+    def generate_synthetic_dataset(self, n_baskets = None, assortment = None,  padded = False):
         """Generates a dataset of baskets."""
 
         if assortment is not None:
@@ -109,6 +109,11 @@ class SyntheticDataGenerator:
         baskets = []
         for _ in range(n_baskets):
             baskets.append(self.generate_basket())
-        return tf.ragged.constant(baskets, dtype=tf.int32)
+
+        if padded:
+            max_len = max(len(row) for row in baskets)
+            return np.array([row + [0]*(max_len - len(row)) for row in baskets])
+            
+        return baskets
     
     

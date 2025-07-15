@@ -13,11 +13,11 @@ class BaseModel:
         n_items: int = 8,
         embedding_dim: int = 4,
         k_noise: int = 8,
-        lr: float = 0.005,
-        epochs: int = 30,
+        lr: float = 0.05,
+        epochs: int = 100,
         optimizer: str = "Adam",
-        batch_size: str = 8,
-        loss_type: str = "bad", # maybe you can find a clearer word than "bad"
+        batch_size: str = 16,
+        loss_type: str = "nce", # maybe you can find a clearer word than "bad"
         Q_distribution: int = None,
     ) -> None:
 
@@ -108,9 +108,8 @@ class BaseModel:
         selected_Wo = tf.gather(self.Wo, target_items_idx) 
         return tf.reduce_sum(selected_Wo * context_vec, axis=1)
         
-
+    """
     def bad_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculates the loss using a simple, naive softmax approach."""
 
         context_vec = self.context_embed(context_items)
         scores = tf.map_fn(
@@ -122,62 +121,72 @@ class BaseModel:
                                tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1))
         
         return tf.reduce_sum(tf.math.log(target_items_scores + 1))
-    
-    def get_neg_items_iterative(self, context, target, n_items, K_noise):
-        context_set = set(context.numpy().tolist())
-        context_set.add(target.numpy().item())
-        all_items = set(range(n_items))
-        neg_pool = list(all_items - context_set)
-        if len(neg_pool) < K_noise:
-            pass
-        else:
-            neg_items = np.random.choice(neg_pool, size=K_noise, replace=False)
-        return np.array(neg_items, dtype=np.int32)
+    """
 
-    def get_neg_items_py(self, context, target):
-        return tf.py_function(
-            func=self.get_neg_items_iterative(context, target, self.n_items, self.K_noise)
-            inp=[context, target, self.n_items, self.K_noise],
-            Tout=tf.int32
+    def bad_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Calculates the loss using a simple, naive softmax cross-entropy approach."""
+
+        context_vec = self.context_embed(context_items)
+        scores = tf.map_fn(
+            lambda x: tf.tensordot(self.Wo, x, axes=1), context_vec
+        )
+        scores_softmax = tf.nn.softmax(scores, axis=1)
+
+        # Gather the predicted probability for the true target item in each batch
+        target_items_scores = tf.gather_nd(
+            scores_softmax,
+            tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1)
         )
 
-    def nce_loss(self, context_items: tf.Tensor, target_items_idx: tf.Tensor) -> tf.Tensor:
-        """Calculates the loss using Noise Contrastive Estimation (NCE)."""
-        
-        batch_size = tf.shape(target_items_idx)[0]
-        context_vec = self.context_embed(context_items)  
-        pos_score = self.score(context_vec, target_items_idx)  
+        # Standard cross-entropy loss: -log(p(target))
+        return -tf.reduce_sum(tf.math.log(target_items_scores + 1e-10))
 
-        """
-         all_items = tf.range(self.n_items, dtype=tf.int32) 
+
+
+    def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Calculates the loss using Noise Contrastive Estimation (NCE)."""
+
+        batch_size = tf.shape(target_items)[0]
+        context_vec = self.context_embed(context_items)
+        pos_score = self.score(context_vec, target_items)
+
+        all_items = tf.range(self.n_items, dtype=tf.int32)
+
         def get_neg_items(context, target):
             exclude = tf.concat([context, [target]], axis=0)
             mask = ~tf.reduce_any(tf.equal(all_items[:, None], exclude[None, :]), axis=1)
             neg_pool = tf.boolean_mask(all_items, mask)
-            neg_items = tf.random.shuffle(neg_pool)[:self.K_noise]
+            n_neg = tf.shape(neg_pool)[0]
+            # If not enough negatives, pad with random items (could repeat); never happens 8
+            neg_items = tf.cond(
+                n_neg >= self.K_noise,
+                lambda: tf.random.shuffle(neg_pool)[:self.K_noise],
+                lambda: tf.pad(tf.random.shuffle(neg_pool),
+                            [[0, self.K_noise - n_neg]],
+                            constant_values=0)
+            )
             return neg_items
-        """
+
         neg_items = tf.map_fn(
-            lambda x: self.get_neg_items_py(x[0], x[1]),
-            (context_items, target_items_idx),
+            lambda x: get_neg_items(x[0], x[1]),
+            (context_items, target_items),
             fn_output_signature=tf.TensorSpec(shape=(self.K_noise,), dtype=tf.int32)
         )
 
-
-        KQ = self.K_noise * tf.gather(self.Q_distribution, target_items_idx)  
+        KQ = self.K_noise * tf.gather(self.Q_distribution, target_items)
         P_1 = tf.exp(pos_score) / (tf.exp(pos_score) + KQ)
-        loss = -tf.math.log(P_1 + 1e-10) 
+        loss = -tf.math.log(P_1 + 1e-10)
 
-
-        flat_context_vec = tf.repeat(context_vec, repeats=self.K_noise, axis=0)  
-        flat_neg_items = tf.reshape(neg_items, [-1]) 
-        neg_scores = self.score(flat_context_vec, flat_neg_items) 
-        neg_scores = tf.reshape(neg_scores, [batch_size, self.K_noise]) 
-        KQ_neg = self.K_noise * tf.gather(self.Q_distribution, neg_items) 
+        flat_context_vec = tf.repeat(context_vec, repeats=self.K_noise, axis=0)
+        flat_neg_items = tf.reshape(neg_items, [-1])
+        neg_scores = self.score(flat_context_vec, flat_neg_items)
+        neg_scores = tf.reshape(neg_scores, [batch_size, self.K_noise])
+        KQ_neg = self.K_noise * tf.gather(self.Q_distribution, neg_items)
         P_0 = 1 - (tf.exp(neg_scores) / (tf.exp(neg_scores) + KQ_neg))
-        loss -= tf.reduce_sum(tf.math.log(P_0 + 1e-10), axis=1)  
+        loss -= tf.reduce_sum(tf.math.log(P_0 + 1e-10), axis=1)
 
         return tf.reduce_sum(loss)
+
 
     def train_step(self, batch: tf.Tensor) -> tf.Tensor:
         """Performs a single training step on the batch of baskets."""
@@ -222,6 +231,7 @@ class BaseModel:
         self,
         dataset,
         repr: bool = False,
+        loss_type: str = "nce",
 
     ) -> None:
         """Trains the model for a specified number of epochs."""
@@ -233,6 +243,8 @@ class BaseModel:
         # dataset = self.data_generator.generate_dummy_dataset()
         # print(f"Generated dataset with {len(dataset)} baskets.")
         # print(f"Training with batch size: {batch_size}, epochs: {epochs}")
+        self.loss_type = loss_type
+        dataset = tf.ragged.constant(dataset, dtype=tf.int32)
 
         iterable = tqdm.trange(self.epochs, desc="Training Epochs")
         for epoch in iterable:
@@ -299,7 +311,7 @@ class BaseModel:
 
 
         plt.tight_layout()
-        plt.savefig("model_representation.png")
+        plt.savefig("model_representation1.png")
         plt.show()
 
         if hyperparams:
