@@ -14,7 +14,7 @@ class BaseModel:
         embedding_dim: int = 4,
         k_noise: int = 8,
         lr: float = 0.05,
-        epochs: int = 100,
+        epochs: int = 50,
         optimizer: str = "Adam",
         batch_size: str = 16,
         loss_type: str = "nce", # maybe you can find a clearer word than "bad"
@@ -100,7 +100,7 @@ class BaseModel:
             lambda args: tf.reduce_sum(tf.transpose(args[0])*args[1] , axis=1),
             (context_emb, attn_weights), fn_output_signature=tf.float32
         )
-        return context_vec
+        return context_vec # [batch_size, self.embedding_dim]
 
     def score(self, context_vec: tf.Tensor, target_items_idx: tf.Tensor) -> tf.Tensor:
         """Returns the score of the item given the context vector."""
