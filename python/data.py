@@ -1,17 +1,39 @@
 """Data generation related stuff."""
-import os
-
 import numpy as np
 import random
-import tensorflow as tf
 
 np.random.seed(42)
 random.seed(42)
 
-# sets -> list or ndarray (Not so important right now, will change it later and compare runtimes)
+
+class SyntheticDataGenerator:
+    def __init__(
+        self,
+        n_baskets_default : int = 400,
+        proba_complementary_items: float = 0.7,
+        proba_neutral_items: float = 0.3,
+        noise_proba: float = 0.15,
+        items_nest: dict = {
+                0: ({0, 1, 2}, [-1, 1, 0, 0]),
+                1: ({3, 4, 5}, [1, -1, 0, 0]),
+                2: ({6}, [0, 0, -1, 0]),
+                3: ({7}, [0, 0, 0, -1]),
+            },
+        default_assortment: set = {0, 1, 2, 3, 4, 5, 6, 7},
+    ) -> None:
 
 
+        self.n_baskets_default = n_baskets_default
 
+        self.proba_complementary_items = proba_complementary_items
+        self.proba_neutral_items = proba_neutral_items
+        self.noise_proba = noise_proba
+        
+  
+        self.items_nest = items_nest
+
+        self.assortment = default_assortment
+        
 class SyntheticDataGenerator:
     def __init__(
         self,
@@ -115,5 +137,3 @@ class SyntheticDataGenerator:
             return np.array([row + [0]*(max_len - len(row)) for row in baskets])
             
         return baskets
-    
-    
