@@ -8,9 +8,9 @@ from AttnModel import AttnModel
 
 # Parameters
 
-n_baskets = 1000
-embedding_dim = 2
-K_noise = 10
+n_baskets = 3000
+embedding_dim = 3
+K_noise = 6
 
 # Generate synthetic dataset
 
@@ -26,3 +26,5 @@ model.instantiate(
     K_noise=K_noise
 )
 model.fit(baskets, repr=True, loss_type="nce")
+
+

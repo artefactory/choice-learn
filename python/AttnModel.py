@@ -18,7 +18,7 @@ class AttnModel:
     def __init__(
         self,
         lr: float = 0.005,
-        epochs: int = 150,
+        epochs: int = 450,
         optimizer: str = "Adam",
         batch_size: str = 32,
         loss_type: str = "nce",
@@ -452,6 +452,9 @@ class AttnModel:
 
             num_batches += 1
 
+        self.represent(hyperparams=False)
+    
+
         return total_loss / num_batches
 
     def model_distribution_matrix(self) -> list:
@@ -514,35 +517,40 @@ class AttnModel:
 
             print("=" * 30)
 
-    def save_model(self, filepath: str) -> None:
+    def save_model(self, filepath: str, overwrite:bool) -> None:
         """ Saves the model parameters to a file.
         
         Parameters
         ----------
             filepath : str
                 Path to the file where the model parameters will be saved.
+            overwrite : bool
+                If True, overwrites the file if it already exists.
         """
 
         if not self.is_trained:
             raise ValueError("Model must be trained before saving. Call fit() first.")
         
         if os.path.exists(filepath):
-            raise FileExistsError(f"Model file {filepath} already exists.")
+            if overwrite:
+                os.remove(filepath)
+            else:
+                raise FileExistsError(f"Model file {filepath} already exists.")
 
         data = {
-            "n_items": self.n_items,
-            "embedding_dim": self.embedding_dim,
-            "k_noise": self.K_noise,
-            "lr": self.lr,
-            "epochs": self.epochs,
+            "n_items": int(self.n_items),
+            "embedding_dim": int(self.embedding_dim),
+            "k_noise": int(self.K_noise),
+            "lr": float(self.lr),
+            "epochs": int(self.epochs),
             "optimizer": self.optimizer.get_config(),
-            "batch_size": self.batch_size,
+            "batch_size": int(self.batch_size),
             "loss_type": self.loss_type,
-            "Q_distribution": self.Q_distribution.numpy().tolist(),
+            "Q_distribution": self.Q_distribution.numpy().tolist() if hasattr(self.Q_distribution, 'numpy') else list(self.Q_distribution),
             "Wi": self.Wi.numpy().tolist(),
             "Wo": self.Wo.numpy().tolist(),
             "wa": self.wa.numpy().tolist(),
-            "loss_history": self.loss_history,
+            "loss_history": [float(l) for l in self.loss_history],
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
@@ -557,29 +565,38 @@ class AttnModel:
                 Path to the file from which the model parameters will be loaded.
         """
 
-
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file {filepath} does not exist.")
 
-        data = json.load(open(filepath, "r"))
-        model = AttnModel(
-            n_items=data["n_items"],
-            embedding_dim=data["embedding_dim"],
-            k_noise=data["k_noise"],
-            lr=data["lr"],
-            epochs=data["epochs"],
-            optimizer=data["optimizer"],
-            batch_size=data["batch_size"],
-            loss_type=data["loss_type"],
-            Q_distribution=data["Q_distribution"],
-        )
+        with open(filepath, "r") as f:
+            data = json.load(f)
 
-        model.Wi.assign(data["Wi"])
-        model.Wo.assign(data["Wo"])
-        model.wa.assign(data["wa"])
+        # Set hyperparameters and attributes
+        self.n_items = int(data["n_items"])
+        self.embedding_dim = int(data["embedding_dim"])
+        self.K_noise = int(data["k_noise"])
+        self.lr = float(data["lr"])
+        self.epochs = int(data["epochs"])
+        self.batch_size = int(data["batch_size"])
+        self.loss_type = data["loss_type"]
+        self.Q_distribution = tf.constant(data["Q_distribution"], dtype=tf.float32)
+        self.loss_history = [float(l) for l in data.get("loss_history", [])]
+
+        # Re-instantiate optimizer
+        if isinstance(data["optimizer"], dict) and "name" in data["optimizer"]:
+            if data["optimizer"]["name"].lower() == "adam":
+                self.optimizer = tf.keras.optimizers.Adam(self.lr)
+            else:
+                print(f"Optimizer {data['optimizer']['name']} not implemented, switching to Adam")
+                self.optimizer = tf.keras.optimizers.Adam(self.lr)
+        else:
+            self.optimizer = tf.keras.optimizers.Adam(self.lr)
+
+        # Re-instantiate variables
+        self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
+        self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
+        self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
 
         self.is_trained = True
-        self.loss_history = data.get("loss_history", [])
+        self.instantiated = True
         print(f"Model loaded from {filepath}")
-
-        return model
