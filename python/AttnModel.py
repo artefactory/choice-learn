@@ -22,6 +22,7 @@ class BaseModel:
         loss_type: str = "nce",
         Q_distribution: int = None,
     ) -> None:
+        
         """Initializes the model with hyperparameters.
         Args:
             n_items (int)       : Number of unique items in the dataset.
@@ -174,14 +175,7 @@ class BaseModel:
             neg_score = self.score(context_vec, column)
 
             P_0 = tf.map_fn(
-                lambda args: 1
-                - (
-                    1
-                    / (
-                        1
-                        + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])
-                    )
-                ),
+                lambda args: 1- (1/ (1+ self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0]))),
                 (neg_score, column),
                 fn_output_signature=tf.float32,
             )
