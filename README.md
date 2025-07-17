@@ -1,1 +1,1 @@
-# rd-attentive-basket
+Implementation of "Attention-Based Transactional Context Embedding for Next-Item Recommendation", Wang et al. (2018)
