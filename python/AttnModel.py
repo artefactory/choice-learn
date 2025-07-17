@@ -1,58 +1,81 @@
-"""Implementation of a simple attention-based model for item recommendation."""
+"""Implementation of an attention-based model for item recommendation."""
+"""Cf. "Attention-Based Transactional Context Embedding for Next-Item Recommendation", Wang et al. (2018)"""
 
 import os
 import json
 import tqdm
+
 import random
 import numpy as np
 import tensorflow as tf
+
 import matplotlib.pyplot as plt
 
 
-class BaseModel:
+class AttnModel:
+    """Class for the attention-based model."""
+
     def __init__(
         self,
-        n_items: int = 8,
-        embedding_dim: int = 4,
-        k_noise: int = 6,
-        lr: float = 0.01,
+        lr: float = 0.005,
         epochs: int = 150,
         optimizer: str = "Adam",
         batch_size: str = 32,
         loss_type: str = "nce",
-        Q_distribution: int = None,
     ) -> None:
         
-        """Initializes the model with hyperparameters.
-        Args:
-            n_items (int)       : Number of unique items in the dataset.
-            embedding_dim (int) : Dimension of the item embeddings.
-            k_noise (int)       : Number of negative samples for NCE.
-            lr (float)          : Learning rate for the optimizer.
-            epochs (int)        : Number of training epochs.
-            optimizer (str)     : Optimizer to use for training. Default is "Adam".
-            batch_size (int)    : Size of the training batches.
-            loss_type (str)     : Type of loss function to use. Options are "nce"
+        """ Initializes the model with hyperparameters.
+
+        Parameters
+        ----------
+            lr : float
+                Learning rate for the optimizer.
+            epochs : int
+                Number of training epochs.
+            optimizer : str
+                Optimizer to use for training. Default is "Adam".
+            batch_size : int
+                Size of the training batches.
+            loss_type : str
+                Type of loss function to use. Options are "nce"
                 or "nll" (negative log likelihood).
-            Q_distribution (list or None): Probability distribution for negative sampling.
-                If None, a uniform distribution is used.
         """
 
-        self.n_items: int = n_items
-        self.embedding_dim: int = embedding_dim
-        self.K_noise: int = k_noise
         self.lr: float = lr
         self.epochs: int = epochs
         self.batch_size: int = batch_size
 
-        if optimizer == "Adam":
+        if optimizer.lower() == "adam":
             self.optimizer = tf.keras.optimizers.Adam(self.lr)
-
         else:
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
 
         self.loss_type = loss_type
+
+
+        self.instantiated = False
+
+
+    def instantiate(self, n_items, embedding_dim, K_noise, Q_distribution = None) -> None:
+        """ Initializes the model parameters.
+        
+        Parameters
+        ----------
+            n_items : int
+                Number of unique items in the dataset.
+            embedding_dim : int
+                Dimension of the item embeddings.
+            K_noise : int
+                Number of negative samples for Noise Contrastive Estimation.
+            Q_distribution : list
+                Probability distribution for negative sampling.
+                If None, a uniform distribution is used.
+        """
+
+        self.n_items = n_items
+        self.embedding_dim = embedding_dim
+        self.K_noise = K_noise
 
         if Q_distribution is None:
             assert n_items > 1, (
@@ -65,10 +88,6 @@ class BaseModel:
         else:
             self.Q_distribution = tf.constant(Q_distribution, dtype=tf.float32)
 
-        self.instantiate()
-
-    def instantiate(self) -> None:
-        """Initializes the model parameters."""
 
         self.Wi = tf.Variable(
             tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wi"
@@ -82,13 +101,28 @@ class BaseModel:
 
         self.is_trained = False
         self.loss_history = []
+        self.instantiated = True
 
     @property
     def trainable_weights(self):
+        """ Returns the trainable weights of the model.
+        
+        Returns
+        -------
+            list
+                List of trainable weights (Wi, wa, Wo).
+        """
+
         return [self.Wi, self.wa, self.Wo]
 
     def get_batches(self, dataset: tf.Tensor) -> list:
-        """Generates batches of baskets for training or testing."""
+        """ Generates batches of baskets for training or testing.
+        
+        Parameters
+        ----------
+            dataset : tf.Tensor
+                Tensor containing the dataset of baskets.
+        """
 
         indices = list(range(dataset.shape[0]))
         random.shuffle(indices)
@@ -99,21 +133,44 @@ class BaseModel:
 
     @tf.function
     def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
-        """Returns the context embedding matrix. [self.embedding_dim]"""
+        """ Returns the context embedding matrix. [self.embedding_dim]
+        
+        Parameters
+        ----------
+            context_items : tf.Tensor
+                Tensor containing the list of the context items.
+        
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the matrix of contexts embeddings.
+        """
+
         context_emb = tf.gather(self.Wi, context_items, axis=0)
-        attn_logits = tf.ragged.map_flat_values(
-            lambda x: tf.tensordot(x, self.wa, axes=1), context_emb
-        )
-        attn_weights = tf.map_fn(lambda x: tf.nn.softmax(x), attn_logits)
         context_vec = tf.map_fn(
-            lambda args: tf.reduce_sum(tf.transpose(args[0]) * args[1], axis=1),
-            (context_emb, attn_weights),
-            fn_output_signature=tf.float32,
+            lambda x: tf.reduce_sum(
+                tf.transpose(x) * tf.nn.softmax(tf.tensordot(x, self.wa, axes=1)), axis=1
+            ),
+            context_emb,
+            fn_output_signature=tf.float32
         )
         return context_vec
 
     def score(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
-        """Returns the score of the item given the context vector."""
+        """ Returns the score of the item given the context vector.
+        
+        Parameters
+        ----------
+            context_vec : tf.Tensor
+                Tensor containing the contexts vector.
+            items : tf.Tensor
+                Tensor containing the items to score.
+                
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the scores for each item.
+        """
 
         return tf.map_fn(
             lambda args: tf.tensordot(tf.gather(self.Wo, args[1]), args[0], axes=1),
@@ -121,12 +178,25 @@ class BaseModel:
             fn_output_signature=tf.float32,
         )
 
+    @tf.function
     def nll_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculates the loss using a simple, naive softmax cross-entropy approach."""
+        """ Calculates the loss using a simple, naive softmax cross-entropy approach.
+        
+        Parameters
+        ----------
+            context_items : tf.Tensor
+                Tensor containing the context items.
+            target_items : tf.Tensor
+                Tensor containing the target items to predict.
+                
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the negative log likelihood loss.
+        """
 
         context_vec = self.context_embed(context_items)
-        scores = tf.map_fn(lambda x: tf.tensordot(self.Wo, x, axes=1), context_vec)
-        scores_softmax = tf.nn.softmax(scores)
+        scores_softmax = tf.map_fn(lambda x: tf.nn.softmax(tf.tensordot(self.Wo, x, axes=1)), context_vec)
 
         target_items_scores = tf.gather_nd(
             scores_softmax,
@@ -136,7 +206,20 @@ class BaseModel:
 
     @tf.function
     def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculates the loss using Noise Contrastive Estimation (NCE)."""
+        """ Calculates the loss using Noise Contrastive Estimation (NCE).
+        
+        Parameters
+        ----------
+            context_items : tf.Tensor
+                Tensor containing the context items.
+            target_items : tf.Tensor
+                Tensor containing the target items to predict.
+        
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the NCE loss.
+        """
 
         context_vec = self.context_embed(context_items)
         pos_score = self.score(context_vec, target_items)
@@ -162,8 +245,7 @@ class BaseModel:
         list_neg_items = tf.constant(list_neg_items, dtype=tf.int32)
 
         P_1 = tf.map_fn(
-            lambda args: 1
-            / (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
+            lambda args: 1/ (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
             (pos_score, target_items),
             fn_output_signature=tf.float32,
         )
@@ -185,7 +267,18 @@ class BaseModel:
 
     @tf.function
     def train_step(self, batch: tf.Tensor) -> tf.Tensor:
-        """Performs a single training step on the batch of baskets."""
+        """ Performs a single training step on the batch of baskets.
+        
+        Parameters
+        ----------
+            batch : tf.Tensor
+                Tensor containing the batch of baskets.   
+        
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the total loss for the batch.
+        """
 
         with tf.GradientTape() as tape:
             total_loss = 0
@@ -226,16 +319,6 @@ class BaseModel:
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return total_loss
 
-    def predict(self, context_items: tf.Tensor) -> np.ndarray:
-        """Predicts the item probabilities given the context items."""
-
-        context_vec = self.context_embed(context_items)
-        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        scores = tf.linalg.set_diag(
-            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
-        )
-        return tf.nn.softmax(scores, axis=1).numpy()
-
     
     def fit(
         self,
@@ -243,8 +326,28 @@ class BaseModel:
         repr: bool = False,
         loss_type: str = "nce",
     ) -> None:
-        """Trains the model for a specified number of epochs."""
+        """ Trains the model for a specified number of epochs.
+        
+        Parameters
+        ----------
+            dataset : list or np.ndarray
+                Dataset of baskets to train the model on.
+            repr : bool
+                If True, represents the model after training.
+            loss_type : str
+                Type of loss function to use. Options are "nce"
+                or "nll" (negative log likelihood).
+        """
 
+        if not self.instantiated:
+            raise ValueError("Model must be instantiated before training. Call instantiate() first.")
+        
+        if not isinstance(dataset, (list, np.ndarray)):
+            raise TypeError("Dataset must be a list or numpy array.")
+        
+        if not dataset:
+            raise ValueError("Dataset cannot be empty.")   
+         
         self.loss_type = loss_type
         dataset = tf.ragged.constant(dataset, dtype=tf.int32)
         self.last_dataset_shape = dataset.shape[0]
@@ -265,9 +368,49 @@ class BaseModel:
 
         if repr:
             self.represent()
+    
+    def predict(self, context_items: tf.Tensor) -> np.ndarray:
+        """Predicts the item probabilities given the context items.
+        
+        Parameters
+        ----------
+            context_items : tf.Tensor
+                Tensor containing the context items for prediction. 
+        
+        Returns
+        -------
+            np.ndarray
+                Numpy array containing the predicted probabilities for each item.
+        """
+        if not self.instantiated:
+            raise ValueError("Model must be instantiated before prediction. Call instantiate() first.")
+        
+        if not self.is_trained:
+            raise ValueError("Model must be trained before prediction. Call fit() first.")
+        
+        if not isinstance(context_items, tf.Tensor):
+            raise TypeError("context_items must be a TensorFlow tensor.")
+        
+        context_vec = self.context_embed(context_items)
+        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
+        scores = tf.linalg.set_diag(
+            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
+        )
+        return tf.nn.softmax(scores, axis=1).numpy()
 
     def evaluate(self, dataset: tf.Tensor) -> float:
-        """Evaluates the model on the given dataset and returns the average loss."""
+        """ Evaluates the model on the given dataset and returns the average loss.
+        
+        Parameters
+        ----------
+            dataset : tf.Tensor
+                Tensor containing the dataset of baskets to evaluate.   
+        
+        Returns
+        -------
+            float
+                Average loss over the dataset.
+        """
 
         dataset = tf.ragged.constant(dataset, dtype=tf.int32)
         total_loss = 0
@@ -312,13 +455,25 @@ class BaseModel:
         return total_loss / num_batches
 
     def model_distribution_matrix(self) -> list:
-        """Returns the model distribution matrix P(i|j) for each item i given j."""
+        """ Returns the model distribution matrix P(i|j) for each item i given j.
+        
+        Returns
+        -------
+            list
+                List of matrices P(i|j) for each item i given j.
+        """
 
         contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
         return self.predict(contexts)
 
     def represent(self, hyperparams: bool = True) -> None:
-        """Prints the model parameters."""
+        """ Prints the model parameters.
+        
+        Parameters
+        ----------
+            hyperparams : bool
+                If True, prints the hyperparameters of the model.
+        """
 
         if not self.is_trained:
             raise ValueError(
@@ -360,8 +515,17 @@ class BaseModel:
             print("=" * 30)
 
     def save_model(self, filepath: str) -> None:
-        """Saves the model parameters to a file."""
+        """ Saves the model parameters to a file.
+        
+        Parameters
+        ----------
+            filepath : str
+                Path to the file where the model parameters will be saved.
+        """
 
+        if not self.is_trained:
+            raise ValueError("Model must be trained before saving. Call fit() first.")
+        
         if os.path.exists(filepath):
             raise FileExistsError(f"Model file {filepath} already exists.")
 
@@ -385,12 +549,20 @@ class BaseModel:
         print(f"Model saved to {filepath}")
 
     def load_model(self, filepath: str) -> None:
-        """Loads the model parameters from a file."""
+        """ Loads the model parameters from a file.
+        
+        Parameters
+        ----------
+            filepath : str
+                Path to the file from which the model parameters will be loaded.
+        """
+
+
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file {filepath} does not exist.")
 
         data = json.load(open(filepath, "r"))
-        model = BaseModel(
+        model = AttnModel(
             n_items=data["n_items"],
             embedding_dim=data["embedding_dim"],
             k_noise=data["k_noise"],
