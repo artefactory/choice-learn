@@ -363,7 +363,10 @@ class AleaCarta:
         else:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)"""
-        alpha_by_basket = tf.gather(tf.concat([tf.zeros((1, self.alpha.shape[1])), self.alpha], axis=0), basket_batch + tf.ones_like(basket_batch))
+        alpha_by_basket = tf.gather(
+            tf.concat([tf.zeros((1, self.alpha.shape[1])), self.alpha], axis=0),
+            basket_batch + tf.ones_like(basket_batch),
+        )
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
@@ -385,7 +388,7 @@ class AleaCarta:
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
-        """Compute the utility of an (unordered) basket.
+        r"""Compute the utility of an (unordered) basket.
 
         Corresponds to the sum of all the conditional utilities: \sum_{i \in basket} U(i | basket \ {i})
         Take as input directly a Trip object or separately basket, store,
