@@ -326,6 +326,34 @@ class AttnModel:
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return total_loss
+    
+
+    def predict(self, context_items: tf.Tensor) -> np.ndarray:
+        """Predicts the item probabilities given the context items.
+        
+        Parameters
+        ----------
+            context_items : tf.Tensor
+                Tensor containing the context items for prediction. 
+        
+        Returns
+        -------
+            np.ndarray
+                Numpy array containing the predicted probabilities for each item.
+        """
+        if not self.instantiated:
+            raise ValueError("Model must be instantiated before prediction. Call instantiate() first.")
+        
+        if not self.is_trained:
+            raise ValueError("Model must be trained before prediction. Call fit() first.")
+        
+        
+        context_vec = self.context_embed(context_items)
+        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
+        scores = tf.linalg.set_diag(
+            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
+        )
+        return tf.nn.softmax(scores, axis=1).numpy()
 
     
     def fit(
@@ -375,36 +403,10 @@ class AttnModel:
         self.is_trained = True
 
         if repr:
-            self.represent()
+            contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
+            self.represent(self.predict(contexts), hyperparams=True)
     
-    def predict(self, context_items: tf.Tensor) -> np.ndarray:
-        """Predicts the item probabilities given the context items.
-        
-        Parameters
-        ----------
-            context_items : tf.Tensor
-                Tensor containing the context items for prediction. 
-        
-        Returns
-        -------
-            np.ndarray
-                Numpy array containing the predicted probabilities for each item.
-        """
-        if not self.instantiated:
-            raise ValueError("Model must be instantiated before prediction. Call instantiate() first.")
-        
-        if not self.is_trained:
-            raise ValueError("Model must be trained before prediction. Call fit() first.")
-        
-        if not isinstance(context_items, tf.Tensor):
-            raise TypeError("context_items must be a TensorFlow tensor.")
-        
-        context_vec = self.context_embed(context_items)
-        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        scores = tf.linalg.set_diag(
-            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
-        )
-        return tf.nn.softmax(scores, axis=1).numpy()
+    
 
     def evaluate(self, dataset: tf.Tensor) -> float:
         """ Evaluates the model on the given dataset and returns the average loss.
@@ -423,8 +425,11 @@ class AttnModel:
         dataset = tf.ragged.constant(dataset, dtype=tf.int32)
         total_loss = 0
         num_batches = 0
+        distribution_matrix = []
 
         for batch in self.get_batches(dataset):
+            if batch.shape[0] != self.batch_size:
+                continue
             target_items_idx_for_mask = tf.map_fn(
                 lambda x: tf.random.uniform(
                     shape=[], maxval=tf.shape(x)[0], dtype=tf.int32
@@ -458,26 +463,18 @@ class AttnModel:
             else:
                 total_loss += tf.reduce_sum(self.nll_loss(context_items, target_items))
 
+            distribution_matrix.append(self.predict(context_items))
             num_batches += 1
+        
 
-        self.represent(hyperparams=False)
+        distribution_matrix = np.concatenate(distribution_matrix, axis=0)
+        self.represent(distribution_matrix, hyperparams=False)
     
 
         return total_loss / num_batches
 
-    def model_distribution_matrix(self) -> list:
-        """ Returns the model distribution matrix P(i|j) for each item i given j.
-        
-        Returns
-        -------
-            list
-                List of matrices P(i|j) for each item i given j.
-        """
 
-        contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
-        return self.predict(contexts)
-
-    def represent(self, hyperparams: bool = True) -> None:
+    def represent(self, context_prediction: tf.Tensor, hyperparams: bool = True, show_loss: bool = True) -> None:
         """ Prints the model parameters.
         
         Parameters
@@ -494,18 +491,18 @@ class AttnModel:
         fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
         im1 = axes[0].imshow(
-            np.stack(self.model_distribution_matrix()),
+            np.stack(context_prediction),
             vmin=0.0,
-            vmax=np.max(np.stack(self.model_distribution_matrix())),
+            vmax=np.max(np.stack(context_prediction)),
             cmap="Spectral",
         )
         axes[0].set_title("Model P(i|j) on elementary baskets")
         plt.colorbar(im1, ax=axes[0])
-
-        axes[1].plot(self.loss_history, label="Training Loss")
-        axes[1].set_xlabel("Training Steps")
-        axes[1].set_ylabel("Loss")
-        axes[1].set_title("Training Loss History")
+        if show_loss:
+            axes[1].plot(self.loss_history, label="Training Loss")
+            axes[1].set_xlabel("Training Steps")
+            axes[1].set_ylabel("Loss")
+            axes[1].set_title("Training Loss History")
 
         plt.tight_layout()
         plt.savefig("model_representation.png")

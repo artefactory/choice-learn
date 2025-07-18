@@ -28,4 +28,7 @@ model.instantiate(
 )
 model.fit(baskets, repr=True, loss_type="nce")
 
+#eval_dataset = data_gen.generate_synthetic_dataset(100)
+#model.evaluate(eval_dataset)
+
 
