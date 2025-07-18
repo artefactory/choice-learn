@@ -8,7 +8,7 @@ from AttnModel import AttnModel
 
 # Parameters
 
-n_baskets = 3000
+n_baskets = 1000
 embedding_dim = 3
 K_noise = 6
 
@@ -16,6 +16,7 @@ K_noise = 6
 
 data_gen = SyntheticDataGenerator()
 baskets = data_gen.generate_synthetic_dataset(n_baskets)
+print("Generated Baskets:", baskets)
 
 # Instantiate and train the model
 

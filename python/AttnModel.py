@@ -18,7 +18,7 @@ class AttnModel:
     def __init__(
         self,
         lr: float = 0.005,
-        epochs: int = 450,
+        epochs: int = 700,
         optimizer: str = "Adam",
         batch_size: str = 32,
         loss_type: str = "nce",
@@ -99,6 +99,10 @@ class AttnModel:
             tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
         )
 
+        self.empty_context_emb = tf.Variable(
+            tf.random.normal((self.embedding_dim,), stddev=0.1), name="empty_context_emb"
+        )
+
         self.is_trained = False
         self.loss_history = []
         self.instantiated = True
@@ -113,7 +117,7 @@ class AttnModel:
                 List of trainable weights (Wi, wa, Wo).
         """
 
-        return [self.Wi, self.wa, self.Wo]
+        return [self.Wi, self.wa, self.Wo, self.empty_context_emb]
 
     def get_batches(self, dataset: tf.Tensor) -> list:
         """ Generates batches of baskets for training or testing.
@@ -148,9 +152,13 @@ class AttnModel:
 
         context_emb = tf.gather(self.Wi, context_items, axis=0)
         context_vec = tf.map_fn(
-            lambda x: tf.reduce_sum(
-                tf.transpose(x) * tf.nn.softmax(tf.tensordot(x, self.wa, axes=1)), axis=1
-            ),
+            lambda x: tf.cond(
+                    tf.equal(tf.shape(x)[0], 0),
+                    lambda: self.empty_context_emb,
+                    lambda: tf.reduce_sum(
+                        tf.transpose(x) * tf.nn.softmax(tf.tensordot(x, self.wa, axes=1)), axis=1
+                    )
+                ),
             context_emb,
             fn_output_signature=tf.float32
         )

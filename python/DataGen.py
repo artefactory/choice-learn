@@ -144,7 +144,7 @@ class SyntheticDataGenerator:
         first_chosen_item, first_chosen_nest = select_first_item()
         basket = complete_basket(first_chosen_item, first_chosen_nest)
         basket = add_noise(basket)
-
+        
         return list(basket)
 
     def generate_synthetic_dataset(self, n_baskets=None, assortment=None) -> list:
@@ -173,6 +173,7 @@ class SyntheticDataGenerator:
 
         baskets = []
         for _ in range(n_baskets):
+
             baskets.append(self.generate_basket())
 
 
