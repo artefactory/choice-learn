@@ -7,8 +7,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../choice-learn')))
 from choice_learn.basket_models.dataset import Trip, TripDataset
 from typing import Union
-np.random.seed(42)
-random.seed(42)
+import matplotlib.pyplot as plt
+#np.random.seed(42)
+#random.seed(42)
 
 
 class SyntheticDataGenerator:
@@ -66,13 +67,12 @@ class SyntheticDataGenerator:
         """
 
 
-                    
-
-        return list(  
+        return list( 
             key
             for key, value in self.items_nest.items()
             if value[0].intersection(assortment)
         )
+            
 
     def generate_basket(self, assortment : Union[int, np.ndarray] = None) -> list:
         """ Generates a basket of items based on the defined item sets and their relations.
@@ -82,17 +82,16 @@ class SyntheticDataGenerator:
             list
                 List of items in the generated basket.
         """
-
         if assortment is None :
             assortment = np.array([i for i in range(self.assortment_matrix.shape[1]) if self.assortment_matrix[0, i] == 1])
         if isinstance(assortment, int) and self.assortment_matrix.shape[0]> assortment:
             assortment = np.array([i for i in range(self.assortment_matrix.shape[1]) if self.assortment_matrix[assortment, i] == 1])
         elif isinstance(assortment, np.ndarray):
+            assert assortment.shape == (8,), "Assortment should be a single row array."
             assortment = np.array(assortment)
-
-        available_sets = self.get_available_sets(assortment)
         
-        print(assortment)
+        assortment = set(assortment)
+        available_sets = self.get_available_sets(assortment)        
 
         def select_first_item() -> tuple:
             """ Selects the first item and its nest randomly from the available sets.
@@ -155,15 +154,15 @@ class SyntheticDataGenerator:
             """
 
             if random.random() < self.noise_proba:
+ 
                 basket.add(random.choice(list(assortment.difference(basket))))
-
             return basket
 
         first_chosen_item, first_chosen_nest = select_first_item()
         basket = complete_basket(first_chosen_item, first_chosen_nest)
         basket = add_noise(basket)
         
-        return list(basket)
+        return np.array(list(basket))
 
     def generate_trip(self, assortment : Union[int, np.ndarray] = None) -> Trip:
         """ Generates a trip object from the generated basket.
@@ -174,47 +173,14 @@ class SyntheticDataGenerator:
                 A Trip object containing the generated basket.
         """
 
-        basket = self.generate_basket(assortment)
+        basket = self.generate_basket()
         return Trip(
             purchases = basket,
             prices = np.array([1.0] * len(basket)),  # Assuming uniform price of 1.0 for simplicity
             assortment = np.array(list(self.assortment_matrix[0])),
         )
 
-    def generate_synthetic_dataset(self, n_baskets=None, assortment=None) -> list:
-        """ Generates a dataset of baskets.
-        
-        Parameters  
-        ----------
-            n_baskets : int, optional
-                Number of baskets to generate. If None, uses the default value.
-            assortment : set, optional
-                Custom assortment of items to use for basket generation. If None, uses the default assortment.
-                
-        Returns
-        -------
-            list or np.ndarray
-                List of baskets or a padded numpy array of baskets if padded is True.
-        """
-
-        if assortment is not None:
-            self.assortment = assortment
-
-        self.get_available_sets()
-
-        if n_baskets is None:
-            n_baskets = self.n_baskets_default
-
-        baskets = []
-        for _ in range(n_baskets):
-            basket = self.generate_basket()
-            if len(basket) == 2:
-                baskets.append(basket)
-            #baskets.append(self.generate_basket())
-
-
-        return baskets
-    
+   
     def generate_trip_dataset(self, n_baskets = None, assortments_matrix : np.ndarray = None) -> TripDataset:
         """ Generates a TripDataset from the generated baskets.
         
@@ -232,7 +198,7 @@ class SyntheticDataGenerator:
         """
 
         if assortments_matrix is None:
-            assortments = np.array(np.zeros((1, self.assortment_matrix.shape[1])), dtype=int)
+            assortments = self.assortment_matrix
         else:
             assortments = assortments_matrix
         
@@ -248,6 +214,22 @@ class SyntheticDataGenerator:
 
         return TripDataset(trips, assortments)
 
+"""
 sdg = SyntheticDataGenerator()
-trip_dataset = sdg.generate_trip_dataset(n_baskets=1000)
-#print(f"Generated {len(trip_dataset)} trips with assortments.")
+trip_dataset = sdg.generate_trip_dataset(n_baskets=10000)
+distribution = np.zeros((8,8))
+for trip in trip_dataset.trips:
+    for i in trip.purchases:
+        for j in trip.purchases:
+            if i != j:
+                distribution[i, j] += 1
+
+distribution = distribution / np.sum(distribution, axis=1, keepdims=True)
+plt.imshow(distribution, cmap='hot', interpolation='nearest')
+plt.colorbar()
+plt.title("Item Co-occurrence Distribution")
+plt.xlabel("Item Index")
+plt.ylabel("Item Index")
+plt.savefig("item_cooccurrence_distribution.png")
+plt.show()
+"""

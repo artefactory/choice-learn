@@ -5,6 +5,11 @@ import os
 import json
 import tqdm
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../choice-learn')))
+from choice_learn.basket_models.dataset import Trip, TripDataset
+
 import random
 import numpy as np
 import tensorflow as tf
@@ -406,14 +411,15 @@ class AttnModel:
         if not self.instantiated:
             raise ValueError("Model must be instantiated before training. Call instantiate() first.")
         
-        if not isinstance(dataset, (list, np.ndarray)):
+        if not isinstance(dataset, TripDataset):
             raise TypeError("Dataset must be a list or numpy array.")
         
         if not dataset:
             raise ValueError("Dataset cannot be empty.")   
          
         self.loss_type = loss_type
-        dataset = tf.ragged.constant(dataset, dtype=tf.int32)
+        dataset_lists = [list(trip.purchases) for trip in dataset.trips]
+        dataset = tf.ragged.constant(dataset_lists, dtype=tf.int32)
         self.last_dataset_shape = dataset.shape[0]
 
         iterable = tqdm.trange(self.epochs, desc="Training Epochs")

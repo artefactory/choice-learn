@@ -15,13 +15,13 @@ K_noise = 7
 # Generate synthetic dataset
 
 data_gen = SyntheticDataGenerator()
-baskets = data_gen.generate_synthetic_dataset(n_baskets)
+baskets = data_gen.generate_trip_dataset(n_baskets)
 
 # Instantiate and train the model
 
 model = AttnModel()
 model.instantiate(
-    n_items=len(data_gen.assortment),
+    n_items=data_gen.assortment_matrix.shape[1],
     embedding_dim=embedding_dim,
     K_noise=K_noise
 )
