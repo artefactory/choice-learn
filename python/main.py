@@ -10,13 +10,12 @@ from AttnModel import AttnModel
 
 n_baskets = 1000
 embedding_dim = 3
-K_noise = 6
+K_noise = 7
 
 # Generate synthetic dataset
 
 data_gen = SyntheticDataGenerator()
 baskets = data_gen.generate_synthetic_dataset(n_baskets)
-print("Generated Baskets:", baskets)
 
 # Instantiate and train the model
 

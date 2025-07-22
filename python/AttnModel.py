@@ -18,7 +18,7 @@ class AttnModel:
     def __init__(
         self,
         lr: float = 0.005,
-        epochs: int = 700,
+        epochs: int = 500,
         optimizer: str = "Adam",
         batch_size: str = 32,
         loss_type: str = "nce",
@@ -98,6 +98,8 @@ class AttnModel:
         self.wa = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
         )
+
+        self.Wo_bias = tf.Variable(tf.zeros([self.n_items]), name='Wo_bias')
 
         self.empty_context_emb = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1), name="empty_context_emb"
@@ -211,9 +213,10 @@ class AttnModel:
             tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1),
         )
         return -tf.math.log(target_items_scores)
-
+    
+    
     @tf.function
-    def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+    def my_nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """ Calculates the loss using Noise Contrastive Estimation (NCE).
         
         Parameters
@@ -269,9 +272,30 @@ class AttnModel:
                 (neg_score, column),
                 fn_output_signature=tf.float32,
             )
+
             loss -= tf.math.log(P_0)
 
         return loss
+    
+
+    @tf.function
+    def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Calculates the loss using TensorFlow's built-in NCE loss."""
+        context_vec = self.context_embed(context_items)  # [batch_size, embedding_dim]
+        # Ensure target_items is shape [batch_size, 1]
+        if len(target_items.shape) == 1:
+            target_items = tf.expand_dims(target_items, axis=1)
+        loss = tf.nn.nce_loss(
+            weights=self.Wo,              # [num_classes, dim]
+            biases=self.Wo_bias,          # [num_classes]
+            labels=target_items,          # [batch_size, 1]
+            inputs=context_vec,           # [batch_size, dim]
+            num_sampled=self.K_noise,
+            num_classes=self.n_items,
+            remove_accidental_hits=True
+        )
+        return loss 
+
 
     @tf.function
     def train_step(self, batch: tf.Tensor) -> tf.Tensor:
@@ -319,6 +343,10 @@ class AttnModel:
 
             context_items = tf.ragged.boolean_mask(batch, mask)
             if self.loss_type == "nce":
+                #print("Using TF NCE loss")
+                #print(tf.reduce_sum(self.nce_loss(context_items, target_items)))
+                #print("Using my NCE loss")
+                #print(tf.reduce_sum(self.my_nce_loss(context_items, target_items)))
                 total_loss += tf.reduce_sum(self.nce_loss(context_items, target_items))
             else:
                 total_loss += tf.reduce_sum(self.nll_loss(context_items, target_items))
@@ -405,7 +433,6 @@ class AttnModel:
         if repr:
             contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
             self.represent(self.predict(contexts), hyperparams=True)
-    
     
 
     def evaluate(self, dataset: tf.Tensor) -> float:
@@ -605,3 +632,6 @@ class AttnModel:
         self.is_trained = True
         self.instantiated = True
         print(f"Model loaded from {filepath}")
+
+
+    
