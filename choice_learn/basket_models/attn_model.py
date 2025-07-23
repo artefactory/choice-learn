@@ -79,13 +79,9 @@ class AttnModel:
         self.K_noise = k_noise
 
         if q_distribution is None:
-            assert n_items > 1, (
-                "n_items must be greater than 1 to define a uniform distribution."
-            )
+            assert n_items > 1, "n_items must be greater than 1 to define a uniform distribution."
 
-            self.Q_distribution = tf.constant(
-                [1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32
-            )
+            self.Q_distribution = tf.constant([1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32)
         else:
             self.Q_distribution = tf.constant(q_distribution, dtype=tf.float32)
 
@@ -95,9 +91,7 @@ class AttnModel:
         self.Wo = tf.Variable(
             tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wo"
         )
-        self.wa = tf.Variable(
-            tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
-        )
+        self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa")
 
         self.Wo_bias = tf.Variable(tf.zeros([self.n_items]), name="Wo_bias")
 
@@ -136,7 +130,6 @@ class AttnModel:
             batch_indices = indices[i : i + self.batch_size]
             yield tf.gather(dataset, batch_indices)
 
-
     def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
 
@@ -164,7 +157,6 @@ class AttnModel:
             fn_output_signature=tf.float32,
         )
 
-
     def score(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
         """Return the score of the item given the context vector.
 
@@ -185,7 +177,6 @@ class AttnModel:
             (context_vec, items),
             fn_output_signature=tf.float32,
         )
-
 
     def nll_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Calculate the loss using a simple, naive softmax cross-entropy approach.
@@ -213,12 +204,12 @@ class AttnModel:
         )
         return -tf.math.log(target_items_scores)
 
-
-    def my_nce_loss(self,
-                    pos_score: tf.Tensor,
-                    target_items: tf.Tensor,
-                    list_neg_items: tf.Tensor,
-                    neg_scores: tf.Tensor
+    def my_nce_loss(
+        self,
+        pos_score: tf.Tensor,
+        target_items: tf.Tensor,
+        list_neg_items: tf.Tensor,
+        neg_scores: tf.Tensor,
     ) -> tf.Tensor:
         """Calculate the loss using Noise Contrastive Estimation (NCE).
 
@@ -236,12 +227,10 @@ class AttnModel:
         """
         loss = -tf.math.log(self.proba_positive_samples(pos_score, target_items))
         for i in range(len(neg_scores)):
-            loss -= tf.math.log(self.proba_negative_samples(
-                neg_scores[i],
-                tf.gather(list_neg_items, i, axis=1)))
+            loss -= tf.math.log(
+                self.proba_negative_samples(neg_scores[i], tf.gather(list_neg_items, i, axis=1))
+            )
         return loss
-
-
 
     def proba_positive_samples(self, pos_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Calculate the probability of positive samples.
@@ -265,8 +254,7 @@ class AttnModel:
         if len(target_items.shape) == 0:
             target_items = tf.expand_dims(target_items, 0)
         return tf.map_fn(
-            lambda args: 1
-            / (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
+            lambda args: 1 / (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
             (pos_score, target_items),
             fn_output_signature=tf.float32,
         )
@@ -297,7 +285,6 @@ class AttnModel:
             (neg_score, target_items),
             fn_output_signature=tf.float32,
         )
-
 
     def get_negative_samples(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Generate negative samples for the given context and target items.
@@ -334,7 +321,6 @@ class AttnModel:
 
         return tf.constant(list_neg_items, dtype=tf.int32)
 
-
     @tf.function
     def train_step(self, context_batch, items_batch) -> tf.Tensor:
         """Perform a single training step on the batch of baskets.
@@ -356,15 +342,19 @@ class AttnModel:
                 context_vec = self.context_embed(context_batch)
                 pos_score = self.score(context_vec, items_batch)
                 list_neg_items = self.get_negative_samples(context_batch, items_batch)
-                neg_scores = [self.score(context_vec, tf.gather(list_neg_items, i, axis=1))
-                              for i in range(len(list_neg_items[0]))]
+                neg_scores = [
+                    self.score(context_vec, tf.gather(list_neg_items, i, axis=1))
+                    for i in range(len(list_neg_items[0]))
+                ]
 
-                total_loss += tf.reduce_sum(self.my_nce_loss(
-                    pos_score = pos_score,
-                    target_items = items_batch,
-                    list_neg_items = list_neg_items,
-                    neg_scores = neg_scores
-                ))
+                total_loss += tf.reduce_sum(
+                    self.my_nce_loss(
+                        pos_score=pos_score,
+                        target_items=items_batch,
+                        list_neg_items=list_neg_items,
+                        neg_scores=neg_scores,
+                    )
+                )
             else:
                 total_loss += tf.reduce_sum(self.nll_loss(context_batch, items_batch))
 
@@ -391,17 +381,11 @@ class AttnModel:
             )
 
         if not self.is_trained:
-            raise ValueError(
-                "Model must be trained before prediction. Call fit() first."
-            )
-
-
+            raise ValueError("Model must be trained before prediction. Call fit() first.")
 
         context_vec = self.context_embed(context_items)
         scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        scores = tf.linalg.set_diag(
-            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
-        )
+        scores = tf.linalg.set_diag(scores, tf.fill([tf.shape(scores)[0]], float("-inf")))
         return tf.nn.softmax(scores, axis=1).numpy()
 
     def fit(
@@ -481,9 +465,7 @@ class AttnModel:
             if batch.shape[0] != self.batch_size:
                 continue
             target_items_idx_for_mask = tf.map_fn(
-                lambda x: tf.random.uniform(
-                    shape=[], maxval=tf.shape(x)[0], dtype=tf.int32
-                ),
+                lambda x: tf.random.uniform(shape=[], maxval=tf.shape(x)[0], dtype=tf.int32),
                 batch,
                 fn_output_signature=tf.int32,
             )
@@ -535,9 +517,7 @@ class AttnModel:
                 If True, prints the hyperparameters of the model.
         """
         if not self.is_trained:
-            raise ValueError(
-                "Model must be trained before representation. Call fit() first."
-            )
+            raise ValueError("Model must be trained before representation. Call fit() first.")
 
         fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -623,7 +603,7 @@ class AttnModel:
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file {filepath} does not exist.")
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
 
         # Set hyperparameters and attributes
@@ -642,9 +622,7 @@ class AttnModel:
             if data["optimizer"]["name"].lower() == "adam":
                 self.optimizer = tf.keras.optimizers.Adam(self.lr)
             else:
-                print(
-                    f"Optimizer {data['optimizer']['name']} not implemented, switching to Adam"
-                )
+                print(f"Optimizer {data['optimizer']['name']} not implemented, switching to Adam")
                 self.optimizer = tf.keras.optimizers.Adam(self.lr)
         else:
             self.optimizer = tf.keras.optimizers.Adam(self.lr)
@@ -657,6 +635,7 @@ class AttnModel:
         self.is_trained = True
         self.instantiated = True
         print(f"Model loaded from {filepath}")
+
 
 """
     def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:

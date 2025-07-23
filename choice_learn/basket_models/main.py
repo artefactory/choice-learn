@@ -20,7 +20,6 @@ data_gen = SyntheticDataGenerator()
 trip_dataset = data_gen.generate_trip_dataset(n_baskets)
 
 
-
 # Instantiate and train the model
 
 model = AttnModel()
