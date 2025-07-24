@@ -16,45 +16,57 @@ class SyntheticDataGenerator:
 
     def __init__(
         self,
-        n_baskets_default: int = 400,
-        proba_complementary_items: float = 0.7,
-        proba_neutral_items: float = 0.3,
-        noise_proba: float = 0.15,
         items_nest: dict = {
             0: ({0, 1, 2}, [-1, 1, 0, 0]),
             1: ({3, 4, 5}, [1, -1, 0, 0]),
             2: ({6}, [0, 0, -1, 0]),
             3: ({7}, [0, 0, 0, -1]),
         },
-        assortment_matrix: np.ndarray = np.ones((1, 8), dtype=int),
     ) -> None:
         """Initialize the data generator with parameters for basket generation.
 
         Parameters
         ----------
-            n_baskets_default : int
-                Default number of baskets to generate if not specified.
+            items_nest : dict
+                Dictionary defining item sets and their relations.
+        """
+
+        self.items_nest = items_nest
+        self.instantiate(
+            proba_complementary_items=0.7,
+            proba_neutral_items=0.3,
+            noise_proba=0.15,
+            assortment_matrix=np.ones((1, 8)),
+        )
+
+        
+
+    def instantiate(self, 
+        proba_complementary_items: float,
+        proba_neutral_items: float,
+        noise_proba: float,
+        assortment_matrix:  np.ndarray = np.ones((1, 8))) -> None:
+        """Instantiate the data generator with parameters for basket generation.
+
+        Parameters
+        ----------
             proba_complementary_items : float
-                Probability of adding complementary items to the basket.
+                Probability of adding complementary items to the basket.       
             proba_neutral_items : float
                 Probability of adding neutral items to the basket.
             noise_proba : float
                 Probability of adding noise items to the basket.
-            items_nest : dict
-                Dictionary defining item sets and their relations.
-            default_assortment : set
-                Default assortment of items available for basket generation.
+            assortment_matrix : np.ndarray, optional
+                Matrix of assortments to use for generating baskets.
+                If None, uses the default assortment matrix.   
         """
-        self.n_baskets_default = n_baskets_default
 
         self.proba_complementary_items = proba_complementary_items
         self.proba_neutral_items = proba_neutral_items
         self.noise_proba = noise_proba
-
-        self.items_nest = items_nest
-
         self.assortment_matrix = assortment_matrix
         self.default_assortment = self.assortment_matrix[0,:]
+
 
     def get_assortment_items(self, assortment : Union[int, np.ndarray] = None) -> np.ndarray:
         """Return the assortment based on the provided index or array.
@@ -248,7 +260,7 @@ class SyntheticDataGenerator:
         )
 
     def generate_trip_dataset(
-        self, n_baskets=None, assortments_matrix: np.ndarray = None
+        self, n_baskets=400, assortments_matrix: np.ndarray = None
     ) -> TripDataset:
         """Generate a TripDataset from the generated baskets.
 

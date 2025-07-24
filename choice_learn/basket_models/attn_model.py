@@ -23,10 +23,10 @@ class AttnModel:
 
     def __init__(
         self,
-        lr: float = 0.005,
-        epochs: int = 450,
+        lr: float = 0.05,
+        epochs: int = 45,
         optimizer: str = "Adam",
-        batch_size: str = 32,
+        batch_size: str = 50,
         loss_type: str = "nce",
     ) -> None:
         """Initialize the model with hyperparameters.
@@ -258,18 +258,24 @@ class AttnModel:
             tf.Tensor
                 Tensor containing the probabilities of positive samples.
         """
+        """
         pos_score = tf.convert_to_tensor(pos_score)
         target_items = tf.convert_to_tensor(target_items)
-        if len(pos_score.shape) == 0:
-            pos_score = tf.expand_dims(pos_score, 0)
-        if len(target_items.shape) == 0:
-            target_items = tf.expand_dims(target_items, 0)
+    #    if len(pos_score.shape) == 0:
+    #        pos_score = tf.expand_dims(pos_score, 0)
+    #    if len(target_items.shape) == 0:
+    #        target_items = tf.expand_dims(target_items, 0)
         return tf.map_fn(
             lambda args: 1
             / (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
-            (pos_score, target_items),
+            (tf.expand_dims(pos_score, 0), tf.expand_dims(target_items, 0)),
             fn_output_signature=tf.float32,
         )
+        """
+
+        q_dist = tf.gather(self.Q_distribution, target_items)
+        return 1 / (1 + self.K_noise * q_dist * tf.exp(-pos_score))
+    
 
     def proba_negative_samples(self, neg_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Calculate the probability of negative samples.
@@ -286,6 +292,7 @@ class AttnModel:
             tf.Tensor
                 Tensor containing the probabilities of negative samples.
         """
+        """
         neg_score = tf.convert_to_tensor(neg_score)
         target_items = tf.convert_to_tensor(target_items)
         if len(neg_score.shape) == 0:
@@ -297,8 +304,11 @@ class AttnModel:
             (neg_score, target_items),
             fn_output_signature=tf.float32,
         )
+        """
+        q_dist = tf.gather(self.Q_distribution, target_items)
+        return 1 - (1 / (1 + self.K_noise * q_dist * tf.exp(-neg_score)))
 
-
+    @tf.function
     def get_negative_samples(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Generate negative samples for the given context and target items.
 
@@ -314,26 +324,41 @@ class AttnModel:
             tf.Tensor
                 Tensor containing the negative samples for each context item.
         """
-        list_neg_items = []
+        
+        batch_size = tf.shape(context_items)[0]
+        n_items = self.n_items
+        target_items_exp = tf.expand_dims(target_items, axis=1)
+        forbidden_items = tf.concat([context_items, target_items_exp], axis=1)  # ragged if context_items is ragged
+        if isinstance(forbidden_items, tf.RaggedTensor):
+            forbidden_items = forbidden_items.to_tensor(default_value=-1)
+        item_range = tf.range(n_items)  # [n_items]
+        item_range = tf.reshape(item_range, (1, 1, n_items))  # [1,1,n_items]
+        forbidden_items_exp = tf.expand_dims(forbidden_items, axis=-1)  # [batch_size, context+1, 1]
+        mask = tf.reduce_any(tf.equal(forbidden_items_exp, item_range), axis=1)  # [batch_size, n_items]
+        candidates_mask = ~mask
 
-        for i in range(context_items.shape[0]):
-            neg_items = []
-            force_ending_cpt = 0
+        # For each batch, get indices of allowed items
+        def sample_negatives(candidates):
+            indices = tf.where(candidates)[:, 0]
+            n_candidates = tf.shape(indices)[0]
+            # If not enough candidates, sample with replacement
+            k = tf.minimum(self.K_noise, n_candidates)
+            shuffled = tf.random.shuffle(indices)
+            result = tf.cond(
+                n_candidates >= self.K_noise,
+                lambda: shuffled[:self.K_noise],
+                lambda: tf.pad(shuffled, [[0, self.K_noise - n_candidates]], constant_values=shuffled[0])
+            )
+            return result
 
-            while len(neg_items) < self.K_noise and force_ending_cpt < 1000:
-                force_ending_cpt += 1
-                candidate_item = random.randint(0, self.n_items - 1)
+        neg_samples = tf.map_fn(
+            sample_negatives,
+            candidates_mask,
+            fn_output_signature=tf.TensorSpec([self.K_noise], dtype=tf.int64)
+        )
 
-                in_context = tf.reduce_any(tf.equal(context_items[i], candidate_item))
-                is_target = tf.equal(target_items[i], candidate_item)
-
-                if not in_context and not is_target:
-                    neg_items.append(candidate_item)
-
-            list_neg_items.append(neg_items)
-
-        return tf.constant(list_neg_items, dtype=tf.int32)
-
+        return tf.cast(neg_samples, tf.int32)
+        
 
     @tf.function
     def train_step(self, context_batch, items_batch) -> tf.Tensor:
@@ -353,12 +378,21 @@ class AttnModel:
             total_loss = 0
 
             if self.loss_type == "nce":
+                """
                 context_vec = self.context_embed(context_batch)
                 pos_score = self.score(context_vec, items_batch)
                 list_neg_items = self.get_negative_samples(context_batch, items_batch)
                 neg_scores = [self.score(context_vec, tf.gather(list_neg_items, i, axis=1))
                               for i in range(len(list_neg_items[0]))]
-
+                """
+                context_vec = self.context_embed(context_batch)
+                pos_score = self.score(context_vec, items_batch)
+                list_neg_items = self.get_negative_samples(context_batch, items_batch) 
+                neg_scores = tf.map_fn(
+                    lambda neg_items: self.score(context_vec, neg_items),
+                    tf.transpose(list_neg_items),  
+                    fn_output_signature=tf.float32,
+                )
                 total_loss += tf.reduce_sum(self.my_nce_loss(
                     pos_score = pos_score,
                     target_items = items_batch,

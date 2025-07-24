@@ -5,7 +5,7 @@ This module tests the methods of the SyntheticDataGenerator class
 
 import numpy as np
 
-from choice_learn.basket_models.DataGen import SyntheticDataGenerator
+from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 from choice_learn.basket_models.dataset import Trip
 
 
@@ -167,10 +167,11 @@ def test_generate_trip_dataset():
     with baskets of items based on the current assortment.
     """
     data_gen = SyntheticDataGenerator()
+    n_baskets = 10
 
     # Test with the default parameters (n_baskets = 400, assortment = [[1, 1, 1, 1, 1, 1, 1, 1],])
-    dataset = data_gen.generate_trip_dataset()
-    assert len(dataset.trips) == data_gen.n_baskets_default, "Should contain exact number of basket"
+    dataset = data_gen.generate_trip_dataset(n_baskets)
+    assert len(dataset.trips) == n_baskets, "Should contain exact number of basket"
     assert all(isinstance(trip, Trip)
                for trip in dataset.trips), "All trips in the dataset should be Trip objects"
     assert all(isinstance(trip.purchases, np.ndarray)
