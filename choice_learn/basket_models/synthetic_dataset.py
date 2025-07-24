@@ -1,28 +1,18 @@
 """Data generation module for synthetic basket data."""
 
-import random
 from typing import Union
 
 import numpy as np
 
 from .dataset import Trip, TripDataset
 
-#np.random.seed(42)
-#random.seed(42)
+np.random.seed(42)
 
 
 class SyntheticDataGenerator:
     """Class to generate synthetic basket data based on predefined item sets and their relations."""
 
-    def __init__(
-        self,
-        items_nest: dict = {
-            0: ({0, 1, 2}, [-1, 1, 0, 0]),
-            1: ({3, 4, 5}, [1, -1, 0, 0]),
-            2: ({6}, [0, 0, -1, 0]),
-            3: ({7}, [0, 0, 0, -1]),
-        },
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize the data generator with parameters for basket generation.
 
         Parameters
@@ -30,42 +20,68 @@ class SyntheticDataGenerator:
             items_nest : dict
                 Dictionary defining item sets and their relations.
         """
-
-        self.items_nest = items_nest
+        self.isinstantiated = False
         self.instantiate(
             proba_complementary_items=0.7,
             proba_neutral_items=0.3,
             noise_proba=0.15,
-            assortment_matrix=np.ones((1, 8)),
+            n_items = 8,
+            assortment_matrix=None,
+            items_nest=None
         )
+        if not self.isinstantiated:
+            raise ValueError(
+                "SyntheticDataGenerator is not instantiated. " \
+                "Please call the instantiate method first."
+            )
 
-        
 
-    def instantiate(self, 
+
+
+
+    def instantiate(self,
         proba_complementary_items: float,
         proba_neutral_items: float,
         noise_proba: float,
-        assortment_matrix:  np.ndarray = np.ones((1, 8))) -> None:
+        n_items: int = None,
+        items_nest: dict = None,
+        assortment_matrix:  np.ndarray = None) -> None:
         """Instantiate the data generator with parameters for basket generation.
 
         Parameters
         ----------
             proba_complementary_items : float
-                Probability of adding complementary items to the basket.       
+                Probability of adding complementary items to the basket.
             proba_neutral_items : float
                 Probability of adding neutral items to the basket.
             noise_proba : float
                 Probability of adding noise items to the basket.
             assortment_matrix : np.ndarray, optional
                 Matrix of assortments to use for generating baskets.
-                If None, uses the default assortment matrix.   
+                If None, uses the default assortment matrix.
         """
-
         self.proba_complementary_items = proba_complementary_items
         self.proba_neutral_items = proba_neutral_items
         self.noise_proba = noise_proba
-        self.assortment_matrix = assortment_matrix
+        if n_items is None:
+            self.n_items = 8
+        else:
+            self.n_items = n_items
+        if assortment_matrix is not None:
+            self.assortment_matrix = assortment_matrix
+        else:
+            self.assortment_matrix = np.ones((1, self.n_items))
         self.default_assortment = self.assortment_matrix[0,:]
+        if items_nest is None:
+            self.items_nest = {
+            0: ({0, 1, 2}, [-1, 1, 0, 0]),
+            1: ({3, 4, 5}, [1, -1, 0, 0]),
+            2: ({6}, [0, 0, -1, 0]),
+            3: ({7}, [0, 0, 0, -1]),
+            }
+        else:
+            self.items_nest = items_nest
+        self.isinstantiated = True
 
 
     def get_assortment_items(self, assortment : Union[int, np.ndarray] = None) -> np.ndarray:
@@ -120,11 +136,11 @@ class SyntheticDataGenerator:
         assortment_items = set(self.get_assortment_items(assortment))
 
 
-        return list(
+        return np.array(list(
             key
             for key, value in self.items_nest.items()
             if value[0].intersection(assortment_items)
-        )
+        ))
 
     def generate_basket(self,
                         assortment: Union[int, np.ndarray] = None,
@@ -141,8 +157,8 @@ class SyntheticDataGenerator:
 
         Returns
         -------
-            list
-                List of items in the generated basket.
+            array
+                array of items in the generated basket.
         """
         available_sets = self.get_available_sets(assortment)
         available_items = self.get_assortment_items(assortment)
@@ -156,10 +172,10 @@ class SyntheticDataGenerator:
                 tuple
                     A tuple containing the first item and its corresponding nest.
             """
-            chosen_nest = random.choice(available_sets)
+            chosen_nest = np.random.choice(available_sets)
             #chosen_item = random.choice(list(self.items_nest[chosen_nest][0]))
-            chosen_item = random.choice(
-                [i for i in self.items_nest[chosen_nest][0] if i in available_items])
+            chosen_item = np.random.choice(
+                np.array([i for i in self.items_nest[chosen_nest][0] if i in available_items]))
 
             return chosen_item, chosen_nest
 
@@ -184,19 +200,17 @@ class SyntheticDataGenerator:
                 nest, relations = self.items_nest[key]
                 if (
                     relations[first_key_index] == 1
-                    and random.random() < self.proba_complementary_items
+                    and np.random.rand() < self.proba_complementary_items
                 ):
-                    #basket.add(random.choice(list(nest)))
-                    basket.append(random.choice(
-                        [i for i in nest if (i not in basket) and (i in available_items)]
+                    basket.append(np.random.choice(
+                        [i for i in nest if i in available_items]
                         ))
                 elif (
                     relations[first_key_index] == 0
-                    and random.random() < self.proba_neutral_items
+                    and np.random.rand() < self.proba_neutral_items
                 ):
-                    #basket.add(random.choice(list(nest)))
-                    basket.append(random.choice(
-                        [i for i in nest if (i not in basket) and (i in available_items)]
+                    basket.append(np.random.choice(
+                        [i for i in nest if i in available_items]
                         ))
             return basket
 
@@ -213,9 +227,9 @@ class SyntheticDataGenerator:
                 list
                     A list containing the items in the basket, potentially with noise items added.
             """
-            if random.random() < self.noise_proba:
+            if np.random.rand() < self.noise_proba:
                 try:
-                    basket.append(int(random.choice(
+                    basket.append(int(np.random.choice(
                         [i for i in available_items if i not in basket]
                         )))
                 except IndexError:
@@ -224,7 +238,7 @@ class SyntheticDataGenerator:
                         "Returning the current basket."
                     )
             return basket
-        if available_sets != []:
+        if len(available_sets) != 0:
             first_chosen_item, first_chosen_nest = select_first_item()
             basket = complete_basket(first_chosen_item, first_chosen_nest)
             basket = add_noise(basket)
@@ -236,10 +250,10 @@ class SyntheticDataGenerator:
             if len(basket) < len_basket:
                 basket = self.generate_basket(assortment, len_basket)
             else:
-                basket = random.sample(basket, len_basket)
+                basket = np.random.choice(basket, len_basket, replace=False)
 
 
-        return np.array(list(basket))
+        return np.array(basket)
 
     def generate_trip(self, assortment: Union[int, np.ndarray] = None) -> Trip:
         """Generate a trip object from the generated basket.
@@ -255,12 +269,15 @@ class SyntheticDataGenerator:
         basket = self.generate_basket(assortment=assortment)
         return Trip(
             purchases=basket,
-            prices=np.array([1.0] * 8),  # Assuming uniform price of 1.0 for simplicity
-            assortment=np.array(list(self.assortment_matrix[0])),
+            # Assuming uniform price of 1.0 for simplicity
+            prices=np.ones((1,self.n_items)),
+            assortment=assortment,
         )
 
     def generate_trip_dataset(
-        self, n_baskets=400, assortments_matrix: np.ndarray = None
+        self,
+        n_baskets: int = 400,
+        assortments_matrix: np.ndarray = None
     ) -> TripDataset:
         """Generate a TripDataset from the generated baskets.
 
@@ -282,17 +299,14 @@ class SyntheticDataGenerator:
             assortments = self.assortment_matrix
         else:
             assortments = assortments_matrix
-
-        if n_baskets is None:
-            n_baskets = self.n_baskets_default
-
         trips = []
+        assortment_id = np.random.randint(0, assortments.shape[0])
         for _ in range(n_baskets):
-            assortment_id = random.randint(0, assortments.shape[0] - 1)
             trip = self.generate_trip(assortments[assortment_id])
-
             trips.append(trip)
 
-        return TripDataset(trips, assortments)
+        trip_dataset_assortments = assortments*n_baskets
+
+        return TripDataset(trips, trip_dataset_assortments)
 
 

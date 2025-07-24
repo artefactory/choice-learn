@@ -971,16 +971,12 @@ class AleaCarta:
         trip_dataset: TripDataset,
         batch_size: int = 32,
         epsilon_eval: float = 1e-6,
+
     ) -> tf.Tensor:
         """Evaluate the model for each trip (unordered basket) in the dataset.
 
         Predicts the probabilities according to the model and then computes the
         mean negative log-likelihood (nll) for the dataset
-
-        N.B.: Some randomness is involved in the evaluation through random sampling
-        of permutations:
-        During batch processing, random permutation of the items in the basket
-        when creating augmented data from a trip index
 
         Parameters
         ----------

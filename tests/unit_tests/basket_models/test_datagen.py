@@ -5,8 +5,8 @@ This module tests the methods of the SyntheticDataGenerator class
 
 import numpy as np
 
-from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 from choice_learn.basket_models.dataset import Trip
+from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 
 
 def test_get_assortment():

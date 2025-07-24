@@ -7,7 +7,6 @@ Wang et al. (2018).
 
 import json
 import os
-import random
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,16 +17,14 @@ import tqdm
 from .dataset import TripDataset
 
 
-class AttnModel:
+class AttentionBasedContextEmbedding:
     """Class for the attention-based model."""
 
     def __init__(
         self,
         lr: float = 0.05,
-        epochs: int = 45,
         optimizer: str = "Adam",
         batch_size: str = 50,
-        loss_type: str = "nce",
     ) -> None:
         """Initialize the model with hyperparameters.
 
@@ -35,18 +32,12 @@ class AttnModel:
         ----------
             lr : float
                 Learning rate for the optimizer.
-            epochs : int
-                Number of training epochs.
             optimizer : str
                 Optimizer to use for training. Default is "Adam".
             batch_size : int
                 Size of the training batches.
-            loss_type : str
-                Type of loss function to use. Options are "nce"
-                or "nll" (negative log likelihood).
         """
         self.lr: float = lr
-        self.epochs: int = epochs
         self.batch_size: int = batch_size
 
         if optimizer.lower() == "adam":
@@ -55,28 +46,35 @@ class AttnModel:
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
 
-        self.loss_type = loss_type
-
+        self.last_n_baskets_dataset = None
         self.instantiated = False
 
-    def instantiate(self, n_items, embedding_dim, k_noise, q_distribution=None) -> None:
+    def instantiate(self,
+                    n_items,
+                    epochs,
+                    embedding_dim,
+                    n_negative_samples,
+                    q_distribution=None) -> None:
         """Initialize the model parameters.
 
         Parameters
         ----------
             n_items : int
                 Number of unique items in the dataset.
+            epochs : int
+                Number of training epochs.
             embedding_dim : int
                 Dimension of the item embeddings.
-            K_noise : int
+            n_negative_samples : int
                 Number of negative samples for Noise Contrastive Estimation.
             Q_distribution : list
                 Probability distribution for negative sampling.
                 If None, a uniform distribution is used.
         """
         self.n_items = n_items
+        self.epochs = epochs
         self.embedding_dim = embedding_dim
-        self.K_noise = k_noise
+        self.n_negative_samples = n_negative_samples
 
         if q_distribution is None:
             assert n_items > 1, (
@@ -99,7 +97,6 @@ class AttnModel:
             tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
         )
 
-        self.Wo_bias = tf.Variable(tf.zeros([self.n_items]), name="Wo_bias")
 
         self.empty_context_emb = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1),
@@ -120,21 +117,6 @@ class AttnModel:
                 List of trainable weights (Wi, wa, Wo).
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_emb]
-
-    def get_batches(self, dataset: tf.Tensor) -> list:
-        """Generate batches of baskets for training or testing.
-
-        Parameters
-        ----------
-            dataset : tf.Tensor
-                Tensor containing the dataset of baskets.
-        """
-        indices = list(range(dataset.shape[0]))
-        random.shuffle(indices)
-
-        for i in range(0, len(indices), self.batch_size):
-            batch_indices = indices[i : i + self.batch_size]
-            yield tf.gather(dataset, batch_indices)
 
 
     def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
@@ -187,34 +169,95 @@ class AttnModel:
         )
 
 
-    def nll_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculate the loss using a simple, naive softmax cross-entropy approach.
+
+    def proba_positive_samples(self, pos_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Calculate the probability of positive samples.
+
+        Parameters
+        ----------
+            pos_score : tf.Tensor
+                Tensor containing the scores of positive samples.
+            target_items : tf.Tensor
+                Tensor containing the target items.
+
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the probabilities of positive samples.
+        """
+        q_dist = tf.gather(self.Q_distribution, target_items)
+        return 1 / (1 + self.n_negative_samples * q_dist * tf.exp(-pos_score))
+
+
+    def proba_negative_samples(self, neg_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Calculate the probability of negative samples.
+
+        Parameters
+        ----------
+            neg_score : tf.Tensor
+                Tensor containing the scores of negative samples.
+            target_items : tf.Tensor
+                Tensor containing the target items.
+
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the probabilities of negative samples.
+        """
+        q_dist = tf.gather(self.Q_distribution, target_items)
+        return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
+
+    @tf.function
+    def get_negative_samples(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
+        """Generate negative samples for the given context and target items.
 
         Parameters
         ----------
             context_items : tf.Tensor
                 Tensor containing the context items.
             target_items : tf.Tensor
-                Tensor containing the target items to predict.
+                Tensor containing the target items.
 
         Returns
         -------
             tf.Tensor
-                Tensor containing the negative log likelihood loss.
+                Tensor containing the negative samples for each context item.
         """
-        context_vec = self.context_embed(context_items)
-        scores_softmax = tf.map_fn(
-            lambda x: tf.nn.softmax(tf.tensordot(self.Wo, x, axes=1)), context_vec
+        n_items = self.n_items
+        target_items_exp = tf.expand_dims(target_items, axis=1)
+        forbidden_items = tf.concat([context_items, target_items_exp], axis=1)
+        if isinstance(forbidden_items, tf.RaggedTensor):
+            forbidden_items = forbidden_items.to_tensor(default_value=-1)
+        item_range = tf.range(n_items)
+        item_range = tf.reshape(item_range, (1, 1, n_items))
+        forbidden_items_exp = tf.expand_dims(forbidden_items, axis=-1)
+        mask = tf.reduce_any(tf.equal(forbidden_items_exp, item_range), axis=1)
+        candidates_mask = ~mask
+
+        # For each batch, get indices of allowed items
+        def sample_negatives(candidates):
+            indices = tf.where(candidates)[:, 0]
+            n_candidates = tf.shape(indices)[0]
+            # If not enough candidates, sample with replacement
+            shuffled = tf.random.shuffle(indices)
+            return tf.cond(
+                n_candidates >= self.n_negative_samples,
+                lambda: shuffled[:self.n_negative_samples],
+                lambda: tf.pad(shuffled,
+                               [[0, self.n_negative_samples - n_candidates]],
+                               constant_values=shuffled[0])
+            )
+
+        neg_samples = tf.map_fn(
+            sample_negatives,
+            candidates_mask,
+            fn_output_signature=tf.TensorSpec([self.n_negative_samples], dtype=tf.int64)
         )
 
-        target_items_scores = tf.gather_nd(
-            scores_softmax,
-            tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1),
-        )
-        return -tf.math.log(target_items_scores)
+        return tf.cast(neg_samples, tf.int32)
 
 
-    def my_nce_loss(self,
+    def nce_loss(self,
                     pos_score: tf.Tensor,
                     target_items: tf.Tensor,
                     list_neg_items: tf.Tensor,
@@ -242,123 +285,40 @@ class AttnModel:
         return loss
 
 
-
-    def proba_positive_samples(self, pos_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculate the probability of positive samples.
+    def get_batch_loss(
+        self,
+        context_batch: tf.Tensor,
+        items_batch: tf.Tensor,
+    ) -> tf.Tensor:
+        """Calculate the loss for a batch of baskets.
 
         Parameters
         ----------
-            pos_score : tf.Tensor
-                Tensor containing the scores of positive samples.
-            target_items : tf.Tensor
-                Tensor containing the target items.
+            context_batch : tf.Tensor
+                Tensor containing the context items for the batch.
+            items_batch : tf.Tensor
+                Tensor containing the target items for the batch.
 
         Returns
         -------
             tf.Tensor
-                Tensor containing the probabilities of positive samples.
+                Tensor containing the total loss for the batch.
         """
-        """
-        pos_score = tf.convert_to_tensor(pos_score)
-        target_items = tf.convert_to_tensor(target_items)
-    #    if len(pos_score.shape) == 0:
-    #        pos_score = tf.expand_dims(pos_score, 0)
-    #    if len(target_items.shape) == 0:
-    #        target_items = tf.expand_dims(target_items, 0)
-        return tf.map_fn(
-            lambda args: 1
-            / (1 + self.K_noise * self.Q_distribution[args[1]] * tf.exp(-args[0])),
-            (tf.expand_dims(pos_score, 0), tf.expand_dims(target_items, 0)),
+        context_vec = self.context_embed(context_batch)
+        pos_score = self.score(context_vec, items_batch)
+        list_neg_items = self.get_negative_samples(context_batch, items_batch)
+        neg_scores = tf.map_fn(
+            lambda neg_items: self.score(context_vec, neg_items),
+            tf.transpose(list_neg_items),
             fn_output_signature=tf.float32,
         )
-        """
+        return tf.reduce_sum(self.nce_loss(
+                pos_score = pos_score,
+                target_items = items_batch,
+                list_neg_items = list_neg_items,
+                neg_scores = neg_scores
+            ))
 
-        q_dist = tf.gather(self.Q_distribution, target_items)
-        return 1 / (1 + self.K_noise * q_dist * tf.exp(-pos_score))
-    
-
-    def proba_negative_samples(self, neg_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Calculate the probability of negative samples.
-
-        Parameters
-        ----------
-            neg_score : tf.Tensor
-                Tensor containing the scores of negative samples.
-            target_items : tf.Tensor
-                Tensor containing the target items.
-
-        Returns
-        -------
-            tf.Tensor
-                Tensor containing the probabilities of negative samples.
-        """
-        """
-        neg_score = tf.convert_to_tensor(neg_score)
-        target_items = tf.convert_to_tensor(target_items)
-        if len(neg_score.shape) == 0:
-            neg_score = tf.expand_dims(neg_score, 0)
-        if len(target_items.shape) == 0:
-            target_items = tf.expand_dims(target_items, 0)
-        return tf.map_fn(
-            lambda args: 1 - self.proba_positive_samples(args[0], args[1]),
-            (neg_score, target_items),
-            fn_output_signature=tf.float32,
-        )
-        """
-        q_dist = tf.gather(self.Q_distribution, target_items)
-        return 1 - (1 / (1 + self.K_noise * q_dist * tf.exp(-neg_score)))
-
-    @tf.function
-    def get_negative_samples(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Generate negative samples for the given context and target items.
-
-        Parameters
-        ----------
-            context_items : tf.Tensor
-                Tensor containing the context items.
-            target_items : tf.Tensor
-                Tensor containing the target items.
-
-        Returns
-        -------
-            tf.Tensor
-                Tensor containing the negative samples for each context item.
-        """
-        
-        batch_size = tf.shape(context_items)[0]
-        n_items = self.n_items
-        target_items_exp = tf.expand_dims(target_items, axis=1)
-        forbidden_items = tf.concat([context_items, target_items_exp], axis=1)  # ragged if context_items is ragged
-        if isinstance(forbidden_items, tf.RaggedTensor):
-            forbidden_items = forbidden_items.to_tensor(default_value=-1)
-        item_range = tf.range(n_items)  # [n_items]
-        item_range = tf.reshape(item_range, (1, 1, n_items))  # [1,1,n_items]
-        forbidden_items_exp = tf.expand_dims(forbidden_items, axis=-1)  # [batch_size, context+1, 1]
-        mask = tf.reduce_any(tf.equal(forbidden_items_exp, item_range), axis=1)  # [batch_size, n_items]
-        candidates_mask = ~mask
-
-        # For each batch, get indices of allowed items
-        def sample_negatives(candidates):
-            indices = tf.where(candidates)[:, 0]
-            n_candidates = tf.shape(indices)[0]
-            # If not enough candidates, sample with replacement
-            k = tf.minimum(self.K_noise, n_candidates)
-            shuffled = tf.random.shuffle(indices)
-            result = tf.cond(
-                n_candidates >= self.K_noise,
-                lambda: shuffled[:self.K_noise],
-                lambda: tf.pad(shuffled, [[0, self.K_noise - n_candidates]], constant_values=shuffled[0])
-            )
-            return result
-
-        neg_samples = tf.map_fn(
-            sample_negatives,
-            candidates_mask,
-            fn_output_signature=tf.TensorSpec([self.K_noise], dtype=tf.int64)
-        )
-
-        return tf.cast(neg_samples, tf.int32)
-        
 
     @tf.function
     def train_step(self, context_batch, items_batch) -> tf.Tensor:
@@ -375,36 +335,12 @@ class AttnModel:
                 Tensor containing the total loss for the batch.
         """
         with tf.GradientTape() as tape:
-            total_loss = 0
+            loss = self.get_batch_loss(context_batch, items_batch)
 
-            if self.loss_type == "nce":
-                """
-                context_vec = self.context_embed(context_batch)
-                pos_score = self.score(context_vec, items_batch)
-                list_neg_items = self.get_negative_samples(context_batch, items_batch)
-                neg_scores = [self.score(context_vec, tf.gather(list_neg_items, i, axis=1))
-                              for i in range(len(list_neg_items[0]))]
-                """
-                context_vec = self.context_embed(context_batch)
-                pos_score = self.score(context_vec, items_batch)
-                list_neg_items = self.get_negative_samples(context_batch, items_batch) 
-                neg_scores = tf.map_fn(
-                    lambda neg_items: self.score(context_vec, neg_items),
-                    tf.transpose(list_neg_items),  
-                    fn_output_signature=tf.float32,
-                )
-                total_loss += tf.reduce_sum(self.my_nce_loss(
-                    pos_score = pos_score,
-                    target_items = items_batch,
-                    list_neg_items = list_neg_items,
-                    neg_scores = neg_scores
-                ))
-            else:
-                total_loss += tf.reduce_sum(self.nll_loss(context_batch, items_batch))
 
-        grads = tape.gradient(total_loss, self.trainable_weights)
+        grads = tape.gradient(loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-        return total_loss
+        return loss
 
     def predict(self, context_items: tf.Tensor) -> np.ndarray:
         """Predicts the item probabilities given the context items.
@@ -429,8 +365,6 @@ class AttnModel:
                 "Model must be trained before prediction. Call fit() first."
             )
 
-
-
         context_vec = self.context_embed(context_items)
         scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
         scores = tf.linalg.set_diag(
@@ -442,7 +376,6 @@ class AttnModel:
         self,
         dataset,
         repr: bool = False,
-        loss_type: str = "nce",
     ) -> None:
         """Trains the model for a specified number of epochs.
 
@@ -452,23 +385,19 @@ class AttnModel:
                 Dataset of baskets to train the model on.
             repr : bool
                 If True, represents the model after training.
-            loss_type : str
-                Type of loss function to use. Options are "nce"
-                or "nll" (negative log likelihood).
         """
         if not self.instantiated:
             raise ValueError(
                 "Model must be instantiated before training. Call instantiate() first."
             )
-
+        # You said not to let raise and assert in code,
+        # if it is here it is just temporary for me to know where errors are coming from
         if not isinstance(dataset, TripDataset):
             raise TypeError("Dataset must be a list or numpy array.")
 
         if not dataset:
             raise ValueError("Dataset cannot be empty.")
-
-        self.loss_type = loss_type
-
+        print("Epode: ", self.epochs)
         iterable = tqdm.trange(self.epochs, desc="Training Epochs")
         for _ in iterable:
             epoch_loss = 0
@@ -486,8 +415,8 @@ class AttnModel:
             self.loss_history.append(epoch_loss)
             iterable.set_postfix({"epoch_loss": epoch_loss})
 
-        print(f"Training completed. Final loss: {self.loss_history[-1]}")
         self.is_trained = True
+        self.last_n_baskets_dataset = len(dataset.trips)
 
         if repr:
             contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
@@ -506,54 +435,36 @@ class AttnModel:
             float
                 Average loss over the dataset.
         """
-        dataset = tf.ragged.constant(dataset, dtype=tf.int32)
-        total_loss = 0
-        num_batches = 0
-        distribution_matrix = []
+        loss = 0
 
-        for batch in self.get_batches(dataset):
-            if batch.shape[0] != self.batch_size:
-                continue
-            target_items_idx_for_mask = tf.map_fn(
-                lambda x: tf.random.uniform(
-                    shape=[], maxval=tf.shape(x)[0], dtype=tf.int32
-                ),
-                batch,
-                fn_output_signature=tf.int32,
-            )
+        for batch in dataset.iter_batch(
+                batch_size=self.batch_size, shuffle=False, data_method="aleacarta"
+            ):
+            ragged_batch = tf.ragged.constant(
+                    [row[row != -1] for row in batch[1]], dtype=tf.int32
+                )
+            target_items = tf.constant(batch[0], dtype=tf.int32)
 
-            target_items = tf.map_fn(
-                lambda args: args[0][args[1]],
-                (batch, target_items_idx_for_mask),
-                fn_output_signature=tf.int32,
-            )
+            loss += self.get_batch_loss(ragged_batch, target_items)
 
-            mask = tf.map_fn(
-                lambda x: tf.one_hot(
-                    x[0],
-                    depth=tf.cast(x[1], tf.int32),
-                    on_value=False,
-                    off_value=True,
-                    dtype=tf.bool,
-                ),
-                (target_items_idx_for_mask, batch.row_lengths()),
-                fn_output_signature=tf.RaggedTensorSpec(shape=[None], dtype=tf.bool),
-            )
+        return loss / len(dataset.trips)
 
-            context_items = tf.ragged.boolean_mask(batch, mask)
 
-            if self.loss_type == "nce":
-                total_loss += tf.reduce_sum(self.nce_loss(context_items, target_items))
-            else:
-                total_loss += tf.reduce_sum(self.nll_loss(context_items, target_items))
-
-            distribution_matrix.append(self.predict(context_items))
-            num_batches += 1
-
-        distribution_matrix = np.concatenate(distribution_matrix, axis=0)
-        self.represent(distribution_matrix, hyperparams=False)
-
-        return total_loss / num_batches
+    def __repr__(self) -> str:
+        """Return a string representation of the model."""
+        return (
+            "=" * 30 + "\n"
+            "      Model Parameters\n"
+            + "=" * 30 + "\n"
+            + f"{'Epochs':20}: {self.epochs}\n"
+            + f"{'Number of Trips':20}: {self.last_n_baskets_dataset}\n"
+            + f"{'n_negative_samples':20}: {self.n_negative_samples}\n"
+            + f"{'Learning_rate':20}: {self.lr}\n"
+            + f"{'Loss type':20}: NCE Loss\n"
+            + f"{'Batch_size':20}: {self.batch_size}\n"
+            + f"{'Embedding_dim':20}: {self.embedding_dim}\n"
+            + "=" * 30
+        )
 
     def represent(
         self,
@@ -590,23 +501,13 @@ class AttnModel:
             axes[1].set_title("Training Loss History")
 
         plt.tight_layout()
-        plt.savefig("model_representation.png")
         plt.show()
 
         if hyperparams:
-            print("=" * 30)
-            print("      Model Parameters")
-            print("=" * 30)
-            print(f"{'Epochs':20}: {self.epochs}")
-            print(f"{'K_noise':20}: {self.K_noise}")
-            print(f"{'Learning_rate':20}: {self.lr}")
-            print(f"{'Loss type':20}: {self.loss_type}")
-            print(f"{'Batch_size':20}: {self.batch_size}")
-            print(f"{'Embedding_dim':20}: {self.embedding_dim}")
+            print(self)
 
-            print("=" * 30)
 
-    def save_model(self, filepath: str, overwrite: bool) -> None:
+    def save_model(self, filepath: str, overwrite: bool = True) -> None:
         """Save the model parameters to a file.
 
         Parameters
@@ -628,23 +529,22 @@ class AttnModel:
         data = {
             "n_items": int(self.n_items),
             "embedding_dim": int(self.embedding_dim),
-            "k_noise": int(self.K_noise),
+            "n_negative_samples": int(self.n_negative_samples),
             "lr": float(self.lr),
             "epochs": int(self.epochs),
             "optimizer": self.optimizer.get_config(),
             "batch_size": int(self.batch_size),
-            "loss_type": self.loss_type,
             "Q_distribution": self.Q_distribution.numpy().tolist()
             if hasattr(self.Q_distribution, "numpy")
             else list(self.Q_distribution),
             "Wi": self.Wi.numpy().tolist(),
             "Wo": self.Wo.numpy().tolist(),
             "wa": self.wa.numpy().tolist(),
+            "empty_context_emb": self.empty_context_emb.numpy().tolist(),
             "loss_history": [float(loss) for loss in self.loss_history],
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
-        print(f"Model saved to {filepath}")
 
     def load_model(self, filepath: str) -> None:
         """Load the model parameters from a file.
@@ -663,13 +563,19 @@ class AttnModel:
         # Set hyperparameters and attributes
         self.n_items = int(data["n_items"])
         self.embedding_dim = int(data["embedding_dim"])
-        self.K_noise = int(data["k_noise"])
+        self.n_negative_samples = int(data["n_negative_samples"])
         self.lr = float(data["lr"])
         self.epochs = int(data["epochs"])
         self.batch_size = int(data["batch_size"])
-        self.loss_type = data["loss_type"]
         self.Q_distribution = tf.constant(data["Q_distribution"], dtype=tf.float32)
         self.loss_history = [float(loss) for loss in data.get("loss_history", [])]
+        self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
+        self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
+        self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
+        self.empty_context_emb = tf.Variable(
+            np.array(data["empty_context_emb"], dtype=np.float32),
+            name="empty_context_emb",
+        )
 
         # Re-instantiate optimizer
         if isinstance(data["optimizer"], dict) and "name" in data["optimizer"]:
@@ -683,28 +589,7 @@ class AttnModel:
         else:
             self.optimizer = tf.keras.optimizers.Adam(self.lr)
 
-        # Re-instantiate variables
-        self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
-        self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
-        self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
 
         self.is_trained = True
         self.instantiated = True
-        print(f"Model loaded from {filepath}")
 
-"""
-    def nce_loss(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        context_vec = self.context_embed(context_items)  # [batch_size, embedding_dim]
-        if len(target_items.shape) == 1:
-            target_items = tf.expand_dims(target_items, axis=1)
-        loss = tf.nn.nce_loss(
-            weights=self.Wo,
-            biases=self.Wo_bias,
-            labels=target_items,
-            inputs=context_vec,
-            num_sampled=self.K_noise,
-            num_classes=self.n_items,
-            remove_accidental_hits=True,
-        )
-        return loss
-"""
