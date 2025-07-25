@@ -246,7 +246,8 @@ class SyntheticDataGenerator:
             basket = []
 
         if len_basket is not None:
-            assert isinstance(len_basket, int), "len_basket should be an integer"
+            if not isinstance(len_basket, int):
+                raise TypeError("len_basket should be an integer")
             if len(basket) < len_basket:
                 basket = self.generate_basket(assortment, len_basket)
             else:

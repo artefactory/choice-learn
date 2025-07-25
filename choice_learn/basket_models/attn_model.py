@@ -74,9 +74,8 @@ class AttentionBasedContextEmbedding:
         self.last_n_baskets_dataset = None
 
         if q_distribution is None:
-            assert n_items > 1, (
-                "n_items must be greater than 1 to define a uniform distribution."
-            )
+            if n_items <= 1:
+                raise ValueError("n_items must be greater than 1 to define a uniform distribution.")
 
             self.Q_distribution = tf.constant(
                 [1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32
@@ -413,8 +412,6 @@ class AttentionBasedContextEmbedding:
             raise ValueError(
                 "Model must be instantiated before training. Call instantiate() first."
             )
-        # You said not to let raise and assert in code,
-        # if it is here it is just temporary for me to know where errors are coming from
         if not isinstance(dataset, TripDataset):
             raise TypeError("Dataset must be a list or numpy array.")
 
