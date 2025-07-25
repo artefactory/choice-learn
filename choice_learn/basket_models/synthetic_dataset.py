@@ -36,6 +36,8 @@ class SyntheticDataGenerator:
                 Probability of adding neutral items to the basket.
             noise_proba : float
                 Probability of adding noise items to the basket.
+            n_items : int, optional
+                Number of items in the dataset. Default is 8.
             assortment_matrix : np.ndarray, optional
                 Matrix of assortments to use for generating baskets.
                 If None, uses the default assortment matrix.
@@ -91,12 +93,17 @@ class SyntheticDataGenerator:
             )
         return assortment
 
-    def get_available_sets(self, assortment: Union[int, np.ndarray] = None) -> list:
+    def get_available_sets(self, assortment: Union[int, np.ndarray] = None) -> np.ndarray:
         """Return the available sets based on the current assortment.
+
+        Parameters
+        ----------
+            assortment : int or np.ndarray, optional
+                Index of the assortment or an array representing the assortment.
 
         Returns
         -------
-            list
+            np.ndarray
                 List of keys from items_nest
                 Where the first item set intersects with the current assortment.
         """
@@ -140,11 +147,9 @@ class SyntheticDataGenerator:
                     A tuple containing the first item and its corresponding nest.
             """
             chosen_nest = np.random.choice(available_sets)
-            # chosen_item = random.choice(list(self.items_nest[chosen_nest][0]))
             chosen_item = np.random.choice(
                 np.array([i for i in self.items_nest[chosen_nest][0] if i in available_items])
             )
-
             return chosen_item, chosen_nest
 
         def complete_basket(first_item: int, first_nest: str) -> list:
@@ -221,6 +226,11 @@ class SyntheticDataGenerator:
 
     def generate_trip(self, assortment: Union[int, np.ndarray] = None) -> Trip:
         """Generate a trip object from the generated basket.
+
+        Parameters
+        ----------
+            assortment : int or np.ndarray, optional
+                Index of the assortment or an array representing the assortment.
 
         Returns
         -------

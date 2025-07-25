@@ -99,9 +99,9 @@ class AttentionBasedContextEmbedding:
         )
         self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa")
 
-        self.empty_context_emb = tf.Variable(
+        self.empty_context_embedding = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1),
-            name="empty_context_emb",
+            name="empty_context_embedding",
         )
 
         self.is_trained = False
@@ -116,7 +116,7 @@ class AttentionBasedContextEmbedding:
             list
                 List of trainable weights (Wi, wa, Wo).
         """
-        return [self.Wi, self.wa, self.Wo, self.empty_context_emb]
+        return [self.Wi, self.wa, self.Wo, self.empty_context_embedding]
 
     def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
@@ -135,7 +135,7 @@ class AttentionBasedContextEmbedding:
         return tf.map_fn(
             lambda x: tf.cond(
                 tf.equal(tf.shape(x)[0], 0),
-                lambda: self.empty_context_emb,
+                lambda: self.empty_context_embedding,
                 lambda: tf.reduce_sum(
                     tf.transpose(x) * tf.nn.softmax(tf.tensordot(x, self.wa, axes=1)),
                     axis=1,
@@ -522,7 +522,7 @@ class AttentionBasedContextEmbedding:
             "Wi": self.Wi.numpy().tolist(),
             "Wo": self.Wo.numpy().tolist(),
             "wa": self.wa.numpy().tolist(),
-            "empty_context_emb": self.empty_context_emb.numpy().tolist(),
+            "empty_context_embedding": self.empty_context_embedding.numpy().tolist(),
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
@@ -554,9 +554,9 @@ class AttentionBasedContextEmbedding:
         self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
         self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
         self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
-        self.empty_context_emb = tf.Variable(
-            np.array(data["empty_context_emb"], dtype=np.float32),
-            name="empty_context_emb",
+        self.empty_context_embedding = tf.Variable(
+            np.array(data["empty_context_embedding"], dtype=np.float32),
+            name="empty_context_embedding",
         )
 
         # Re-instantiate optimizer
