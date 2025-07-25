@@ -348,7 +348,7 @@ class AleaCarta:
         )  # Shape: (batch_size,)
 
         # Create a RaggedTensor from the indices with padding removed
-        """item_indices_ragged = tf.cast(
+        item_indices_ragged = tf.cast(
             tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
             dtype=tf.int32,
         )
@@ -363,11 +363,11 @@ class AleaCarta:
         else:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
-            """
-        alpha_by_basket = tf.gather(
+
+        """alpha_by_basket = tf.gather(
             tf.concat([tf.zeros((1, self.alpha.shape[1])), self.alpha], axis=0),
             basket_batch + tf.ones_like(basket_batch),
-        )
+        )"""
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
