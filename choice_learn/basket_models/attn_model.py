@@ -22,38 +22,18 @@ class AttentionBasedContextEmbedding:
 
     def __init__(
         self,
-        lr: float = 0.05,
-        optimizer: str = "Adam",
-        batch_size: str = 50,
     ) -> None:
-        """Initialize the model with hyperparameters.
-
-        Parameters
-        ----------
-            lr : float
-                Learning rate for the optimizer.
-            optimizer : str
-                Optimizer to use for training. Default is "Adam".
-            batch_size : int
-                Size of the training batches.
-        """
-        self.lr: float = lr
-        self.batch_size: int = batch_size
-
-        if optimizer.lower() == "adam":
-            self.optimizer = tf.keras.optimizers.Adam(self.lr)
-        else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-
-        self.last_n_baskets_dataset = None
+        """Initialize the model with hyperparameters."""
         self.instantiated = False
 
     def instantiate(self,
                     n_items,
                     epochs,
+                    lr,
                     embedding_dim,
                     n_negative_samples,
+                    optimizer: str = "Adam",
+                    batch_size: str = 50,
                     q_distribution=None) -> None:
         """Initialize the model parameters.
 
@@ -63,18 +43,35 @@ class AttentionBasedContextEmbedding:
                 Number of unique items in the dataset.
             epochs : int
                 Number of training epochs.
+            lr : float
+                Learning rate for the optimizer.
             embedding_dim : int
                 Dimension of the item embeddings.
             n_negative_samples : int
                 Number of negative samples for Noise Contrastive Estimation.
+            optimizer : str
+                Optimizer to use for training. Default is "Adam".
+            batch_size : int
+                Size of the training batches.
             Q_distribution : list
                 Probability distribution for negative sampling.
                 If None, a uniform distribution is used.
         """
         self.n_items = n_items
         self.epochs = epochs
+        self.lr = lr
         self.embedding_dim = embedding_dim
         self.n_negative_samples = n_negative_samples
+
+        self.batch_size: int = batch_size
+
+        if optimizer.lower() == "adam":
+            self.optimizer = tf.keras.optimizers.Adam(self.lr)
+        else:
+            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
+            self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+
+        self.last_n_baskets_dataset = None
 
         if q_distribution is None:
             assert n_items > 1, (
@@ -253,7 +250,6 @@ class AttentionBasedContextEmbedding:
             candidates_mask,
             fn_output_signature=tf.TensorSpec([self.n_negative_samples], dtype=tf.int64)
         )
-
         return tf.cast(neg_samples, tf.int32)
 
 
@@ -283,6 +279,33 @@ class AttentionBasedContextEmbedding:
                 neg_scores[i],
                 tf.gather(list_neg_items, i, axis=1)))
         return loss
+
+    def negative_log_likelihood_loss(self,
+                                     context_vec: tf.Tensor,
+                                     target_items: tf.Tensor) -> tf.Tensor:
+        """Calculate the loss using a simple, naive softmax cross-entropy approach.
+
+        Parameters
+        ----------
+            context_vec : tf.Tensor
+                Tensor containing the context vector for the batch.
+            target_items : tf.Tensor
+                Tensor containing the target items to predict.
+
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the negative log likelihood loss.
+        """
+        scores_softmax = tf.map_fn(
+            lambda x: tf.nn.softmax(tf.tensordot(self.Wo, x, axes=1)), context_vec
+        )
+
+        target_items_scores = tf.gather_nd(
+            scores_softmax,
+            tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1),
+        )
+        return -tf.math.log(target_items_scores)
 
 
     def get_batch_loss(
@@ -435,7 +458,8 @@ class AttentionBasedContextEmbedding:
             float
                 Average loss over the dataset.
         """
-        loss = 0
+        total_loss = 0.0
+        total_samples = 0
 
         for batch in dataset.iter_batch(
                 batch_size=self.batch_size, shuffle=False, data_method="aleacarta"
@@ -444,10 +468,12 @@ class AttentionBasedContextEmbedding:
                     [row[row != -1] for row in batch[1]], dtype=tf.int32
                 )
             target_items = tf.constant(batch[0], dtype=tf.int32)
+            context_vec = self.context_embed(ragged_batch)
+            batch_loss = self.negative_log_likelihood_loss(context_vec, target_items)
+            total_loss += tf.reduce_sum(batch_loss).numpy()
+            total_samples += batch_loss.shape[0]
 
-            loss += self.get_batch_loss(ragged_batch, target_items)
-
-        return loss / len(dataset.trips)
+        return total_loss / total_samples
 
 
     def __repr__(self) -> str:
