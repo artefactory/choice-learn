@@ -7,9 +7,11 @@ Wang et al. (2018).
 
 import json
 import os
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tqdm
@@ -22,25 +24,17 @@ class AttentionBasedContextEmbedding:
 
     def __init__(
         self,
+        epochs,
+        lr,
+        embedding_dim,
+        n_negative_samples,
+        batch_size: str = 50,
+        optimizer: str = "Adam",
     ) -> None:
-        """Initialize the model with hyperparameters."""
-        self.instantiated = False
-
-    def instantiate(self,
-                    n_items,
-                    epochs,
-                    lr,
-                    embedding_dim,
-                    n_negative_samples,
-                    optimizer: str = "Adam",
-                    batch_size: str = 50,
-                    q_distribution=None) -> None:
-        """Initialize the model parameters.
+        """Initialize the model with hyperparameters.
 
         Parameters
         ----------
-            n_items : int
-                Number of unique items in the dataset.
             epochs : int
                 Number of training epochs.
             lr : float
@@ -48,16 +42,12 @@ class AttentionBasedContextEmbedding:
             embedding_dim : int
                 Dimension of the item embeddings.
             n_negative_samples : int
-                Number of negative samples for Noise Contrastive Estimation.
+                Number of negative samples to use in training.
             optimizer : str
                 Optimizer to use for training. Default is "Adam".
-            batch_size : int
-                Size of the training batches.
-            Q_distribution : list
-                Probability distribution for negative sampling.
-                If None, a uniform distribution is used.
         """
-        self.n_items = n_items
+        self.instantiated = False
+
         self.epochs = epochs
         self.lr = lr
         self.embedding_dim = embedding_dim
@@ -73,15 +63,33 @@ class AttentionBasedContextEmbedding:
 
         self.last_n_baskets_dataset = None
 
-        if q_distribution is None:
+    def instantiate(self, n_items, negative_samples_distribution=None) -> None:
+        """Initialize the model parameters.
+
+        Parameters
+        ----------
+            n_items : int
+                Number of unique items in the dataset.
+            negative_samples_distribution : list
+                Probability distribution for negative sampling.
+                If None, a uniform distribution is used.
+        """
+        self.n_items = tf.constant(n_items, dtype=tf.int32)
+        if negative_samples_distribution is None:
             if n_items <= 1:
                 raise ValueError("n_items must be greater than 1 to define a uniform distribution.")
 
-            self.Q_distribution = tf.constant(
+            self.negative_samples_distribution = tf.constant(
                 [1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32
             )
         else:
-            self.Q_distribution = tf.constant(q_distribution, dtype=tf.float32)
+            if len(negative_samples_distribution) != n_items:
+                raise ValueError(
+                    "Negative samples distribution must have the same length as n_items."
+                )
+            self.negative_samples_distribution = tf.constant(
+                negative_samples_distribution, dtype=tf.float32
+            )
 
         self.Wi = tf.Variable(
             tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wi"
@@ -89,10 +97,7 @@ class AttentionBasedContextEmbedding:
         self.Wo = tf.Variable(
             tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wo"
         )
-        self.wa = tf.Variable(
-            tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa"
-        )
-
+        self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa")
 
         self.empty_context_emb = tf.Variable(
             tf.random.normal((self.embedding_dim,), stddev=0.1),
@@ -100,7 +105,6 @@ class AttentionBasedContextEmbedding:
         )
 
         self.is_trained = False
-        self.loss_history = []
         self.instantiated = True
 
     @property
@@ -113,7 +117,6 @@ class AttentionBasedContextEmbedding:
                 List of trainable weights (Wi, wa, Wo).
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_emb]
-
 
     def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
@@ -142,7 +145,6 @@ class AttentionBasedContextEmbedding:
             fn_output_signature=tf.float32,
         )
 
-
     def score(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
         """Return the score of the item given the context vector.
 
@@ -164,8 +166,6 @@ class AttentionBasedContextEmbedding:
             fn_output_signature=tf.float32,
         )
 
-
-
     def proba_positive_samples(self, pos_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Calculate the probability of positive samples.
 
@@ -181,9 +181,8 @@ class AttentionBasedContextEmbedding:
             tf.Tensor
                 Tensor containing the probabilities of positive samples.
         """
-        q_dist = tf.gather(self.Q_distribution, target_items)
+        q_dist = tf.gather(self.negative_samples_distribution, target_items)
         return 1 / (1 + self.n_negative_samples * q_dist * tf.exp(-pos_score))
-
 
     def proba_negative_samples(self, neg_score: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
         """Calculate the probability of negative samples.
@@ -200,7 +199,7 @@ class AttentionBasedContextEmbedding:
             tf.Tensor
                 Tensor containing the probabilities of negative samples.
         """
-        q_dist = tf.gather(self.Q_distribution, target_items)
+        q_dist = tf.gather(self.negative_samples_distribution, target_items)
         return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
 
     @tf.function
@@ -238,25 +237,27 @@ class AttentionBasedContextEmbedding:
             shuffled = tf.random.shuffle(indices)
             return tf.cond(
                 n_candidates >= self.n_negative_samples,
-                lambda: shuffled[:self.n_negative_samples],
-                lambda: tf.pad(shuffled,
-                               [[0, self.n_negative_samples - n_candidates]],
-                               constant_values=shuffled[0])
+                lambda: shuffled[: self.n_negative_samples],
+                lambda: tf.pad(
+                    shuffled,
+                    [[0, self.n_negative_samples - n_candidates]],
+                    constant_values=shuffled[0],
+                ),
             )
 
         neg_samples = tf.map_fn(
             sample_negatives,
             candidates_mask,
-            fn_output_signature=tf.TensorSpec([self.n_negative_samples], dtype=tf.int64)
+            fn_output_signature=tf.TensorSpec([self.n_negative_samples], dtype=tf.int64),
         )
         return tf.cast(neg_samples, tf.int32)
 
-
-    def nce_loss(self,
-                    pos_score: tf.Tensor,
-                    target_items: tf.Tensor,
-                    list_neg_items: tf.Tensor,
-                    neg_scores: tf.Tensor
+    def nce_loss(
+        self,
+        pos_score: tf.Tensor,
+        target_items: tf.Tensor,
+        list_neg_items: tf.Tensor,
+        neg_scores: tf.Tensor,
     ) -> tf.Tensor:
         """Calculate the loss using Noise Contrastive Estimation (NCE).
 
@@ -274,14 +275,15 @@ class AttentionBasedContextEmbedding:
         """
         loss = -tf.math.log(self.proba_positive_samples(pos_score, target_items))
         for i in range(len(neg_scores)):
-            loss -= tf.math.log(self.proba_negative_samples(
-                neg_scores[i],
-                tf.gather(list_neg_items, i, axis=1)))
+            loss -= tf.math.log(
+                self.proba_negative_samples(neg_scores[i], tf.gather(list_neg_items, i, axis=1))
+            )
         return loss
 
-    def negative_log_likelihood_loss(self,
-                                     context_vec: tf.Tensor,
-                                     target_items: tf.Tensor) -> tf.Tensor:
+    @tf.autograph.experimental.do_not_convert
+    def negative_log_likelihood_loss(
+        self, context_vec: tf.Tensor, target_items: tf.Tensor
+    ) -> tf.Tensor:
         """Calculate the loss using a simple, naive softmax cross-entropy approach.
 
         Parameters
@@ -305,7 +307,6 @@ class AttentionBasedContextEmbedding:
             tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1),
         )
         return -tf.math.log(target_items_scores)
-
 
     def get_batch_loss(
         self,
@@ -334,13 +335,14 @@ class AttentionBasedContextEmbedding:
             tf.transpose(list_neg_items),
             fn_output_signature=tf.float32,
         )
-        return tf.reduce_sum(self.nce_loss(
-                pos_score = pos_score,
-                target_items = items_batch,
-                list_neg_items = list_neg_items,
-                neg_scores = neg_scores
-            ))
-
+        return tf.reduce_sum(
+            self.nce_loss(
+                pos_score=pos_score,
+                target_items=items_batch,
+                list_neg_items=list_neg_items,
+                neg_scores=neg_scores,
+            )
+        )
 
     @tf.function
     def train_step(self, context_batch, items_batch) -> tf.Tensor:
@@ -358,7 +360,6 @@ class AttentionBasedContextEmbedding:
         """
         with tf.GradientTape() as tape:
             loss = self.get_batch_loss(context_batch, items_batch)
-
 
         grads = tape.gradient(loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -383,27 +384,19 @@ class AttentionBasedContextEmbedding:
             )
 
         if not self.is_trained:
-            raise ValueError(
-                "Model must be trained before prediction. Call fit() first."
-            )
+            raise ValueError("Model must be trained before prediction. Call fit() first.")
 
         context_vec = self.context_embed(context_items)
         scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        scores = tf.linalg.set_diag(
-            scores, tf.fill([tf.shape(scores)[0]], float("-inf"))
-        )
+        scores = tf.linalg.set_diag(scores, tf.fill([tf.shape(scores)[0]], float("-inf")))
         return tf.nn.softmax(scores, axis=1).numpy()
 
-    def fit(
-        self,
-        dataset,
-        repr: bool = False,
-    ) -> None:
+    def fit(self, dataset) -> None:
         """Trains the model for a specified number of epochs.
 
         Parameters
         ----------
-            dataset : list or np.ndarray
+            dataset : TripDataset
                 Dataset of baskets to train the model on.
             repr : bool
                 If True, represents the model after training.
@@ -413,11 +406,21 @@ class AttentionBasedContextEmbedding:
                 "Model must be instantiated before training. Call instantiate() first."
             )
         if not isinstance(dataset, TripDataset):
-            raise TypeError("Dataset must be a list or numpy array.")
+            raise TypeError("Dataset must be a TripDataset.")
 
         if not dataset:
             raise ValueError("Dataset cannot be empty.")
-        print("Epode: ", self.epochs)
+
+        if (
+            max([len(trip.purchases) for trip in dataset.trips]) + self.n_negative_samples
+            > self.n_items
+        ):
+            raise ValueError(
+                "The number of items in the dataset is less than the number of negative samples."
+            )
+
+        history = {"train_loss": []}
+
         iterable = tqdm.trange(self.epochs, desc="Training Epochs")
         for _ in iterable:
             epoch_loss = 0
@@ -432,22 +435,21 @@ class AttentionBasedContextEmbedding:
                 loss = self.train_step(ragged_batch, target_items)
                 epoch_loss += loss
 
-            self.loss_history.append(epoch_loss)
-            iterable.set_postfix({"epoch_loss": epoch_loss})
+            float_loss = float(epoch_loss.numpy())
+            history["train_loss"].append(float_loss)
+            iterable.set_postfix({"epoch_loss": float_loss})
 
         self.is_trained = True
         self.last_n_baskets_dataset = len(dataset.trips)
 
-        if repr:
-            contexts = tf.constant([[i] for i in range(self.n_items)], dtype=tf.int32)
-            self.represent(self.predict(contexts), hyperparams=True)
+        return history
 
     def evaluate(self, dataset: tf.Tensor) -> float:
         """Evaluate the model on the given dataset and returns the average loss.
 
         Parameters
         ----------
-            dataset : tf.Tensor
+            dataset : TripDataset
                 Tensor containing the dataset of baskets to evaluate.
 
         Returns
@@ -459,11 +461,9 @@ class AttentionBasedContextEmbedding:
         total_samples = 0
 
         for batch in dataset.iter_batch(
-                batch_size=self.batch_size, shuffle=False, data_method="aleacarta"
-            ):
-            ragged_batch = tf.ragged.constant(
-                    [row[row != -1] for row in batch[1]], dtype=tf.int32
-                )
+            batch_size=self.batch_size, shuffle=False, data_method="aleacarta"
+        ):
+            ragged_batch = tf.ragged.constant([row[row != -1] for row in batch[1]], dtype=tf.int32)
             target_items = tf.constant(batch[0], dtype=tf.int32)
             context_vec = self.context_embed(ragged_batch)
             batch_loss = self.negative_log_likelihood_loss(context_vec, target_items)
@@ -472,13 +472,13 @@ class AttentionBasedContextEmbedding:
 
         return total_loss / total_samples
 
-
     def __repr__(self) -> str:
         """Return a string representation of the model."""
         return (
             "=" * 30 + "\n"
             "      Model Parameters\n"
-            + "=" * 30 + "\n"
+            + "=" * 30
+            + "\n"
             + f"{'Epochs':20}: {self.epochs}\n"
             + f"{'Number of Trips':20}: {self.last_n_baskets_dataset}\n"
             + f"{'n_negative_samples':20}: {self.n_negative_samples}\n"
@@ -488,47 +488,6 @@ class AttentionBasedContextEmbedding:
             + f"{'Embedding_dim':20}: {self.embedding_dim}\n"
             + "=" * 30
         )
-
-    def represent(
-        self,
-        context_prediction: tf.Tensor,
-        hyperparams: bool = True,
-        show_loss: bool = True,
-    ) -> None:
-        """Print the model parameters.
-
-        Parameters
-        ----------
-            hyperparams : bool
-                If True, prints the hyperparameters of the model.
-        """
-        if not self.is_trained:
-            raise ValueError(
-                "Model must be trained before representation. Call fit() first."
-            )
-
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-        im1 = axes[0].imshow(
-            np.stack(context_prediction),
-            vmin=0.0,
-            vmax=np.max(np.stack(context_prediction)),
-            cmap="Spectral",
-        )
-        axes[0].set_title("Model P(i|j) on elementary baskets")
-        plt.colorbar(im1, ax=axes[0])
-        if show_loss:
-            axes[1].plot(self.loss_history, label="Training Loss")
-            axes[1].set_xlabel("Training Steps")
-            axes[1].set_ylabel("Loss")
-            axes[1].set_title("Training Loss History")
-
-        plt.tight_layout()
-        plt.show()
-
-        if hyperparams:
-            print(self)
-
 
     def save_model(self, filepath: str, overwrite: bool = True) -> None:
         """Save the model parameters to a file.
@@ -557,14 +516,13 @@ class AttentionBasedContextEmbedding:
             "epochs": int(self.epochs),
             "optimizer": self.optimizer.get_config(),
             "batch_size": int(self.batch_size),
-            "Q_distribution": self.Q_distribution.numpy().tolist()
-            if hasattr(self.Q_distribution, "numpy")
-            else list(self.Q_distribution),
+            "negative_samples_distribution": self.negative_samples_distribution.numpy().tolist()
+            if hasattr(self.negative_samples_distribution, "numpy")
+            else list(self.negative_samples_distribution),
             "Wi": self.Wi.numpy().tolist(),
             "Wo": self.Wo.numpy().tolist(),
             "wa": self.wa.numpy().tolist(),
             "empty_context_emb": self.empty_context_emb.numpy().tolist(),
-            "loss_history": [float(loss) for loss in self.loss_history],
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
@@ -580,7 +538,7 @@ class AttentionBasedContextEmbedding:
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file {filepath} does not exist.")
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
 
         # Set hyperparameters and attributes
@@ -590,8 +548,9 @@ class AttentionBasedContextEmbedding:
         self.lr = float(data["lr"])
         self.epochs = int(data["epochs"])
         self.batch_size = int(data["batch_size"])
-        self.Q_distribution = tf.constant(data["Q_distribution"], dtype=tf.float32)
-        self.loss_history = [float(loss) for loss in data.get("loss_history", [])]
+        self.negative_samples_distribution = tf.constant(
+            data["negative_samples_distribution"], dtype=tf.float32
+        )
         self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
         self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
         self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
@@ -605,14 +564,10 @@ class AttentionBasedContextEmbedding:
             if data["optimizer"]["name"].lower() == "adam":
                 self.optimizer = tf.keras.optimizers.Adam(self.lr)
             else:
-                print(
-                    f"Optimizer {data['optimizer']['name']} not implemented, switching to Adam"
-                )
+                print(f"Optimizer {data['optimizer']['name']} not implemented, switching to Adam")
                 self.optimizer = tf.keras.optimizers.Adam(self.lr)
         else:
             self.optimizer = tf.keras.optimizers.Adam(self.lr)
 
-
         self.is_trained = True
         self.instantiated = True
-

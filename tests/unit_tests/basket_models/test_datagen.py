@@ -17,7 +17,6 @@ def test_get_assortment():
     """
     data_gen = SyntheticDataGenerator()
 
-
     # Test assortment = None
     # In this case the default assortment is the first row of the assortment matrix
     n_items = data_gen.assortment_matrix.shape[1]
@@ -61,22 +60,26 @@ def test_get_available_sets():
     assortment = np.array([1] * n_items)
     available_sets = data_gen.get_available_sets(assortment)
     expected_sets = [0, 1, 2, 3]
-    assert set(available_sets) == set(expected_sets),\
-            f"Expected {expected_sets}, got {available_sets}"
+    assert set(available_sets) == set(expected_sets), (
+        f"Expected {expected_sets}, got {available_sets}"
+    )
 
-    if n_items ==8:
-        assortment = np.array([0,1,1,0,0,0,1,0])
+    if n_items == 8:
+        assortment = np.array([0, 1, 1, 0, 0, 0, 1, 0])
         available_sets = data_gen.get_available_sets(assortment)
         expected_sets = [0, 2]
-        assert set(available_sets) == set(expected_sets),\
+        assert set(available_sets) == set(expected_sets), (
             f"Expected {expected_sets}, got {available_sets}"
+        )
 
-    if n_items ==8:
-        assortment = np.array([0,0,0,0,0,0,0,0])
+    if n_items == 8:
+        assortment = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         available_sets = data_gen.get_available_sets(assortment)
         expected_sets = []
-        assert set(available_sets) == set(expected_sets),\
+        assert set(available_sets) == set(expected_sets), (
             f"Expected {expected_sets}, got {available_sets}"
+        )
+
 
 def test_generate_basket():
     """
@@ -96,7 +99,6 @@ def test_generate_basket():
     assert len(basket) > 0, "Basket should not be empty"
     assert assortment_items.issuperset(set(basket)), "items in basket should be from the assortment"
     assert len(unique_items) == len(basket), "Basket should not contain duplicate items"
-
 
     # Test with an empty assortment
     assortment = np.array([0] * n_items)
@@ -141,6 +143,7 @@ def test_select_first_item():
         check_all_values_possible[first_item] = 1
     assert np.prod(check_all_values_possible) == 1, "All items can be first item"
 
+
 def test_generate_trip():
     """
     Test the generate_trip method.
@@ -159,6 +162,7 @@ def test_generate_trip():
     assert isinstance(trip.purchases, np.ndarray), "Basket in Trip should be a numpy array"
     assert assortment_items.issuperset(set(trip.purchases)), "items in should be from assortment"
 
+
 def test_generate_trip_dataset():
     """
     Test the generate_trip_dataset method.
@@ -172,13 +176,15 @@ def test_generate_trip_dataset():
     # Test with the default parameters (n_baskets = 400, assortment = [[1, 1, 1, 1, 1, 1, 1, 1],])
     dataset = data_gen.generate_trip_dataset(n_baskets)
     assert len(dataset.trips) == n_baskets, "Should contain exact number of basket"
-    assert all(isinstance(trip, Trip)
-               for trip in dataset.trips), "All trips in the dataset should be Trip objects"
-    assert all(isinstance(trip.purchases, np.ndarray)
-               for trip in dataset.trips), "All trip purchases should be numpy arrays"
-    assert all(len(trip.purchases) > 0
-               for trip in dataset.trips), "All Trip purchases should not be empty"
-
+    assert all(isinstance(trip, Trip) for trip in dataset.trips), (
+        "All trips in the dataset should be Trip objects"
+    )
+    assert all(isinstance(trip.purchases, np.ndarray) for trip in dataset.trips), (
+        "All trip purchases should be numpy arrays"
+    )
+    assert all(len(trip.purchases) > 0 for trip in dataset.trips), (
+        "All Trip purchases should not be empty"
+    )
 
     # Test with a custom number of baskets
     n_baskets = 10
@@ -190,7 +196,8 @@ def test_generate_trip_dataset():
     assortment_matrix = np.array([[1, 1, 0, 0, 1, 0, 1, 0]])
     available_items = set(data_gen.get_assortment_items(assortment_matrix[0]))
     dataset = data_gen.generate_trip_dataset(
-        n_baskets= n_baskets,
-        assortments_matrix=assortment_matrix)
-    assert all(set(trip.purchases).issubset(available_items)
-               for trip in dataset.trips), "All trip purchases not in the assortment matrix"
+        n_baskets=n_baskets, assortments_matrix=assortment_matrix
+    )
+    assert all(set(trip.purchases).issubset(available_items) for trip in dataset.trips), (
+        "All trip purchases not in the assortment matrix"
+    )
