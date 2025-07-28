@@ -8,44 +8,21 @@ import numpy as np
 from choice_learn.basket_models.dataset import Trip
 from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 
+data_gen = SyntheticDataGenerator(
+    proba_complementary_items=0.7,
+    proba_neutral_items=0.3,
+    noise_proba=0.15,
+    items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+    nests_interactions=[
+        ["", "compl", "neutral", "neutral"],
+        ["compl", "", "neutral", "neutral"],
+        ["neutral", "neutral", "", "neutral"],
+        ["neutral", "neutral", "neutral", ""],
+    ],
+)
 
-def test_get_assortment():
-    """
-    Test the get_assortment method.
-
-    This method should return the assortment based on the provided index or array.
-    """
-    data_gen = SyntheticDataGenerator()
-
-    # Test assortment = None
-    # In this case the default assortment is the first row of the assortment matrix
-    n_items = data_gen.assortment_matrix.shape[1]
-    assortment = None
-    result = data_gen.get_assortment_items(assortment)
-    expected = np.array([i for i in range(n_items) if data_gen.assortment_matrix[0, i] == 1])
-    assert np.array_equal(result, expected), f"Expected {expected}, got {result}"
-
-    # Test assortment as an integer index
-    # In this case the assortment is the row of the assortment matrix corresponding to the index
-    row_id = 0
-    assortment = row_id
-    result = data_gen.get_assortment_items(assortment)
-    expected = np.array([i for i in range(n_items) if data_gen.assortment_matrix[row_id, i] == 1])
-    assert np.array_equal(result, expected), f"Expected {expected}, got {result}"
-
-    # Test assortment as a numpy array
-    # In this case the assortment binary representation is the array itself
-    assortment = np.array([1, 0, 1, 0, 1, 0, 1, 0])
-    result = data_gen.get_assortment_items(assortment)
-    expected = np.array([i for i in range(n_items) if assortment[i] == 1])
-    assert np.array_equal(result, expected), f"Expected {expected}, got {result}"
-
-    # Test assortment is none of the above
-    # In this case the assortment  is the first row of the assortment matrix
-    assortment = "Hello World"
-    expected = np.array([i for i in range(n_items) if data_gen.assortment_matrix[0, i] == 1])
-    result = data_gen.get_assortment_items(assortment)
-    assert np.array_equal(result, expected), f"Expected {expected}, got {result}"
+n_items = 8
+assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 0]])
 
 
 def test_get_available_sets():
@@ -54,11 +31,9 @@ def test_get_available_sets():
 
     This method should return the available nests based on the current assortment.
     """
-    data_gen = SyntheticDataGenerator()
-    n_items = data_gen.assortment_matrix.shape[1]
-
     assortment = np.array([1] * n_items)
-    available_sets = data_gen.get_available_sets(assortment)
+    assortment_items = set(np.where(assortment == 1)[0])
+    available_sets = data_gen.get_available_sets(assortment_items)
     expected_sets = [0, 1, 2, 3]
     assert set(available_sets) == set(expected_sets), (
         f"Expected {expected_sets}, got {available_sets}"
@@ -66,7 +41,8 @@ def test_get_available_sets():
 
     if n_items == 8:
         assortment = np.array([0, 1, 1, 0, 0, 0, 1, 0])
-        available_sets = data_gen.get_available_sets(assortment)
+        assortment_items = set(np.where(assortment == 1)[0])
+        available_sets = data_gen.get_available_sets(assortment_items)
         expected_sets = [0, 2]
         assert set(available_sets) == set(expected_sets), (
             f"Expected {expected_sets}, got {available_sets}"
@@ -74,7 +50,8 @@ def test_get_available_sets():
 
     if n_items == 8:
         assortment = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        available_sets = data_gen.get_available_sets(assortment)
+        assortment_items = set(np.where(assortment == 1)[0])
+        available_sets = data_gen.get_available_sets(assortment_items)
         expected_sets = []
         assert set(available_sets) == set(expected_sets), (
             f"Expected {expected_sets}, got {available_sets}"
@@ -87,13 +64,10 @@ def test_generate_basket():
 
     This method should generate a basket of items based on the current assortment.
     """
-    data_gen = SyntheticDataGenerator()
-    n_items = data_gen.assortment_matrix.shape[1]
-
     # Test with the default complete assortment
     assortment = np.ones(n_items, dtype=int)
     basket = data_gen.generate_basket(assortment)
-    assortment_items = set(data_gen.get_assortment_items(assortment))
+    assortment_items = set(np.where(assortment == 1)[0])
     unique_items = set(basket)
     assert isinstance(basket, np.ndarray), "Basket should be a numpy array"
     assert len(basket) > 0, "Basket should not be empty"
@@ -107,7 +81,7 @@ def test_generate_basket():
 
     # Test with a random assortment
     assortment = np.array([0, 1, 0, 1, 0, 1, 0, 1])
-    assortment_items = set(data_gen.get_assortment_items(assortment))
+    assortment_items = set(np.where(assortment == 1)[0])
     basket = data_gen.generate_basket(assortment)
     unique_items = set(basket)
     assert len(basket) >= 0, "Basket should not be negative length"
@@ -129,9 +103,6 @@ def test_select_first_item():
 
     This method should select the first item and its nest randomly from the available sets.
     """
-    data_gen = SyntheticDataGenerator()
-    n_items = data_gen.assortment_matrix.shape[1]
-
     # Test with the default complete assortment
     assortment = np.ones(n_items, dtype=int)
 
@@ -150,12 +121,9 @@ def test_generate_trip():
 
     This method should generate a trip with a basket of items based on the current assortment.
     """
-    data_gen = SyntheticDataGenerator()
-    n_items = data_gen.assortment_matrix.shape[1]
-
     # Test with the default complete assortment
     assortment = np.ones(n_items, dtype=int)
-    assortment_items = set(data_gen.get_assortment_items(assortment))
+    assortment_items = set(np.where(assortment == 1)[0])
     trip = data_gen.generate_trip(assortment)
 
     assert isinstance(trip, Trip), "result of generate_trip should be a Trip object"
@@ -170,11 +138,10 @@ def test_generate_trip_dataset():
     This method should generate a dataset of trips
     with baskets of items based on the current assortment.
     """
-    data_gen = SyntheticDataGenerator()
     n_baskets = 10
 
     # Test with the default parameters (n_baskets = 400, assortment = [[1, 1, 1, 1, 1, 1, 1, 1],])
-    dataset = data_gen.generate_trip_dataset(n_baskets)
+    dataset = data_gen.generate_trip_dataset(n_baskets, assortments_matrix)
     assert len(dataset.trips) == n_baskets, "Should contain exact number of basket"
     assert all(isinstance(trip, Trip) for trip in dataset.trips), (
         "All trips in the dataset should be Trip objects"
@@ -188,13 +155,15 @@ def test_generate_trip_dataset():
 
     # Test with a custom number of baskets
     n_baskets = 10
-    dataset = data_gen.generate_trip_dataset(n_baskets=n_baskets)
+    dataset = data_gen.generate_trip_dataset(
+        n_baskets=n_baskets, assortments_matrix=assortments_matrix
+    )
     assert len(dataset.trips) == n_baskets, f"Dataset should contain {n_baskets} baskets"
 
     # Test with a custom assortment matrix
     n_baskets = 10
     assortment_matrix = np.array([[1, 1, 0, 0, 1, 0, 1, 0]])
-    available_items = set(data_gen.get_assortment_items(assortment_matrix[0]))
+    available_items = set(np.where(assortment_matrix[0] == 1)[0])
     dataset = data_gen.generate_trip_dataset(
         n_baskets=n_baskets, assortments_matrix=assortment_matrix
     )

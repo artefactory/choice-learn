@@ -23,15 +23,24 @@ data_gen = SyntheticDataGenerator(
     proba_complementary_items=0.7,
     proba_neutral_items=0.3,
     noise_proba=0.15,
+    items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+    nests_interactions=[
+        ["", "compl", "neutral", "neutral"],
+        ["compl", "", "neutral", "neutral"],
+        ["neutral", "neutral", "", "neutral"],
+        ["neutral", "neutral", "neutral", ""],
+    ],
 )
 
+assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 0]])
 
-train_trip_dataset = data_gen.generate_trip_dataset(n_baskets_train)
-train_trip_dataset = data_gen.generate_trip_dataset(n_baskets_eval)
+
+train_trip_dataset = data_gen.generate_trip_dataset(n_baskets_train, assortments_matrix)
+train_trip_dataset = data_gen.generate_trip_dataset(n_baskets_eval, assortments_matrix)
 
 # Generate custom dataset
-assortment = data_gen.assortment_matrix[0, :]
-n_items = data_gen.assortment_matrix.shape[1]
+assortment = np.array([1, 0, 1, 1, 0, 1, 1, 0])
+n_items = len(assortment)
 baskets = [[0, 6], [1, 2, 3, 6], [3, 7], [0, 1, 7], [6], [7]]
 contexts = [[0], [1, 3, 6], [3], [0, 1], [], []]
 target_items = [6, 2, 7, 7, 6, 7]
@@ -47,7 +56,7 @@ model = AttentionBasedContextEmbedding(
     embedding_dim=embedding_dim,
     n_negative_samples=n_negative_samples,
 )
-model.instantiate(n_items=data_gen.assortment_matrix.shape[1])
+model.instantiate(n_items=n_items)
 Wi, wa, Wo, empty_context_emb = model.trainable_weights
 Wi = tf.transpose(Wi)
 
@@ -126,7 +135,7 @@ def test_get_negative_samples():
 
     This method should return a list of negative samples for each basket.
     """
-    negative_samples = model.get_negative_samples(ragged_batch, target_items)
+    negative_samples = model.get_negative_samples(ragged_batch, target_items, assortments_matrix[0])
 
     assert isinstance(negative_samples, tf.Tensor), "Negative samples should be a tensor"
     assert len(negative_samples[0]) <= n_negative_samples, "Negative samples length mismatch"

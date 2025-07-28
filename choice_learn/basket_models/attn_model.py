@@ -1,15 +1,13 @@
 """
 Implementation of an attention-based model for item recommendation.
 
-Cf. "Attention-Based Transactional Context Embedding for Next-Item Recommendation".
-Wang et al. (2018).
+Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian, and Wei Liu.
+"Attention-based transactional context embedding for next-item recommendation."
+In Proceedings of the AAAI conference on artificial intelligence, vol. 32, no. 1. 2018.
 """
 
 import json
 import os
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +26,7 @@ class AttentionBasedContextEmbedding:
         lr,
         embedding_dim,
         n_negative_samples,
-        batch_size: str = 50,
+        batch_size: int = 50,
         optimizer: str = "Adam",
     ) -> None:
         """Initialize the model with hyperparameters.
@@ -202,46 +200,52 @@ class AttentionBasedContextEmbedding:
         q_dist = tf.gather(self.negative_samples_distribution, target_items)
         return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
 
-    @tf.function
-    def get_negative_samples(self, context_items: tf.Tensor, target_items: tf.Tensor) -> tf.Tensor:
-        """Generate negative samples for the given context and target items.
+    def get_negative_samples(
+        self, context_items: tf.Tensor, target_items: tf.Tensor, available_items: tf.Tensor
+    ) -> tf.Tensor:
+        """
+        Génère des échantillons négatifs en tenant compte des items disponibles.
 
         Parameters
         ----------
             context_items : tf.Tensor
-                Tensor containing the context items.
+                Tensor contenant les items de contexte (batch_size, variable_length).
             target_items : tf.Tensor
-                Tensor containing the target items.
+                Tensor contenant les items cibles (batch_size,).
+            available_items : tf.Tensor
+                Tensor binaire (batch_size, n_items) indiquant les items disponibles.
 
         Returns
         -------
             tf.Tensor
-                Tensor containing the negative samples for each context item.
+                Tensor contenant les échantillons négatifs pour chaque contexte.
         """
-        n_items = self.n_items
         target_items_exp = tf.expand_dims(target_items, axis=1)
         forbidden_items = tf.concat([context_items, target_items_exp], axis=1)
         if isinstance(forbidden_items, tf.RaggedTensor):
             forbidden_items = forbidden_items.to_tensor(default_value=-1)
-        item_range = tf.range(n_items)
-        item_range = tf.reshape(item_range, (1, 1, n_items))
+        item_range = tf.range(self.n_items)
+        item_range = tf.reshape(item_range, (1, 1, self.n_items))
         forbidden_items_exp = tf.expand_dims(forbidden_items, axis=-1)
         mask = tf.reduce_any(tf.equal(forbidden_items_exp, item_range), axis=1)
-        candidates_mask = ~mask
+        candidates_mask = tf.logical_and(~mask, available_items > 0)
 
-        # For each batch, get indices of allowed items
         def sample_negatives(candidates):
             indices = tf.where(candidates)[:, 0]
             n_candidates = tf.shape(indices)[0]
-            # If not enough candidates, sample with replacement
             shuffled = tf.random.shuffle(indices)
+            pad_value = tf.cond(
+                n_candidates > 0,
+                lambda: tf.cast(shuffled[0], tf.int64),
+                lambda: tf.constant(0, dtype=tf.int64),
+            )
             return tf.cond(
                 n_candidates >= self.n_negative_samples,
                 lambda: shuffled[: self.n_negative_samples],
                 lambda: tf.pad(
                     shuffled,
                     [[0, self.n_negative_samples - n_candidates]],
-                    constant_values=shuffled[0],
+                    constant_values=pad_value,
                 ),
             )
 
@@ -280,11 +284,10 @@ class AttentionBasedContextEmbedding:
             )
         return loss
 
-    @tf.autograph.experimental.do_not_convert
     def negative_log_likelihood_loss(
         self, context_vec: tf.Tensor, target_items: tf.Tensor
     ) -> tf.Tensor:
-        """Calculate the loss using a simple, naive softmax cross-entropy approach.
+        """Calculate the loss using tf.keras.losses.sparse_categorical_crossentropy.
 
         Parameters
         ----------
@@ -298,20 +301,16 @@ class AttentionBasedContextEmbedding:
             tf.Tensor
                 Tensor containing the negative log likelihood loss.
         """
-        scores_softmax = tf.map_fn(
-            lambda x: tf.nn.softmax(tf.tensordot(self.Wo, x, axes=1)), context_vec
+        logits = tf.matmul(context_vec, self.Wo, transpose_b=True)
+        return tf.keras.losses.sparse_categorical_crossentropy(
+            target_items, logits, from_logits=True
         )
 
-        target_items_scores = tf.gather_nd(
-            scores_softmax,
-            tf.stack([tf.range(tf.shape(target_items)[0]), target_items], axis=1),
-        )
-        return -tf.math.log(target_items_scores)
-
-    def get_batch_loss(
+    def compute_batch_loss(
         self,
         context_batch: tf.Tensor,
         items_batch: tf.Tensor,
+        available_items: tf.Tensor,
     ) -> tf.Tensor:
         """Calculate the loss for a batch of baskets.
 
@@ -329,7 +328,7 @@ class AttentionBasedContextEmbedding:
         """
         context_vec = self.context_embed(context_batch)
         pos_score = self.score(context_vec, items_batch)
-        list_neg_items = self.get_negative_samples(context_batch, items_batch)
+        list_neg_items = self.get_negative_samples(context_batch, items_batch, available_items)
         neg_scores = tf.map_fn(
             lambda neg_items: self.score(context_vec, neg_items),
             tf.transpose(list_neg_items),
@@ -345,7 +344,7 @@ class AttentionBasedContextEmbedding:
         )
 
     @tf.function
-    def train_step(self, context_batch, items_batch) -> tf.Tensor:
+    def train_step(self, context_batch, items_batch, available_items) -> tf.Tensor:
         """Perform a single training step on the batch of baskets.
 
         Parameters
@@ -359,7 +358,7 @@ class AttentionBasedContextEmbedding:
                 Tensor containing the total loss for the batch.
         """
         with tf.GradientTape() as tape:
-            loss = self.get_batch_loss(context_batch, items_batch)
+            loss = self.compute_batch_loss(context_batch, items_batch, available_items)
 
         grads = tape.gradient(loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -432,7 +431,8 @@ class AttentionBasedContextEmbedding:
                     [row[row != -1] for row in batch[1]], dtype=tf.int32
                 )
                 target_items = tf.constant(batch[0], dtype=tf.int32)
-                loss = self.train_step(ragged_batch, target_items)
+                available_items = tf.constant(batch[6], dtype=tf.int32)
+                loss = self.train_step(ragged_batch, target_items, available_items)
                 epoch_loss += loss
 
             float_loss = float(epoch_loss.numpy())
