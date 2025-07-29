@@ -364,13 +364,15 @@ class AttentionBasedContextEmbedding:
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return loss
 
-    def predict(self, context_items: tf.Tensor) -> np.ndarray:
+    def predict(self, context_items: tf.Tensor, available_items: np.ndarray) -> np.ndarray:
         """Predicts the item probabilities given the context items.
 
         Parameters
         ----------
             context_items : tf.Tensor
                 Tensor containing the context items for prediction.
+            available_items : np.ndarray
+                Numpy array indicating the available items for prediction.
 
         Returns
         -------
@@ -386,9 +388,17 @@ class AttentionBasedContextEmbedding:
             raise ValueError("Model must be trained before prediction. Call fit() first.")
 
         context_vec = self.context_embed(context_items)
-        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1)
-        scores = tf.linalg.set_diag(scores, tf.fill([tf.shape(scores)[0]], float("-inf")))
-        return tf.nn.softmax(scores, axis=1).numpy()
+        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1).numpy()
+        for i in range(len(available_items)):
+            if available_items[i] == 0:
+                scores[i, :] -= float("inf")
+                scores[:, i] -= float("inf")
+            scores[i, i] = float("-inf")  # Prevent self-prediction
+        probas = tf.nn.softmax(tf.constant(scores, dtype=tf.float32), axis=1).numpy()
+        for i in range(len(available_items)):
+            if available_items[i] == 0:
+                probas[i, :] = 0.0
+        return probas
 
     def fit(self, dataset) -> None:
         """Trains the model for a specified number of epochs.

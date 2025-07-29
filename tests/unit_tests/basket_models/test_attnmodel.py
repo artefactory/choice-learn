@@ -32,7 +32,7 @@ data_gen = SyntheticDataGenerator(
     ],
 )
 
-assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 0]])
+assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 1]])
 
 
 train_trip_dataset = data_gen.generate_trip_dataset(n_baskets_train, assortments_matrix)
@@ -136,6 +136,7 @@ def test_get_negative_samples():
     This method should return a list of negative samples for each basket.
     """
     negative_samples = model.get_negative_samples(ragged_batch, target_items, assortments_matrix[0])
+    print("Negative samples", negative_samples)
 
     assert isinstance(negative_samples, tf.Tensor), "Negative samples should be a tensor"
     assert len(negative_samples[0]) <= n_negative_samples, "Negative samples length mismatch"
