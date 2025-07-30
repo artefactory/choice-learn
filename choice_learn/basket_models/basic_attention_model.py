@@ -1,10 +1,4 @@
-"""
-Implementation of an attention-based model for item recommendation.
-
-Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian, and Wei Liu.
-"Attention-based transactional context embedding for next-item recommendation."
-In Proceedings of the AAAI conference on artificial intelligence, vol. 32, no. 1. 2018.
-"""
+"""Implementation of an attention-based model for item recommendation."""
 
 import json
 import os
@@ -18,7 +12,13 @@ from .dataset import TripDataset
 
 
 class AttentionBasedContextEmbedding:
-    """Class for the attention-based model."""
+    """
+    Class for the attention-based model.
+
+    Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian, and Wei Liu.
+    "Attention-based transactional context embedding for next-item recommendation."
+    In Proceedings of the AAAI conference on artificial intelligence, vol. 32, no. 1. 2018.
+    """
 
     def __init__(
         self,
@@ -116,17 +116,19 @@ class AttentionBasedContextEmbedding:
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_embedding]
 
-    def context_embed(self, context_items: tf.Tensor) -> tf.Tensor:
+    def embed_context(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
 
         Parameters
         ----------
             context_items : tf.Tensor
+                [batch_size, variable_length] tf.Tensor
                 Tensor containing the list of the context items.
 
         Returns
         -------
             tf.Tensor
+                [batch_size, embedding_dim] tf.Tensor
                 Tensor containing the matrix of contexts embeddings.
         """
         context_emb = tf.gather(self.Wi, context_items, axis=0)
@@ -149,13 +151,16 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_vec : tf.Tensor
+                [batch_size, embedding_dim] tf.Tensor
                 Tensor containing the contexts vector.
             items : tf.Tensor
+                [batch_size, n_items] tf.Tensor
                 Tensor containing the items to score.
 
         Returns
         -------
             tf.Tensor
+                [batch_size, n_items] tf.Tensor
                 Tensor containing the scores for each item.
         """
         return tf.map_fn(
@@ -170,13 +175,16 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             pos_score : tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the scores of positive samples.
             target_items : tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the target items.
 
         Returns
         -------
             tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the probabilities of positive samples.
         """
         q_dist = tf.gather(self.negative_samples_distribution, target_items)
@@ -188,13 +196,16 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             neg_score : tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
                 Tensor containing the scores of negative samples.
             target_items : tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
                 Tensor containing the target items.
 
         Returns
         -------
             tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
                 Tensor containing the probabilities of negative samples.
         """
         q_dist = tf.gather(self.negative_samples_distribution, target_items)
@@ -209,15 +220,19 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_items : tf.Tensor
+                [batch_size, variable_length] tf.
                 Tensor contenant les items de contexte (batch_size, variable_length).
             target_items : tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor contenant les items cibles (batch_size,).
             available_items : tf.Tensor
+                [batch_size, n_items] tf.
                 Tensor binaire (batch_size, n_items) indiquant les items disponibles.
 
         Returns
         -------
             tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
                 Tensor contenant les échantillons négatifs pour chaque contexte.
         """
         target_items_exp = tf.expand_dims(target_items, axis=1)
@@ -267,14 +282,23 @@ class AttentionBasedContextEmbedding:
 
         Parameters
         ----------
-            context_items : tf.Tensor
-                Tensor containing the context items.
+            pos_score : tf.Tensor
+                [batch_size,] tf.Tensor
+                Tensor containing the scores of positive samples.
             target_items : tf.Tensor
-                Tensor containing the target items to predict.
+                [batch_size,] tf.Tensor
+                Tensor containing the target items.
+            list_neg_items : tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
+                Tensor containing the negative samples.
+            neg_scores : tf.Tensor
+                [batch_size, n_negative_samples] tf.Tensor
+                Tensor containing the scores of negative samples.
 
         Returns
         -------
             tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the NCE loss.
         """
         loss = -tf.math.log(self.proba_positive_samples(pos_score, target_items))
@@ -292,13 +316,16 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_vec : tf.Tensor
+                [batch_size, embedding_dim] tf.Tensor
                 Tensor containing the context vector for the batch.
             target_items : tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the target items to predict.
 
         Returns
         -------
             tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the negative log likelihood loss.
         """
         logits = tf.matmul(context_vec, self.Wo, transpose_b=True)
@@ -317,8 +344,10 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_batch : tf.Tensor
+                [batch_size, variable_length] tf.Tensor
                 Tensor containing the context items for the batch.
             items_batch : tf.Tensor
+                [batch_size,] tf.Tensor
                 Tensor containing the target items for the batch.
 
         Returns
@@ -326,7 +355,7 @@ class AttentionBasedContextEmbedding:
             tf.Tensor
                 Tensor containing the total loss for the batch.
         """
-        context_vec = self.context_embed(context_batch)
+        context_vec = self.embed_context(context_batch)
         pos_score = self.score(context_vec, items_batch)
         list_neg_items = self.get_negative_samples(context_batch, items_batch, available_items)
         neg_scores = tf.map_fn(
@@ -349,8 +378,15 @@ class AttentionBasedContextEmbedding:
 
         Parameters
         ----------
-            batch : tf.Tensor
+            context_batch : tf.Tensor
+                [batch_size, variable_length] tf.Tensor
                 Tensor containing the batch of baskets.
+            items_batch : tf.Tensor
+                [batch_size,] tf.Tensor
+                Tensor containing the target items for the batch.
+            available_items : tf.Tensor
+                [batch_size, n_items] tf.Tensor
+                Tensor indicating the available items for the batch.
 
         Returns
         -------
@@ -365,40 +401,60 @@ class AttentionBasedContextEmbedding:
         return loss
 
     def predict(self, context_items: tf.Tensor, available_items: np.ndarray) -> np.ndarray:
-        """Predicts the item probabilities given the context items.
+        """
+        Predicts the item probabilities given the context items.
 
         Parameters
         ----------
             context_items : tf.Tensor
+                [batch_size, variable_length] tf.Tensor or tf.RaggedTensor
                 Tensor containing the context items for prediction.
             available_items : np.ndarray
+                [n_items,] np.ndarray
                 Numpy array indicating the available items for prediction.
 
         Returns
         -------
             np.ndarray
+                [batch_size, n_items] np.ndarray
                 Numpy array containing the predicted probabilities for each item.
         """
         if not self.instantiated:
-            raise ValueError(
-                "Model must be instantiated before prediction. Call instantiate() first."
-            )
+            self.instantiate(n_items=len(available_items))
 
-        if not self.is_trained:
-            raise ValueError("Model must be trained before prediction. Call fit() first.")
+        context_vec = self.embed_context(context_items)
+        scores = tf.matmul(context_vec, self.Wo, transpose_b=True)
 
-        context_vec = self.context_embed(context_items)
-        scores = tf.tensordot(self.Wo, tf.transpose(context_vec), axes=1).numpy()
-        for i in range(len(available_items)):
-            if available_items[i] == 0:
-                scores[i, :] -= float("inf")
-                scores[:, i] -= float("inf")
-            scores[i, i] = float("-inf")  # Prevent self-prediction
-        probas = tf.nn.softmax(tf.constant(scores, dtype=tf.float32), axis=1).numpy()
-        for i in range(len(available_items)):
-            if available_items[i] == 0:
-                probas[i, :] = 0.0
-        return probas
+        # Mask unavailable items (columns)
+        available_items = tf.convert_to_tensor(available_items, dtype=scores.dtype)
+        mask = tf.cast(available_items, tf.bool)
+        minus_inf = tf.constant(-1e9, dtype=scores.dtype)
+        scores = tf.where(mask, scores, minus_inf)
+
+        # Prevent self-prediction: set logits for items in the context to -inf for each row
+        if isinstance(context_items, tf.RaggedTensor):
+            row_lengths = context_items.row_lengths()
+            flat_values = context_items.flat_values
+        else:
+            batch_size = tf.shape(context_items)[0]
+            variable_length = tf.shape(context_items)[1]
+            row_lengths = tf.fill([batch_size], variable_length)
+            flat_values = tf.reshape(context_items, [-1])
+
+        batch_indices = tf.repeat(tf.range(tf.shape(scores)[0]), row_lengths)
+        item_indices = flat_values
+        indices = tf.stack([batch_indices, item_indices], axis=1)
+        updates = tf.fill([tf.shape(indices)[0]], minus_inf)
+        scores = tf.tensor_scatter_nd_update(scores, indices, updates)
+
+        probas = tf.nn.softmax(scores, axis=1)
+
+        # Zero out probabilities for unavailable items (columns)
+        probas = probas * available_items
+        row_sums = tf.reduce_sum(probas, axis=1, keepdims=True)
+        probas = tf.where(row_sums > 0, probas / row_sums, probas)
+
+        return probas.numpy()
 
     def fit(self, dataset) -> None:
         """Trains the model for a specified number of epochs.
@@ -411,14 +467,10 @@ class AttentionBasedContextEmbedding:
                 If True, represents the model after training.
         """
         if not self.instantiated:
-            raise ValueError(
-                "Model must be instantiated before training. Call instantiate() first."
-            )
+            self.instantiate(n_items=len(dataset.trips[0].purchases))
+
         if not isinstance(dataset, TripDataset):
             raise TypeError("Dataset must be a TripDataset.")
-
-        if not dataset:
-            raise ValueError("Dataset cannot be empty.")
 
         if (
             max([len(trip.purchases) for trip in dataset.trips]) + self.n_negative_samples
@@ -430,12 +482,12 @@ class AttentionBasedContextEmbedding:
 
         history = {"train_loss": []}
 
-        iterable = tqdm.trange(self.epochs, desc="Training Epochs")
-        for _ in iterable:
+        epochs_range = tqdm.trange(self.epochs, desc="Training Epochs")
+        for _ in epochs_range:
             epoch_loss = 0
 
             for batch in dataset.iter_batch(
-                batch_size=self.batch_size, shuffle=False, data_method="aleacarta"
+                batch_size=self.batch_size, shuffle=True, data_method="aleacarta"
             ):
                 ragged_batch = tf.ragged.constant(
                     [row[row != -1] for row in batch[1]], dtype=tf.int32
@@ -447,7 +499,7 @@ class AttentionBasedContextEmbedding:
 
             float_loss = float(epoch_loss.numpy())
             history["train_loss"].append(float_loss)
-            iterable.set_postfix({"epoch_loss": float_loss})
+            epochs_range.set_postfix({"epoch_loss": float_loss})
 
         self.is_trained = True
         self.last_n_baskets_dataset = len(dataset.trips)
@@ -475,7 +527,7 @@ class AttentionBasedContextEmbedding:
         ):
             ragged_batch = tf.ragged.constant([row[row != -1] for row in batch[1]], dtype=tf.int32)
             target_items = tf.constant(batch[0], dtype=tf.int32)
-            context_vec = self.context_embed(ragged_batch)
+            context_vec = self.embed_context(ragged_batch)
             batch_loss = self.negative_log_likelihood_loss(context_vec, target_items)
             total_loss += tf.reduce_sum(batch_loss).numpy()
             total_samples += batch_loss.shape[0]
@@ -490,12 +542,12 @@ class AttentionBasedContextEmbedding:
             + "=" * 30
             + "\n"
             + f"{'Epochs':20}: {self.epochs}\n"
-            + f"{'Number of Trips':20}: {self.last_n_baskets_dataset}\n"
-            + f"{'n_negative_samples':20}: {self.n_negative_samples}\n"
-            + f"{'Learning_rate':20}: {self.lr}\n"
             + f"{'Loss type':20}: NCE Loss\n"
             + f"{'Batch_size':20}: {self.batch_size}\n"
+            + f"{'Learning_rate':20}: {self.lr}\n"
             + f"{'Embedding_dim':20}: {self.embedding_dim}\n"
+            + f"{'Number of Trips':20}: {self.last_n_baskets_dataset}\n"
+            + f"{'n_negative_samples':20}: {self.n_negative_samples}\n"
             + "=" * 30
         )
 
@@ -518,6 +570,20 @@ class AttentionBasedContextEmbedding:
             else:
                 raise FileExistsError(f"Model file {filepath} already exists.")
 
+        base = Path(filepath)
+        base_no_suffix = base.with_suffix("")  # Removes the extension
+
+        wi_file = str(base_no_suffix) + "_Wi.npy"
+        wo_file = str(base_no_suffix) + "_Wo.npy"
+        wa_file = str(base_no_suffix) + "_wa.npy"
+        empty_context_file = str(base_no_suffix) + "_empty_context_embedding.npy"
+
+        # Save weights as .npy files
+        np.save(wi_file, self.Wi.numpy())
+        np.save(wo_file, self.Wo.numpy())
+        np.save(wa_file, self.wa.numpy())
+        np.save(empty_context_file, self.empty_context_embedding.numpy())
+
         data = {
             "n_items": int(self.n_items),
             "embedding_dim": int(self.embedding_dim),
@@ -529,10 +595,10 @@ class AttentionBasedContextEmbedding:
             "negative_samples_distribution": self.negative_samples_distribution.numpy().tolist()
             if hasattr(self.negative_samples_distribution, "numpy")
             else list(self.negative_samples_distribution),
-            "Wi": self.Wi.numpy().tolist(),
-            "Wo": self.Wo.numpy().tolist(),
-            "wa": self.wa.numpy().tolist(),
-            "empty_context_embedding": self.empty_context_embedding.numpy().tolist(),
+            "Wi_file": wi_file,
+            "Wo_file": wo_file,
+            "wa_file": wa_file,
+            "empty_context_embedding_file": empty_context_file,
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
@@ -561,12 +627,13 @@ class AttentionBasedContextEmbedding:
         self.negative_samples_distribution = tf.constant(
             data["negative_samples_distribution"], dtype=tf.float32
         )
-        self.Wi = tf.Variable(np.array(data["Wi"], dtype=np.float32), name="Wi")
-        self.Wo = tf.Variable(np.array(data["Wo"], dtype=np.float32), name="Wo")
-        self.wa = tf.Variable(np.array(data["wa"], dtype=np.float32), name="wa")
+
+        # Load weights from .npy files
+        self.Wi = tf.Variable(np.load(data["Wi_file"]), name="Wi")
+        self.Wo = tf.Variable(np.load(data["Wo_file"]), name="Wo")
+        self.wa = tf.Variable(np.load(data["wa_file"]), name="wa")
         self.empty_context_embedding = tf.Variable(
-            np.array(data["empty_context_embedding"], dtype=np.float32),
-            name="empty_context_embedding",
+            np.load(data["empty_context_embedding_file"]), name="empty_context_embedding"
         )
 
         # Re-instantiate optimizer

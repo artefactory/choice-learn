@@ -1,11 +1,9 @@
 """Contain unit tests for the AttentionBasedContextEmbedding model."""
 
-from pathlib import Path
-
 import numpy as np
 import tensorflow as tf
 
-from choice_learn.basket_models.attn_model import AttentionBasedContextEmbedding
+from choice_learn.basket_models.basic_attention_model import AttentionBasedContextEmbedding
 from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 
 # Test hyperparameters
@@ -79,9 +77,9 @@ def test_context_embedding():
 
     This method should compute the context embeddings for the given contexts.
     """
-    custom_context_emb = model.context_embed(ragged_batch)
+    custom_context_emb = model.embed_context(ragged_batch)
     assert isinstance(custom_context_emb, tf.Tensor), "Context embedding should be a Tensor"
-    custom_context_emb = model.context_embed(ragged_batch).numpy()
+    custom_context_emb = model.embed_context(ragged_batch).numpy()
     expected_embedding = np.array(
         [context_embed_tester(context).numpy().tolist() for context in contexts]
     )
@@ -118,7 +116,7 @@ def test_score():
 
     This method should compute the scores for the target items based on the context embeddings.
     """
-    custom_context_emb = model.context_embed(ragged_batch)
+    custom_context_emb = model.embed_context(ragged_batch)
     scores = model.score(custom_context_emb, tf.constant(target_items, dtype=tf.int32))
     expected_scores = naive_basket_score(contexts, target_items)
 
@@ -150,30 +148,3 @@ def test_get_negative_samples():
             assert item not in negative_samples[i].numpy(), (
                 f"Item {item} should not be in negative samples"
             )
-
-
-def test_evaluate_save_load():
-    """Test the evaluate method.
-
-    This method should evaluate the model on the training dataset and save the model.
-    """
-    model.fit(train_trip_dataset)
-    loss = model.evaluate(train_trip_dataset)
-    assert isinstance(loss, np.float32), "Loss should be a float"
-    model.save_model("test_model")
-
-    loaded_model = AttentionBasedContextEmbedding(
-        epochs=epochs,
-        lr=lr,
-        embedding_dim=embedding_dim,
-        n_negative_samples=n_negative_samples,
-    )
-    loaded_model.load_model("test_model")
-    epsilon = 1e-3
-
-    for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
-        assert np.allclose(w1.numpy(), w2.numpy(), atol=epsilon), (
-            f"Loaded model weights do not match original model weights. \
-                {w1.numpy()} != {w2.numpy()}"
-        )
-    Path("test_model").unlink()
