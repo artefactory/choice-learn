@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from choice_learn.basket_models.basic_attention_model import AttentionBasedContextEmbedding
+from choice_learn.basket_models.dataset import Trip, TripDataset
 from choice_learn.basket_models.synthetic_dataset import SyntheticDataGenerator
 
 # Test hyperparameters
@@ -148,3 +149,75 @@ def test_get_negative_samples():
             assert item not in negative_samples[i].numpy(), (
                 f"Item {item} should not be in negative samples"
             )
+
+
+def test_predict():
+    """
+    Test the predict method of the AttentionBasedContextEmbedding model.
+
+    This method should predict the probabilities of items
+    in the assortment based on the context embeddings.
+    """
+    assortment = np.array([[1, 1, 1, 1, 1, 1, 1, 0]])
+    dataset = data_gen.generate_trip_dataset(2, assortment)
+    model = AttentionBasedContextEmbedding(
+        epochs=40, lr=0.01, embedding_dim=4, n_negative_samples=5
+    )
+
+    contexts = []
+    for batch in dataset.iter_batch(1, data_method="aleacarta"):
+        contexts.append(batch[1][0])
+    contexts = tf.ragged.constant([row[row != -1] for row in contexts], dtype=tf.int32)
+    available_items = batch[-1][0]
+    context_prediction = model.predict(contexts, available_items=available_items)
+    assert np.allclose(context_prediction.sum(axis=1), 1, atol=1e-2), "Each row must sum to 1"
+    for i in np.where(assortment[0] == 0)[0]:
+        assert np.all(context_prediction[:, i] == 0), (
+            f"Column {i} is not all zeros and {i} is not in assortment"
+        )
+
+
+def test_evaluate_uniform():
+    """
+    Test the evaluate method of the AttentionBasedContextEmbedding model with uniform logits.
+
+    This method should return the expected loss for a uniform distribution.
+    """
+    n_items = 3
+    n_trips = 3
+    embedding_dim = 2
+
+    # All items available
+    assortment_matrix = np.ones((1, n_items), dtype=int)
+
+    # Each trip contains a single item (0, 1, 2)
+    trips = []
+    for i in range(n_trips):
+        purchases = np.array([i])
+        prices = np.ones(n_items)
+        assortment = assortment_matrix[0]
+        trips.append(Trip(purchases, prices, assortment))
+
+    dataset = TripDataset(trips, assortment_matrix)
+
+    # Instantiate model and set weights to zero for uniform logits
+    model = AttentionBasedContextEmbedding(
+        epochs=1,
+        lr=0.01,
+        embedding_dim=embedding_dim,
+        n_negative_samples=1,
+        batch_size=1,
+    )
+    model.instantiate(n_items=n_items)
+    model.is_trained = True
+    model.Wi.assign(tf.zeros_like(model.Wi))
+    model.Wo.assign(tf.zeros_like(model.Wo))
+    model.wa.assign(tf.zeros_like(model.wa))
+    model.empty_context_embedding.assign(tf.zeros_like(model.empty_context_embedding))
+
+    # Expected loss for uniform distribution: -log(1/n_items)
+    expected_loss = -np.log(1.0 / n_items)
+
+    # Evaluate
+    eval_loss = model.evaluate(dataset)
+    assert np.allclose(eval_loss, expected_loss, atol=1e-5), "Loss does not match expected value!"

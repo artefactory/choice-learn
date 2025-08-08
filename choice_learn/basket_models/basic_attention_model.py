@@ -41,6 +41,8 @@ class AttentionBasedContextEmbedding:
                 Dimension of the item embeddings.
             n_negative_samples : int
                 Number of negative samples to use in training.
+            batch_size : int
+                Size of the batches for training. Default is 50.
             optimizer : str
                 Optimizer to use for training. Default is "Adam".
         """
@@ -71,6 +73,8 @@ class AttentionBasedContextEmbedding:
             negative_samples_distribution : list
                 Probability distribution for negative sampling.
                 If None, a uniform distribution is used.
+                If use_true_nce_distribution in fit() is True,
+                the distribution is calculated based on the dataset.
         """
         self.n_items = tf.constant(n_items, dtype=tf.int32)
         if negative_samples_distribution is None:
@@ -78,7 +82,7 @@ class AttentionBasedContextEmbedding:
                 raise ValueError("n_items must be greater than 1 to define a uniform distribution.")
 
             self.negative_samples_distribution = tf.constant(
-                [1.0 / (n_items - 1 + 1)] * n_items, dtype=tf.float32
+                [1.0 / (n_items - 1)] * n_items, dtype=tf.float32
             )
         else:
             if len(negative_samples_distribution) != n_items:
@@ -122,7 +126,7 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_items : tf.Tensor
-                [batch_size, variable_length] tf.Tensor
+                [batch_size, variable_length] tf.RaggedTensor
                 Tensor containing the list of the context items.
 
         Returns
@@ -271,6 +275,26 @@ class AttentionBasedContextEmbedding:
         )
         return tf.cast(neg_samples, tf.int32)
 
+    def count_items_occurrences(self, dataset: TripDataset) -> tf.Tensor:
+        """Count the occurrences of each item in the dataset.
+
+        Parameters
+        ----------
+            dataset : TripDataset
+                Dataset containing the baskets.
+
+        Returns
+        -------
+            tf.Tensor
+                Tensor containing the count of each item.
+        """
+        item_counts = np.zeros(self.n_items, dtype=np.int32)
+        for trip in dataset.trips:
+            for item in trip.purchases:
+                item_counts[item] += 1
+        negative_samples_distribution = item_counts / item_counts.sum()
+        return tf.constant(negative_samples_distribution, dtype=tf.float32)
+
     def nce_loss(
         self,
         pos_score: tf.Tensor,
@@ -410,7 +434,7 @@ class AttentionBasedContextEmbedding:
                 [batch_size, variable_length] tf.Tensor or tf.RaggedTensor
                 Tensor containing the context items for prediction.
             available_items : np.ndarray
-                [n_items,] np.ndarray
+                [bacth_size,] np.ndarray
                 Numpy array indicating the available items for prediction.
 
         Returns
@@ -456,15 +480,16 @@ class AttentionBasedContextEmbedding:
 
         return probas.numpy()
 
-    def fit(self, dataset) -> None:
+    def fit(self, dataset: TripDataset, use_true_nce_distribution: bool = True) -> None:
         """Trains the model for a specified number of epochs.
 
         Parameters
         ----------
             dataset : TripDataset
                 Dataset of baskets to train the model on.
-            repr : bool
-                If True, represents the model after training.
+            use_true_nce_distribution : bool
+                If True, uses the frequencies of items in the dataset for negative sampling,
+                otherwise uses a uniform distribution or a predefined distribution.
         """
         if not self.instantiated:
             self.instantiate(n_items=len(dataset.trips[0].purchases))
@@ -481,6 +506,9 @@ class AttentionBasedContextEmbedding:
             )
 
         history = {"train_loss": []}
+
+        if use_true_nce_distribution:
+            self.negative_samples_distribution = self.count_items_occurrences(dataset)
 
         epochs_range = tqdm.trange(self.epochs, desc="Training Epochs")
         for _ in epochs_range:

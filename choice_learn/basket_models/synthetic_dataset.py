@@ -194,20 +194,26 @@ class SyntheticDataGenerator:
 
         return np.array(basket)
 
-    def generate_trip(self, assortment: Union[int, np.ndarray] = None) -> Trip:
+    def generate_trip(
+        self, assortment: Union[int, np.ndarray] = None, len_basket: int = None
+    ) -> Trip:
         """Generate a trip object from the generated basket.
 
         Parameters
         ----------
             assortment : int or np.ndarray
                 Index of the assortment or an array representing the assortment.
+            len_basket : int, optional
+                Length of the basket to be generated.
+                If None, the basket length is determined by the
+                available sets.
 
         Returns
         -------
             Trip
                 A Trip object containing the generated basket.
         """
-        basket = self.generate_basket(assortment)
+        basket = self.generate_basket(assortment, len_basket=len_basket)
         return Trip(
             purchases=basket,
             # Assuming uniform price of 1.0 for simplicity
@@ -216,7 +222,7 @@ class SyntheticDataGenerator:
         )
 
     def generate_trip_dataset(
-        self, n_baskets: int = 400, assortments_matrix: np.ndarray = None
+        self, n_baskets: int = 400, assortments_matrix: np.ndarray = None, len_basket: int = None
     ) -> TripDataset:
         """Generate a TripDataset from the generated baskets.
 
@@ -228,6 +234,10 @@ class SyntheticDataGenerator:
                 Matrix of assortments to use for generating baskets.
                 If None, uses the default assortment matrix.
                 shape (n_assortments, n_items)
+            len_basket : int, optional
+                Length of the basket to be generated.
+                If None, the basket length is determined by the
+                available sets.
 
         Returns
         -------
@@ -238,7 +248,7 @@ class SyntheticDataGenerator:
         assortments = []
         assortment_id = np.random.randint(0, len(assortments_matrix))
         for _ in range(n_baskets):
-            trip = self.generate_trip(assortments_matrix[assortment_id])
+            trip = self.generate_trip(assortments_matrix[assortment_id], len_basket=len_basket)
             assortments.append(assortments_matrix[assortment_id])
             trips.append(trip)
 
