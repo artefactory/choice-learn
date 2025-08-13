@@ -6,8 +6,6 @@ import numpy as np
 
 from .dataset import Trip, TripDataset
 
-np.random.seed(42)
-
 
 class SyntheticDataGenerator:
     """Class to generate synthetic basket data based on predefined item sets and their relations."""
@@ -19,6 +17,7 @@ class SyntheticDataGenerator:
         proba_complementary_items: float = 0.7,
         proba_neutral_items: float = 0.15,
         noise_proba: float = 0.05,
+        plant_seed: int = None,
     ) -> None:
         """Initialize the data generator with parameters for basket generation.
 
@@ -50,6 +49,8 @@ class SyntheticDataGenerator:
         self.noise_proba = noise_proba
         self.items_nest = items_nest
         self.nests_interactions = nests_interactions
+        if plant_seed is not None:
+            np.random.seed(plant_seed)
 
     def get_available_sets(self, assortment_items: np.ndarray = None) -> np.ndarray:
         """Return the available nests based on the current assortment.
@@ -140,7 +141,7 @@ class SyntheticDataGenerator:
             list
                 A list containing the items in the basket, potentially with noise items added.
         """
-        if np.random.rand() < self.noise_proba:
+        if np.random.rand() <= self.noise_proba:
             try:
                 basket.append(
                     int(np.random.choice([i for i in available_items if i not in basket]))

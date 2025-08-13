@@ -135,7 +135,6 @@ def test_get_negative_samples():
     This method should return a list of negative samples for each basket.
     """
     negative_samples = model.get_negative_samples(ragged_batch, target_items, assortments_matrix[0])
-    print("Negative samples", negative_samples)
 
     assert isinstance(negative_samples, tf.Tensor), "Negative samples should be a tensor"
     assert len(negative_samples[0]) <= n_negative_samples, "Negative samples length mismatch"
@@ -144,11 +143,9 @@ def test_get_negative_samples():
         basket = baskets[i]
         for item in basket:
             if item in negative_samples[i].numpy():
-                print("basket: ", basket)
-                print("negative_samples: ", negative_samples[i].numpy())
-            assert item not in negative_samples[i].numpy(), (
-                f"Item {item} should not be in negative samples"
-            )
+                assert item not in negative_samples[i].numpy(), (
+                    f"Item {item} should not be in negative samples"
+                )
 
 
 def test_predict():
@@ -221,3 +218,160 @@ def test_evaluate_uniform():
     # Evaluate
     eval_loss = model.evaluate(dataset)
     assert np.allclose(eval_loss, expected_loss, atol=1e-5), "Loss does not match expected value!"
+
+
+def test_negative_log_likelihood_loss_matches_manual():
+    """Test that NLL loss matches manual computation."""
+    n_items = 4
+    batch_size = 3
+    emb_dim = 2
+
+    model = AttentionBasedContextEmbedding(
+        epochs=1, lr=0.01, embedding_dim=emb_dim, n_negative_samples=1
+    )
+    model.instantiate(n_items=n_items)
+
+    context_vec = tf.ones((batch_size, emb_dim))
+    target_items = tf.constant([0, 1, 2], dtype=tf.int32)
+
+    # Manual computation
+    logits = tf.matmul(context_vec, model.Wo, transpose_b=True)
+    expected_loss = tf.keras.losses.sparse_categorical_crossentropy(
+        target_items, logits, from_logits=True
+    )
+
+    # Model computation
+    loss = model.negative_log_likelihood_loss(context_vec, target_items)
+
+    assert np.allclose(loss.numpy(), expected_loss.numpy()), "NLL loss mismatch"
+
+
+def test_trainable_weights_property():
+    """Ensure trainable_weights property returns expected weights."""
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=5, n_negative_samples=1)
+    model.instantiate(n_items=6)
+    weights = model.trainable_weights
+
+    assert len(weights) == 4, "Expected 4 trainable weight tensors"
+    assert weights[0] is model.Wi, "First weight should be Wi"
+    assert weights[1] is model.wa, "Second weight should be wa"
+    assert weights[2] is model.Wo, "Third weight should be Wo"
+    assert weights[3] is model.empty_context_embedding, (
+        "Fourth weight should be empty_context_embedding"
+    )
+
+
+def test_instantiate_validation_errors():
+    """Ensure instantiate raises appropriate errors for invalid inputs."""
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=4, n_negative_samples=1)
+
+    # Test n_items <= 1
+    try:
+        model.instantiate(n_items=1)
+        assert False, "Should have failed with n_items <= 1"
+    except ValueError as e:
+        assert "greater than 1" in str(e)
+
+    # Test wrong distribution length
+    try:
+        model.instantiate(n_items=3, negative_samples_distribution=[0.5, 0.5])
+        assert False, "Should have failed with wrong distribution length"
+    except ValueError as e:
+        assert "same length" in str(e)
+
+
+def test_load_model_missing_file():
+    """Ensure load_model raises FileNotFoundError for missing files."""
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=3, n_negative_samples=1)
+
+    try:
+        model.load_model("non_existent_file.json")
+        assert False, "Should have failed for missing file"
+    except FileNotFoundError:
+        pass
+
+
+def test_proba_positive_and_negative_samples():
+    """Test probability calculations for positive and negative samples."""
+    n_items = 4
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=2, n_negative_samples=2)
+    model.instantiate(n_items=n_items)
+
+    # Test positive samples
+    pos_score = tf.constant([1.0, 2.0], dtype=tf.float32)
+    target_items = tf.constant([0, 1], dtype=tf.int32)
+    pos_proba = model.positive_samples_probability(pos_score, target_items)
+
+    assert pos_proba.shape == (2,), "Positive probabilities shape mismatch"
+    assert tf.reduce_all(pos_proba > 0) and tf.reduce_all(pos_proba <= 1), (
+        "Probabilities should be in (0,1]"
+    )
+
+    # Test negative samples
+    neg_score = tf.constant([[0.5, 1.5], [1.0, 2.0]], dtype=tf.float32)
+    neg_items = tf.constant([[2, 3], [0, 2]], dtype=tf.int32)
+    neg_proba = model.negative_samples_probability(neg_score, neg_items)
+
+    assert neg_proba.shape == (2, 2), "Negative probabilities shape mismatch"
+    assert tf.reduce_all(neg_proba >= 0) and tf.reduce_all(neg_proba < 1), (
+        "Probabilities should be in [0,1)"
+    )
+
+
+def test_count_items_occurrences():
+    """Test item occurrence counting functionality."""
+    n_items = 4
+
+    # Create simple dataset
+    trips = [
+        Trip(np.array([0, 1]), np.ones(n_items), np.ones(n_items)),
+        Trip(np.array([1, 2]), np.ones(n_items), np.ones(n_items)),
+        Trip(np.array([0]), np.ones(n_items), np.ones(n_items)),
+    ]
+    assortment_matrix = np.ones((1, n_items))
+    dataset = TripDataset(trips, assortment_matrix)
+
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=2, n_negative_samples=1)
+    model.instantiate(n_items=n_items)
+
+    distribution = model._get_items_frequencies(dataset)
+
+    # Item 0 appears 2 times, item 1 appears 2 times, item 2 appears 1 time, item 3 appears 0 times
+    expected_counts = np.array([2, 2, 1, 0]) / 5  # Total = 5 items across all baskets
+
+    assert np.allclose(distribution.numpy(), expected_counts), (
+        "Item occurrence distribution mismatch"
+    )
+    assert np.allclose(tf.reduce_sum(distribution), 1.0), "Distribution should sum to 1"
+
+
+def test_nce_loss_computation():
+    """Test NCE loss computation with known values."""
+    n_items = 3
+    model = AttentionBasedContextEmbedding(epochs=1, lr=0.01, embedding_dim=2, n_negative_samples=1)
+    model.instantiate(n_items=n_items)
+
+    pos_score = tf.constant([1.0, 2.0], dtype=tf.float32)
+    target_items = tf.constant([0, 1], dtype=tf.int32)
+    list_neg_items = tf.constant([[2], [0]], dtype=tf.int32)
+    neg_scores = [tf.constant([0.5, 1.5], dtype=tf.float32)]
+
+    loss = model.nce_loss(pos_score, target_items, list_neg_items, neg_scores)
+
+    assert loss.shape == (2,), "NCE loss shape should match batch size"
+    assert tf.reduce_all(loss > 0), "NCE loss should be positive"
+
+
+def test_optimizer_initialization():
+    """Test optimizer initialization with different options."""
+    # Test Adam optimizer (default)
+    model1 = AttentionBasedContextEmbedding(
+        epochs=1, lr=0.01, embedding_dim=2, n_negative_samples=1, optimizer="Adam"
+    )
+    assert isinstance(model1.optimizer, tf.keras.optimizers.Adam), "Should use Adam optimizer"
+
+    # Test unsupported optimizer (should fall back to Adam)
+    model2 = AttentionBasedContextEmbedding(
+        epochs=1, lr=0.01, embedding_dim=2, n_negative_samples=1, optimizer="SGD"
+    )
+    assert isinstance(model2.optimizer, tf.keras.optimizers.Adam), "Should fall back to Adam"
