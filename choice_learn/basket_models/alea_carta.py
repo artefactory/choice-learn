@@ -153,6 +153,15 @@ class AleaCarta:
         self.momentum = momentum
         # Add epsilon to prices to avoid NaN values (log(0))
         self.epsilon_price = epsilon_price
+        
+        if len(tf.config.get_visible_devices("GPU")):
+            # At least one available GPU
+            self.on_gpu = True
+        else:
+            # No available GPU
+            self.on_gpu = False
+        # /!\ If a model trained on GPU is loaded on CPU, self.on_gpu must be set
+        # to False manually after loading the model, and vice versa
 
         self.instantiated = False
 
@@ -364,10 +373,6 @@ class AleaCarta:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
 
-        """alpha_by_basket = tf.gather(
-            tf.concat([tf.zeros((1, self.alpha.shape[1])), self.alpha], axis=0),
-            basket_batch + tf.ones_like(basket_batch),
-        )"""
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
