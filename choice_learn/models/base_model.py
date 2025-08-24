@@ -12,6 +12,7 @@ import tensorflow as tf
 import tqdm
 
 import choice_learn.tf_ops as tf_ops
+import choice_learn.utils.normalomax as nlm
 
 
 class ChoiceModel:
@@ -30,6 +31,7 @@ class ChoiceModel:
         batch_size=32,
         regularization=None,
         regularization_strength=0.0,
+        is_probit=False,
     ):
         """Instantiate the ChoiceModel.
 
@@ -134,6 +136,8 @@ class ChoiceModel:
             self.regularization_strength = 0.0
             self.regularization = None
 
+        self.is_probit = is_probit
+
     @property
     def trainable_weights(self):
         """Trainable weights need to be specified in children classes.
@@ -227,12 +231,17 @@ class ChoiceModel:
                 choices=choices,
             )
 
-            probabilities = tf_ops.softmax_with_availabilities(
-                items_logit_by_choice=utilities,
-                available_items_by_choice=available_items_by_choice,
-                normalize_exit=self.add_exit_choice,
-                axis=-1,
-            )
+            if self.is_probit:
+                probabilities = nlm.normalomax_with_availabilities(
+                    utilities, available_items_by_choice
+                )
+            else:
+                probabilities = tf_ops.softmax_with_availabilities(
+                    items_logit_by_choice=utilities,
+                    available_items_by_choice=available_items_by_choice,
+                    normalize_exit=self.add_exit_choice,
+                    axis=-1,
+                )
             # Negative Log-Likelihood
             neg_loglikelihood = self.loss(
                 y_pred=probabilities,
@@ -488,12 +497,15 @@ class ChoiceModel:
             choices,
         )
         # Compute probabilities from utilities & availabilties
-        probabilities = tf_ops.softmax_with_availabilities(
-            items_logit_by_choice=utilities,
-            available_items_by_choice=available_items_by_choice,
-            normalize_exit=self.add_exit_choice,
-            axis=-1,
-        )
+        if self.is_probit:
+            probabilities = nlm.normalomax_with_availabilities(utilities, available_items_by_choice)
+        else:
+            probabilities = tf_ops.softmax_with_availabilities(
+                items_logit_by_choice=utilities,
+                available_items_by_choice=available_items_by_choice,
+                normalize_exit=self.add_exit_choice,
+                axis=-1,
+            )
 
         # Compute loss from probabilities & actual choices
         # batch_loss = self.loss(probabilities, c_batch, sample_weight=sample_weight)

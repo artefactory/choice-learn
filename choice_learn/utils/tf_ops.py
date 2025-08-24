@@ -1,4 +1,4 @@
-"""Diverse Tensorflow operations used in the ChoiceLearn library."""
+"""Diverse Tensorflow operations used in the Choice-Learn library."""
 
 import tensorflow as tf
 
