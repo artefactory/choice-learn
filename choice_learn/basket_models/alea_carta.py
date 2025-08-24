@@ -153,7 +153,7 @@ class AleaCarta:
         self.momentum = momentum
         # Add epsilon to prices to avoid NaN values (log(0))
         self.epsilon_price = epsilon_price
-        
+
         if len(tf.config.get_visible_devices("GPU")):
             # At least one available GPU
             self.on_gpu = True
