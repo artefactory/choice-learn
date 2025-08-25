@@ -2,15 +2,13 @@
 
 import logging
 import random
-import time
 from typing import Union
 
 import numpy as np
 import tensorflow as tf
-import tqdm
 
 from .base_basket_model import BaseBasketModel
-from .basket_dataset.dataset import Trip, TripDataset
+from .basket_dataset.dataset import Trip
 from .utils.permutation import permutations
 
 
@@ -254,6 +252,23 @@ class Shopper(BaseBasketModel):
             weights.extend([self.mu, self.delta])
 
         return weights
+
+    @property
+    def train_iter_method(self):
+        """Method used to generate sub-baskets from a purchased one.
+
+        Available methods are:
+        - 'shopper': randomly orders the purchases and creates the ordered sub-baskets:
+                        (1|0); (2|1); (3|1,2); (4|1,2,3); etc...
+        - 'aleacarta': creates all the sub-baskets with N-1 items:
+                        (4|1,2,3); (3|1,2,4); (2|1,3,4); (1|2,3,4)
+
+        Returns
+        -------
+        str
+            Data generation method.
+        """
+        return "shopper"
 
     def thinking_ahead(
         self,
@@ -1062,6 +1077,7 @@ class Shopper(BaseBasketModel):
 
         return batch_loss
 
+    '''
     def fit(
         self,
         trip_dataset: TripDataset,
@@ -1217,4 +1233,4 @@ class Shopper(BaseBasketModel):
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
-        return history
+        return history'''

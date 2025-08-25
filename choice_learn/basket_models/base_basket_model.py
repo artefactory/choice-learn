@@ -137,7 +137,7 @@ class BaseBasketModel:
         str
             Data generation method.
         """
-        return
+        raise ValueError("Argument 'train_iter_method' should be defined in child class.")
 
     @abstractmethod
     def compute_batch_utility(
