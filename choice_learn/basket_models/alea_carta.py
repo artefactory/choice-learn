@@ -13,7 +13,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
-from .dataset import Trip, TripDataset
+from .basket_dataset.dataset import Trip, TripDataset
 
 
 class AleaCarta:
