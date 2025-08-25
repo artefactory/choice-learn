@@ -5,7 +5,7 @@ from typing import Union
 
 import numpy as np
 
-from .utils.permutation import permutations
+from ..utils.permutation import permutations
 
 
 class Trip:

@@ -121,8 +121,8 @@ class BaseBasketModel:
         """
         return self._trainable_weights
 
-    @abstractmethod
     @property
+    @abstractmethod
     def train_iter_method(self) -> str:
         """Method used to generate sub-baskets from a purchased one.
 
@@ -499,6 +499,7 @@ class BaseBasketModel:
             * total_n_permutations
         )  # Rescale the mean to the total number of permutations
 
+    @abstractmethod
     @tf.function  # Graph mode
     def compute_batch_loss(
         self,
@@ -548,85 +549,8 @@ class BaseBasketModel:
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        batch_size = len(item_batch)
-        item_batch = tf.cast(item_batch, dtype=tf.int32)
-
-        # Negative sampling
-        negative_samples = tf.reshape(
-            tf.transpose(
-                tf.reshape(
-                    tf.concat(
-                        [
-                            self.get_negative_samples(
-                                available_items=available_item_batch[idx],
-                                purchased_items=basket_batch[idx],
-                                future_purchases=future_batch[idx],
-                                next_item=item_batch[idx],
-                                n_samples=self.n_negative_samples,
-                            )
-                            for idx in range(batch_size)
-                        ],
-                        axis=0,
-                    ),
-                    # Reshape to have at the beginning of the array all the first negative samples
-                    # of all positive samples, then all the second negative samples, etc.
-                    # (same logic as for the calls to np.tile)
-                    [batch_size, self.n_negative_samples],
-                ),
-            ),
-            # Flatten 2D --> 1D
-            shape=[-1],
-        )
-
-        augmented_item_batch = tf.cast(
-            tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
-        )
-        prices_tiled = tf.tile(price_batch, [self.n_negative_samples + 1, 1])
-        # Each time, pick only the price of the item in augmented_item_batch from the
-        # corresponding price array
-        augmented_price_batch = tf.gather(
-            params=prices_tiled,
-            indices=augmented_item_batch,
-            # batch_dims=1 is equivalent to having an outer loop over
-            # the first axis of params and indices
-            batch_dims=1,
-        )
-
-        # Compute the utility of all the available items
-        all_utilities = self.compute_batch_utility(
-            item_batch=augmented_item_batch,
-            basket_batch=tf.tile(basket_batch, [self.n_negative_samples + 1, 1]),
-            store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
-            week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
-            price_batch=augmented_price_batch,
-            available_item_batch=tf.tile(available_item_batch, [self.n_negative_samples + 1, 1]),
-        )
-
-        positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
-        negative_samples_utilities = tf.gather(
-            all_utilities, tf.range(batch_size, tf.shape(all_utilities)[0])
-        )
-
-        # Log-likelihood of a batch = sum of log-likelihoods of its samples
-        # Add a small epsilon to gain numerical stability (avoid log(0))
-        epsilon = 0.0  # No epsilon added for now
-        loglikelihood = tf.reduce_sum(
-            tf.math.log(
-                tf.sigmoid(
-                    tf.tile(
-                        positive_samples_utilities,
-                        [self.n_negative_samples],
-                    )
-                    - negative_samples_utilities
-                )
-                + epsilon
-            ),
-        )  # Shape of loglikelihood: (1,)
-
-        # Maximize the predicted log-likelihood (ie minimize the negative log-likelihood)
-        # normalized by the batch size and the number of negative samples
-        batch_loss = -1 * loglikelihood / (batch_size * self.n_negative_samples)
-
+        batch_loss = 0.0
+        loglikelihood = 0.0
         return batch_loss, loglikelihood
 
     @tf.function  # Graph mode
@@ -1012,7 +936,7 @@ class BaseBasketModel:
 
         init_params = {}
         non_init_params = {}
-        for key, val in params.items:
+        for key, val in params.items():
             if key in inspect.signature(cls.__init__).parameters.keys():
                 init_params[key] = val
             else:
@@ -1022,7 +946,7 @@ class BaseBasketModel:
         model = cls(**init_params)
 
         # Set non-init parameters
-        for key, val in non_init_params.keys():
+        for key, val in non_init_params.items():
             setattr(model, key, val)
 
         # Load weights
