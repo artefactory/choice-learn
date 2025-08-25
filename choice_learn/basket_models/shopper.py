@@ -13,12 +13,12 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
-from ..tf_ops import softmax_with_availabilities
+from .base_basket_model import BaseBasketModel
 from .basket_dataset.dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
 
-class Shopper:
+class Shopper(BaseBasketModel):
     """Class for the Shopper model."""
 
     def __init__(
@@ -38,6 +38,7 @@ class Shopper:
         weight_decay: Union[float, None] = None,
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
+        **kwargs,
     ) -> None:
         """Initialize the Shopper model.
 
@@ -113,52 +114,21 @@ class Shopper:
             raise ValueError("n_negative_samples must be > 0.")
 
         self.latent_sizes = latent_sizes
-
         self.n_negative_samples = n_negative_samples
 
-        self.optimizer_name = optimizer
-        if optimizer.lower() == "adam":
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "amsgrad":
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr,
-                amsgrad=True,
-                clipvalue=grad_clip_value,
-                weight_decay=weight_decay,
-            )
-        elif optimizer.lower() == "adamax":
-            self.optimizer = tf.keras.optimizers.Adamax(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "rmsprop":
-            self.optimizer = tf.keras.optimizers.RMSprop(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "sgd":
-            self.optimizer = tf.keras.optimizers.SGD(
-                learning_rate=lr,
-                clipvalue=grad_clip_value,
-                weight_decay=weight_decay,
-                momentum=momentum,
-            )
-        else:
-            logging.warning(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-
-        self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
-        self.callbacks.set_model(self)
-        self.lr = lr
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.grad_clip_value = grad_clip_value
-        self.weight_decay = weight_decay
-        self.momentum = momentum
-        # Add epsilon to prices to avoid NaN values (log(0))
         self.epsilon_price = epsilon_price
+
+        super().__init__(
+            optimizer=optimizer,
+            callbacks=callbacks,
+            lr=lr,
+            epochs=epochs,
+            batch_size=batch_size,
+            grad_clip_value=grad_clip_value,
+            weight_decay=weight_decay,
+            momentum=momentum,
+            **kwargs,
+        )
 
         if len(tf.config.get_visible_devices("GPU")):
             # At least one available GPU
@@ -612,104 +582,6 @@ class Shopper:
         )
 
         return item_utilities + next_step_utilities
-
-    def compute_item_likelihood(
-        self,
-        basket: Union[None, np.ndarray] = None,
-        available_items: Union[None, np.ndarray] = None,
-        store: Union[None, int] = None,
-        week: Union[None, int] = None,
-        prices: Union[None, np.ndarray] = None,
-        trip: Union[None, Trip] = None,
-    ) -> tf.Tensor:
-        """Compute the likelihood of all items for a given trip.
-
-        Take as input directly a Trip object or separately basket, available_items,
-        store, week and prices.
-
-        Parameters
-        ----------
-        basket: np.ndarray or None, optional
-            ID the of items already in the basket, by default None
-        available_items: np.ndarray or None, optional
-            Matrix indicating the availability (1) or not (0) of the products,
-            by default None
-            Shape must be (n_items,)
-        store: int or None, optional
-            Store id, by default None
-        week: int or None, optional
-            Week number, by default None
-        prices: np.ndarray or None, optional
-            Prices of all the items in the dataset, by default None
-            Shape must be (n_items,)
-        trip: Trip or None, optional
-            Trip object containing basket, available_items, store,
-            week and prices, by default None
-
-        Returns
-        -------
-        likelihood: tf.Tensor
-            Likelihood of all items for a given trip
-            Shape must be (n_items,)
-        """
-        if trip is None:
-            # Trip not provided as an argument
-            # Then basket, available_items, store, week and prices must be provided
-            if (
-                basket is None
-                or available_items is None
-                or store is None
-                or week is None
-                or prices is None
-            ):
-                raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be provided as arguments."
-                )
-
-        else:
-            # Trip directly provided as an argument
-            basket = trip.purchases
-
-            if isinstance(trip.assortment, int):
-                # Then it is the assortment ID (ie its index in the attribute
-                # available_items of the TripDataset), but we do not have the
-                # the TripDataset as input here
-                raise ValueError(
-                    "The assortment ID is not enough to compute the likelihood. "
-                    "Please provide the availability matrix directly (array of shape (n_items,) "
-                    "indicating the availability (1) or not (0) of the products)."
-                )
-            # Else: np.ndarray
-            available_items = trip.assortment
-
-            store = trip.store
-            week = trip.week
-            prices = trip.prices
-
-        # Prevent unintended side effects from in-place modifications
-        available_items_copy = available_items.copy()
-
-        # Compute the utility of all the items
-        all_utilities = self.compute_batch_utility(
-            # All items
-            item_batch=np.array([item_id for item_id in range(self.n_items)]),
-            # For each item: same basket / store / week / prices / available items
-            basket_batch=np.array([basket for _ in range(self.n_items)]),
-            store_batch=np.array([store for _ in range(self.n_items)]),
-            week_batch=np.array([week for _ in range(self.n_items)]),
-            price_batch=prices,
-            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
-        )
-
-        # Softmax on the utilities
-        return softmax_with_availabilities(
-            items_logit_by_choice=all_utilities,  # Shape: (n_items,)
-            available_items_by_choice=available_items_copy,  # Shape: (n_items,)
-            axis=-1,
-            normalize_exit=False,
-            eps=None,
-        )
 
     def compute_ordered_basket_likelihood(
         self,
