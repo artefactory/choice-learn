@@ -775,25 +775,18 @@ class BaseBasketModel:
         self.callbacks.on_train_end(logs=temps_logs)
         return history
 
-    # Weird, uses all sub-baskets -> ?
     def evaluate(
         self,
         trip_dataset: TripDataset,
-        n_permutations: int = 1,
         batch_size: int = 32,
-        epsilon_eval: float = 1e-6,
+        epsilon_eval: float = 1e-9,
     ) -> tf.Tensor:
-        """Evaluate the model for each trip (unordered basket) in the dataset.
+        r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
         Predicts the probabilities according to the model and then computes the
         mean negative log-likelihood (nll) for the dataset
-
-        N.B.: Some randomness is involved in the evaluation through random sampling
-        of permutations at 2 levels:
-        - During batch processing: random permutation of the items in the basket
-        when creating augmented data from a trip index
-        - During the computation of the likelihood of an (unordered) basket: approximation
-        by the average of the likelihoods of several permutations of the basket
+        NLL = \sum_{\mathcal{B} \in \mathcal{D}}
+                    \sum_{i \in \mathcal{B}} \mathbb{P}(i | \mathcal{B} \setminus i)
 
         Parameters
         ----------
@@ -814,12 +807,13 @@ class BaseBasketModel:
             Shape must be (1,)
         """
         sum_loglikelihoods = 0.0
+        n_evals = 0
 
         inner_range = trip_dataset.iter_batch(
-            shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+            shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
         for (
-            _,
+            item_batch,
             basket_batch,
             _,
             store_batch,
@@ -827,41 +821,33 @@ class BaseBasketModel:
             price_batch,
             available_item_batch,
         ) in inner_range:
-            # Sum of the log-likelihoods of all the (unordered) baskets in the batch
+            # Sum of the log-likelihoods of all the baskets in the batch
             sum_loglikelihoods += np.sum(
                 np.log(
                     [
-                        self.compute_basket_likelihood(
+                        self.compute_item_likelihood(
                             basket=basket,
                             available_items=available_items,
                             store=store,
                             week=week,
                             prices=prices,
-                            n_permutations=n_permutations,
-                        )
+                        )[item]
                         + epsilon_eval
-                        for basket, available_items, store, week, prices in zip(
-                            basket_batch, available_item_batch, store_batch, week_batch, price_batch
+                        for basket, item, available_items, store, week, prices in zip(
+                            basket_batch,
+                            item_batch,
+                            available_item_batch,
+                            store_batch,
+                            week_batch,
+                            price_batch,
                         )
                     ]
                 )
             )
-
-        # Obliged to recall iter_batch because a generator is exhausted once iterated over
-        # or once transformed into a list
-        n_batches = len(
-            list(
-                trip_dataset.iter_batch(
-                    shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
-                )
-            )
-        )
-        # Total number of samples processed: sum of the batch sizes
-        # (last batch may have a different size if incomplete)
-        n_elements = batch_size * (n_batches - 1) + len(basket_batch)
+            n_evals += len(item_batch)
 
         # Predicted mean negative log-likelihood over all the batches
-        return -1 * sum_loglikelihoods / n_elements
+        return -1 * sum_loglikelihoods / n_evals
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.

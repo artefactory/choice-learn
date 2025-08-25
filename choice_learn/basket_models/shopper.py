@@ -1,12 +1,8 @@
 """Implementation of the Shopper model."""
 
-import json
 import logging
-import os
 import random
 import time
-from datetime import datetime
-from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -198,7 +194,7 @@ class Shopper(BaseBasketModel):
                     shape=(n_items - 1,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
-                name="lambda",
+                name="lambda_",
             )
 
         if self.price_effects:
@@ -1222,187 +1218,3 @@ class Shopper(BaseBasketModel):
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
         return history
-
-    def evaluate(
-        self,
-        trip_dataset: TripDataset,
-        n_permutations: int = 1,
-        batch_size: int = 32,
-        epsilon_eval: float = 1e-6,
-    ) -> tf.Tensor:
-        """Evaluate the model for each trip (unordered basket) in the dataset.
-
-        Predicts the probabilities according to the model and then computes the
-        mean negative log-likelihood (nll) for the dataset
-
-        N.B.: Some randomness is involved in the evaluation through random sampling
-        of permutations at 2 levels:
-        - During batch processing: random permutation of the items in the basket
-        when creating augmented data from a trip index
-        - During the computation of the likelihood of an (unordered) basket: approximation
-        by the average of the likelihoods of several permutations of the basket
-
-        Parameters
-        ----------
-        trip_dataset: TripDataset
-            Dataset on which to apply to prediction
-        n_permutations: int, optional
-            Number of permutations to average over, by default 1
-        batch_size: int, optional
-            Batch size, by default 32
-        epsilon_eval: float, optional
-            Small value to avoid log(0) in the computation of the log-likelihood,
-            by default 1e-6
-
-        Returns
-        -------
-        loss: tf.Tensor
-            Value of the mean loss (nll) for the dataset,
-            Shape must be (1,)
-        """
-        sum_loglikelihoods = 0.0
-
-        inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)
-        for (
-            _,
-            basket_batch,
-            _,
-            store_batch,
-            week_batch,
-            price_batch,
-            available_item_batch,
-        ) in inner_range:
-            # Sum of the log-likelihoods of all the (unordered) baskets in the batch
-            sum_loglikelihoods += np.sum(
-                np.log(
-                    [
-                        self.compute_basket_likelihood(
-                            basket=basket,
-                            available_items=available_items,
-                            store=store,
-                            week=week,
-                            prices=prices,
-                            n_permutations=n_permutations,
-                        )
-                        + epsilon_eval
-                        for basket, available_items, store, week, prices in zip(
-                            basket_batch, available_item_batch, store_batch, week_batch, price_batch
-                        )
-                    ]
-                )
-            )
-
-        # Obliged to recall iter_batch because a generator is exhausted once iterated over
-        # or once transformed into a list
-        n_batches = len(list(trip_dataset.iter_batch(shuffle=True, batch_size=batch_size)))
-        # Total number of samples processed: sum of the batch sizes
-        # (last batch may have a different size if incomplete)
-        n_elements = batch_size * (n_batches - 1) + len(basket_batch)
-
-        # Predicted mean negative log-likelihood over all the batches
-        return -1 * sum_loglikelihoods / n_elements
-
-    def save_model(self, path: str) -> None:
-        """Save the different models on disk.
-
-        Parameters
-        ----------
-        path: str
-            path to the folder where to save the model
-        """
-        if os.path.exists(path):
-            # Add current date and time to the folder name
-            # if the folder already exists
-            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-            path += f"_{current_time}/"
-        else:
-            path += "/"
-
-        if not os.path.exists(path):
-            Path(path).mkdir(parents=True, exist_ok=True)
-
-        # Save the parameters in a single pickle file
-        params = {}
-        for k, v in self.__dict__.items():
-            # Save only the JSON-serializable parameters
-            if isinstance(v, (int, float, list, str, dict)):
-                params[k] = v
-        json.dump(params, open(os.path.join(path, "params.json"), "w"))
-
-        # Save the latent parameters in separate numpy files
-        for latent_parameter in self.trainable_weights:
-            parameter_name = latent_parameter.name.split(":")[0]
-            np.save(os.path.join(path, parameter_name + ".npy"), latent_parameter)
-
-    @classmethod
-    def load_model(cls, path: str) -> object:
-        """Load a model previously saved with save_model().
-
-        Parameters
-        ----------
-        path: str
-            path to the folder where the saved model files are
-
-        Returns
-        -------
-        ChoiceModel
-            Loaded ChoiceModel
-        """
-        # Load parameters
-        params = json.load(open(os.path.join(path, "params.json")))
-
-        # Initialize model
-        model = cls(
-            item_intercept=params["item_intercept"],
-            price_effects=params["price_effects"],
-            seasonal_effects=params["seasonal_effects"],
-            think_ahead=params["think_ahead"],
-            latent_sizes=params["latent_sizes"],
-            n_negative_samples=params["n_negative_samples"],
-            optimizer=params["optimizer_name"],
-            callbacks=params.get("callbacks", None),  # To avoid KeyError if None
-            lr=params["lr"],
-            epochs=params["epochs"],
-            batch_size=params["batch_size"],
-            grad_clip_value=params.get("grad_clip_value", None),
-            weight_decay=params.get("weight_decay", None),
-            momentum=params["momentum"],
-            epsilon_price=params["epsilon_price"],
-        )
-
-        # Instantiate manually the model
-        model.n_items = params["n_items"]
-        model.n_stores = params["n_stores"]
-
-        # Fix manually trainable weights values
-        model.rho = tf.Variable(np.load(os.path.join(path, "rho.npy")), trainable=True, name="rho")
-        model.alpha = tf.Variable(
-            np.load(os.path.join(path, "alpha.npy")), trainable=True, name="alpha"
-        )
-        model.theta = tf.Variable(
-            np.load(os.path.join(path, "theta.npy")), trainable=True, name="theta"
-        )
-
-        lambda_path = os.path.join(path, "lambda.npy")
-        if os.path.exists(lambda_path):
-            model.lambda_ = tf.Variable(np.load(lambda_path), trainable=True, name="lambda")
-
-        beta_path = os.path.join(path, "beta.npy")
-        if os.path.exists(beta_path):
-            # Then the paths to the saved gamma should also exist (price effects)
-            model.beta = tf.Variable(np.load(beta_path), trainable=True, name="beta")
-            model.gamma = tf.Variable(
-                np.load(os.path.join(path, "gamma.npy")), trainable=True, name="gamma"
-            )
-
-        mu_path = os.path.join(path, "mu.npy")
-        if os.path.exists(mu_path):
-            # Then the paths to the saved delta should also exist (price effects)
-            model.mu = tf.Variable(np.load(mu_path), trainable=True, name="mu")
-            model.delta = tf.Variable(
-                np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
-            )
-
-        model.instantiated = params["instantiated"]
-
-        return model
