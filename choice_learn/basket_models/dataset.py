@@ -485,6 +485,12 @@ class TripDataset:
             Batch size (number of items in the batch)
         shuffle: bool
             Whether or not to shuffle the dataset
+        data_method: str
+            Method used to generate sub-baskets from a purchased one. Available methods are:
+            - 'shopper': randomly orders the purchases and creates the ordered sub-baskets:
+                         (1|0); (2|1); (3|1,2); (4|1,2,3); etc...
+            - 'aleacarta': creates all the sub-baskets with N-1 items:
+                           (4|1,2,3); (3|1,2,4); (2|1,3,4); (1|2,3,4)
 
         Yields
         ------
