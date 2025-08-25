@@ -19,7 +19,11 @@ from .utils.permutation import permutations
 
 
 class Shopper(BaseBasketModel):
-    """Class for the Shopper model."""
+    """Class for the Shopper model.
+
+    SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements,
+    Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)
+    """
 
     def __init__(
         self,

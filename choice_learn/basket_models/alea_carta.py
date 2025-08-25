@@ -17,7 +17,12 @@ from .basket_dataset.dataset import Trip, TripDataset
 
 
 class AleaCarta:
-    """Class for the AleaCarta model."""
+    """Class for the AleaCarta model.
+
+    Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for
+    Basket Choice Modeling,
+    Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD
+    """
 
     def __init__(
         self,
