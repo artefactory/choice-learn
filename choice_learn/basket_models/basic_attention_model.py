@@ -124,8 +124,7 @@ class AttentionBasedContextEmbedding:
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_embedding]
 
-    tf.config.run_functions_eagerly(True)
-
+    ##tf.config.run_functions_eagerly(True)
     def embed_context(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
 
@@ -155,8 +154,7 @@ class AttentionBasedContextEmbedding:
             fn_output_signature=tf.float32,
         )
 
-    tf.config.run_functions_eagerly(True)
-
+    # tf.config.run_functions_eagerly(True)
     def score(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
         """Return the score of the item given the context vector.
 
@@ -227,8 +225,7 @@ class AttentionBasedContextEmbedding:
         q_dist = tf.gather(self.negative_samples_distribution, target_items)
         return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
 
-    tf.config.run_functions_eagerly(True)
-
+    ##tf.config.run_functions_eagerly(True)
     def get_negative_samples(
         self, context_items: tf.Tensor, target_items: tf.Tensor, available_items: tf.Tensor
     ) -> tf.Tensor:
@@ -309,8 +306,7 @@ class AttentionBasedContextEmbedding:
         items_distribution = item_counts / item_counts.sum()
         return tf.constant(items_distribution, dtype=tf.float32)
 
-    tf.config.run_functions_eagerly(True)
-
+    ##tf.config.run_functions_eagerly(True)
     def nce_loss(
         self,
         pos_score: tf.Tensor,
@@ -375,8 +371,7 @@ class AttentionBasedContextEmbedding:
             target_items, logits, from_logits=True
         )
 
-    tf.config.run_functions_eagerly(True)
-
+    ##tf.config.run_functions_eagerly(True)
     def compute_batch_loss(
         self,
         context_batch: tf.Tensor,
