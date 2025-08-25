@@ -278,7 +278,7 @@ class AleaCarta:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -372,6 +372,7 @@ class AleaCarta:
         else:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
+
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
@@ -393,8 +394,10 @@ class AleaCarta:
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
-        """Compute the utility of an (unordered) basket.
+        r"""Compute the utility of an (unordered) basket.
 
+        Corresponds to the sum of all the conditional utilities:
+                \sum_{i \in basket} U(i | basket \ {i})
         Take as input directly a Trip object or separately basket, store,
         week and prices.
 
@@ -461,7 +464,7 @@ class AleaCarta:
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> tf.Tensor:
-        """Compute the likelihood of all items for a given trip.
+        """Compute the likelihood for all items (as next item) with a given basket.
 
         Take as input directly a Trip object or separately basket, available_items,
         store, week and prices.
@@ -527,6 +530,7 @@ class AleaCarta:
             prices = trip.prices
 
         # Prevent unintended side effects from in-place modifications
+        # Likelihood of an item in the basket = 0
         available_items_copy = available_items.copy()
         for basket_item in basket:
             if basket_item != -1:
@@ -535,7 +539,7 @@ class AleaCarta:
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
             # All items
-            item_batch=np.array([item_id for item_id in range(self.n_items)]),
+            item_batch=np.arange(self.n_items),
             # For each item: same basket / store / week / prices / available items
             basket_batch=np.array([basket for _ in range(self.n_items)]),
             store_batch=np.array([store for _ in range(self.n_items)]),
