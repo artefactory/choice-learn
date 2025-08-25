@@ -1,11 +1,11 @@
 """Base Class for basket choice modeling."""
 
-from abc import abstractmethod
 import json
 import logging
 import os
 import random
 import time
+from abc import abstractmethod
 from datetime import datetime
 from pathlib import Path
 from typing import Union
@@ -182,7 +182,7 @@ class BaseBasketModel:
         """
         return
 
-     # Not clear
+    # Not clear
     def compute_item_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -255,7 +255,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
-                trip=None
+                trip=None,
             )
 
         # Prevent unintended side effects from in-place modifications
@@ -353,7 +353,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
-                trip=None
+                trip=None,
             )
 
         # Prevent unintended side effects from in-place modifications
@@ -734,17 +734,16 @@ class BaseBasketModel:
             if verbose > 0:
                 inner_range = tqdm.tqdm(
                     trip_dataset.iter_batch(
-                        shuffle=True,
-                        batch_size=batch_size,
-                        data_method=self.train_iter_method
+                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
                     ),
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=1,
                     leave=False,
                 )
             else:
-                inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size, 
-                        data_method=self.train_iter_method)
+                inner_range = trip_dataset.iter_batch(
+                    shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                )
 
             for batch_nb, (
                 item_batch,
@@ -812,8 +811,11 @@ class BaseBasketModel:
                     week_batch,
                     price_batch,
                     available_item_batch,
-                ) in enumerate(val_dataset.iter_batch(shuffle=True, batch_size=batch_size,
-                        data_method=self.train_iter_method)):
+                ) in enumerate(
+                    val_dataset.iter_batch(
+                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                    )
+                ):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
@@ -889,8 +891,9 @@ class BaseBasketModel:
         """
         sum_loglikelihoods = 0.0
 
-        inner_range = trip_dataset.iter_batch(shuffle=True, batch_size=batch_size,
-                        data_method=self.train_iter_method)
+        inner_range = trip_dataset.iter_batch(
+            shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+        )
         for (
             _,
             basket_batch,
@@ -922,8 +925,13 @@ class BaseBasketModel:
 
         # Obliged to recall iter_batch because a generator is exhausted once iterated over
         # or once transformed into a list
-        n_batches = len(list(trip_dataset.iter_batch(shuffle=True, batch_size=batch_size, 
-                        data_method=self.train_iter_method)))
+        n_batches = len(
+            list(
+                trip_dataset.iter_batch(
+                    shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                )
+            )
+        )
         # Total number of samples processed: sum of the batch sizes
         # (last batch may have a different size if incomplete)
         n_elements = batch_size * (n_batches - 1) + len(basket_batch)
@@ -975,7 +983,13 @@ class BaseBasketModel:
         for file in os.listdir(directory):
             if file.endswith(".npy"):
                 weight_name = file.split(".")[0]
-                setattr(self, weight_name, tf.Variable(np.load(os.path.join(directory, file)), trainable=True, name=weight_name))
+                setattr(
+                    self,
+                    weight_name,
+                    tf.Variable(
+                        np.load(os.path.join(directory, file)), trainable=True, name=weight_name
+                    ),
+                )
 
     @classmethod
     def load_model(cls, path: str) -> object:
@@ -992,6 +1006,7 @@ class BaseBasketModel:
             Loaded BasketModel
         """
         import inspect
+
         # Load parameters
         params = json.load(open(os.path.join(path, "params.json")))
 
