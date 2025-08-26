@@ -13,10 +13,11 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
+from .base_basket_model import BaseBasketModel
 from .basket_dataset.dataset import Trip, TripDataset
 
 
-class AleaCarta:
+class AleaCarta(BaseBasketModel):
     """Class for the AleaCarta model.
 
     Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for
@@ -41,7 +42,7 @@ class AleaCarta:
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
     ) -> None:
-        """Initialize the Shopper model.
+        """Initialize the AleaCarta model.
 
         Parameters
         ----------
@@ -112,7 +113,6 @@ class AleaCarta:
             raise ValueError("n_negative_samples must be > 0.")
 
         self.latent_sizes = latent_sizes
-
         self.n_negative_samples = n_negative_samples
 
         self.optimizer_name = optimizer
@@ -214,7 +214,7 @@ class AleaCarta:
                     shape=(n_items,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
-                name="lambda",
+                name="lambda_",
             )
 
         if self.price_effects:
@@ -282,6 +282,7 @@ class AleaCarta:
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
 
@@ -303,6 +304,10 @@ class AleaCarta:
         price_batch: np.ndarray
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
 
         Returns
         -------
@@ -310,6 +315,7 @@ class AleaCarta:
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
+        _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
@@ -396,6 +402,7 @@ class AleaCarta:
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
+        available_item_batch: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
         """Compute the utility of an (unordered) basket.
@@ -437,6 +444,7 @@ class AleaCarta:
             basket = trip.purchases
             store = trip.store
             week = trip.week
+            available_item_batch = trip.assortment
             prices = [trip.prices[item_id] for item_id in basket]
 
         len_basket = len(basket)
@@ -454,6 +462,7 @@ class AleaCarta:
                 store_batch=np.array([store] * len_basket),
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
+                available_item_batch=available_item_batch,
             )
         ).numpy()
 
@@ -546,6 +555,7 @@ class AleaCarta:
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
+            available_item_batch=available_items,
         )
 
         # Softmax on the utilities
@@ -717,6 +727,7 @@ class AleaCarta:
             store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
             week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,
+            available_item_batch=available_item_batch,
         )
 
         positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
@@ -893,7 +904,7 @@ class AleaCarta:
                 epoch_losses.append(batch_loss)
 
                 if verbose > 0:
-                    inner_range.set_description(
+                    t_range.set_description(
                         f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
                     )
 
@@ -1136,7 +1147,7 @@ class AleaCarta:
             np.load(os.path.join(path, "theta.npy")), trainable=True, name="theta"
         )
 
-        lambda_path = os.path.join(path, "lambda.npy")
+        lambda_path = os.path.join(path, "lambda_.npy")
         if os.path.exists(lambda_path):
             model.lambda_ = tf.Variable(np.load(lambda_path), trainable=True, name="lambda")
 
