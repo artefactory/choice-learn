@@ -266,7 +266,7 @@ class AleaCarta(BaseBasketModel):
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -365,6 +365,7 @@ class AleaCarta(BaseBasketModel):
         else:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
+
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
@@ -387,8 +388,10 @@ class AleaCarta(BaseBasketModel):
         available_item_batch: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
-        """Compute the utility of an (unordered) basket.
+        r"""Compute the utility of an (unordered) basket.
 
+        Corresponds to the sum of all the conditional utilities:
+                \sum_{i \in basket} U(i | basket \ {i})
         Take as input directly a Trip object or separately basket, store,
         week and prices.
 
@@ -447,6 +450,7 @@ class AleaCarta(BaseBasketModel):
                 available_item_batch=available_item_batch,
             )
         ).numpy()
+
 
     def get_negative_samples(
         self,
