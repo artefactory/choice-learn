@@ -451,7 +451,6 @@ class AleaCarta(BaseBasketModel):
             )
         ).numpy()
 
-
     def get_negative_samples(
         self,
         available_items: np.ndarray,
