@@ -822,6 +822,7 @@ class BaseBasketModel:
             available_item_batch,
         ) in inner_range:
             # Sum of the log-likelihoods of all the baskets in the batch
+            basket_batch = [basket[basket != -1] for basket in basket_batch]
             sum_loglikelihoods += np.sum(
                 np.log(
                     [
