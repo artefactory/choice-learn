@@ -29,6 +29,7 @@ class AttentionBasedContextEmbedding:
         n_negative_samples,
         batch_size: int = 50,
         optimizer: str = "Adam",
+        nce_distribution="natural",
     ) -> None:
         """Initialize the model with hyperparameters.
 
@@ -46,6 +47,11 @@ class AttentionBasedContextEmbedding:
                 Size of the batches for training. Default is 50.
             optimizer : str
                 Optimizer to use for training. Default is "Adam".
+            nce_distribution: str
+                Items distribution to be used to compute the NCE Loss
+                Currentlry available: 'natural' to estimate the distribution
+                from the train dataset and 'uniform' where all items have the
+                same disitrbution, 1/n_items. Default is 'natural'.
         """
         self.instantiated = False
 
@@ -62,8 +68,11 @@ class AttentionBasedContextEmbedding:
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
 
+        self.nce_distribution = nce_distribution
+
     def instantiate(
-        self, n_items, negative_samples_distribution=None, use_true_nce_distribution=True
+        self,
+        n_items,
     ) -> None:
         """Initialize the model parameters.
 
@@ -76,26 +85,8 @@ class AttentionBasedContextEmbedding:
                 If None, a uniform distribution is used.
                 If use_true_nce_distribution in fit() is True,
                 the distribution is calculated based on the dataset.
-            use_true_nce_distribution : bool
-                If True, uses the true distribution of items in the dataset
         """
         self.n_items = tf.constant(n_items, dtype=tf.int32)
-        if negative_samples_distribution is None:
-            if n_items <= 1:
-                raise ValueError("n_items must be greater than 1 to define a uniform distribution.")
-
-            self.negative_samples_distribution = tf.constant(
-                [1.0 / (n_items - 1)] * n_items, dtype=tf.float32
-            )
-        else:
-            if len(negative_samples_distribution) != n_items:
-                raise ValueError(
-                    "Negative samples distribution must have the same length as n_items."
-                )
-            self.negative_samples_distribution = tf.constant(
-                negative_samples_distribution, dtype=tf.float32
-            )
-        self.use_true_nce_distribution = use_true_nce_distribution
 
         self.Wi = tf.Variable(
             tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wi"
@@ -124,7 +115,6 @@ class AttentionBasedContextEmbedding:
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_embedding]
 
-    ##tf.config.run_functions_eagerly(True)
     def embed_context(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
 
@@ -154,9 +144,8 @@ class AttentionBasedContextEmbedding:
             fn_output_signature=tf.float32,
         )
 
-    # tf.config.run_functions_eagerly(True)
-    def score(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
-        """Return the score of the item given the context vector.
+    def compute_batch_utility(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
+        """Return the utility of the item given the context vector.
 
         Parameters
         ----------
@@ -225,8 +214,73 @@ class AttentionBasedContextEmbedding:
         q_dist = tf.gather(self.negative_samples_distribution, target_items)
         return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
 
-    ##tf.config.run_functions_eagerly(True)
     def get_negative_samples(
+        self,
+        available_items: np.ndarray,
+        purchased_items: np.ndarray,
+        next_item: int,
+        n_samples: int,
+    ) -> list[int]:
+        """Sample randomly a set of items.
+
+        (set of items not already purchased and *not necessarily* from the basket)
+
+        Parameters
+        ----------
+        available_items: np.ndarray
+            Matrix indicating the availability (1) or not (0) of the products
+            Shape must be (n_items,)
+        purchased_items: np.ndarray
+            List of items already purchased (already in the basket)
+        next_item: int
+            Next item (to be added in the basket)
+        n_samples: int
+            Number of samples to draw
+
+        Returns
+        -------
+        list[int]
+            Random sample of items, each of them distinct from
+            the next item and from the items already in the basket
+        """
+        # Convert inputs to tensors
+        available_items = tf.cast(tf.convert_to_tensor(available_items), dtype=tf.int32)
+        purchased_items = tf.cast(tf.convert_to_tensor(purchased_items), dtype=tf.int32)
+        next_item = tf.cast(tf.convert_to_tensor(next_item), dtype=tf.int32)
+
+        # Get the list of available items based on the availability matrix
+        item_ids = tf.range(self.n_items)
+        available_mask = tf.equal(available_items, 1)
+        assortment = tf.boolean_mask(item_ids, available_mask)
+
+        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
+
+        # Sample negative items from the assortment excluding not_to_be_chosen
+        negative_samples = tf.boolean_mask(
+            tensor=assortment,
+            # Reduce the 2nd dimension of the boolean mask to get a 1D mask
+            mask=~tf.reduce_any(
+                tf.equal(tf.expand_dims(assortment, axis=1), not_to_be_chosen), axis=1
+            ),
+        )
+
+        error_message = (
+            "The number of negative samples to draw must be less than "
+            "the number of available items not already purchased and "
+            "distinct from the next item."
+        )
+        # Raise an error if n_samples > tf.size(negative_samples)
+        tf.debugging.assert_greater_equal(
+            tf.size(negative_samples), n_samples, message=error_message
+        )
+
+        # Randomize the sampling
+        negative_samples = tf.random.shuffle(negative_samples)
+
+        # Keep only n_samples
+        return negative_samples[:n_samples]
+
+    '''def get_negative_samples(
         self, context_items: tf.Tensor, target_items: tf.Tensor, available_items: tf.Tensor
     ) -> tf.Tensor:
         """
@@ -235,7 +289,7 @@ class AttentionBasedContextEmbedding:
         Parameters
         ----------
             context_items : tf.Tensor
-                [batch_size, variable_length] tf.
+                [batch_size, variable_length]
                 Tensor contenant les items de contexte (batch_size, variable_length).
             target_items : tf.Tensor
                 [batch_size,] tf.Tensor
@@ -284,7 +338,7 @@ class AttentionBasedContextEmbedding:
             candidates_mask,
             fn_output_signature=tf.TensorSpec([self.n_negative_samples], dtype=tf.int64),
         )
-        return tf.cast(neg_samples, tf.int32)
+        return tf.cast(neg_samples, tf.int32)'''
 
     def _get_items_frequencies(self, dataset: TripDataset) -> tf.Tensor:
         """Count the occurrences of each item in the dataset.
@@ -306,7 +360,6 @@ class AttentionBasedContextEmbedding:
         items_distribution = item_counts / item_counts.sum()
         return tf.constant(items_distribution, dtype=tf.float32)
 
-    ##tf.config.run_functions_eagerly(True)
     def nce_loss(
         self,
         pos_score: tf.Tensor,
@@ -371,7 +424,6 @@ class AttentionBasedContextEmbedding:
             target_items, logits, from_logits=True
         )
 
-    ##tf.config.run_functions_eagerly(True)
     def compute_batch_loss(
         self,
         context_batch: tf.Tensor,
@@ -395,10 +447,10 @@ class AttentionBasedContextEmbedding:
                 Tensor containing the total loss for the batch.
         """
         context_vec = self.embed_context(context_batch)
-        pos_score = self.score(context_vec, items_batch)
+        pos_score = self.compute_batch_utility(context_vec, items_batch)
         list_neg_items = self.get_negative_samples(context_batch, items_batch, available_items)
         neg_scores = tf.map_fn(
-            lambda neg_items: self.score(context_vec, neg_items),
+            lambda neg_items: self.compute_batch_utility(context_vec, neg_items),
             tf.transpose(list_neg_items),
             fn_output_signature=tf.float32,
         )
