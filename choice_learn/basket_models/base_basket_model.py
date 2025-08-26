@@ -260,6 +260,9 @@ class BaseBasketModel:
 
         # Prevent unintended side effects from in-place modifications
         available_items_copy = available_items.copy()
+        for basket_item in basket:
+            if basket_item != -1:
+                available_items_copy[basket_item] = 0.0
 
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
