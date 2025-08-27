@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 from .base_basket_model import BaseBasketModel
-from .basket_dataset.dataset import Trip
+from .data.basket_dataset import Trip
 
 
 class AleaCarta(BaseBasketModel):

@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from choice_learn.basket_models.basket_dataset.preprocessing import map_indexes
+from choice_learn.basket_models.data.preprocessing import map_indexes
 
 
 def test_map_indexes() -> None:

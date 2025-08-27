@@ -15,7 +15,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
-from .basket_dataset.dataset import Trip, TripDataset
+from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
 

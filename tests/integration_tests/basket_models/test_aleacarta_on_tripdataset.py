@@ -7,7 +7,7 @@ import pytest
 import tensorflow as tf
 
 from choice_learn.basket_models import AleaCarta
-from choice_learn.basket_models.basket_dataset.dataset import Trip, TripDataset
+from choice_learn.basket_models.data import Trip, TripDataset
 
 # Toy dataset 1: different items between trips
 trip_list_1 = [
