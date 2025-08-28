@@ -1,8 +1,5 @@
 """Implementation of an attention-based model for item recommendation."""
 
-import json
-import os
-from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -11,7 +8,7 @@ import tqdm
 
 from ..tf_ops import softmax_with_availabilities
 from .base_basket_model import BaseBasketModel
-from .dataset import TripDataset
+from .data.basket_dataset import TripDataset
 
 
 class AttentionBasedContextEmbedding(BaseBasketModel):
@@ -46,8 +43,8 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             Number of training epochs.
         lr : float
             Learning rate for the optimizer.
-        embedding_dim : int
-            Dimension of the item embeddings.
+        latent_size : int
+            Size of the item embeddings.
         n_negative_samples : int
             Number of negative samples to use in training.
         batch_size : int
@@ -92,15 +89,15 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         self.n_items = tf.constant(n_items, dtype=tf.int32)
 
         self.Wi = tf.Variable(
-            tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wi"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1), name="Wi"
         )
         self.Wo = tf.Variable(
-            tf.random.normal((self.n_items, self.embedding_dim), stddev=0.1), name="Wo"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1), name="Wo"
         )
-        self.wa = tf.Variable(tf.random.normal((self.embedding_dim,), stddev=0.1), name="wa")
+        self.wa = tf.Variable(tf.random.normal((self.latent_size,), stddev=0.1), name="wa")
 
         self.empty_context_embedding = tf.Variable(
-            tf.random.normal((self.embedding_dim,), stddev=0.1),
+            tf.random.normal((self.latent_size,), stddev=0.1),
             name="empty_context_embedding",
         )
 
@@ -147,7 +144,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         Returns
         -------
             tf.Tensor
-                [batch_size, embedding_dim] tf.Tensor
+                [batch_size, latent_size] tf.Tensor
                 Tensor containing the matrix of contexts embeddings.
         """
         context_emb = tf.gather(self.Wi, context_items, axis=0)
@@ -164,29 +161,52 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             fn_output_signature=tf.float32,
         )
 
-    def compute_batch_utility(self, context_vec: tf.Tensor, items: tf.Tensor) -> tf.Tensor:
-        """Return the utility of the item given the context vector.
+    def compute_batch_utility(
+        self,
+        item_batch: Union[np.ndarray, tf.Tensor],
+        basket_batch: np.ndarray,
+        store_batch: np.ndarray,
+        week_batch: np.ndarray,
+        price_batch: np.ndarray,
+        available_item_batch: np.ndarray,
+    ) -> tf.Tensor:
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
-            context_vec : tf.Tensor
-                [batch_size, embedding_dim] tf.Tensor
-                Tensor containing the contexts vector.
-            items : tf.Tensor
-                [batch_size, n_items] tf.Tensor
-                Tensor containing the items to score.
+        item_batch: np.ndarray or tf.Tensor
+            Batch of the purchased items ID (integers) for which to compute the utility
+            Shape must be (batch_size,)
+            (positive and negative samples concatenated together)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        store_batch: np.ndarray
+            Batch of store IDs (integers) for each purchased item
+            Shape must be (batch_size,)
+        week_batch: np.ndarray
+            Batch of week numbers (integers) for each purchased item
+            Shape must be (batch_size,)
+        price_batch: np.ndarray
+            Batch of prices (floats) for each purchased item
+            Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
 
         Returns
         -------
-            tf.Tensor
-                [batch_size, n_items] tf.Tensor
-                Tensor containing the scores for each item.
+        item_utilities: tf.Tensor
+            Utility of all the items in item_batch
+            Shape must be (batch_size,)
         """
-        return tf.map_fn(
-            lambda args: tf.tensordot(tf.gather(self.Wo, args[1]), args[0], axes=1),
-            (context_vec, items),
-            fn_output_signature=tf.float32,
-        )
+        _ = store_batch
+        _ = price_batch
+        _ = week_batch
+        _ = available_item_batch
+        context_embedding = self.embed_context(basket_batch)
+        return tf.reduce_sum(tf.multiply(tf.gather(self.Wo, item_batch), context_embedding), axis=1)
 
     def positive_samples_probability(
         self, pos_score: tf.Tensor, target_items: tf.Tensor
@@ -427,7 +447,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         Parameters
         ----------
             context_vec : tf.Tensor
-                [batch_size, embedding_dim] tf.Tensor
+                [batch_size, latent_size] tf.Tensor
                 Tensor containing the context vector for the batch.
             target_items : tf.Tensor
                 [batch_size,] tf.Tensor
@@ -469,9 +489,15 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         context_vec = self.embed_context(context_batch)
         pos_score = self.compute_batch_utility(context_vec, items_batch)
         list_neg_items = self.get_negative_samples(context_batch, items_batch, available_items)
+        negative_samples = self.get_negative_samples(
+            available_items=available_items,
+            purchased_items=context_batch,
+            next_item=items_batch,
+            n_samples=self.n_negative_samples,
+        )
         neg_scores = tf.map_fn(
             lambda neg_items: self.compute_batch_utility(context_vec, neg_items),
-            tf.transpose(list_neg_items),
+            negative_samples,
             fn_output_signature=tf.float32,
         )
         return tf.reduce_sum(
@@ -596,7 +622,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
 
         return history
 
-    def evaluate(self, dataset: tf.Tensor) -> float:
+    '''def evaluate(self, dataset: tf.Tensor) -> float:
         """Evaluate the model on the given dataset and returns the average loss.
 
         Parameters
@@ -622,9 +648,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             total_loss += tf.reduce_sum(batch_loss).numpy()
             total_samples += batch_loss.shape[0]
 
-        return total_loss / total_samples
+        return total_loss / total_samples'''
 
-    def save_model(self, filepath: str, overwrite: bool = True) -> None:
+    '''def save_model(self, filepath: str, overwrite: bool = True) -> None:
         """Save the model parameters to a file.
 
         Parameters
@@ -634,9 +660,6 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             overwrite : bool
                 If True, overwrites the file if it already exists.
         """
-        if not self.is_trained:
-            raise ValueError("Model must be trained before saving. Call fit() first.")
-
         if os.path.exists(filepath):
             if overwrite:
                 Path(filepath).unlink()
@@ -659,7 +682,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
 
         data = {
             "n_items": int(self.n_items),
-            "embedding_dim": int(self.embedding_dim),
+            "latent_size": int(self.latent_size),
             "n_negative_samples": int(self.n_negative_samples),
             "lr": float(self.lr),
             "epochs": int(self.epochs),
@@ -692,7 +715,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
 
         # Set hyperparameters and attributes
         self.n_items = int(data["n_items"])
-        self.embedding_dim = int(data["embedding_dim"])
+        self.latent_size = int(data["latent_size"])
         self.n_negative_samples = int(data["n_negative_samples"])
         self.lr = float(data["lr"])
         self.epochs = int(data["epochs"])
@@ -721,3 +744,4 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
 
         self.is_trained = True
         self.instantiated = True
+    '''
