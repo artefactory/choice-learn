@@ -3,16 +3,18 @@
 import json
 import os
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
+from .base_basket_model import BaseBasketModel
 from .dataset import TripDataset
 
 
-class AttentionBasedContextEmbedding:
+class AttentionBasedContextEmbedding(BaseBasketModel):
     """
     Class for the attention-based model.
 
@@ -23,68 +25,69 @@ class AttentionBasedContextEmbedding:
 
     def __init__(
         self,
-        epochs,
-        lr,
-        embedding_dim,
-        n_negative_samples,
-        batch_size: int = 50,
-        optimizer: str = "Adam",
+        latent_size: int = 4,
+        n_negative_samples: int = 2,
         nce_distribution="natural",
+        optimizer: str = "adam",
+        callbacks: Union[tf.keras.callbacks.CallbackList, None] = None,
+        lr: float = 1e-3,
+        epochs: int = 10,
+        batch_size: int = 32,
+        grad_clip_value: Union[float, None] = None,
+        weight_decay: Union[float, None] = None,
+        momentum: float = 0.0,
+        **kwargs,
     ) -> None:
         """Initialize the model with hyperparameters.
 
         Parameters
         ----------
-            epochs : int
-                Number of training epochs.
-            lr : float
-                Learning rate for the optimizer.
-            embedding_dim : int
-                Dimension of the item embeddings.
-            n_negative_samples : int
-                Number of negative samples to use in training.
-            batch_size : int
-                Size of the batches for training. Default is 50.
-            optimizer : str
-                Optimizer to use for training. Default is "Adam".
-            nce_distribution: str
-                Items distribution to be used to compute the NCE Loss
-                Currentlry available: 'natural' to estimate the distribution
-                from the train dataset and 'uniform' where all items have the
-                same disitrbution, 1/n_items. Default is 'natural'.
+        epochs : int
+            Number of training epochs.
+        lr : float
+            Learning rate for the optimizer.
+        embedding_dim : int
+            Dimension of the item embeddings.
+        n_negative_samples : int
+            Number of negative samples to use in training.
+        batch_size : int
+            Size of the batches for training. Default is 50.
+        optimizer : str
+            Optimizer to use for training. Default is "Adam".
+        nce_distribution: str
+            Items distribution to be used to compute the NCE Loss
+            Currentlry available: 'natural' to estimate the distribution
+            from the train dataset and 'uniform' where all items have the
+            same disitrbution, 1/n_items. Default is 'natural'.
         """
         self.instantiated = False
 
-        self.epochs = epochs
-        self.lr = lr
-        self.embedding_dim = embedding_dim
+        self.latent_size = latent_size
         self.n_negative_samples = n_negative_samples
-
-        self.batch_size: int = batch_size
-
-        if optimizer.lower() == "adam":
-            self.optimizer = tf.keras.optimizers.Adam(self.lr)
-        else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-
         self.nce_distribution = nce_distribution
+
+        super().__init__(
+            optimizer=optimizer,
+            callbacks=callbacks,
+            lr=lr,
+            epochs=epochs,
+            batch_size=batch_size,
+            grad_clip_value=grad_clip_value,
+            weight_decay=weight_decay,
+            momentum=momentum,
+            **kwargs,
+        )
 
     def instantiate(
         self,
-        n_items,
+        n_items: int,
     ) -> None:
         """Initialize the model parameters.
 
         Parameters
         ----------
-            n_items : int
-                Number of unique items in the dataset.
-            negative_samples_distribution : list
-                Probability distribution for negative sampling.
-                If None, a uniform distribution is used.
-                If use_true_nce_distribution in fit() is True,
-                the distribution is calculated based on the dataset.
+        n_items : int
+            Number of unique items in the dataset.
         """
         self.n_items = tf.constant(n_items, dtype=tf.int32)
 
@@ -114,6 +117,23 @@ class AttentionBasedContextEmbedding:
                 List of trainable weights (Wi, wa, Wo).
         """
         return [self.Wi, self.wa, self.Wo, self.empty_context_embedding]
+
+    @property
+    def train_iter_method(self) -> str:
+        """Method used to generate sub-baskets from a purchased one.
+
+        Available methods are:
+        - 'shopper': randomly orders the purchases and creates the ordered sub-baskets:
+                        (1|0); (2|1); (3|1,2); (4|1,2,3); etc...
+        - 'aleacarta': creates all the sub-baskets with N-1 items:
+                        (4|1,2,3); (3|1,2,4); (2|1,3,4); (1|2,3,4)
+
+        Returns
+        -------
+        str
+            Data generation method.
+        """
+        return "aleacarta"
 
     def embed_context(self, context_items: tf.Tensor) -> tf.Tensor:
         """Return the context embedding matrix.
