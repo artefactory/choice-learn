@@ -35,7 +35,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - [SwissMetro](./references/datasets/references_base.md)
     - [ModeCanada](./references/datasets/references_base.md)
     - The [Train](./references/datasets/references_base.md) dataset
-    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
+    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/dataset/references_base.md) datasets from Kenneth Train
     - [Stated car preferences](./references/datasets/references_base.md)
     - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
@@ -54,13 +54,12 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [TasteNet](./references/models/references_tastenet.md)
         - [Learning MNL](./references/models/references_learning_mnl.md)
         - [ResLogit](./references/models/references_reslogit.md)
-        - [SHOPPER](./references/basket_models/references_shopper.md) (see also [here](./references/basket_models/references_trip_dataset.md) and [here](./references/basket_models/references_trip_preprocessing.md))
 
 
 ### Multi-Purchases or Basket Models
-- [Introduction to data handling for basket models](./notebooks/basket_models/basket_data.md)
-- [Shopper](./notebooks/basket_models/shopper.md)
-- [AleaCarta](./notebooks/basket_models/alea_carta.md)
+- [Data handling](./references/basket_models/data/references_data.md) for basket models and [preprocessing](./references/basket_models/data/references_preprocessing.md)
+- [Shopper](./references/basket_models/references_shopper.md) model
+- [AleaCarta](./references/basket_models/references_alea_carta.md) model
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)
