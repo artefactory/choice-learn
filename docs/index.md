@@ -41,7 +41,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
     - [London Passenger Mode Choice](./references/datasets/references_base.md)
 
-### Models
+### Single Choice Models
 - [Custom modeling](./notebooks/introduction/4_model_customization.md)
 - Ready to be used models:
     - *Linear Models:*
@@ -55,6 +55,12 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [Learning MNL](./references/models/references_learning_mnl.md)
         - [ResLogit](./references/models/references_reslogit.md)
         - [SHOPPER](./references/basket_models/references_shopper.md) (see also [here](./references/basket_models/references_trip_dataset.md) and [here](./references/basket_models/references_trip_preprocessing.md))
+
+
+### Multi-Purchases or Basket Models
+- [Introduction to data handling for basket models](./notebooks/basket_models/basket_data.md)
+- [Shopper](./notebooks/basket_models/shopper.md)
+- [AleaCarta](./notebooks/basket_models/alea_carta.md)
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)
