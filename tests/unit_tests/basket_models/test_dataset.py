@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from choice_learn.basket_models import Trip, TripDataset
+from choice_learn.basket_models.data import Trip, TripDataset
 
 # Toy dataset 1: different items between trips
 trip_list_1 = [

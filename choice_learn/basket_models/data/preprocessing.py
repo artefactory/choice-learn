@@ -7,7 +7,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-from .dataset import Trip, TripDataset
+from .basket_dataset import Trip, TripDataset
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
 DATA_MODULE = "../choice_learn/datasets/data"
