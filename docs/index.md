@@ -60,6 +60,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
 - [Data handling](./references/basket_models/data/references_data.md) for basket models and [preprocessing](./references/basket_models/data/references_preprocessing.md)
 - [Shopper](./references/basket_models/references_shopper.md) model
 - [AleaCarta](./references/basket_models/references_alea_carta.md) model
+- [Basic Attention](./references/basket_models/references_basic_attention_model.md) model
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)
