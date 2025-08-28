@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from choice_learn.basket_models import AleaCarta
+from choice_learn.basket_models import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
 
 # Toy dataset 1: different items between trips
@@ -200,14 +200,9 @@ n_stores_2 = trip_dataset_2.n_stores
 
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
-    model = AleaCarta(
-        item_intercept=True,
-        price_effects=True,
-        seasonal_effects=True,
-    )
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
 
@@ -234,11 +229,7 @@ def test_item_probabilities_sum_to_1() -> None:
 
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
-    model = AleaCarta(
-        item_intercept=True,
-        price_effects=False,
-        seasonal_effects=True,
-        latent_sizes={"preferences": 2, "price": 2, "season": 2},
+    model = AttentionBasedContextEmbedding(
         n_negative_samples=1,
     )
     model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
@@ -288,10 +279,9 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
 
 def test_no_intercept() -> None:
     """Test the Shopper model without item intercepts."""
-    model = AleaCarta(item_intercept=False)
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
 
     batch_size = 4
@@ -307,10 +297,9 @@ def test_no_intercept() -> None:
 
 def test_compute_item_likelihood() -> None:
     """Test the compute_item_likelihood method."""
-    model = AleaCarta()
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
 
     with pytest.raises(ValueError):
@@ -338,10 +327,9 @@ def test_compute_item_likelihood() -> None:
 
 def test_compute_ordered_basket_likelihood() -> None:
     """Test the compute_ordered_basket_likelihood method."""
-    model = AleaCarta()
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
 
     with pytest.raises(ValueError):
@@ -369,10 +357,9 @@ def test_compute_ordered_basket_likelihood() -> None:
 
 def test_compute_basket_likelihood(caplog) -> None:
     """Test the compute_basket_likelihood method."""
-    model = AleaCarta()
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
 
     with pytest.raises(ValueError):
@@ -422,10 +409,9 @@ def test_compute_basket_likelihood(caplog) -> None:
 
 def test_get_negative_samples() -> None:
     """Test the get_negative_samples method."""
-    model = AleaCarta()
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
 
     with pytest.raises(tf.errors.InvalidArgumentError):
@@ -441,10 +427,9 @@ def test_get_negative_samples() -> None:
 
 def test_fit() -> None:
     """Test the fit method."""
-    model = AleaCarta(batch_size=-1)
+    model = AttentionBasedContextEmbedding(batch_size=-1)
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
     # Test lazy instantiation + verbose + batch_size=-1
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
@@ -452,19 +437,13 @@ def test_fit() -> None:
 
 def test_evaluate_load_and_save() -> None:
     """Test evaluate endpoint."""
-    model = AleaCarta(
-        item_intercept=True,
-        price_effects=False,
-        seasonal_effects=True,
-        latent_sizes={"preferences": 2, "price": 2, "season": 2},
-    )
+    model = AttentionBasedContextEmbedding()
     model.instantiate(
         n_items=n_items_1,
-        n_stores=n_stores_1,
     )
     eff_loss = model.evaluate(trip_dataset=trip_dataset_1)
-    model.save_model("test_aleacarta")
-    loaded_model = AleaCarta.load_model("test_aleacarta")
+    model.save_model("test_base_att")
+    loaded_model = AttentionBasedContextEmbedding.load_model("test_base_att")
     loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
     # print(model.trainable_weights, loaded_model.trainable_weights)
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
