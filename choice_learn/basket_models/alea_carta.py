@@ -574,24 +574,21 @@ class AleaCarta(BaseBasketModel):
         # Negative sampling
         negative_samples = tf.reshape(
             tf.transpose(
-                tf.reshape(
-                    tf.concat(
-                        [
-                            self.get_negative_samples(
-                                available_items=available_item_batch[idx],
-                                purchased_items=basket_batch[idx],
-                                next_item=item_batch[idx],
-                                n_samples=self.n_negative_samples,
-                            )
-                            for idx in range(batch_size)
-                        ],
-                        axis=0,
-                    ),
-                    # Reshape to have at the beginning of the array all the first negative samples
-                    # of all positive samples, then all the second negative samples, etc.
-                    # (same logic as for the calls to np.tile)
-                    [batch_size, self.n_negative_samples],
+                tf.stack(
+                    [
+                        self.get_negative_samples(
+                            available_items=available_item_batch[idx],
+                            purchased_items=basket_batch[idx],
+                            next_item=item_batch[idx],
+                            n_samples=self.n_negative_samples,
+                        )
+                        for idx in range(batch_size)
+                    ],
+                    axis=0,
                 ),
+                # Reshape to have at the beginning of the array all the first negative samples
+                # of all positive samples, then all the second negative samples, etc.
+                # (same logic as for the calls to np.tile)
             ),
             # Flatten 2D --> 1D
             shape=[-1],
