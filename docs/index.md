@@ -35,7 +35,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - [SwissMetro](./references/datasets/references_base.md)
     - [ModeCanada](./references/datasets/references_base.md)
     - The [Train](./references/datasets/references_base.md) dataset
-    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/dataset/references_base.md) datasets from Kenneth Train
+    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/datasets/references_base.md) datasets from Kenneth Train
     - [Stated car preferences](./references/datasets/references_base.md)
     - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
