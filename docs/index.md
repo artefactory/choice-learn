@@ -35,13 +35,13 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - [SwissMetro](./references/datasets/references_base.md)
     - [ModeCanada](./references/datasets/references_base.md)
     - The [Train](./references/datasets/references_base.md) dataset
-    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/dataset/references_base.md)datasets from Kenneth Train
+    - The [Heating](./references/datasets/references_base.md) & [Electricity](./references/datasets/references_base.md) datasets from Kenneth Train
     - [Stated car preferences](./references/datasets/references_base.md)
     - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
     - [London Passenger Mode Choice](./references/datasets/references_base.md)
 
-### Models
+### Single Choice Models
 - [Custom modeling](./notebooks/introduction/4_model_customization.md)
 - Ready to be used models:
     - *Linear Models:*
@@ -54,7 +54,13 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [TasteNet](./references/models/references_tastenet.md)
         - [Learning MNL](./references/models/references_learning_mnl.md)
         - [ResLogit](./references/models/references_reslogit.md)
-        - [SHOPPER](./references/basket_models/references_shopper.md) (see also [here](./references/basket_models/references_trip_dataset.md) and [here](./references/basket_models/references_trip_preprocessing.md))
+
+
+### Multi-Purchases or Basket Models
+- [Data handling](./references/basket_models/data/references_data.md) for basket models and [preprocessing](./references/basket_models/data/references_preprocessing.md)
+- [Shopper](./references/basket_models/references_shopper.md) model
+- [AleaCarta](./references/basket_models/references_alea_carta.md) model
+- [Basic Attention](./references/basket_models/references_basic_attention_model.md) model
 
 ### Tools
 - [Assortment Optimization](./references/toolbox/references_assortment_optimizer.md)

@@ -72,7 +72,7 @@ nav:
       - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
       - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
       - Basket Data Handling: notebooks/basket_models/basket_data_handling.md
-    - Modeling:
+    - Modeling Single Choices:
       - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
       - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
       - Nested Logit Usage: notebooks/models/nested_logit.md
@@ -86,6 +86,10 @@ nav:
       - HaloMNL model Usage: notebooks/models/halo_mnl.md
       - Learning MNL model Usage: notebooks/models/learning_mnl.md
       - ResLogit model Usage: notebooks/models/reslogit.md
+    - Modeling Basket of purchases:
+      - Introduction data handling, the TripDataset: notebooks/basket_models/basket_data.md
+      - Shopper model Usage: notebooks/basket_models/shopper.md
+      - AleaCarta model Usage: notebooks/basket_models/alea_carta.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
@@ -112,8 +116,9 @@ nav:
       - HaloMNL: references/models/references_halo_mnl.md
     - Basket Models:
       - Shopper: references/basket_models/references_shopper.md
-      - Trip and TripDataset: references/basket_models/references_dataset.md
-      - Basket preprocessing: references/basket_models/references_preprocessing.md
+      - The AleaCarta model: references/basket_models/references_alea_carta.md
+      - Trip and TripDataset: references/basket_models/data/references_dataset.md
+      - Basket preprocessing: references/basket_models/data/references_preprocessing.md
       - Permutation: references/basket_models/utils/references_permutation.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md

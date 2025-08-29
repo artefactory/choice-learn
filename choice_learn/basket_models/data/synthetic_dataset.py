@@ -5,7 +5,7 @@ from typing import Union
 
 import numpy as np
 
-from .dataset import Trip, TripDataset
+from .basket_dataset import Trip, TripDataset
 
 
 class SyntheticDataGenerator:

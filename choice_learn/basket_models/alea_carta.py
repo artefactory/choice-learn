@@ -1,23 +1,22 @@
 """Implementation of the AleaCarta model."""
 
-import json
 import logging
-import os
-import time
-from datetime import datetime
-from pathlib import Path
 from typing import Union
 
 import numpy as np
 import tensorflow as tf
-import tqdm
 
-from ..tf_ops import softmax_with_availabilities
-from .dataset import Trip, TripDataset
+from .base_basket_model import BaseBasketModel
+from .data.basket_dataset import Trip
 
 
-class AleaCarta:
-    """Class for the AleaCarta model."""
+class AleaCarta(BaseBasketModel):
+    """Class for the AleaCarta model.
+
+    Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for
+    Basket Choice Modeling,
+    Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD
+    """
 
     def __init__(
         self,
@@ -35,8 +34,9 @@ class AleaCarta:
         weight_decay: Union[float, None] = None,
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
+        **kwargs,
     ) -> None:
-        """Initialize the Shopper model.
+        """Initialize the AleaCarta model.
 
         Parameters
         ----------
@@ -107,52 +107,22 @@ class AleaCarta:
             raise ValueError("n_negative_samples must be > 0.")
 
         self.latent_sizes = latent_sizes
-
         self.n_negative_samples = n_negative_samples
 
-        self.optimizer_name = optimizer
-        if optimizer.lower() == "adam":
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "amsgrad":
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr,
-                amsgrad=True,
-                clipvalue=grad_clip_value,
-                weight_decay=weight_decay,
-            )
-        elif optimizer.lower() == "adamax":
-            self.optimizer = tf.keras.optimizers.Adamax(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "rmsprop":
-            self.optimizer = tf.keras.optimizers.RMSprop(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-        elif optimizer.lower() == "sgd":
-            self.optimizer = tf.keras.optimizers.SGD(
-                learning_rate=lr,
-                clipvalue=grad_clip_value,
-                weight_decay=weight_decay,
-                momentum=momentum,
-            )
-        else:
-            print(f"Optimizer {optimizer} not implemented, switching for default Adam")
-            self.optimizer = tf.keras.optimizers.Adam(
-                learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
-            )
-
-        self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
-        self.callbacks.set_model(self)
-        self.lr = lr
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.grad_clip_value = grad_clip_value
-        self.weight_decay = weight_decay
-        self.momentum = momentum
         # Add epsilon to prices to avoid NaN values (log(0))
         self.epsilon_price = epsilon_price
+
+        super().__init__(
+            optimizer=optimizer,
+            callbacks=callbacks,
+            lr=lr,
+            epochs=epochs,
+            batch_size=batch_size,
+            grad_clip_value=grad_clip_value,
+            weight_decay=weight_decay,
+            momentum=momentum,
+            **kwargs,
+        )
 
         if len(tf.config.get_visible_devices("GPU")):
             # At least one available GPU
@@ -209,7 +179,7 @@ class AleaCarta:
                     shape=(n_items,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
-                name="lambda",
+                name="lambda_",
             )
 
         if self.price_effects:
@@ -270,6 +240,23 @@ class AleaCarta:
 
         return weights
 
+    @property
+    def train_iter_method(self) -> str:
+        """Method used to generate sub-baskets from a purchased one.
+
+        Available methods are:
+        - 'shopper': randomly orders the purchases and creates the ordered sub-baskets:
+                        (1|0); (2|1); (3|1,2); (4|1,2,3); etc...
+        - 'aleacarta': creates all the sub-baskets with N-1 items:
+                        (4|1,2,3); (3|1,2,4); (2|1,3,4); (1|2,3,4)
+
+        Returns
+        -------
+        str
+            Data generation method.
+        """
+        return "aleacarta"
+
     def compute_batch_utility(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
@@ -277,8 +264,9 @@ class AleaCarta:
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -298,6 +286,10 @@ class AleaCarta:
         price_batch: np.ndarray
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
 
         Returns
         -------
@@ -305,6 +297,7 @@ class AleaCarta:
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
+        _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
@@ -372,6 +365,7 @@ class AleaCarta:
         else:
             # Gather the embeddings using a ragged tensor of indices
             alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
+
         # Basket interaction: one vs all
         alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
@@ -391,10 +385,13 @@ class AleaCarta:
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
+        available_item_batch: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
-        """Compute the utility of an (unordered) basket.
+        r"""Compute the utility of an (unordered) basket.
 
+        Corresponds to the sum of all the conditional utilities:
+                \sum_{i \in basket} U(i | basket \ {i})
         Take as input directly a Trip object or separately basket, store,
         week and prices.
 
@@ -432,6 +429,7 @@ class AleaCarta:
             basket = trip.purchases
             store = trip.store
             week = trip.week
+            available_item_batch = trip.assortment
             prices = [trip.prices[item_id] for item_id in basket]
 
         len_basket = len(basket)
@@ -449,108 +447,9 @@ class AleaCarta:
                 store_batch=np.array([store] * len_basket),
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
+                available_item_batch=available_item_batch,
             )
         ).numpy()
-
-    def compute_item_likelihood(
-        self,
-        basket: Union[None, np.ndarray] = None,
-        available_items: Union[None, np.ndarray] = None,
-        store: Union[None, int] = None,
-        week: Union[None, int] = None,
-        prices: Union[None, np.ndarray] = None,
-        trip: Union[None, Trip] = None,
-    ) -> tf.Tensor:
-        """Compute the likelihood of all items for a given trip.
-
-        Take as input directly a Trip object or separately basket, available_items,
-        store, week and prices.
-
-        Parameters
-        ----------
-        basket: np.ndarray or None, optional
-            ID the of items already in the basket, by default None
-        available_items: np.ndarray or None, optional
-            Matrix indicating the availability (1) or not (0) of the products,
-            by default None
-            Shape must be (n_items,)
-        store: int or None, optional
-            Store id, by default None
-        week: int or None, optional
-            Week number, by default None
-        prices: np.ndarray or None, optional
-            Prices of all the items in the dataset, by default None
-            Shape must be (n_items,)
-        trip: Trip or None, optional
-            Trip object containing basket, available_items, store,
-            week and prices, by default None
-
-        Returns
-        -------
-        likelihood: tf.Tensor
-            Likelihood of all items for a given trip
-            Shape must be (n_items,)
-        """
-        if trip is None:
-            # Trip not provided as an argument
-            # Then basket, available_items, store, week and prices must be provided
-            if (
-                basket is None
-                or available_items is None
-                or store is None
-                or week is None
-                or prices is None
-            ):
-                raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be provided as arguments."
-                )
-
-        else:
-            # Trip directly provided as an argument
-            basket = trip.purchases
-
-            if isinstance(trip.assortment, int):
-                # Then it is the assortment ID (ie its index in the attribute
-                # available_items of the TripDataset), but we do not have the
-                # the TripDataset as input here
-                raise ValueError(
-                    "The assortment ID is not enough to compute the likelihood. "
-                    "Please provide the availability matrix directly (array of shape (n_items,) "
-                    "indicating the availability (1) or not (0) of the products)."
-                )
-            # Else: np.ndarray
-            available_items = trip.assortment
-
-            store = trip.store
-            week = trip.week
-            prices = trip.prices
-
-        # Prevent unintended side effects from in-place modifications
-        available_items_copy = available_items.copy()
-        for basket_item in basket:
-            if basket_item != -1:
-                available_items_copy[basket_item] = 0.0
-
-        # Compute the utility of all the items
-        all_utilities = self.compute_batch_utility(
-            # All items
-            item_batch=np.array([item_id for item_id in range(self.n_items)]),
-            # For each item: same basket / store / week / prices / available items
-            basket_batch=np.array([basket for _ in range(self.n_items)]),
-            store_batch=np.array([store for _ in range(self.n_items)]),
-            week_batch=np.array([week for _ in range(self.n_items)]),
-            price_batch=prices,
-        )
-
-        # Softmax on the utilities
-        return softmax_with_availabilities(
-            items_logit_by_choice=all_utilities,  # Shape: (n_items,)
-            available_items_by_choice=available_items_copy,  # Shape: (n_items,)
-            axis=-1,
-            normalize_exit=False,
-            eps=None,
-        )
 
     def get_negative_samples(
         self,
@@ -623,6 +522,7 @@ class AleaCarta:
         self,
         item_batch: np.ndarray,
         basket_batch: np.ndarray,
+        future_batch: np.ndarray,
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
@@ -638,6 +538,11 @@ class AleaCarta:
         basket_batch: np.ndarray
             Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
             Shape must be (batch_size, max_basket_size)
+        future_batch: np.ndarray
+            Batch of items to be purchased in the future (ID of items not yet in the
+            basket) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+            Here for signature reasons, unused for this model
         store_batch: np.ndarray
             Batch of store IDs (integers) for each purchased item
             Shape must be (batch_size,)
@@ -662,30 +567,28 @@ class AleaCarta:
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
         negative_samples = tf.reshape(
             tf.transpose(
-                tf.reshape(
-                    tf.concat(
-                        [
-                            self.get_negative_samples(
-                                available_items=available_item_batch[idx],
-                                purchased_items=basket_batch[idx],
-                                next_item=item_batch[idx],
-                                n_samples=self.n_negative_samples,
-                            )
-                            for idx in range(batch_size)
-                        ],
-                        axis=0,
-                    ),
-                    # Reshape to have at the beginning of the array all the first negative samples
-                    # of all positive samples, then all the second negative samples, etc.
-                    # (same logic as for the calls to np.tile)
-                    [batch_size, self.n_negative_samples],
+                tf.stack(
+                    [
+                        self.get_negative_samples(
+                            available_items=available_item_batch[idx],
+                            purchased_items=basket_batch[idx],
+                            next_item=item_batch[idx],
+                            n_samples=self.n_negative_samples,
+                        )
+                        for idx in range(batch_size)
+                    ],
+                    axis=0,
                 ),
+                # Reshape to have at the beginning of the array all the first negative samples
+                # of all positive samples, then all the second negative samples, etc.
+                # (same logic as for the calls to np.tile)
             ),
             # Flatten 2D --> 1D
             shape=[-1],
@@ -712,6 +615,7 @@ class AleaCarta:
             store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
             week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,
+            available_item_batch=available_item_batch,
         )
 
         positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
@@ -748,404 +652,3 @@ class AleaCarta:
 
         # Normalize by the batch size and the number of negative samples
         return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
-
-    @tf.function  # Graph mode
-    def train_step(
-        self,
-        item_batch: np.ndarray,
-        basket_batch: np.ndarray,
-        store_batch: np.ndarray,
-        week_batch: np.ndarray,
-        price_batch: np.ndarray,
-        available_item_batch: np.ndarray,
-    ) -> tf.Variable:
-        """Train the model for one step.
-
-        Parameters
-        ----------
-        item_batch: np.ndarray
-            Batch of purchased items ID (integers)
-            Shape must be (batch_size,)
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size, max_basket_size)
-        store_batch: np.ndarray
-            Batch of store ids (integers) for each purchased item
-            Shape must be (batch_size,)
-        week_batch: np.ndarray
-            Batch of week numbers (integers) for each purchased item
-            Shape must be (batch_size,)
-        price_batch: np.ndarray
-            Batch of prices (floats) for each purchased item
-            Shape must be (batch_size,)
-        available_item_batch: np.ndarray
-            List of availability matrices (indicating the availability (1) or not (0)
-            of the products) (arrays) for each purchased item
-            Shape must be (batch_size, n_items)
-
-        Returns
-        -------
-        batch_loss: tf.Tensor
-            Value of the loss for the batch
-        """
-        with tf.GradientTape() as tape:
-            batch_loss = self.compute_batch_loss(
-                item_batch=item_batch,
-                basket_batch=basket_batch,
-                store_batch=store_batch,
-                week_batch=week_batch,
-                price_batch=price_batch,
-                available_item_batch=available_item_batch,
-            )[0]
-        grads = tape.gradient(batch_loss, self.trainable_weights)
-
-        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-
-        return batch_loss
-
-    def fit(
-        self,
-        trip_dataset: TripDataset,
-        val_dataset: Union[TripDataset, None] = None,
-        verbose: int = 0,
-    ) -> dict:
-        """Fit the model to the data in order to estimate the latent parameters.
-
-        Parameters
-        ----------
-        trip_dataset: TripDataset
-            Dataset on which to fit the model
-        val_dataset: TripDataset, optional
-            Validation dataset, by default None
-        verbose: int, optional
-            print level, for debugging, by default 0
-
-        Returns
-        -------
-        history: dict
-            Different metrics values over epochs
-        """
-        if not self.instantiated:
-            # Lazy instantiation
-            self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
-        batch_size = self.batch_size
-
-        history = {"train_loss": [], "val_loss": []}
-        t_range = tqdm.trange(self.epochs, position=0)
-
-        self.callbacks.on_train_begin()
-
-        # Iterate of epochs
-        for epoch_nb in t_range:
-            self.callbacks.on_epoch_begin(epoch_nb)
-            t_start = time.time()
-            train_logs = {"train_loss": []}
-            val_logs = {"val_loss": []}
-            epoch_losses = []
-
-            if verbose > 1:
-                inner_range = tqdm.tqdm(
-                    trip_dataset.iter_batch(
-                        shuffle=True,
-                        batch_size=batch_size,
-                        data_method="aleacarta",
-                    ),
-                    total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
-                    position=0,
-                    leave=False,
-                )
-            else:
-                inner_range = trip_dataset.iter_batch(
-                    shuffle=True,
-                    batch_size=batch_size,
-                    data_method="aleacarta",
-                )
-
-            for batch_nb, (
-                item_batch,
-                basket_batch,
-                _,
-                store_batch,
-                week_batch,
-                price_batch,
-                available_item_batch,
-            ) in enumerate(inner_range):
-                # self.callbacks.on_train_batch_begin(batch_nb)
-
-                batch_loss = self.train_step(
-                    item_batch=item_batch,
-                    basket_batch=basket_batch,
-                    store_batch=store_batch,
-                    week_batch=week_batch,
-                    price_batch=price_batch,
-                    available_item_batch=available_item_batch,
-                )
-                # train_logs["train_loss"].append(batch_loss)
-                # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-                # self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
-
-                # Optimization Steps
-                epoch_losses.append(batch_loss)
-
-                if verbose > 0:
-                    inner_range.set_description(
-                        f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
-                    )
-
-            # Take into account the fact that the last batch may have a
-            # different length for the computation of the epoch loss.
-            if batch_size != -1:
-                """last_batch_size = len(item_batch)
-                coefficients = tf.concat(
-                    [tf.ones(len(epoch_losses) - 1) * batch_size, [last_batch_size]],
-                    axis=0,
-                )
-                epoch_losses = tf.multiply(epoch_losses, coefficients)
-                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples"""
-                epoch_loss = tf.reduce_mean(epoch_losses)
-            else:
-                epoch_loss = tf.reduce_mean(epoch_losses)
-
-            history["train_loss"].append(epoch_loss)
-            print_loss = history["train_loss"][-1].numpy()
-            desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
-            if verbose > 1:
-                print(
-                    f"Loop {epoch_nb} Time:",
-                    f"{time.time() - t_start:.4f}",
-                    f"Loss: {print_loss:.4f}",
-                )
-
-            # Test on val_dataset if provided
-            if val_dataset is not None:
-                val_losses = []
-                for batch_nb, (
-                    item_batch,
-                    basket_batch,
-                    _,
-                    store_batch,
-                    week_batch,
-                    price_batch,
-                    available_item_batch,
-                ) in enumerate(
-                    val_dataset.iter_batch(
-                        shuffle=True, batch_size=batch_size, data_method="aleacarta"
-                    )
-                ):
-                    self.callbacks.on_batch_begin(batch_nb)
-                    self.callbacks.on_test_batch_begin(batch_nb)
-
-                    val_losses.append(
-                        self.compute_batch_loss(
-                            item_batch=item_batch,
-                            basket_batch=basket_batch,
-                            store_batch=store_batch,
-                            week_batch=week_batch,
-                            price_batch=price_batch,
-                            available_item_batch=available_item_batch,
-                        )[0]
-                    )
-                    val_logs["val_loss"].append(val_losses[-1])
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
-                    self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
-
-                val_loss = tf.reduce_mean(val_losses)
-                if verbose > 1:
-                    print("Test Negative-LogLikelihood:", val_loss.numpy())
-                    desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
-                history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
-                train_logs = {**train_logs, **val_logs}
-
-            temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-            self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
-
-            t_range.set_description(desc)
-            t_range.refresh()
-
-        temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
-        self.callbacks.on_train_end(logs=temps_logs)
-        return history
-
-    def evaluate(
-        self,
-        trip_dataset: TripDataset,
-        batch_size: int = 32,
-        epsilon_eval: float = 1e-6,
-    ) -> tf.Tensor:
-        """Evaluate the model for each trip (unordered basket) in the dataset.
-
-        Predicts the probabilities according to the model and then computes the
-        mean negative log-likelihood (nll) for the dataset
-
-        Parameters
-        ----------
-        trip_dataset: TripDataset
-            Dataset on which to apply to prediction
-        batch_size: int, optional
-            Batch size, by default 32
-        epsilon_eval: float, optional
-            Small value to avoid log(0) in the computation of the log-likelihood,
-            by default 1e-6
-
-        Returns
-        -------
-        loss: tf.Tensor
-            Value of the mean loss (nll) for the dataset,
-            Shape must be (1,)
-        """
-        sum_loglikelihoods = 0.0
-
-        inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        )
-        n_batches = 0
-        for (
-            item_batch,
-            basket_batch,
-            _,
-            store_batch,
-            week_batch,
-            price_batch,
-            available_item_batch,
-        ) in inner_range:
-            # Remove padding (-1) from the baskets
-            basket_batch_without_padding = [basket[basket != -1] for basket in basket_batch]
-            # Sum of the log-likelihoods of all the (unordered) baskets in the batch
-            sum_loglikelihoods += np.sum(
-                np.log(
-                    [
-                        self.compute_item_likelihood(
-                            basket=basket,
-                            available_items=available_items,
-                            store=store,
-                            week=week,
-                            prices=prices,
-                        )
-                        + epsilon_eval
-                        for basket, available_items, store, week, prices in zip(
-                            basket_batch_without_padding,
-                            available_item_batch,
-                            store_batch,
-                            week_batch,
-                            price_batch,
-                        )
-                    ]
-                )
-            )
-            n_batches += 1
-
-        # Obliged to recall iter_batch because a generator is exhausted once iterated over
-        # or once transformed into a list
-        # n_batches = len(list(trip_dataset.iter_batch(
-        #     shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        #     )
-        # ))
-        # Total number of samples processed: sum of the batch sizes
-        # (last batch may have a different size if incomplete)
-        n_elements = batch_size * (n_batches - 1) + len(basket_batch)
-
-        # Predicted mean negative log-likelihood over all the batches
-        return -1 * sum_loglikelihoods / n_elements
-
-    def save_model(self, path: str) -> None:
-        """Save the different models on disk.
-
-        Parameters
-        ----------
-        path: str
-            path to the folder where to save the model
-        """
-        if os.path.exists(path):
-            # Add current date and time to the folder name
-            # if the folder already exists
-            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-            path += f"_{current_time}/"
-        else:
-            path += "/"
-
-        if not os.path.exists(path):
-            Path(path).mkdir(parents=True, exist_ok=True)
-
-        # Save the parameters in a single pickle file
-        params = {}
-        for k, v in self.__dict__.items():
-            # Save only the JSON-serializable parameters
-            if isinstance(v, (int, float, list, str, dict)):
-                params[k] = v
-        json.dump(params, open(os.path.join(path, "params.json"), "w"))
-
-        # Save the latent parameters in separate numpy files
-        for latent_parameter in self.trainable_weights:
-            parameter_name = latent_parameter.name.split(":")[0]
-            np.save(os.path.join(path, parameter_name + ".npy"), latent_parameter)
-
-    @classmethod
-    def load_model(cls, path: str) -> "AleaCarta":
-        """Load a model previously saved with save_model().
-
-        Parameters
-        ----------
-        path: str
-            path to the folder where the saved model files are
-
-        Returns
-        -------
-        ChoiceModel
-            Loaded ChoiceModel
-        """
-        # Load parameters
-        params = json.load(open(os.path.join(path, "params.json")))
-
-        # Initialize model
-        model = cls(
-            item_intercept=params["item_intercept"],
-            price_effects=params["price_effects"],
-            seasonal_effects=params["seasonal_effects"],
-            latent_sizes=params["latent_sizes"],
-            n_negative_samples=params["n_negative_samples"],
-            optimizer=params["optimizer_name"],
-            callbacks=params.get("callbacks", None),  # To avoid KeyError if None
-            lr=params["lr"],
-            epochs=params["epochs"],
-            batch_size=params["batch_size"],
-            grad_clip_value=params.get("grad_clip_value", None),
-            weight_decay=params.get("weight_decay", None),
-            momentum=params["momentum"],
-            epsilon_price=params["epsilon_price"],
-        )
-
-        # Instantiate manually the model
-        model.n_items = params["n_items"]
-        model.n_stores = params["n_stores"]
-
-        # Fix manually trainable weights values
-        model.alpha = tf.Variable(
-            np.load(os.path.join(path, "alpha.npy")), trainable=True, name="alpha"
-        )
-        model.theta = tf.Variable(
-            np.load(os.path.join(path, "theta.npy")), trainable=True, name="theta"
-        )
-
-        lambda_path = os.path.join(path, "lambda.npy")
-        if os.path.exists(lambda_path):
-            model.lambda_ = tf.Variable(np.load(lambda_path), trainable=True, name="lambda")
-
-        beta_path = os.path.join(path, "beta.npy")
-        if os.path.exists(beta_path):
-            # Then the paths to the saved gamma should also exist (price effects)
-            model.beta = tf.Variable(np.load(beta_path), trainable=True, name="beta")
-            model.gamma = tf.Variable(
-                np.load(os.path.join(path, "gamma.npy")), trainable=True, name="gamma"
-            )
-
-        mu_path = os.path.join(path, "mu.npy")
-        if os.path.exists(mu_path):
-            # Then the paths to the saved delta should also exist (price effects)
-            model.mu = tf.Variable(np.load(mu_path), trainable=True, name="mu")
-            model.delta = tf.Variable(
-                np.load(os.path.join(path, "delta.npy")), trainable=True, name="delta"
-            )
-
-        model.instantiated = params["instantiated"]
-
-        return model
