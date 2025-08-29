@@ -208,9 +208,9 @@ class ExactCategoricalCrossEntropy(tf.keras.losses.Loss):
 
         Parameters
         ----------
-        y_true : np.ndarray | tf.Tenosr
+        y_true : np.ndarray | tf.Tensor
             Ground truth labels
-        y_pred : np.ndarray | tf.Tenosr
+        y_pred : np.ndarray | tf.Tensor
             Predicted labels
 
         Returns
@@ -230,3 +230,62 @@ class ExactCategoricalCrossEntropy(tf.keras.losses.Loss):
         # Apply label clipping to avoid log(0) and such issues
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0 - self.epsilon)
         return -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=self.axis)
+
+
+class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
+    """Noise Contrastive Estimation Loss.
+    """
+
+    def __init__(
+        self,
+        epsilon=1e-10,
+        name="noise_contrastive_estimation",
+        reduction="sum_over_batch_size",
+    ):
+        """Initialize function.
+
+        Follows structure of tf.keras.losses.CategoricalCrossentropy.
+
+        Parameters
+        ----------
+        epsilon: float
+            safety net for logarithm computation
+        name: str
+            Name of the loss function - here to follow tf.keras.losses.Loss signature
+        reduction:
+            Reduction function - here to follow tf.keras.losses.Loss signature
+        """
+        self.epsilon = epsilon
+        super().__init__(reduction=reduction, name=name)
+
+    def __call__(self, logit_true, logit_negative, freq_true, freq_negative, sample_weight=None):
+    
+        losses = self.call(logit_true, logit_negative, freq_true, freq_negative)
+        if sample_weight is not None:
+            losses = losses * sample_weight
+        print("losses", losses)
+        return tf.reduce_sum(losses)
+
+    def call(self, logit_true, logit_negative, freq_true, freq_negative):
+        """Compute the cross-entropy loss.
+
+        Parameters
+        ----------
+        logit_true : np.ndarray | tf.Tensor
+            Ground truth samplelogits
+        logit_negative : np.ndarray | tf.Tensor
+            Negative samples logits
+        freq_true : np.ndarray | tf.Tensor
+            Frequency / probabilty in data of true sample
+        freq_negative : np.ndarray | tf.Tensor
+            Frequency / probabilty in data of negative samples
+        Returns
+        -------
+        tf.Tensor
+            Average Cross-Entropy loss
+        """
+        n_negative_samples = tf.cast(tf.shape(logit_negative)[1], tf.float32)
+
+        true_contribution = 1 / (1 + n_negative_samples * freq_true * tf.exp(-logit_true))
+        noise_contribution = 1 - (1 / (1 + n_negative_samples * freq_negative * tf.exp(-logit_negative)))
+        return - tf.math.log(true_contribution+self.epsilon) - tf.reduce_sum(tf.math.log(noise_contribution+self.epsilon), axis=-1)
