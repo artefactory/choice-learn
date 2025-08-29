@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from choice_learn.basket_models import Shopper
+from choice_learn.basket_models import AleaCarta
 from choice_learn.basket_models.data import Trip, TripDataset
 
 # Toy dataset 1: different items between trips
@@ -19,14 +19,14 @@ trip_list_1 = [
         assortment=0,
     ),
     Trip(
-        purchases=[2, 1, 3, 0],
+        purchases=[2, 1, 3],
         store=3,
         week=5,
         prices=[200, 140, 110, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
         assortment=1,
     ),
     Trip(
-        purchases=[1, 7, 3, 0],
+        purchases=[1, 7, 3],
         store=1,
         week=2,
         prices=[100, 110, 120, 200, 130, 140, 150, 170, 180, 190, 200, 210, 150, 140, 170],
@@ -40,14 +40,14 @@ trip_list_1 = [
         assortment=2,
     ),
     Trip(
-        purchases=[8, 1, 9, 0],
+        purchases=[8, 1, 9],
         store=3,
         week=34,
         prices=[100, 140, 150, 160, 170, 180, 190, 200, 85, 200, 210, 220, 150, 170, 130],
         assortment=3,
     ),
     Trip(
-        purchases=[10, 4, 11, 0],
+        purchases=[10, 4, 11],
         store=1,
         week=51,
         prices=[130, 140, 150, 160, 170, 180, 190, 200, 220, 100, 210, 240, 170, 110, 90],
@@ -200,11 +200,10 @@ n_stores_2 = trip_dataset_2.n_stores
 
 def test_item_probabilities_sum_to_1() -> None:
     """Test that the item probabilities sum to 1."""
-    model = Shopper(
+    model = AleaCarta(
         item_intercept=True,
         price_effects=True,
         seasonal_effects=True,
-        think_ahead=False,
     )
     model.instantiate(
         n_items=n_items_1,
@@ -235,11 +234,10 @@ def test_item_probabilities_sum_to_1() -> None:
 
 def test_ordered_basket_probabilities_sum_to_1() -> None:
     """Test that the ordered basket probabilities sum to 1."""
-    model = Shopper(
+    model = AleaCarta(
         item_intercept=True,
         price_effects=False,
         seasonal_effects=True,
-        think_ahead=False,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
         n_negative_samples=1,
     )
@@ -250,11 +248,6 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     # compute_ordered_basket_likelihood = 1/3 * 1/3 * 1/2 * 1/1 = 1/18
     # (1/nb_possibilities but the checkout item is not considered during the 1st step)
 
-    # List of all the possible availability matrices verifying 2 conditions
-    # to get a basket probability > 0:
-    # - The checkout item must be available
-    # - The checkout item must not be the only item available
-    # (because the proba of an empty basket is 0 and cannot sum to 1)
     list_availability_matrices = [
         np.array([1, 1, 1, 1, 1]),
         np.array([1, 0, 1, 1, 1]),
@@ -288,28 +281,9 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
         )
 
 
-def test_thinking_ahead() -> None:
-    """Test the Shopper model with thinking ahead."""
-    model = Shopper(think_ahead=True)
-    model.instantiate(
-        n_items=n_items_1,
-        n_stores=n_stores_1,
-    )
-
-    batch_size = 4
-    model.compute_batch_utility(
-        item_batch=np.array([4, 5, 6, 0]),
-        basket_batch=np.array([[1, 2, 3]] * batch_size),
-        store_batch=np.array([0] * batch_size),
-        week_batch=np.array([0] * batch_size),
-        price_batch=np.random.uniform(1, 10, batch_size),
-        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
-    )
-
-
 def test_no_intercept() -> None:
     """Test the Shopper model without item intercepts."""
-    model = Shopper(item_intercept=False)
+    model = AleaCarta(item_intercept=False)
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -328,7 +302,7 @@ def test_no_intercept() -> None:
 
 def test_compute_item_likelihood() -> None:
     """Test the compute_item_likelihood method."""
-    model = Shopper()
+    model = AleaCarta()
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -359,7 +333,7 @@ def test_compute_item_likelihood() -> None:
 
 def test_compute_ordered_basket_likelihood() -> None:
     """Test the compute_ordered_basket_likelihood method."""
-    model = Shopper()
+    model = AleaCarta()
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -390,7 +364,7 @@ def test_compute_ordered_basket_likelihood() -> None:
 
 def test_compute_basket_likelihood(caplog) -> None:
     """Test the compute_basket_likelihood method."""
-    model = Shopper()
+    model = AleaCarta()
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -443,25 +417,26 @@ def test_compute_basket_likelihood(caplog) -> None:
 
 def test_get_negative_samples() -> None:
     """Test the get_negative_samples method."""
-    model = Shopper()
+    model = AleaCarta()
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
 
     with pytest.raises(tf.errors.InvalidArgumentError):
-        model.get_negative_samples(
+        neg_samples = model.get_negative_samples(
             available_items=np.ones(n_items_1),
             purchased_items=np.array([1, 2]),
-            future_purchases=np.array([3, 0]),
             next_item=0,
             n_samples=n_items_1,  # Too many samples
         )
+        for item in [0, 1, 2]:
+            assert item not in neg_samples
 
 
 def test_fit() -> None:
     """Test the fit method."""
-    model = Shopper(batch_size=-1)
+    model = AleaCarta(batch_size=-1)
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -472,11 +447,10 @@ def test_fit() -> None:
 
 def test_evaluate_load_and_save() -> None:
     """Test evaluate endpoint."""
-    model = Shopper(
+    model = AleaCarta(
         item_intercept=True,
         price_effects=False,
         seasonal_effects=True,
-        think_ahead=False,
         latent_sizes={"preferences": 2, "price": 2, "season": 2},
     )
     model.instantiate(
@@ -484,7 +458,9 @@ def test_evaluate_load_and_save() -> None:
         n_stores=n_stores_1,
     )
     eff_loss = model.evaluate(trip_dataset=trip_dataset_1)
-    model.save_model("test_shopper")
-    loaded_model = Shopper.load_model("test_shopper")
+    model.save_model("test_aleacarta")
+    loaded_model = AleaCarta.load_model("test_aleacarta")
     loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
+    for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
+        assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)

@@ -5,6 +5,7 @@ import numpy as np
 from choice_learn.tf_ops import (
     CustomCategoricalCrossEntropy,
     ExactCategoricalCrossEntropy,
+    NoiseConstrastiveEstimation,
     softmax_with_availabilities,
 )
 
@@ -80,3 +81,46 @@ def test_exact_categorical_crossentropy():
     assert loss([1], [[2.0, 4.0]]) < 0.1270
     assert loss([1], [[4.0, 2.0]]) > 2.1269
     assert loss([1], [[4.0, 2.0]]) < 2.1270
+
+
+def test_nce():
+    """Test the Noise Constrastice Estimation Loss."""
+    loss = NoiseConstrastiveEstimation()
+    loss_ref = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+    )
+
+    loss_more = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.8, 0.8]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+    )
+    assert loss_more > loss_ref
+
+    loss_more = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.01, 0.1], [0.1, 0.01]]).astype("float32"),
+    )
+    assert loss_more > loss_ref
+
+    loss_less = loss(
+        logit_true=np.array([12.0, 12.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+    )
+    assert loss_less < loss_ref
+
+    loss_less = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[-4.0, 0.0], [0.0, -4.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+    )
+    assert loss_less < loss_ref

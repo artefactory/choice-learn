@@ -1,10 +1,11 @@
 """Data generation module for synthetic basket data."""
 
+import logging
 from typing import Union
 
 import numpy as np
 
-from .dataset import Trip, TripDataset
+from .basket_dataset import Trip, TripDataset
 
 
 class SyntheticDataGenerator:
@@ -70,7 +71,7 @@ class SyntheticDataGenerator:
             list(
                 key
                 for key, value in self.items_nest.items()
-                if set(value).intersection(assortment_items)
+                if set(value).intersection(set(assortment_items))
             )
         )
 
@@ -91,11 +92,13 @@ class SyntheticDataGenerator:
         """
         chosen_nest = np.random.choice(available_sets)
         chosen_item = np.random.choice(
-            np.array([i for i in self.items_nest[chosen_nest] if i in available_items])
+            [i for i in self.items_nest[chosen_nest] if i in available_items]
         )
         return chosen_item, chosen_nest
 
-    def complete_basket(self, first_item: int, first_nest: int, available_items) -> list:
+    def complete_basket(
+        self, first_item: int, first_nest: int, available_items: np.ndarray
+    ) -> list:
         """Completes the basket by adding items based on the relations of the first item.
 
         Parameters
@@ -104,6 +107,8 @@ class SyntheticDataGenerator:
                 The first item to be added to the basket.
             first_nest : int
                 The nest corresponding to the first item.
+            available_items: np.ndarray
+                Avaialbe item IDs
 
         Returns
         -------
@@ -111,20 +116,26 @@ class SyntheticDataGenerator:
                 list next basket items.
         """
         basket = [first_item]
-        relations = self.nests_interactions[first_nest]
+        interactions = self.nests_interactions[first_nest]
         for nest_id, items in self.items_nest.items():
             if (
-                relations[nest_id] == "compl"
+                interactions[nest_id] == "compl"
                 and np.random.random() < self.proba_complementary_items
             ):
                 try:
                     basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
+                    logging.warning(
+                        f"Warning: No more complementary items available in nest {nest_id}"
+                    )
                     pass
-            elif relations[nest_id] == "neutral" and np.random.random() < self.proba_neutral_items:
+            elif (
+                interactions[nest_id] == "neutral" and np.random.random() < self.proba_neutral_items
+            ):
                 try:
                     basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
+                    logging.warning(f"Warning: No more neutral items available in nest {nest_id}")
                     pass
         return basket
 
@@ -143,13 +154,14 @@ class SyntheticDataGenerator:
         """
         if np.random.rand() <= self.noise_proba:
             try:
-                basket.append(
-                    int(np.random.choice([i for i in available_items if i not in basket]))
-                )
+                basket.append(np.random.choice([i for i in available_items if i not in basket]))
             except IndexError:
-                print(
-                    "Warning: No more items available to add as noise. "
-                    "Returning the current basket."
+                logging.warning(
+                    "Warning: No more items available to add as noise.Returning the current basket."
+                )
+            except ValueError:
+                logging.warning(
+                    "Warning: No more items available to add as noise.Returning the current basket."
                 )
         return basket
 
@@ -162,6 +174,7 @@ class SyntheticDataGenerator:
         ----------
             assortment : np.ndarray, optional
                 Index of the assortment or an array representing the assortment.
+                1 represent sold items while 0 represnet missing items.
             len_basket : int, optional
                 Length of the basket to be generated.
                 If None, the basket length is determined by the available sets.
@@ -172,7 +185,7 @@ class SyntheticDataGenerator:
                 array of items in the generated basket.
         """
         available_items = np.where(assortment > 0)[0]
-        available_sets = self.get_available_sets(set(available_items))
+        available_sets = self.get_available_sets(available_items)
 
         if len(available_sets) != 0:
             first_chosen_item, first_chosen_nest = self.select_first_item(
@@ -186,8 +199,8 @@ class SyntheticDataGenerator:
             basket = []
 
         if len_basket is not None:
-            if not isinstance(len_basket, int):
-                raise TypeError("len_basket should be an integer")
+            if not isinstance(len_basket, int) or len_basket < 1:
+                raise TypeError("len_basket should be an integer larger than 0.")
             if len(basket) < len_basket:
                 basket = self.generate_basket(assortment, len_basket)
             else:
@@ -214,7 +227,7 @@ class SyntheticDataGenerator:
             Trip
                 A Trip object containing the generated basket.
         """
-        basket = self.generate_basket(assortment, len_basket=len_basket)
+        basket = self.generate_basket(assortment, len_basket=len_basket).astype(int)
         return Trip(
             purchases=basket,
             # Assuming uniform price of 1.0 for simplicity
