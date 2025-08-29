@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 import tensorflow as tf
 
-from ..tf_ops import NoiseConstrastiveEstimation, softmax_with_availabilities
+from ..tf_ops import NoiseConstrastiveEstimation
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import TripDataset
 
@@ -215,52 +215,6 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             axis=1,
         )
 
-    def positive_samples_probability(
-        self, pos_score: tf.Tensor, target_items: tf.Tensor
-    ) -> tf.Tensor:
-        """Calculate the probability of positive samples.
-
-        Parameters
-        ----------
-            pos_score : tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the scores of positive samples.
-            target_items : tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the target items.
-
-        Returns
-        -------
-            tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the probabilities of positive samples.
-        """
-        q_dist = tf.gather(self.negative_samples_distribution, tf.cast(target_items, tf.int32))
-        return 1 / (1 + self.n_negative_samples * q_dist * tf.exp(-pos_score))
-
-    def negative_samples_probability(
-        self, neg_score: tf.Tensor, target_items: tf.Tensor
-    ) -> tf.Tensor:
-        """Calculate the probability of negative samples.
-
-        Parameters
-        ----------
-            neg_score : tf.Tensor
-                [batch_size, n_negative_samples] tf.Tensor
-                Tensor containing the scores of negative samples.
-            target_items : tf.Tensor
-                [batch_size, n_negative_samples] tf.Tensor
-                Tensor containing the target items.
-
-        Returns
-        -------
-            tf.Tensor
-                [batch_size, n_negative_samples] tf.Tensor
-                Tensor containing the probabilities of negative samples.
-        """
-        q_dist = tf.gather(self.negative_samples_distribution, tf.cast(target_items, tf.int32))
-        return 1 - (1 / (1 + self.n_negative_samples * q_dist * tf.exp(-neg_score)))
-
     def get_negative_samples(
         self,
         available_items: np.ndarray,
@@ -346,70 +300,6 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
                 item_counts[item] += 1
         items_distribution = item_counts / item_counts.sum()
         return tf.constant(items_distribution, dtype=tf.float32)
-
-    def nce_loss(
-        self,
-        pos_score: tf.Tensor,
-        target_items: tf.Tensor,
-        list_neg_items: tf.Tensor,
-        neg_scores: tf.Tensor,
-    ) -> tf.Tensor:
-        """Calculate the loss using Noise Contrastive Estimation (NCE).
-
-        Parameters
-        ----------
-            pos_score : tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the scores of positive samples.
-            target_items : tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the target items.
-            list_neg_items : tf.Tensor
-                [batch_size, n_negative_samples] tf.Tensor
-                Tensor containing the negative samples.
-            neg_scores : tf.Tensor
-                [batch_size, n_negative_samples] tf.Tensor
-                Tensor containing the scores of negative samples.
-
-        Returns
-        -------
-            tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the NCE loss.
-        """
-        loss = -tf.math.log(self.positive_samples_probability(pos_score, target_items))
-        for i in range(len(neg_scores)):
-            loss -= tf.math.log(
-                self.negative_samples_probability(
-                    neg_scores[i], tf.gather(list_neg_items, tf.cast(i, tf.int32), axis=1)
-                )
-            )
-        return loss
-
-    def negative_log_likelihood_loss(
-        self, context_vec: tf.Tensor, target_items: tf.Tensor
-    ) -> tf.Tensor:
-        """Calculate the loss using tf.keras.losses.sparse_categorical_crossentropy.
-
-        Parameters
-        ----------
-            context_vec : tf.Tensor
-                [batch_size, latent_size] tf.Tensor
-                Tensor containing the context vector for the batch.
-            target_items : tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the target items to predict.
-
-        Returns
-        -------
-            tf.Tensor
-                [batch_size,] tf.Tensor
-                Tensor containing the negative log likelihood loss.
-        """
-        logits = tf.matmul(context_vec, self.Wo, transpose_b=True)
-        return tf.keras.losses.sparse_categorical_crossentropy(
-            target_items, logits, from_logits=True
-        )
 
     def compute_batch_loss(
         self,
@@ -500,41 +390,6 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
                 tf.cast(tf.transpose(negative_samples), tf.int32),
             ),
         ), 1e-10
-
-    def predict(self, context_items: tf.Tensor, available_items: np.ndarray) -> np.ndarray:
-        """
-        Predicts the item probabilities given the context items.
-
-        Parameters
-        ----------
-            context_items : tf.Tensor
-                [batch_size, variable_length] tf.Tensor or tf.RaggedTensor
-                Tensor containing the context items for prediction.
-            available_items : np.ndarray
-                [bacth_size,] np.ndarray
-                Numpy array indicating the available items for prediction.
-
-        Returns
-        -------
-            np.ndarray
-                [batch_size, n_items] np.ndarray
-                Numpy array containing the predicted probabilities for each item.
-        """
-        if not self.instantiated:
-            self.instantiate(n_items=len(available_items))
-
-        context_vec = self.embed_context(context_items)
-        scores = tf.matmul(context_vec, self.Wo, transpose_b=True)
-        avail_mask = tf.convert_to_tensor(available_items, dtype=scores.dtype)
-        probs = softmax_with_availabilities(
-            items_logit_by_choice=scores,
-            available_items_by_choice=avail_mask,
-            axis=-1,
-            normalize_exit=False,
-            eps=1e-5,
-        )
-
-        return probs.numpy()
 
     def fit(
         self,

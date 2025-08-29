@@ -9,8 +9,6 @@ import tensorflow as tf
 from choice_learn.basket_models import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
 
-tf.compat.v1.enable_eager_execution()
-
 # Toy dataset 1: different items between trips
 trip_list_1 = [
     Trip(

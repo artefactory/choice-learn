@@ -87,14 +87,14 @@ def test_nce():
     """Test the Noise Constrastice Estimation Loss."""
     loss = NoiseConstrastiveEstimation()
     loss_ref = loss(
-        logit_true=np.array([10.0, 10.0]),
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
         logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]),
         freq_true=np.array([0.1, 0.1]),
         freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]),
     )
 
     loss_more = loss(
-        logit_true=np.array([10.0, 10.0]),
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
         logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]),
         freq_true=np.array([0.8, 0.8]),
         freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]),
@@ -102,7 +102,7 @@ def test_nce():
     assert loss_more > loss_ref
 
     loss_more = loss(
-        logit_true=np.array([10.0, 10.0]),
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
         logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]),
         freq_true=np.array([0.1, 0.1]),
         freq_negative=np.array([[0.01, 0.1], [0.1, 0.01]]),
@@ -110,7 +110,7 @@ def test_nce():
     assert loss_more > loss_ref
 
     loss_less = loss(
-        logit_true=np.array([12.0, 12.0]),
+        logit_true=np.array([12.0, 12.0]).astype("float32"),
         logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]),
         freq_true=np.array([0.1, 0.1]),
         freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]),
@@ -118,7 +118,7 @@ def test_nce():
     assert loss_less < loss_ref
 
     loss_less = loss(
-        logit_true=np.array([10.0, 10.0]),
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
         logit_negative=np.array([[-4.0, 0.0], [0.0, -4.0]]),
         freq_true=np.array([0.1, 0.1]),
         freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]),
