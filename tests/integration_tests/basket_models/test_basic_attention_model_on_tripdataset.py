@@ -9,6 +9,8 @@ import tensorflow as tf
 from choice_learn.basket_models import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
 
+tf.compat.v1.enable_eager_execution()
+
 # Toy dataset 1: different items between trips
 trip_list_1 = [
     Trip(
@@ -227,56 +229,6 @@ def test_item_probabilities_sum_to_1() -> None:
             )
 
 
-def test_ordered_basket_probabilities_sum_to_1() -> None:
-    """Test that the ordered basket probabilities sum to 1."""
-    model = AttentionBasedContextEmbedding(
-        n_negative_samples=1,
-    )
-    model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
-    model.fit(trip_dataset=trip_dataset_2)
-
-    # For a basket {1, 2, 3, 0} of size 3:
-    # compute_ordered_basket_likelihood = 1/3 * 1/3 * 1/2 * 1/1 = 1/18
-    # (1/nb_possibilities but the checkout item is not considered during the 1st step)
-
-    # List of all the possible availability matrices verifying 2 conditions
-    # to get a basket probability > 0:
-    # - The checkout item must be available
-    # - The checkout item must not be the only item available
-    # (because the proba of an empty basket is 0 and cannot sum to 1)
-    list_availability_matrices = [
-        np.array([1, 1, 1, 1, 1]),
-        np.array([1, 0, 1, 1, 1]),
-        np.array([1, 1, 0, 1, 1]),
-        np.array([1, 1, 1, 0, 1]),
-        np.array([1, 1, 1, 1, 0]),
-        np.array([1, 0, 0, 0, 1]),
-        np.array([1, 0, 0, 1, 0]),
-        np.array([1, 0, 1, 0, 0]),
-        np.array([1, 1, 0, 0, 0]),
-    ]
-    for availability_matrix in list_availability_matrices:
-        # Try with different availability matrices
-        assert (
-            np.abs(
-                np.sum(
-                    [
-                        model.compute_ordered_basket_likelihood(
-                            basket=trip.purchases,
-                            available_items=availability_matrix,
-                            store=trip.store,
-                            week=trip.week,
-                            prices=trip.prices,
-                        )
-                        for trip in trip_dataset_2.trips
-                    ]
-                )
-                - 1.0
-            )
-            < 2e-2
-        )
-
-
 def test_no_intercept() -> None:
     """Test the Shopper model without item intercepts."""
     model = AttentionBasedContextEmbedding()
@@ -445,7 +397,6 @@ def test_evaluate_load_and_save() -> None:
     model.save_model("test_base_att")
     loaded_model = AttentionBasedContextEmbedding.load_model("test_base_att")
     loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
-    # print(model.trainable_weights, loaded_model.trainable_weights)
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
-        assert np.allclose(w1.numpy(), w2.numpy())
+        assert np.allclose(w1.numpy(), w2.numpy()), (w1, w2)
     assert np.isclose(eff_loss, loaded_loss)

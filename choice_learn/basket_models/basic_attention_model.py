@@ -4,9 +4,8 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
-import tqdm
 
-from ..tf_ops import softmax_with_availabilities, NoiseConstrastiveEstimation
+from ..tf_ops import NoiseConstrastiveEstimation, softmax_with_availabilities
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import TripDataset
 
@@ -206,12 +205,15 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         _ = price_batch
         _ = week_batch
         _ = available_item_batch
-        basket_batch_ragged =  tf.cast(
+        basket_batch_ragged = tf.cast(
             tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
             dtype=tf.int32,
         )
         context_embedding = self.embed_context(basket_batch_ragged)
-        return tf.reduce_sum(tf.multiply(tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding), axis=1)
+        return tf.reduce_sum(
+            tf.multiply(tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding),
+            axis=1,
+        )
 
     def positive_samples_probability(
         self, pos_score: tf.Tensor, target_items: tf.Tensor
@@ -458,43 +460,45 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        # basket_embedding = self.embed_context(basket_batch)
+        _ = future_batch
         negative_samples = tf.transpose(
-                tf.stack(
-                    [
-                        self.get_negative_samples(
-                            available_items=available_item_batch[idx],
-                            purchased_items=basket_batch[idx],
-                            next_item=item_batch[idx],
-                            n_samples=self.n_negative_samples,
-                        )
-                        for idx in range(len(item_batch))
-                    ],
-                    axis=0,
-                ),
-            )
+            tf.stack(
+                [
+                    self.get_negative_samples(
+                        available_items=available_item_batch[idx],
+                        purchased_items=basket_batch[idx],
+                        next_item=item_batch[idx],
+                        n_samples=self.n_negative_samples,
+                    )
+                    for idx in range(len(item_batch))
+                ],
+                axis=0,
+            ),
+        )
         pos_score = self.compute_batch_utility(
-                        item_batch,
-                        basket_batch,
-                        store_batch,
-                        week_batch,
-                        price_batch,
-                        available_item_batch)
+            item_batch, basket_batch, store_batch, week_batch, price_batch, available_item_batch
+        )
         neg_scores = tf.map_fn(
-            lambda neg_items: self.compute_batch_utility(item_batch=neg_items,
-                        basket_batch=basket_batch,
-                        store_batch=store_batch,
-                        week_batch=week_batch,
-                        price_batch=price_batch,
-                        available_item_batch=available_item_batch),
+            lambda neg_items: self.compute_batch_utility(
+                item_batch=neg_items,
+                basket_batch=basket_batch,
+                store_batch=store_batch,
+                week_batch=week_batch,
+                price_batch=price_batch,
+                available_item_batch=available_item_batch,
+            ),
             negative_samples,
             fn_output_signature=tf.float32,
         )
         # neg_scores = tf.reshape(neg_scores, (-1, self.n_negative_samples))
         return self.loss(
-            logit_true=pos_score, logit_negative=tf.transpose(neg_scores),
+            logit_true=pos_score,
+            logit_negative=tf.transpose(neg_scores),
             freq_true=tf.gather(self.negative_samples_distribution, tf.cast(item_batch, tf.int32)),
-            freq_negative=tf.gather(self.negative_samples_distribution, tf.cast(tf.transpose(negative_samples), tf.int32))
+            freq_negative=tf.gather(
+                self.negative_samples_distribution,
+                tf.cast(tf.transpose(negative_samples), tf.int32),
+            ),
         ), 1e-10
 
     def predict(self, context_items: tf.Tensor, available_items: np.ndarray) -> np.ndarray:
@@ -532,10 +536,12 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
 
         return probs.numpy()
 
-    def fit(self, 
+    def fit(
+        self,
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
-        verbose: int = 0,) -> None:
+        verbose: int = 0,
+    ) -> None:
         """Trains the model for a specified number of epochs.
 
         Parameters
@@ -560,7 +566,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         if self.nce_distribution == "natural":
             self.negative_samples_distribution = self._get_items_frequencies(trip_dataset)
         else:
-            self.negative_samples_distribution = (1 / trip_dataset.n_items) * np.ones((trip_dataset.n_items, ))
+            self.negative_samples_distribution = (1 / trip_dataset.n_items) * np.ones(
+                (trip_dataset.n_items,)
+            )
 
         history = super().fit(trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose)
 

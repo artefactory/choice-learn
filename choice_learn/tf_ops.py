@@ -233,8 +233,7 @@ class ExactCategoricalCrossEntropy(tf.keras.losses.Loss):
 
 
 class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
-    """Noise Contrastive Estimation Loss.
-    """
+    """Noise Contrastive Estimation Loss."""
 
     def __init__(
         self,
@@ -259,15 +258,7 @@ class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
         super().__init__(reduction=reduction, name=name)
 
     def __call__(self, logit_true, logit_negative, freq_true, freq_negative, sample_weight=None):
-    
-        losses = self.call(logit_true, logit_negative, freq_true, freq_negative)
-        if sample_weight is not None:
-            losses = losses * sample_weight
-        print("losses", losses)
-        return tf.reduce_sum(losses)
-
-    def call(self, logit_true, logit_negative, freq_true, freq_negative):
-        """Compute the cross-entropy loss.
+        """Overide of the tf.keras __call__ function.
 
         Parameters
         ----------
@@ -279,6 +270,33 @@ class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
             Frequency / probabilty in data of true sample
         freq_negative : np.ndarray | tf.Tensor
             Frequency / probabilty in data of negative samples
+        sample_weight : np.ndarray | tf.Tensor
+            samplewise weights
+
+        Returns
+        -------
+        tf.Tensor
+            Average Cross-Entropy loss
+        """
+        losses = self.call(logit_true, logit_negative, freq_true, freq_negative)
+        if sample_weight is not None:
+            losses = losses * sample_weight
+        return tf.reduce_sum(losses)
+
+    def call(self, logit_true, logit_negative, freq_true, freq_negative):
+        """Compute NCE loss.
+
+        Parameters
+        ----------
+        logit_true : np.ndarray | tf.Tensor
+            Ground truth samplelogits
+        logit_negative : np.ndarray | tf.Tensor
+            Negative samples logits
+        freq_true : np.ndarray | tf.Tensor
+            Frequency / probabilty in data of true sample
+        freq_negative : np.ndarray | tf.Tensor
+            Frequency / probabilty in data of negative samples
+
         Returns
         -------
         tf.Tensor
@@ -287,5 +305,9 @@ class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
         n_negative_samples = tf.cast(tf.shape(logit_negative)[1], tf.float32)
 
         true_contribution = 1 / (1 + n_negative_samples * freq_true * tf.exp(-logit_true))
-        noise_contribution = 1 - (1 / (1 + n_negative_samples * freq_negative * tf.exp(-logit_negative)))
-        return - tf.math.log(true_contribution+self.epsilon) - tf.reduce_sum(tf.math.log(noise_contribution+self.epsilon), axis=-1)
+        noise_contribution = 1 - (
+            1 / (1 + n_negative_samples * freq_negative * tf.exp(-logit_negative))
+        )
+        return -tf.math.log(true_contribution + self.epsilon) - tf.reduce_sum(
+            tf.math.log(noise_contribution + self.epsilon), axis=-1
+        )

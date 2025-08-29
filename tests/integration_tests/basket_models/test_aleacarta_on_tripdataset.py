@@ -248,11 +248,6 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     # compute_ordered_basket_likelihood = 1/3 * 1/3 * 1/2 * 1/1 = 1/18
     # (1/nb_possibilities but the checkout item is not considered during the 1st step)
 
-    # List of all the possible availability matrices verifying 2 conditions
-    # to get a basket probability > 0:
-    # - The checkout item must be available
-    # - The checkout item must not be the only item available
-    # (because the proba of an empty basket is 0 and cannot sum to 1)
     list_availability_matrices = [
         np.array([1, 1, 1, 1, 1]),
         np.array([1, 0, 1, 1, 1]),
@@ -466,7 +461,6 @@ def test_evaluate_load_and_save() -> None:
     model.save_model("test_aleacarta")
     loaded_model = AleaCarta.load_model("test_aleacarta")
     loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
-    # print(model.trainable_weights, loaded_model.trainable_weights)
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
