@@ -1,5 +1,7 @@
 """Contain unit tests for the AttentionBasedContextEmbedding model."""
 
+from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
 
@@ -257,3 +259,79 @@ def test_optimizer_initialization():
         epochs=1, lr=0.01, latent_size=2, n_negative_samples=1, optimizer="zblub"
     )
     assert isinstance(model2.optimizer, tf.keras.optimizers.Adam), "Should fall back to Adam"
+
+
+def test_load_save():
+    """Test save and load model functionality."""
+    data_gen = SyntheticDataGenerator(
+        proba_complementary_items=0.7,
+        proba_neutral_items=0.3,
+        noise_proba=0.15,
+        items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+        nests_interactions=[
+            ["", "compl", "neutral", "neutral"],
+            ["compl", "", "neutral", "neutral"],
+            ["neutral", "neutral", "", "neutral"],
+            ["neutral", "neutral", "neutral", ""],
+        ],
+    )
+    assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 1]])
+    # Create evaluation dataset
+    trip_dataset_train = data_gen.generate_trip_dataset(10, assortments_matrix)
+
+    model1 = AttentionBasedContextEmbedding(
+        epochs=2, lr=0.01, embedding_dim=2, n_negative_samples=2
+    )
+
+    model1.instantiate(n_items=len(assortments_matrix[0]), use_true_nce_distribution=True)
+    model1.fit(trip_dataset_train)
+
+    # Save model
+    model1.save_model("attn_model.json")
+
+    # Create a model 3 without instantiating
+    model3 = AttentionBasedContextEmbedding(
+        epochs=epochs, lr=lr, embedding_dim=embedding_dim, n_negative_samples=n_negative_samples
+    )
+
+    # Load first model and compare results on evaluation dataset
+    model3.load_model("attn_model.json")
+    Path("attn_model.json").unlink()
+    Path("attn_model_empty_context_embedding.npy").unlink()
+    Path("attn_model_wa.npy").unlink()
+    Path("attn_model_Wi.npy").unlink()
+    Path("attn_model_Wo.npy").unlink()
+
+
+def test_fit_basic_functionality():
+    """Test basic functionality of the fit method."""
+    data_gen = SyntheticDataGenerator(
+        proba_complementary_items=0.7,
+        proba_neutral_items=0.3,
+        noise_proba=0.15,
+        items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+        nests_interactions=[
+            ["", "compl", "neutral", "neutral"],
+            ["compl", "", "neutral", "neutral"],
+            ["neutral", "neutral", "", "neutral"],
+            ["neutral", "neutral", "neutral", ""],
+        ],
+    )
+    assortments_matrix = np.array([[1, 0, 1, 1, 0, 1, 1, 1]])
+
+    basic_model = AttentionBasedContextEmbedding(
+        epochs=4, lr=0.01, embedding_dim=2, n_negative_samples=2
+    )
+    train_dataset = data_gen.generate_trip_dataset(10, assortments_matrix)
+    n_items = 8
+    basic_model.instantiate(n_items=n_items)
+
+    # Test that fit runs without errors
+    history = basic_model.fit(train_dataset)
+
+    # Verify return type and structure
+    assert isinstance(history, dict), "fit() should return a dictionary"
+    assert len(history["train_loss"]) == epochs, f"Loss history should have {epochs} entries"
+
+    # Verify model is marked as trained
+    assert basic_model.is_trained, "Model should be marked as trained after fit()"
