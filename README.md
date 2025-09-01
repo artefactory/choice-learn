@@ -89,7 +89,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Basket Model | Example | Colab | Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | -------- | ------ | ---- | ------ | :---: |
 | Shopper | [notebook](notebooks/basket_models/shopper.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
-| Alea Carta | [notebook](notebooks/basket_models/alea_carta.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#]() |
+| Alea Carta | [notebook](notebooks/basket_models/alea_carta.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
+| Base Attention | [notebook](notebooks/basket_models/basic_attention.ipynb) | [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
 
 
 ### Auxiliary tools
@@ -264,16 +265,16 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 </a>
 
 ```bash
-@article{
+@article{Desir2025
   doi = {},
   url = {},
-  year = {},
+  year = {2025},
   publisher = {},
   volume = {},
   number = {},
   pages = {},
-  author = {},
-  title = {},
+  author = {Jules Désir and Vincent Auriau and Martin Možina and Emmanuel Malherbe},
+  title = {Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
   journal = {} }
 ```
 ### License
@@ -335,7 +336,8 @@ Choice-Learn has been developed through a collaboration between researchers at t
 [14] [A Customer Choice Model with HALO Effect](https://arxiv.org/abs/1805.01603), Maragheh, R., Y.; Chronopoulou, A.; Davis, J., M. (2018)\
 [15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)\
 [16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)\
-[17] Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling, Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD
+[17] [Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD\
+[18] [Attention-based Transactional Context Embedding for Next-Item Recommendation](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Wans, S.; Liang, H.; Longbing,C.; Xiaoshui, H.; Defu, L.; Wei, L. (2018)
 
 ### Code and Repositories
 

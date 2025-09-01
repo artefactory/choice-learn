@@ -117,8 +117,9 @@ nav:
     - Basket Models:
       - Shopper: references/basket_models/references_shopper.md
       - The AleaCarta model: references/basket_models/references_alea_carta.md
-      - Trip and TripDataset: references/basket_models/references_dataset.md
-      - Basket preprocessing: references/basket_models/references_preprocessing.md
+      - Basic Attention model: references/basket_models/references_basic_attention_model.md
+      - Trip and TripDataset: references/basket_models/data/references_dataset.md
+      - Basket preprocessing: references/basket_models/data/references_preprocessing.md
       - Permutation: references/basket_models/utils/references_permutation.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
