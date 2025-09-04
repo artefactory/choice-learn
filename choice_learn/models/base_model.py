@@ -533,8 +533,14 @@ class ChoiceModel:
         # To improve for non-string attributes
         params = {}
         for k, v in self.__dict__.items():
-            if isinstance(v, (int, float, str, dict)):
+            if isinstance(v, (int, float, str, dict, tuple)):
                 params[k] = v
+
+            if isinstance(v, list):
+                to_save = all([isinstance(value_list, (int, float, str, dict)) for value_list in v])
+                if to_save:
+                    params[k] = v
+
         json.dump(params, open(os.path.join(path, "params.json"), "w"))
 
         # Save optimizer state

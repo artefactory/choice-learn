@@ -39,7 +39,7 @@ def test_mode_canada_gt():
     assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
 
 
-def test_mode_canada_fit():
+def test_mode_canada_fit_save():
     """Tests specific config of cLogit and .fit()."""
     tf.config.run_functions_eagerly(True)
     # Instantiation with the coefficients dictionnary
@@ -58,6 +58,17 @@ def test_mode_canada_fit():
     model.fit(canada_dataset)
     model.compute_report(canada_dataset)
 
+    total_nll = model.evaluate(canada_dataset) * len(canada_dataset)
+    assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
+    assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
+    model.save_model("clogit_model")
+
+
+def test_load_model():
+    """Tests model loading."""
+    model = ConditionalLogit.load_model("clogit_model")
+
+    canada_dataset = load_modecanada(as_frame=False, preprocessing="tutorial")
     total_nll = model.evaluate(canada_dataset) * len(canada_dataset)
     assert total_nll <= 1874.4, f"Got NLL: {total_nll}"
     assert total_nll >= 1874.1, f"Got NLL: {total_nll}"

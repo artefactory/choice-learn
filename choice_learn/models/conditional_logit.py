@@ -1,7 +1,10 @@
 """Conditional MNL model."""
 
+import json
 import logging
 import math
+import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -190,6 +193,55 @@ class MNLCoefficients:
             List of coefficients in the specification.
         """
         return list(self.coefficients.keys())
+
+    def save_coefficient(self, directory):
+        """Save the coefficient on disk.
+
+        Parameters
+        ----------
+        path : str
+            path to the folder where to save the coefficient
+        """
+        if not os.path.exists(directory):
+            Path(directory).mkdir(parents=True)
+
+        params = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, (int, float, str, dict, tuple)):
+                params[k] = v
+
+            if isinstance(v, list):
+                to_save = all([isinstance(value_list, (int, float, str, dict)) for value_list in v])
+                if to_save:
+                    params[k] = v
+                else:
+                    print(k, v)
+
+        json.dump(params, open(os.path.join(directory, "coefficient_params.json"), "w"))
+
+    @classmethod
+    def load_coefficient(cls, path):
+        """Load a MNLCoefficient previously saved with save_coefficient().
+
+        Parameters
+        ----------
+        path : str
+            path to the folder where the saved coefficient files are
+
+        Returns
+        -------
+        MNLCoefficient
+            Loaded MNLCoefficient
+        """
+        obj = cls()
+
+        # To improve for non string attributes
+        params = json.load(open(Path(path) / "coefficient_params.json"))
+        for k, v in params.items():
+            setattr(obj, k, v)
+
+        # Load optimizer step
+        return obj
 
 
 class ConditionalLogit(ChoiceModel):
@@ -719,6 +771,36 @@ class ConditionalLogit(ChoiceModel):
         hessian = tape_1.batch_jacobian(jacobian, w)
         inv_hessian = tf.linalg.inv(tf.squeeze(hessian))
         return tf.sqrt([inv_hessian[i][i] for i in range(len(tf.squeeze(hessian)))])
+
+    def save_model(self, path):
+        """Save the different models on disk.
+
+        Parameters
+        ----------
+        path : str
+            path to the folder where to save the model
+        """
+        super().save_model(path)
+        self.coefficients.save_coefficient(path)
+
+    @classmethod
+    def load_model(cls, path):
+        """Load a ChoiceModel previously saved with save_model().
+
+        Parameters
+        ----------
+        path : str
+            path to the folder where the saved model files are
+
+        Returns
+        -------
+        ChoiceModel
+            Loaded ChoiceModel
+        """
+        obj = super().load_model(path)
+        coefficients = MNLCoefficients.load_coefficient(path)
+        obj.coefficients = coefficients
+        return obj
 
     def clone(self):
         """Return a clone of the model."""
