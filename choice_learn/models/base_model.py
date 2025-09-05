@@ -536,12 +536,17 @@ class ChoiceModel:
             if isinstance(v, (int, float, str, dict, tuple)):
                 params[k] = v
 
-            if isinstance(v, list):
-                to_save = all([isinstance(value_list, (int, float, str, dict)) for value_list in v])
-                if to_save:
+            elif isinstance(v, (list, tuple)):
+                if all(isinstance(item, (int, float, str, dict)) for item in v):
                     params[k] = v
-
-        json.dump(params, open(os.path.join(path, "params.json"), "w"))
+                else:
+                    logging.warning(
+                        """Attribute '%s' is a list with non-serializable
+                         types and will not be saved.""",
+                        k,
+                    )
+        with open(os.path.join(path, "params.json"), "w") as f:
+            json.dump(params, f)
 
         # Save optimizer state
 
