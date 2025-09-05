@@ -199,7 +199,7 @@ class MNLCoefficients:
 
         Parameters
         ----------
-        path : str
+        directory : str
             path to the folder where to save the coefficient
         """
         if not os.path.exists(directory):
@@ -209,15 +209,17 @@ class MNLCoefficients:
         for k, v in self.__dict__.items():
             if isinstance(v, (int, float, str, dict, tuple)):
                 params[k] = v
-
-            if isinstance(v, list):
-                to_save = all([isinstance(value_list, (int, float, str, dict)) for value_list in v])
-                if to_save:
+            elif isinstance(v, (list, tuple)):
+                if all(isinstance(item, (int, float, str, dict)) for item in v):
                     params[k] = v
                 else:
-                    print(k, v)
-
-        json.dump(params, open(os.path.join(directory, "coefficient_params.json"), "w"))
+                    logging.warning(
+                        """Attribute '%s' is a list with non-serializable
+                        types and will not be saved.""",
+                        k,
+                    )
+        with open(os.path.join(directory, "coefficient_params.json"), "w") as f:
+            json.dump(params, f)
 
     @classmethod
     def load_coefficient(cls, path):
@@ -236,11 +238,10 @@ class MNLCoefficients:
         obj = cls()
 
         # To improve for non string attributes
-        params = json.load(open(Path(path) / "coefficient_params.json"))
+        with open(Path(path) / "coefficient_params.json") as f:
+            params = json.load(f)
         for k, v in params.items():
             setattr(obj, k, v)
-
-        # Load optimizer step
         return obj
 
 
