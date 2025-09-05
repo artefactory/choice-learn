@@ -209,7 +209,6 @@ class MNLCoefficients:
         for k, v in self.__dict__.items():
             if isinstance(v, (int, float, str, dict, tuple)):
                 params[k] = v
-
             elif isinstance(v, (list, tuple)):
                 if all(isinstance(item, (int, float, str, dict)) for item in v):
                     params[k] = v
