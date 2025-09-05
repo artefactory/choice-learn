@@ -533,9 +533,20 @@ class ChoiceModel:
         # To improve for non-string attributes
         params = {}
         for k, v in self.__dict__.items():
-            if isinstance(v, (int, float, str, dict)):
+            if isinstance(v, (int, float, str, dict, tuple)):
                 params[k] = v
-        json.dump(params, open(os.path.join(path, "params.json"), "w"))
+
+            elif isinstance(v, (list, tuple)):
+                if all(isinstance(item, (int, float, str, dict)) for item in v):
+                    params[k] = v
+                else:
+                    logging.warning(
+                        """Attribute '%s' is a list with non-serializable
+                         types and will not be saved.""",
+                        k,
+                    )
+        with open(os.path.join(path, "params.json"), "w") as f:
+            json.dump(params, f)
 
         # Save optimizer state
 
