@@ -13,7 +13,7 @@ import requests
 from choice_learn.data.choice_dataset import ChoiceDataset
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
-DATA_MODULE = "choice_learn/datasets/data"
+DATA_MODULE = "../../choice_learn/datasets/data"
 
 
 def get_path(data_file_name, module=DATA_MODULE):
