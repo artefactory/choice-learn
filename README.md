@@ -265,17 +265,17 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 </a>
 
 ```bash
-@article{Desir2025
+@inproceedings{Desir2025
   doi = {},
   url = {},
   year = {2025},
   publisher = {},
-  volume = {},
-  number = {},
-  pages = {},
   author = {Jules Désir and Vincent Auriau and Martin Možina and Emmanuel Malherbe},
   title = {Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
-  journal = {} }
+  booktitle={Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
+  year={2025},
+  organization={Springer}
+}
 ```
 ### License
 
