@@ -49,9 +49,9 @@ class AleaCarta(BaseBasketModel):
             Whether to include seasonal effects in the model, by default True
         latent_sizes: dict[str]
             Lengths of the vector representation of the latent parameters
-            latent_sizes["preferences"]: length of one vector of theta, alpha
-            latent_sizes["price"]: length of one vector of gamma, beta
-            latent_sizes["season"]: length of one vector of delta, mu
+            latent_sizes["preferences"]: length of one vector of theta, gamma
+            latent_sizes["price"]: length of one vector of delta, beta
+            latent_sizes["season"]: length of one vector of nu, mu
             by default {"preferences": 4, "price": 4, "season": 4}
         n_negative_samples: int, optional
             Number of negative samples to draw for each positive sample for the training,
@@ -152,20 +152,20 @@ class AleaCarta(BaseBasketModel):
         self.n_items = n_items
         if n_stores == 0 and self.price_effects:
             # To take into account the price effects, the number of stores must be > 0
-            # to have a gamma embedding
+            # to have a delta embedding
             # (By default, the store id is 0)
             n_stores = 1
         self.n_stores = n_stores
 
-        self.alpha = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+        self.gamma = tf.Variable(
+            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                 shape=(n_items, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
-            name="alpha",
+            name="gamma",
         )
         self.theta = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                 shape=(n_stores, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
@@ -174,29 +174,29 @@ class AleaCarta(BaseBasketModel):
 
         if self.item_intercept:
             # Add item intercept
-            self.lambda_ = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+            self.alpha = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(n_items,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
-                name="lambda_",
+                name="alpha",
             )
 
         if self.price_effects:
             # Add price sensitivity
             self.beta = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(n_items, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="beta",
             )
-            self.gamma = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+            self.delta = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(n_stores, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
-                name="gamma",
+                name="delta",
             )
 
         if self.seasonal_effects:
@@ -208,12 +208,12 @@ class AleaCarta(BaseBasketModel):
                 trainable=True,
                 name="mu",
             )
-            self.delta = tf.Variable(
+            self.nu = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(52, self.latent_sizes["season"])
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
-                name="delta",
+                name="nu",
             )
 
         self.instantiated = True
@@ -227,16 +227,16 @@ class AleaCarta(BaseBasketModel):
         list[tf.Variable]
             Latent parameters of the model
         """
-        weights = [self.alpha, self.theta]
+        weights = [self.gamma, self.theta]
 
         if self.item_intercept:
-            weights.append(self.lambda_)
+            weights.append(self.alpha)
 
         if self.price_effects:
-            weights.extend([self.beta, self.gamma])
+            weights.extend([self.beta, self.delta])
 
         if self.seasonal_effects:
-            weights.extend([self.mu, self.delta])
+            weights.extend([self.mu, self.nu])
 
         return weights
 
@@ -305,36 +305,36 @@ class AleaCarta(BaseBasketModel):
         price_batch = tf.cast(price_batch, dtype=tf.float32)
 
         theta_store = tf.gather(self.theta, indices=store_batch)
-        alpha_item = tf.gather(self.alpha, indices=item_batch)
+        gamma_item = tf.gather(self.gamma, indices=item_batch)
         # Compute the dot product along the last dimension
-        store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
+        store_preferences = tf.reduce_sum(theta_store * gamma_item, axis=1)
 
         if self.item_intercept:
-            item_intercept = tf.gather(self.lambda_, indices=item_batch)
+            item_intercept = tf.gather(self.alpha, indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
 
         if self.price_effects:
-            gamma_store = tf.gather(self.gamma, indices=store_batch)
+            delta_store = tf.gather(self.delta, indices=store_batch)
             beta_item = tf.gather(self.beta, indices=item_batch)
             # Add epsilon to avoid NaN values (log(0))
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
-                * tf.reduce_sum(gamma_store * beta_item, axis=1)
+                * tf.reduce_sum(delta_store * beta_item, axis=1)
                 * tf.math.log(price_batch + self.epsilon_price)
             )
         else:
-            gamma_store = tf.zeros_like(store_batch)
+            delta_store = tf.zeros_like(store_batch)
             price_effects = tf.zeros_like(store_preferences)
 
         if self.seasonal_effects:
-            delta_week = tf.gather(self.delta, indices=week_batch)
+            nu_week = tf.gather(self.nu, indices=week_batch)
             mu_item = tf.gather(self.mu, indices=item_batch)
             # Compute the dot product along the last dimension
-            seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
+            seasonal_effects = tf.reduce_sum(nu_week * mu_item, axis=1)
         else:
-            delta_week = tf.zeros_like(week_batch)
+            nu_week = tf.zeros_like(week_batch)
             seasonal_effects = tf.zeros_like(store_preferences)
 
         # The effects of item intercept, store preferences, price sensitivity
@@ -356,21 +356,21 @@ class AleaCarta(BaseBasketModel):
         )
 
         if tf.size(item_indices_ragged) == 0:
-            # Empty baskets: no alpha embeddings to gather
+            # Empty baskets: no gamma embeddings to gather
             # (It must be a ragged tensor here because TF's GraphMode requires the same
             # nested structure to be returned from all branches of a conditional)
-            alpha_by_basket = tf.RaggedTensor.from_tensor(
-                tf.zeros((len(item_batch), 0, self.alpha.shape[1]))
+            gamma_by_basket = tf.RaggedTensor.from_tensor(
+                tf.zeros((len(item_batch), 0, self.gamma.shape[1]))
             )
         else:
             # Gather the embeddings using a ragged tensor of indices
-            alpha_by_basket = tf.ragged.map_flat_values(tf.gather, self.alpha, item_indices_ragged)
+            gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
 
         # Basket interaction: one vs all
-        alpha_i = tf.expand_dims(alpha_item, axis=1)  # Shape: (batch_size, 1, latent_size)
+        gamma_i = tf.expand_dims(gamma_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
         basket_interaction_utility = tf.reduce_sum(
-            alpha_i * alpha_by_basket, axis=-1
+            gamma_i * gamma_by_basket, axis=-1
         )  # Shape: (batch_size, None)
         # Sum over the items in the basket
         basket_interaction_utility = tf.reduce_sum(
