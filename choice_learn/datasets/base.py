@@ -42,6 +42,7 @@ def get_path(data_file_name, module=DATA_MODULE):
     path = Path(os.path.join("../..", module)).resolve() / data_file_name
     return path.as_posix()
 
+
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Load csv files.
 
