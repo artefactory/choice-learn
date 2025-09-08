@@ -13,7 +13,7 @@ import requests
 from choice_learn.data.choice_dataset import ChoiceDataset
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
-DATA_MODULE = "../../choice_learn/datasets/data"
+DATA_MODULE = "choice_learn/datasets/data"
 
 
 def get_path(data_file_name, module=DATA_MODULE):
@@ -35,14 +35,12 @@ def get_path(data_file_name, module=DATA_MODULE):
     """
     import sys
 
-    if sys.version >= "3.9":
+    if int(sys.version.split(".")[1]) >= 9:
         return resources.files(module.replace("/", ".")) / data_file_name
-
     # with resources.path(module, data_file_name) as path:
     #     return path
-    path = Path(module).resolve() / data_file_name
+    path = Path(os.path.join("../..", module)).resolve() / data_file_name
     return path.as_posix()
-
 
 def load_csv(data_file_name, data_module=DATA_MODULE, encoding="utf-8"):
     """Load csv files.
