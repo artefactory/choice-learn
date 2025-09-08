@@ -63,7 +63,7 @@ def test_mode_canada_fit_save():
     assert total_nll >= 1874.1, f"Got NLL: {total_nll}"
 
 
-def test_load_model(tmp_path):
+def test_save_load_model(tmp_path):
     """Tests model loading."""
     # Instantiation with the coefficients dictionnary
     coefficients = {
