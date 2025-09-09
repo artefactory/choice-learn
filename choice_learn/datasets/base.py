@@ -1161,8 +1161,8 @@ def load_londonpassenger(
         london_df["week_end"] = np.where(london_df["day_of_week"] >= 6, 1, 0)
 
         # Transform the purpose column into OneHot encoding:
-        london_df = pd.get_dummies(london_df, columns=['purpose'], dtype=int)
-                
+        london_df = pd.get_dummies(london_df, columns=["purpose"], dtype=int)
+
         # Change the name of the purpose columns:
         london_df = london_df.rename(columns={"purpose_1": "purpose_home_to_work"})
         london_df = london_df.rename(columns={"purpose_2": "purpose_home_to_school"})
@@ -1183,7 +1183,7 @@ def load_londonpassenger(
                 "cost_driving_fuel",
                 "cost_driving_ccharge",
                 "purpose",
-                "day_of_week"
+                "day_of_week",
             ],
             axis=1,
         )
