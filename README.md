@@ -6,7 +6,7 @@
   <img src="https://raw.githubusercontent.com/artefactory/choice-learn/refs/heads/white_logo/docs/white_logo_choice_learn.png" width="300">
 </picture>
 
-*Large-scale choice modeling through the lens of machine learning*
+*User-friendly and scalable package for modeling choices*
 
 [![CI status](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/choice-learn/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -23,10 +23,12 @@
 </div>
 
 
-Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models, e.g., for assortment planning.
-The package provides ready-to-use datasets and models studied in the academic literature. It also provides a lower level use if you wish to customize the specification of the choice model or formulate your own model from scratch. Choice-Learn efficiently handles large-scale choice data by limiting RAM usage.
+Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models. It is designed to efficiently handle large-scale choice data by limiting RAM usage.
 
-Choice-Learn uses NumPy and pandas as data backend engines and TensorFlow for models.
+It provides ready-to-use datasets studied in the academic literature as well as a wide panel of different models covering both single choice and multiple choices models. Off-the shelf implementation of well known models are provided as well as a lower level use if you wish to customize your own model.
+
+Finally, you can also find original models published in academic conferences, such as the AleaCarta [[17]](#trident-references) model.
+
 
 ## :trident: Table of Contents
   - [Introduction - Discrete Choice modeling](#trident-introduction---discrete-choice-modeling)
@@ -80,18 +82,18 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Maragheh et al. [[14]](#trident-references) | *HaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/halo_mnl/) |
 | Low-Rank Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Ko and Li [[15]](#trident-references) | *LowRankHaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/halo_mnl/) |
 
-| NN-based Model | Example | Related Paper | *from choice_learn.models import* | Doc |
+| NN-based Model  &nbsp; &nbsp;| Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- |  ------ | ---- | ------ | :---: |
-| RUMnet| [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/rumnet.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
-| TasteNet | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/tastenet.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
-| Learning-MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/learning_mnl.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
-| ResLogit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/reslogit.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
+| RUMnet| [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/rumnet.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/rumnet.ipynb) | Aouad and Désir [[1]](#trident-references) | *RUMnet* | [#](https://artefactory.github.io/choice-learn/references/models/references_rumnet/#choice_learn.models.rumnet.PaperRUMnet) |
+| TasteNet | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/tastenet.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/tastenet.ipynb) | Han et al. [[7]](#trident-references) | *TasteNet* | [#](https://artefactory.github.io/choice-learn/references/models/references_tastenet/) |
+| Learning-MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/learning_mnl.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
+| ResLogit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/reslogit.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
 
-| Basket Model | Example| Related Paper | *from choice_learn.basket_models import* | Doc |
+| Basket Model  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;| Example| Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | --------  | ---- | ------ | :---: |
-| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
-| Alea Carta | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/alea_carta.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
-| Base Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/basic_attention.ipynb) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
+| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Alea Carta | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/alea_carta.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
+| Base Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/basic_attention.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
 
 
 ### Data
