@@ -26,16 +26,17 @@ Choice-Learn is a Python package designed to help you formulate, estimate, and d
 
 The package offers ready-to-use datasets from the academic literature and supports a wide range of models, including both single-choice and multiple-choice frameworks. Well-known models come with out-of-the-box implementations, while a lower-level API is available if you want to build and customize your own models.
 
-Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the AleaCarta [[17]](#trident-references) model.
+Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the AleaCarta [[17]](#trident-references) model presented at ECML-PKDD 2025.
 
 
 ## :trident: Table of Contents
-  - [Introduction - Discrete Choice modeling](#trident-introduction---discrete-choice-modeling)
-  - [What's in there ?](#trident-whats-in-there-)
   - [Getting Started](#trident-getting-started)
+    * [Notebook & Examples](#notebooks-and-examples)
+    * [Documentation](#documentation)
+    * [What's choice modeling ?](#whats-choice-modeling-)
+  - [What's in there ?](#trident-whats-in-there-)
   - [Installation](#trident-installation)
   - [Usage](#trident-usage)
-  - [Documentation](#trident-documentation)
   - [Contributing](#trident-contributing)
   - [Citation](#trident-citation)
   - [References](#trident-references)
@@ -44,22 +45,23 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
 
 ### Notebooks and Examples
 
-You can find the following tutorials to help you getting started with the package:
-- Generic and simple introduction [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab
-)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
-- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
-- A detailed example of conditional logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)  [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
-- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
-- All models and algorithms have a companion example in the notebook [directory](./notebooks/)
+You can find different tutorials which are a great way to getting started with the package:
+- A generic and simple introduction to choice-learn [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
+- A detailed example of conditional Logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
+- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
+
+All models and algorithms are sourced in the references and have a **companion example** in the notebook [directory](./notebooks/).
 
 
 ### Documentation
 
-A detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
-TensorFlow also has extensive [documentation](https://www.tensorflow.org/) that can help you.\
-An academic paper has been published in the Journal of Open-Source Software, [here](https://joss.theoj.org/papers/10.21105/joss.06899).
+Many examples are provided here and a detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+You can also open [issues]() or contact us if you have questions.
 
-### Introduction to Discrete Choice modeling
+An academic [paper]((https://joss.theoj.org/papers/10.21105/joss.06899)) has been published in the Journal of Open-Source Software to present choice-learn. The [*AleaCarta*]() model has been presented at ECML-PKDD 2025.
+
+### What's choice modeling ?
 
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
@@ -68,10 +70,10 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 ## :trident: What's in there ?
 
 ### Model Estimation
-- Different models are already implemented. You can import and parametrize the models for your own usage.
+- Different models are already implemented for single and multiple choice modeling. You can import and parametrize the models for your own usage.
 - Otherwise, **custom modeling** is made easy by subclassing the ChoiceModel class and specifying your own utility function. [[Example]](notebooks/introduction/4_model_customization.ipynb)
 
-*List of implemented & ready-to-use models:*
+*List of implemented single choice models:*
 | Model | Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- |  -------- | ------ | ------ | :---: |
 | MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/simple_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
@@ -88,9 +90,11 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Learning-MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/learning_mnl.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
 | ResLogit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/reslogit.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
 
+*List of implemented multiple choices models:*
+
 | Basket Model  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;| Example| Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | --------  | ---- | ------ | :---: |
-| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) | *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
 | Alea Carta | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/alea_carta.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
 | Base Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/basic_attention.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
 
@@ -116,7 +120,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 ### Auxiliary tools
 Algorithms leveraging choice models are integrated within the library:
-- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[8]](#trident-references) [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb)[[Colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb)
 
 ## :trident: Installation
 
@@ -282,9 +286,6 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
   organization={Springer}
 }
 ```
-### License
-
-The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
 ### Affiliations
 
@@ -321,6 +322,11 @@ Choice-Learn has been developed through a collaboration between researchers at t
     <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_insead.png" height="60" />
   </a>
 </p>
+
+
+## :trident: License
+
+The use of this software is under the MIT license, with no limitation of usage, including for commercial applications.
 
 ## :trident: References
 
