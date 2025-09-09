@@ -22,12 +22,11 @@
 [![cite](https://img.shields.io/badge/Citation-BibTeX-cyan)](./CITATION.bib)
 </div>
 
+Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models. It is optimized to efficiently handle large-scale choice data while minimizing RAM usage.
 
-Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models. It is designed to efficiently handle large-scale choice data by limiting RAM usage.
+The package offers ready-to-use datasets from the academic literature and supports a wide range of models, including both single-choice and multiple-choice frameworks. Well-known models come with out-of-the-box implementations, while a lower-level API is available if you want to build and customize your own models.
 
-It provides ready-to-use datasets studied in the academic literature as well as a wide panel of different models covering both single choice and multiple choices models. Off-the shelf implementation of well known models are provided as well as a lower level use if you wish to customize your own model.
-
-Finally, you can also find original models published in academic conferences, such as the AleaCarta [[17]](#trident-references) model.
+Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the AleaCarta [[17]](#trident-references) model.
 
 
 ## :trident: Table of Contents
