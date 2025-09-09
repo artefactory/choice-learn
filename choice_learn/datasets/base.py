@@ -1182,7 +1182,6 @@ def load_londonpassenger(
                 "dur_pt_int",
                 "cost_driving_fuel",
                 "cost_driving_ccharge",
-                "purpose",
                 "day_of_week",
             ],
             axis=1,
