@@ -1111,12 +1111,16 @@ def load_londonpassenger(
         "household_id",
         "person_n",
         "trip_n",
-        "purpose",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "survey_year",
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
+        "week_end",
         "start_time",
         "age",
         "female",
@@ -1128,9 +1132,10 @@ def load_londonpassenger(
         "fueltype",
         "faretype",
         "bus_scale",
-        "dur",
+        "dur_pt",
         "interchanges",
-        "cost_transit",
+        "cost_pt",
+        "cost_driving",
         "driving_traffic_percent",
     ]
     choice_column = "travel_mode"
@@ -1152,6 +1157,19 @@ def load_londonpassenger(
             london_df["cost_driving_fuel"] + london_df["cost_driving_ccharge"]
         )
 
+        # Change the day of the week to a binary variable indicating whether it is a weekend or not:
+        london_df["week_end"] = np.where(london_df["day_of_week"] >= 6, 1, 0)
+
+        # Transform the purpose column into OneHot encoding:
+        london_df = pd.get_dummies(london_df, columns=['purpose'], dtype=int)
+                
+        # Change the name of the purpose columns:
+        london_df = london_df.rename(columns={"purpose_1": "purpose_home_to_work"})
+        london_df = london_df.rename(columns={"purpose_2": "purpose_home_to_school"})
+        london_df = london_df.rename(columns={"purpose_3": "purpose_home_to_other"})
+        london_df = london_df.rename(columns={"purpose_4": "purpose_work_travel"})
+        london_df = london_df.rename(columns={"purpose_5": "purpose_other"})
+
         # Change the name of the public transport cost column:
         london_df = london_df.rename(columns={"cost_transit": "cost_pt"})
 
@@ -1164,6 +1182,8 @@ def load_londonpassenger(
                 "dur_pt_int",
                 "cost_driving_fuel",
                 "cost_driving_ccharge",
+                "purpose",
+                "day_of_week"
             ],
             axis=1,
         )
