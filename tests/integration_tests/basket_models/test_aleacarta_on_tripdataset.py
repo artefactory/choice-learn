@@ -1,5 +1,6 @@
 """Integration tests for Shopper model and TripDataset."""
 
+import itertools
 import logging
 
 import numpy as np
@@ -79,47 +80,13 @@ n_stores_1 = trip_dataset_1.n_stores
 # with store, week and prices fixed
 trip_list_2 = [
     Trip(
-        purchases=[0, 1, 2],
+        purchases=list(p),
         store=0,
         week=0,
         prices=[170, 110, 150],
         assortment=0,
-    ),
-    Trip(
-        purchases=[0, 2, 1],
-        store=0,
-        week=0,
-        prices=[170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[1, 2, 0],
-        store=0,
-        week=0,
-        prices=[170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[2, 1, 0],
-        store=0,
-        week=0,
-        prices=[170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[1, 0, 2],
-        store=0,
-        week=0,
-        prices=[170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[2, 0, 1],
-        store=0,
-        week=0,
-        prices=[170, 110, 150],
-        assortment=0,
-    ),
+    )
+    for p in itertools.permutations([0, 1, 2])
 ]
 # One more item available in the assortment to be able to use negative sampling
 available_items_2 = np.expand_dims(np.ones(3), axis=0)
@@ -173,8 +140,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     )
     model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
     # For a basket {1, 2, 0} of size 3:
-    # compute_ordered_basket_likelihood = 1/3 * 1/3 * 1/2 * 1/1 = 1/18
-    # (1/nb_possibilities but the checkout item is not considered during the 1st step)
+    # compute_ordered_basket_likelihood = 1/3 * 1/2 * 1/1 = 1/6
 
     assert (
         np.abs(
@@ -182,7 +148,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                 [
                     model.compute_ordered_basket_likelihood(
                         basket=trip.purchases,
-                        available_items=np.ones((3,)),
+                        available_items=np.ones((trip_dataset_2.n_items,)),
                         store=trip.store,
                         week=trip.week,
                         prices=trip.prices,
