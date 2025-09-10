@@ -93,7 +93,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | Learning-MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/learning_mnl.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/learning_mnl.ipynb) | Sifringer et al. [[13]](#trident-references) | *LearningMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_learning_mnl/) |
 | ResLogit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/reslogit.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/reslogit.ipynb) | Wong and Farooq [[12]](#trident-references) | *ResLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_reslogit/) |
 
-*List of implemented multiple choices models:*
+*List of implemented multiple choice models:*
 
 | Basket Model  &nbsp; &nbsp; &nbsp; | Example| Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | --------  | ---- | ------ | :---: |
@@ -103,7 +103,8 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 
 ### Data
-- The **ChoiceDataset** class can handle choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
+- The **ChoiceDataset** class can handle single choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
+- The **TripDataset** class is designed to handle choice datasets with bundle / baskets of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
 - Many academic datasets are integrated in the library and ready to be used:
 
 | Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
