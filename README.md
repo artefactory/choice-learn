@@ -35,6 +35,9 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
     * [Documentation](#documentation)
     * [What's choice modeling ?](#whats-choice-modeling-)
   - [What's in there ?](#trident-whats-in-there-)
+    * [Single and Multiple Choice Models](#model-estimation)
+    * [Data & Datasets](#data)
+    * [Tools](#auxiliary-tools)
   - [Installation](#trident-installation)
   - [Usage](#trident-usage)
   - [Contributing](#trident-contributing)
@@ -92,9 +95,9 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 *List of implemented multiple choices models:*
 
-| Basket Model  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;| Example| Related Paper | *from choice_learn.basket_models import* | Doc |
+| Basket Model  &nbsp; &nbsp; &nbsp; | Example| Related Paper | *from choice_learn.basket_models import* | Doc |
 | ---------- | --------  | ---- | ------ | :---: |
-| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
+| Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
 | Alea Carta | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/alea_carta.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
 | Base Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/basic_attention.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
 
