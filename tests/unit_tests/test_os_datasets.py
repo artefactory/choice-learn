@@ -168,7 +168,6 @@ def test_londonpassenger_loader():
         "person_n",
         "trip_n",
         "travel_mode",
-        "purpose",
         "fueltype",
         "faretype",
         "bus_scale",
@@ -195,21 +194,28 @@ def test_londonpassenger_loader():
         "cost_driving_fuel",
         "cost_driving_ccharge",
         "driving_traffic_percent",
+        "week_end",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
     ]
     assert londonpassenger.columns.equals(pd.Index(expected_columns))
-    assert londonpassenger.shape == (81086, 32)
+    assert londonpassenger.shape == (81086, 37)
 
     londonpassenger = load_londonpassenger()
     assert isinstance(londonpassenger, ChoiceDataset)
-    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 7)
-    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
+    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 8)
+    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 19)
     expected_items_features_names = [
         "fueltype",
         "faretype",
         "bus_scale",
-        "dur",
+        "dur_pt",
         "interchanges",
-        "cost_transit",
+        "cost_pt",
+        "cost_driving",
         "driving_traffic_percent",
     ]
     assert londonpassenger.items_features_by_choice_names[0] == expected_items_features_names
@@ -217,12 +223,16 @@ def test_londonpassenger_loader():
         "household_id",
         "person_n",
         "trip_n",
-        "purpose",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "survey_year",
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
+        "week_end",
         "start_time",
         "age",
         "female",
@@ -238,16 +248,17 @@ def test_londonpassenger_loader():
         1,
         81086,
         4,
-        11,
+        12,
     )  # last dimension +4
-    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
+    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 19)
     expected_items_features_names = [
         "fueltype",
         "faretype",
         "bus_scale",
-        "dur",
+        "dur_pt",
         "interchanges",
-        "cost_transit",
+        "cost_pt",
+        "cost_driving",
         "driving_traffic_percent",
         "oh_walking",
         "oh_cycling",
@@ -259,12 +270,16 @@ def test_londonpassenger_loader():
         "household_id",
         "person_n",
         "trip_n",
-        "purpose",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "survey_year",
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
+        "week_end",
         "start_time",
         "age",
         "female",
@@ -282,7 +297,6 @@ def test_londonpassenger_loader():
         "person_n",
         "trip_n",
         "travel_mode",
-        "purpose",
         "fueltype",
         "faretype",
         "bus_scale",
@@ -290,7 +304,6 @@ def test_londonpassenger_loader():
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
         "start_time",
         "age",
         "female",
@@ -303,23 +316,30 @@ def test_londonpassenger_loader():
         "dur_driving",
         "cost_pt",
         "driving_traffic_percent",
+        "week_end",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "dur_pt",
         "cost_driving",
     ]
     assert londonpassenger.columns.equals(pd.Index(expected_columns))
-    assert londonpassenger.shape == (81086, 28)
+    assert londonpassenger.shape == (81086, 32)
 
     londonpassenger = load_londonpassenger(preprocessing="summation")
     assert isinstance(londonpassenger, ChoiceDataset)
-    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 7)
-    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
+    assert np.shape(londonpassenger.items_features_by_choice) == (1, 81086, 4, 8)
+    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 19)
     expected_items_features_names = [
         "fueltype",
         "faretype",
         "bus_scale",
-        "dur",
+        "dur_pt",
         "interchanges",
-        "cost_transit",
+        "cost_pt",
+        "cost_driving",
         "driving_traffic_percent",
     ]
     assert londonpassenger.items_features_by_choice_names[0] == expected_items_features_names
@@ -327,12 +347,16 @@ def test_londonpassenger_loader():
         "household_id",
         "person_n",
         "trip_n",
-        "purpose",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "survey_year",
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
+        "week_end",
         "start_time",
         "age",
         "female",
@@ -348,16 +372,17 @@ def test_londonpassenger_loader():
         1,
         81086,
         4,
-        11,
+        12,
     )  # last dimension +4
-    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 15)
+    assert np.shape(londonpassenger.shared_features_by_choice) == (1, 81086, 19)
     expected_items_features_names = [
         "fueltype",
         "faretype",
         "bus_scale",
-        "dur",
+        "dur_pt",
         "interchanges",
-        "cost_transit",
+        "cost_pt",
+        "cost_driving",
         "driving_traffic_percent",
         "oh_walking",
         "oh_cycling",
@@ -369,12 +394,16 @@ def test_londonpassenger_loader():
         "household_id",
         "person_n",
         "trip_n",
-        "purpose",
+        "purpose_home_to_work",
+        "purpose_home_to_school",
+        "purpose_home_to_other",
+        "purpose_work_travel",
+        "purpose_other",
         "survey_year",
         "travel_year",
         "travel_month",
         "travel_date",
-        "day_of_week",
+        "week_end",
         "start_time",
         "age",
         "female",
