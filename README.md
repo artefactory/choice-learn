@@ -26,7 +26,7 @@ Choice-Learn is a Python package designed to help you formulate, estimate, and d
 
 The package offers ready-to-use datasets from the academic literature and supports a wide range of models, including both single-choice and multiple-choice frameworks. Well-known models come with out-of-the-box implementations, while a lower-level API is available if you want to build and customize your own models.
 
-Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the AleaCarta [[17]](#trident-references) model presented at ECML-PKDD 2025.
+Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the *AleaCarta* [[17]](#trident-references) model presented at ECML-PKDD 2025.
 
 
 ## :trident: Table of Contents
@@ -49,10 +49,10 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
 ### Notebooks and Examples
 
 You can find different tutorials which are a great way to getting started with the package:
-- A generic and simple introduction to choice-learn [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/1_introductive_example/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
-- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/2_data_handling/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
-- A detailed example of conditional Logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/3_model_clogit/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
-- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://expert-dollop-1wemk8l.pages.github.io/notebooks/introduction/4_model_customization/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
+- A generic and simple introduction to choice-learn [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/1_introductive_example/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
+- Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/2_data_handling/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
+- A detailed example of conditional Logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/3_model_clogit/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
+- Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/4_model_customization/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
 
 All models and algorithms are sourced in the references and have a **companion example** in the notebook [directory](./notebooks/).
 
