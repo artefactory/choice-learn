@@ -1142,8 +1142,8 @@ def load_londonpassenger(
 
     if return_desc:
         return description
-    
-     # Change the day of the week to a binary variable indicating whether it is a weekend or not:
+
+    # Change the day of the week to a binary variable indicating whether it is a weekend or not:
     london_df["week_end"] = np.where(london_df["day_of_week"] >= 6, 1, 0)
 
     # Transform the purpose column into OneHot encoding:
@@ -1182,7 +1182,7 @@ def load_londonpassenger(
                 "dur_pt_int",
                 "cost_driving_fuel",
                 "cost_driving_ccharge",
-                "day_of_week"
+                "day_of_week",
             ],
             axis=1,
         )
