@@ -26,7 +26,7 @@ Choice-Learn is a Python package designed to help you formulate, estimate, and d
 
 The package offers ready-to-use datasets from the academic literature and supports a wide range of models, including both single-choice and multiple-choice frameworks. Well-known models come with out-of-the-box implementations, while a lower-level API is available if you want to build and customize your own models.
 
-Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the *AleaCarta* [[17]](#trident-references) model presented at ECML-PKDD 2025.
+Additionally, Choice-Learn includes innovative models presented at academic conferences, such as the *AleaCarta*[[17]](#trident-references) model presented at ECML-PKDD 2025.
 
 
 ## :trident: Table of Contents
@@ -104,7 +104,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 ### Data
 - The **ChoiceDataset** class can handle single choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
-- The **TripDataset** class is designed to handle choice datasets with bundle / baskets of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
+- The **TripDataset** class is designed to handle choice datasets wit bundle / baskets of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
 - Many academic datasets are integrated in the library and ready to be used:
 
 | Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
