@@ -232,9 +232,14 @@ class ChoiceModel:
             )
 
             if self.is_probit:
-                probabilities = nlm.normalomax_with_availabilities(
-                    utilities, available_items_by_choice
-                )
+                if tf.shape(utilities)[1] == 2:
+                    probabilities = nlm.normalomax_with_availabilities(
+                        utilities, available_items_by_choice, binary=True
+                    )
+                else:
+                    probabilities = nlm.normalomax_with_availabilities(
+                        utilities, available_items_by_choice
+                    )
             else:
                 probabilities = tf_ops.softmax_with_availabilities(
                     items_logit_by_choice=utilities,
@@ -498,7 +503,14 @@ class ChoiceModel:
         )
         # Compute probabilities from utilities & availabilties
         if self.is_probit:
-            probabilities = nlm.normalomax_with_availabilities(utilities, available_items_by_choice)
+            if tf.shape(utilities)[1] == 2:
+                probabilities = nlm.normalomax_with_availabilities(
+                    utilities, available_items_by_choice, binary=True
+                )
+            else:
+                probabilities = nlm.normalomax_with_availabilities(
+                    utilities, available_items_by_choice
+                )
         else:
             probabilities = tf_ops.softmax_with_availabilities(
                 items_logit_by_choice=utilities,

@@ -37,6 +37,10 @@ def noisy_argmax(
         axis on which to compute the argmax, by default -1
     noise_distribution: str, optional
         distribution law for the noise, by default "normal"
+    binary; int, optional
+        Whether a binary classification should be performed. In this case, the first item/class
+        is considered to have a utility of zero (not checked) and noise is added only to the
+        second item/class. By default, False.
 
     Returns
     -------
@@ -119,6 +123,10 @@ def normalomax_with_availabilities(
         axis on which to compute the argmax, by default -1
     noise_distribution: str, optional
         distribution law for the noise, by default "normal"
+    binary; int, optional
+        Whether a binary classification should be performed. In this case, the first item/class
+        is considered to have a utility of zero (not checked) and noise is added only to the
+        second item/class. By default, False.
 
     Returns
     -------
