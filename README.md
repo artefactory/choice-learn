@@ -51,7 +51,7 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
 You can find different tutorials which are a great way to getting started with the package:
 - A generic and simple introduction to choice-learn [[notebook]](notebooks/introduction/1_introductive_example.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/1_introductive_example/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/1_introductive_example.ipynb)
 - Detailed explanations of data handling depending on the data format [[noteboook]](notebooks/introduction/2_data_handling.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/2_data_handling/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb)
-- A detailed example of conditional Logit estimation [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/3_model_clogit/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
+- An example of conditional Logit estimation and analysis [[notebook]](notebooks/introduction/3_model_clogit.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/3_model_clogit/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb)
 - Introduction to custom modeling and more complex parametrization [[notebook]](notebooks/introduction/4_model_customization.ipynb)[[doc]](https://artefactory.github.io/choice-learn/notebooks/introduction/4_model_customization/)[[colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/4_model_customization.ipynb)
 
 All models and algorithms are sourced in the references and have a **companion example** in the notebook [directory](./notebooks/).
@@ -59,7 +59,7 @@ All models and algorithms are sourced in the references and have a **companion e
 
 ### Documentation
 
-Many examples are provided here and a detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
+Many examples are provided through the different notebooks and a detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
 You can also open [issues](https://github.com/artefactory/choice-learn/issues) or [contact us](vincent.auriau@artefact.com) if you have questions.
 
 The Choice-Learn package is supported by two peer-reviewed publications:
@@ -246,10 +246,9 @@ print(model.report)
 You are welcome to contribute to the project ! You can help in various ways:
 - raise issues
 - resolve issues already opened
-- develop new features
+- develop new features and tests
 - provide additional examples of use
 - fix typos, improve code quality
-- develop new tests
 
 We recommend to first open an [issue](https://github.com/artefactory/choice-learn/issues) to discuss your ideas. More details are given [here](./CONTRIBUTING.md).
 
