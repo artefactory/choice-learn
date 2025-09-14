@@ -60,9 +60,12 @@ All models and algorithms are sourced in the references and have a **companion e
 ### Documentation
 
 Many examples are provided here and a detailed documentation of this project is available [here](https://artefactory.github.io/choice-learn/).\
-You can also open [issues]() or contact us if you have questions.
+You can also open [issues](https://github.com/artefactory/choice-learn/issues) or [contact us](vincent.auriau@artefact.com) if you have questions.
 
-An academic [paper]((https://joss.theoj.org/papers/10.21105/joss.06899)) has been published in the Journal of Open-Source Software to present choice-learn. The [*AleaCarta*]() model has been presented at ECML-PKDD 2025.
+The Choice-Learn package is supported by two peer-reviewed publications:
+> &nbsp; &nbsp; A paper in the Journal of Open Source Software introducing the library: *Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning*, Auriau et al. (2024) [📄](https://joss.theoj.org/papers/10.21105/joss.06899) \
+&nbsp; &nbsp; A paper at ECML-PKDD presenting a specific model, *AleaCarta*: *Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling*, Désir et al. (2025) [📄](https://ecmlpkdd.org/)
+
 
 ### What's choice modeling ?
 
@@ -104,7 +107,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 
 ### Data
 - The **ChoiceDataset** class can handle single choice datasets with efficient memory management. It can be used on your own dataset. [[Example]](notebooks/introduction/2_data_handling.ipynb)
-- The **TripDataset** class is designed to handle choice datasets wit bundle / baskets of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
+- The **TripDataset** class is designed to handle choice datasets with bundle - or baskets - of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
 - Many academic datasets are integrated in the library and ready to be used:
 
 | Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
@@ -281,7 +284,6 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 @inproceedings{Desir2025
   doi = {},
   url = {},
-  year = {2025},
   publisher = {},
   author = {Jules Désir and Vincent Auriau and Martin Možina and Emmanuel Malherbe},
   title = {Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
