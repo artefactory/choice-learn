@@ -63,8 +63,9 @@ Many examples are provided here and a detailed documentation of this project is 
 You can also open [issues](https://github.com/artefactory/choice-learn/issues) or [contact us](vincent.auriau@artefact.com) if you have questions.
 
 The Choice-Learn package is supported by two peer-reviewed publications:
-> &nbsp; &nbsp; A paper in the Journal of Open Source Software introducing the library: *Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning*, Auriau et al. (2024) [📄](https://joss.theoj.org/papers/10.21105/joss.06899) \
-&nbsp; &nbsp; A paper at ECML-PKDD presenting a specific model, *AleaCarta*: *Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling*, Désir et al. (2025) [📄](https://ecmlpkdd.org/)
+> &nbsp; &nbsp; A paper in the Journal of Open Source Software introducing the library: *Choice-Learn: Large-scale choice modeling for operational contexts through the lens of machine learning*, Auriau et al. (2024) [📄](https://joss.theoj.org/papers/10.21105/joss.06899)
+
+> &nbsp; &nbsp; A paper at ECML-PKDD presenting a specific model, *AleaCarta*: *Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling*, Désir et al. (2025) [📄](https://ecmlpkdd.org/)
 
 
 ### What's choice modeling ?
