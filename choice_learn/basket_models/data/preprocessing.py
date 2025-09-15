@@ -7,6 +7,8 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
+
 from .basket_dataset import Trip, TripDataset
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
@@ -362,3 +364,27 @@ def from_csv(
     print(f"{n_items=}, {n_stores=} and {n_trips=}")
 
     return trip_dataset, n_items, n_stores, n_trips
+
+
+
+
+def load_bakery(as_frame=False):
+    noms_colonnes = ['article_1', 'article_2', 'article_3', 'article_4', 'article_5']
+
+    path = Path(os.path.join("..", DATA_MODULE)).resolve() / 'uchoice-Bakery/uchoice-Bakery-5-25.txt'
+
+    df = pd.read_csv(path, sep='\s+', header=None, names=noms_colonnes)
+
+    if as_frame :
+        return df
+    
+    num_transactions = df.shape[0]
+    n_item = int(df.max().max())
+  
+    availability_matrix = np.ones((num_transactions, n_item), dtype=int)
+    
+    list_purchases = [[int(item) for item in row if pd.notna(item)] for row in df.values]
+    prices = [1]*n_item
+    trips_list = [Trip(purchases=purchases, assortment=0, prices =prices) for purchases in list_purchases]
+
+    return TripDataset(trips = trips_list, available_items = availability_matrix)

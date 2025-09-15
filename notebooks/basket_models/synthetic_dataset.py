@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from choice_learn.basket_models import Trip, TripDataset
+from choice_learn.basket_models.data import Trip, TripDataset
 
 
 def get_dataset(num_baskets: int = 100) -> TripDataset:
