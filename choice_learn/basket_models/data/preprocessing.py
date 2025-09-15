@@ -369,8 +369,17 @@ def from_csv(
 
 
 def load_bakery(as_frame=False):
+    """Load the bakery dataset from uchoice-Bakery-5-25.txt.
+
+    Parameters
+    ----------
+    as_frame : bool, optional
+        Whether to return the dataset as pd.DataFrame. If not, returned as TripDataset,
+        by default False."""
+    
     noms_colonnes = ['article_1', 'article_2', 'article_3', 'article_4', 'article_5']
 
+     # likewise get_path function
     path = Path(os.path.join("..", DATA_MODULE)).resolve() / 'uchoice-Bakery/uchoice-Bakery-5-25.txt'
 
     df = pd.read_csv(path, sep='\s+', header=None, names=noms_colonnes)
@@ -378,10 +387,11 @@ def load_bakery(as_frame=False):
     if as_frame :
         return df
     
-    num_transactions = df.shape[0]
+    num_purchases = df.shape[0]
     n_item = int(df.max().max())
-  
-    availability_matrix = np.ones((num_transactions, n_item), dtype=int)
+    
+    # Apparently all items are available at each trip 
+    availability_matrix = np.ones((num_purchases, n_item), dtype=int) 
     
     list_purchases = [[int(item) for item in row if pd.notna(item)] for row in df.values]
     prices = [1]*n_item
