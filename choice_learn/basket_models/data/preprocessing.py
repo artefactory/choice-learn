@@ -387,14 +387,15 @@ def load_bakery(as_frame=False):
     if as_frame :
         return df
     
-    num_purchases = df.shape[0]
     n_item = int(df.max().max())
     
     # Apparently all items are available at each trip 
-    availability_matrix = np.ones((num_purchases, n_item), dtype=int) 
+    availability_matrix = np.array([[1]*n_item]) 
     
     list_purchases = [[int(item) for item in row if pd.notna(item)] for row in df.values]
-    prices = [1]*n_item
+
+    # Dummy prices, all equal to 1
+    prices = np.array([[1]*n_item])
     trips_list = [Trip(purchases=purchases, assortment=0, prices =prices) for purchases in list_purchases]
 
     return TripDataset(trips = trips_list, available_items = availability_matrix)
