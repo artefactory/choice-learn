@@ -418,7 +418,7 @@ class TripDataset:
         # Draw a random permutation of the items in the basket without the checkout item 0
         # TODO at a later stage: improve by sampling several permutations here
         permutation_list = list(permutations(range(length_trip - 1)))
-        permutation = random.sample(permutation_list, 1)[0] # nosec
+        permutation = random.sample(permutation_list, 1)[0]  # nosec
 
         # Permute the basket while keeping the checkout item 0 at the end
         permuted_purchases = np.array([trip.purchases[j] for j in permutation] + [0])
