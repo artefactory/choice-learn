@@ -478,7 +478,7 @@ class BaseBasketModel:
 
         # Limit the number of permutations to n!
         if n_permutations <= total_n_permutations:
-            permutation_list = random.sample(permutation_list, n_permutations)
+            permutation_list = random.sample(permutation_list, n_permutations) # nosec
         else:
             logging.warning(
                 "Warning: n_permutations > n! (all permutations). \
