@@ -396,7 +396,7 @@ def load_bakery(as_frame=False):
         # We extract all the files 
         tar.extractall(path=extract_path)
         
-        # We want to read the uchoice-Bakery-5-25.txt file (second file in the archive)
+        # We want to read the uchoice-Bakery.txt file (second file in the archive)
         csv_file_to_read = file_names[1] 
     
     noms_colonnes = ['article_1', 'article_2', 'article_3', 'article_4', 'article_5', 'article_6', 'article_7','article_8']
@@ -409,7 +409,7 @@ def load_bakery(as_frame=False):
     if as_frame :
         return df
     
-    n_item = int(df.max().max())
+    n_item = int(df.max().max())+1
     
     # Apparently all items are available at each trip 
     availability_matrix = np.array([[1]*n_item]) 
