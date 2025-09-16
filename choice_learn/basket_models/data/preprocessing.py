@@ -8,7 +8,10 @@ import numpy as np
 import pandas as pd
 
 from pathlib import Path
+import tarfile
 
+from choice_learn.datasets.base import get_path
+from choice_learn.datasets.base import download_from_url
 from .basket_dataset import Trip, TripDataset
 
 OS_DATA_MODULE = os.path.join(os.path.abspath(".."), "choice_learn", "datasets", "data")
@@ -377,10 +380,29 @@ def load_bakery(as_frame=False):
         Whether to return the dataset as pd.DataFrame. If not, returned as TripDataset,
         by default False."""
     
-    noms_colonnes = ['article_1', 'article_2', 'article_3', 'article_4', 'article_5']
+    url = "https://drive.usercontent.google.com/u/0/uc?id=1qV8qmiHTq6y5fwgN0_hRXyKreNKrF72E&export=download"
+    data_file_name = download_from_url(url)
+    
+    archive_path = get_path(data_file_name)
 
-     # likewise get_path function
-    path = Path(os.path.join("..", DATA_MODULE)).resolve() / 'uchoice-Bakery/uchoice-Bakery-5-25.txt'
+    # We put the extracted files in the data directory
+    extract_path = '../../choice_learn/datasets/data/'
+    with tarfile.open(archive_path, "r:gz") as tar:
+
+        # Here are the files we are downloading
+        file_names = tar.getnames()
+        print(f"Files : {file_names}")
+        
+        # We extract all the files 
+        tar.extractall(path=extract_path)
+        
+        # We want to read the uchoice-Bakery-5-25.txt file (second file in the archive)
+        csv_file_to_read = file_names[1] 
+    
+    noms_colonnes = ['article_1', 'article_2', 'article_3', 'article_4', 'article_5', 'article_6', 'article_7','article_8']
+
+    # likewise get_path function
+    path = Path(os.path.join("..", DATA_MODULE)).resolve() / csv_file_to_read
 
     df = pd.read_csv(path, sep='\s+', header=None, names=noms_colonnes)
 
