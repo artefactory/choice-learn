@@ -409,12 +409,12 @@ def load_bakery(as_frame=False):
     if as_frame :
         return df
     
-    n_item = int(df.max().max())+1
+    n_item = int(df.max().max())
     
     # Apparently all items are available at each trip 
     availability_matrix = np.array([[1]*n_item]) 
     
-    list_purchases = [[int(item) for item in row if pd.notna(item)] for row in df.values]
+    list_purchases = [[int(item)-1 for item in row if pd.notna(item)] for row in df.values]
 
     # Dummy prices, all equal to 1
     prices = np.array([[1]*n_item])
