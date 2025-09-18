@@ -35,6 +35,7 @@ def get_path(data_file_name, module=DATA_MODULE):
     """
     import sys
 
+
     if sys.version_info.minor >= 9:
         return resources.files(module.replace("/", ".")) / data_file_name
     # with resources.path(module, data_file_name) as path:
