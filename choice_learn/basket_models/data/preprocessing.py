@@ -362,4 +362,3 @@ def from_csv(
     print(f"{n_items=}, {n_stores=} and {n_trips=}")
 
     return trip_dataset, n_items, n_stores, n_trips
-
