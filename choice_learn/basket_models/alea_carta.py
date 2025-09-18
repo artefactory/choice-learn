@@ -21,7 +21,7 @@ class AleaCarta(BaseBasketModel):
     def __init__(
         self,
         item_intercept: bool = True,
-        price_effects: bool = False,
+        price_effects: bool = True,
         seasonal_effects: bool = False,
         latent_sizes: dict[str] = {"preferences": 4, "price": 4, "season": 4},
         n_negative_samples: int = 2,
@@ -46,7 +46,7 @@ class AleaCarta(BaseBasketModel):
         price_effects: bool, optional
             Whether to include price effects in the model, by default True
         seasonal_effects: bool, optional
-            Whether to include seasonal effects in the model, by default True
+            Whether to include seasonal effects in the model, by default False
         latent_sizes: dict[str]
             Lengths of the vector representation of the latent parameters
             latent_sizes["preferences"]: length of one vector of theta, gamma
