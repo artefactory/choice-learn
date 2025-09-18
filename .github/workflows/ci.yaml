@@ -9,6 +9,8 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
