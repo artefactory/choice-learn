@@ -24,6 +24,21 @@ test_dataset = ChoiceDataset(
     choices=[0, 1, 2, 0],
 )
 
+small_dataset = ChoiceDataset(
+    shared_features_by_choice=np.array([[1.0], [1.0], [2.0]]),
+    items_features_by_choice=np.array(
+        [[[2.0, 1.0], [1.0, 2.0]], [[2.0, 1.0], [1.0, 2.0]], [[3.0, 3.0], [3.0, 3.0]]]
+    ),
+    available_items_by_choice=np.ones((3, 2)),
+    choices=[0.0, 0.0, 1.0],
+)
+reduced_small_dataset = ChoiceDataset(
+    shared_features_by_choice=np.array([[1.0], [2.0]]),
+    items_features_by_choice=np.array([[[2.0, 1.0], [1.0, 2.0]], [[3.0, 3.0], [3.0, 3.0]]]),
+    available_items_by_choice=np.ones((2, 2)),
+    choices=[0.0, 1.0],
+)
+
 
 def test_simplemnl_instantiation():
     """Tests SimpleMNL instantiation."""
@@ -101,6 +116,26 @@ def test_fit_adam_weights():
     assert np.isclose(nll_c, nll_a, atol=1e-5)
 
     assert model.report.to_numpy().shape == (7, 5)
+
+
+def test_evaluate_weights():
+    """Tests instantiation with item and fit with Adam."""
+    tf.config.run_functions_eagerly(True)
+    model = SimpleMNL(
+        intercept="item",
+        optimizer="Adam",
+        epochs=100,
+        lr=0.1,
+        regularization="l1",
+        regularization_strength=0.01,
+    )
+    model.instantiate(n_items=2, n_items_features=2, n_shared_features=1)
+    nll_test = model.evaluate(small_dataset)
+
+    nll_1 = model.evaluate(reduced_small_dataset, batch_size=-1, sample_weight=[2.0, 1.0])
+    nll_2 = model.evaluate(small_dataset, batch_size=-1, sample_weight=[1.0, 1.0, 1.0])
+    assert np.isclose(nll_test, nll_1 * 2 / 3, atol=1e-5)
+    assert np.isclose(nll_test, nll_2, atol=1e-5)
 
 
 def test_save_load():
