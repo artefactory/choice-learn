@@ -1473,7 +1473,7 @@ class ChoiceDataset:
             list of weights to be returned with the right indexing during the shuffling
         """
         if batch_size == -1 or batch_size == len(self):
-            yield self.indexer.get_full_dataset()
+            yield self.indexer.get_full_dataset(sample_weight=sample_weight)
         else:
             # Get indexes for each choice
             num_choices = len(self)

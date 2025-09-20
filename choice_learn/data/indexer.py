@@ -491,7 +491,7 @@ class ChoiceDatasetIndexer(Indexer):
         logging.error(f"Type{type(choices_indexes)} not handled")
         raise NotImplementedError(f"Type{type(choices_indexes)} not handled")
 
-    def get_full_dataset(self):
+    def get_full_dataset(self, sample_weight=None):
         """Return the full dataset.
 
         This function is here to speed up iteration over dataset when batch_size
@@ -630,6 +630,13 @@ class ChoiceDatasetIndexer(Indexer):
             else:
                 items_features_by_choice = tuple(items_features_by_choice)
 
+        if sample_weight is not None:
+            return (
+                shared_features_by_choice,
+                items_features_by_choice,
+                available_items_by_choice,
+                choices,
+            ), sample_weight
         return (
             shared_features_by_choice,
             items_features_by_choice,
