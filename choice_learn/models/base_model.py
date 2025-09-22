@@ -647,7 +647,7 @@ class ChoiceModel:
                     items_features_by_choice=items_features_by_choice,
                     available_items_by_choice=available_items_by_choice,
                     choices=choices,
-                    sample_weight=sample_weight,
+                    sample_weight=batch_sample_weight,
                 )
                 if mode == "eval":
                     batch_losses.append(loss["Exact-NegativeLogLikelihood"])
