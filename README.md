@@ -30,19 +30,26 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
 
 
 ## :trident: Table of Contents
-  - [Getting Started](#trident-getting-started)
-    * [Notebook & Examples](#notebooks-and-examples)
-    * [Documentation](#documentation)
-    * [What's choice modeling ?](#whats-choice-modeling-)
-  - [What's in there ?](#trident-whats-in-there-)
-    * [Single and Multiple Choice Models](#model-estimation)
-    * [Data & Datasets](#data)
-    * [Tools](#auxiliary-tools)
-  - [Installation](#trident-installation)
-  - [Usage](#trident-usage)
-  - [Contributing](#trident-contributing)
-  - [Citation](#trident-citation)
-  - [References](#trident-references)
+- [:trident: Table of Contents](#trident-table-of-contents)
+- [:trident: Getting Started](#trident-getting-started)
+  - [Notebooks and Examples](#notebooks-and-examples)
+  - [Documentation](#documentation)
+  - [What's choice modeling ?](#whats-choice-modeling-)
+- [:trident: What's in there ?](#trident-whats-in-there-)
+  - [Model Estimation](#model-estimation)
+  - [Data](#data)
+  - [Auxiliary tools](#auxiliary-tools)
+- [:trident: Installation](#trident-installation)
+  - [User installation](#user-installation)
+  - [Dependencies](#dependencies)
+- [:trident: Usage](#trident-usage)
+- [:trident: Contributing](#trident-contributing)
+- [:trident: Citation](#trident-citation)
+  - [Affiliations](#affiliations)
+- [:trident: License](#trident-license)
+- [:trident: References](#trident-references)
+  - [Papers](#papers)
+  - [Code and Repositories](#code-and-repositories)
 
 ## :trident: Getting Started
 
@@ -123,7 +130,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | *load_tafeng* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_tafeng/) |
 | ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | *load_expedia* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_expedia/) |
 | London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
-
+| Bakery Dataset | [url]() | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.bakery.load_bakery) |
 
 
 ### Auxiliary tools
@@ -354,7 +361,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [15] [Modeling Choice via Self-Attention](https://arxiv.org/abs/2311.07607), Ko, J.; Li, A., A. (2023)\
 [16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)\
 [17] [Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD\
-[18] [Attention-based Transactional Context Embedding for Next-Item Recommendation](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Wans, S.; Liang, H.; Longbing,C.; Xiaoshui, H.; Defu, L.; Wei, L. (2018)
+[18] [Attention-based Transactional Context Embedding for Next-Item Recommendation](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Wans, S.; Liang, H.; Longbing,C.; Xiaoshui, H.; Defu, L.; Wei, L. (2018)\
+[19] [A Discrete Choice Model for Subset Selection.](https://www.cs.cornell.edu/~arb/papers/higher-order-choice-wsdm-2018.pdf), Benson, A.; Kumar, R.; Tomkins, A. (2018)
 
 ### Code and Repositories
 
