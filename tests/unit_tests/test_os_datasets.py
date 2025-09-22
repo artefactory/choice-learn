@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from choice_learn.data import ChoiceDataset
+from choice_learn.basket_models.data import TripDataset
 from choice_learn.datasets import (
     load_car_preferences,
     load_electricity,
@@ -16,7 +17,7 @@ from choice_learn.datasets import (
     load_train,
 )
 from choice_learn.datasets.base import load_csv, load_gzip, slice_from_names
-
+from choice_learn.datasets.bakery import load_bakery
 
 def test_swissmetro_loader():
     """Test loading the Swissmetro dataset."""
@@ -432,3 +433,11 @@ def test_load_csv():
     _ = load_csv(data_file_name="test_data.csv", data_module="tests/data")
     names, data = load_gzip("swissmetro.csv.gz", data_module="choice_learn/datasets/data")
     _ = slice_from_names(data, names[:4], names)
+
+
+def test_bakery_loader():
+    """Test loading the Bakery dataset."""
+    bakery = load_bakery(as_frame=True)
+    assert isinstance(bakery, pd.DataFrame)
+    bakery = load_bakery()
+    assert isinstance(bakery, TripDataset)
