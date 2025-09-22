@@ -633,23 +633,43 @@ class ChoiceModel:
             Choice probabilties for each choice and each product
         """
         batch_losses = []
-        for (
-            shared_features_by_choice,
-            items_features_by_choice,
-            available_items_by_choice,
-            choices,
-        ) in choice_dataset.iter_batch(batch_size=batch_size):
-            loss, _ = self.batch_predict(
-                shared_features_by_choice=shared_features_by_choice,
-                items_features_by_choice=items_features_by_choice,
-                available_items_by_choice=available_items_by_choice,
-                choices=choices,
-                sample_weight=sample_weight,
-            )
-            if mode == "eval":
-                batch_losses.append(loss["Exact-NegativeLogLikelihood"])
-            elif mode == "optim":
-                batch_losses.append(loss["optimized_loss"])
+        if sample_weight is not None:
+            for (
+                shared_features_by_choice,
+                items_features_by_choice,
+                available_items_by_choice,
+                choices,
+            ), batch_sample_weight in choice_dataset.iter_batch(
+                batch_size=batch_size, sample_weight=sample_weight
+            ):
+                loss, _ = self.batch_predict(
+                    shared_features_by_choice=shared_features_by_choice,
+                    items_features_by_choice=items_features_by_choice,
+                    available_items_by_choice=available_items_by_choice,
+                    choices=choices,
+                    sample_weight=batch_sample_weight,
+                )
+                if mode == "eval":
+                    batch_losses.append(loss["Exact-NegativeLogLikelihood"])
+                elif mode == "optim":
+                    batch_losses.append(loss["optimized_loss"])
+        else:
+            for (
+                shared_features_by_choice,
+                items_features_by_choice,
+                available_items_by_choice,
+                choices,
+            ) in choice_dataset.iter_batch(batch_size=batch_size):
+                loss, _ = self.batch_predict(
+                    shared_features_by_choice=shared_features_by_choice,
+                    items_features_by_choice=items_features_by_choice,
+                    available_items_by_choice=available_items_by_choice,
+                    choices=choices,
+                )
+                if mode == "eval":
+                    batch_losses.append(loss["Exact-NegativeLogLikelihood"])
+                elif mode == "optim":
+                    batch_losses.append(loss["optimized_loss"])
         if batch_size != -1:
             last_batch_size = available_items_by_choice.shape[0]
             coefficients = tf.concat(
