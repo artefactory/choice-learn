@@ -1472,6 +1472,8 @@ class ChoiceDataset:
         sample_weight : Iterable
             list of weights to be returned with the right indexing during the shuffling
         """
+        if sample_weight is not None and isinstance(sample_weight, list):
+            sample_weight = np.array(sample_weight)
         if batch_size == -1 or batch_size == len(self):
             yield self.indexer.get_full_dataset(sample_weight=sample_weight)
         else:
