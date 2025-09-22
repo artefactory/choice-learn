@@ -246,6 +246,11 @@ class ChoiceDatasetIndexer(Indexer):
     def _get_shared_features_by_choice(self, choices_indexes):
         """Access sessions features of the ChoiceDataset.
 
+        Parameters
+        ----------
+        choices_indexes : list of ints or int
+            choices indexes of the shared features to return
+
         Returns
         -------
         tuple of np.ndarray or np.ndarray

@@ -133,9 +133,13 @@ def test_evaluate_weights():
     nll_test = model.evaluate(small_dataset)
 
     nll_1 = model.evaluate(reduced_small_dataset, batch_size=-1, sample_weight=[2.0, 1.0])
+    nll_1_2 = model.evaluate(reduced_small_dataset, batch_size=1, sample_weight=[2.0, 1.0])
     nll_2 = model.evaluate(small_dataset, batch_size=-1, sample_weight=[1.0, 1.0, 1.0])
+    nll_3 = model.evaluate(small_dataset, batch_size=1, sample_weight=[1.0, 1.0, 1.0])
     assert np.isclose(nll_test, nll_1 * 2 / 3, atol=1e-5)
+    assert np.isclose(nll_1_2, nll_1, atol=1e-5)
     assert np.isclose(nll_test, nll_2, atol=1e-5)
+    assert np.isclose(nll_test, nll_3, atol=1e-5)
 
 
 def test_save_load():
