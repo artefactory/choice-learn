@@ -10,6 +10,7 @@ from choice_learn.datasets.base import download_from_url, get_path
 
 DATA_MODULE = "choice_learn/datasets/data"
 
+
 def load_bakery(as_frame=False):
     """Load the bakery dataset from uchoice-Bakery-5-25.txt.
 
@@ -36,7 +37,6 @@ def load_bakery(as_frame=False):
         # We want to read the uchoice-Bakery.txt file (second file in the archive)
         csv_file_to_read = file_names[1]
 
-
     noms_colonnes = [
         "article_1",
         "article_2",
@@ -51,8 +51,6 @@ def load_bakery(as_frame=False):
     # likewise get_path function
     path = Path(os.path.join("../../", DATA_MODULE)).resolve() / csv_file_to_read
     df = pd.read_csv(path, sep=r"\s+", header=None, names=noms_colonnes)
-
-
 
     if as_frame:
         return df

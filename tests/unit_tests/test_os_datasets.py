@@ -3,8 +3,8 @@
 import numpy as np
 import pandas as pd
 
-from choice_learn.data import ChoiceDataset
 from choice_learn.basket_models.data import TripDataset
+from choice_learn.data import ChoiceDataset
 from choice_learn.datasets import (
     load_car_preferences,
     load_electricity,
@@ -16,8 +16,9 @@ from choice_learn.datasets import (
     load_tafeng,
     load_train,
 )
-from choice_learn.datasets.base import load_csv, load_gzip, slice_from_names
 from choice_learn.datasets.bakery import load_bakery
+from choice_learn.datasets.base import load_csv, load_gzip, slice_from_names
+
 
 def test_swissmetro_loader():
     """Test loading the Swissmetro dataset."""
