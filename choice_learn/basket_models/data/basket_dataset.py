@@ -93,7 +93,9 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip], available_items: np.ndarray) -> None:
+    def __init__(
+        self, trips: list[Trip], available_items: np.ndarray = None, prices: np.ndarray = None
+    ) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -112,6 +114,7 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
+        self.prices = prices
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -308,7 +311,7 @@ class TripDataset:
         self,
         trip_index: int,
     ) -> tuple[np.ndarray]:
-        """Get augmented data from a trip index.
+        """Get augmented data from a trip index - following AleaCarta method.
 
         Augmented data consists in removing one item from the basket that will be used
         as a target from the remaining items. It is done for all items, leading to returning:
@@ -386,7 +389,7 @@ class TripDataset:
         self,
         trip_index: int,
     ) -> tuple[np.ndarray]:
-        """Get augmented data from a trip index.
+        """Get augmented data from a trip index - following Shopper method.
 
         Augmented data includes all the transactions obtained sequentially from the trip.
         In particular, items in the basket are shuffled and sub-baskets are built iteratively
@@ -417,11 +420,11 @@ class TripDataset:
 
         # Draw a random permutation of the items in the basket without the checkout item 0
         # TODO at a later stage: improve by sampling several permutations here
-        permutation_list = list(permutations(range(length_trip - 1)))
+        permutation_list = list(permutations(range(length_trip)))
         permutation = random.sample(permutation_list, 1)[0]  # nosec
 
         # Permute the basket while keeping the checkout item 0 at the end
-        permuted_purchases = np.array([trip.purchases[j] for j in permutation] + [0])
+        permuted_purchases = np.array([trip.purchases[j] for j in permutation] + [self.n_items])
 
         # Truncate the baskets: for each batch sample, we consider the truncation possibilities
         # ranging from an empty basket to the basket with all the elements except the checkout item
@@ -430,7 +433,7 @@ class TripDataset:
         padded_truncated_purchases = np.array(
             [
                 np.concatenate((permuted_purchases[:i], -1 * np.ones(self.max_length - i)))
-                for i in range(0, length_trip)
+                for i in range(0, length_trip + 1)
             ],
             dtype=int,
         )
@@ -447,7 +450,7 @@ class TripDataset:
                         -1 * np.ones(self.max_length - len(permuted_purchases) + i + 1),
                     )
                 )
-                for i in range(0, length_trip)
+                for i in range(0, length_trip + 1)
             ],
             dtype=int,
         )
@@ -458,6 +461,17 @@ class TripDataset:
         else:  # np.ndarray
             # Then it is directly the availability matrix
             assortment = trip.assortment
+        # end-of-basket item always available
+        assortment = np.concatenate([assortment, [1.0]])
+
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            prices = trip.prices
+        # end-of-basket item always 0.
+        prices = np.concatenate([prices, [0.0]])
 
         # Each item is linked to a basket, the future purchases,
         # a store, a week, prices and an assortment
@@ -465,10 +479,10 @@ class TripDataset:
             permuted_purchases,  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
-            np.full(length_trip, trip.store),  # Stores
-            np.full(length_trip, trip.week),  # Weeks
-            np.tile(trip.prices, (length_trip, 1)),  # Prices
-            np.tile(assortment, (length_trip, 1)),  # Available items
+            np.full(length_trip + 1, trip.store),  # Stores
+            np.full(length_trip + 1, trip.week),  # Weeks
+            np.tile(prices, (length_trip + 1, 1)),  # Prices
+            np.tile(assortment, (length_trip + 1, 1)),  # Available items
         )
 
     def iter_batch(
@@ -509,16 +523,28 @@ class TripDataset:
             trip_indexes = np.random.default_rng().permutation(trip_indexes)
 
         # Initialize the buffer
-        buffer = (
-            np.empty(0, dtype=int),  # Items
-            np.empty((0, self.max_length), dtype=int),  # Baskets
-            np.empty((0, self.max_length), dtype=int),  # Future purchases
-            np.empty(0, dtype=int),  # Stores
-            np.empty(0, dtype=int),  # Weeks
-            np.empty((0, self.n_items), dtype=int),  # Prices
-            np.empty((0, self.n_items), dtype=int),  # Available items
-        )
-
+        if data_method == "shopper":
+            buffer = (
+                np.empty(0, dtype=int),  # Items
+                np.empty((0, self.max_length), dtype=int),  # Baskets
+                np.empty((0, self.max_length), dtype=int),  # Future purchases
+                np.empty(0, dtype=int),  # Stores
+                np.empty(0, dtype=int),  # Weeks
+                np.empty((0, self.n_items + 1), dtype=int),  # Prices
+                np.empty((0, self.n_items + 1), dtype=int),  # Available items
+            )
+        elif data_method == "aleacarta":
+            buffer = (
+                np.empty(0, dtype=int),  # Items
+                np.empty((0, self.max_length), dtype=int),  # Baskets
+                np.empty((0, self.max_length), dtype=int),  # Future purchases
+                np.empty(0, dtype=int),  # Stores
+                np.empty(0, dtype=int),  # Weeks
+                np.empty((0, self.n_items), dtype=int),  # Prices
+                np.empty((0, self.n_items), dtype=int),  # Available items
+            )
+        else:
+            raise ValueError(f"Unknown data method: {data_method}")
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:

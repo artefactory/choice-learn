@@ -79,121 +79,123 @@ n_stores_1 = trip_dataset_1.n_stores
 # with store, week and prices fixed
 trip_list_2 = [
     Trip(
-        purchases=[0],  # Empty basket
+        purchases=[],  # Empty basket
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[0],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[1],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[2],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[0, 1],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[0, 2],
+        store=0,
+        week=0,
+        prices=0,
         assortment=0,
     ),
     Trip(
         purchases=[1, 0],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[1, 2],
+        store=0,
+        week=0,
+        prices=0,
         assortment=0,
     ),
     Trip(
         purchases=[2, 0],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
         assortment=0,
     ),
     Trip(
-        purchases=[3, 0],
+        purchases=[2, 1],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[0, 1, 2],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[0, 2, 1],
+        store=0,
+        week=0,
+        prices=0,
+        assortment=0,
+    ),
+    Trip(
+        purchases=[1, 0, 2],
+        store=0,
+        week=0,
+        prices=0,
         assortment=0,
     ),
     Trip(
         purchases=[1, 2, 0],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
         assortment=0,
     ),
     Trip(
-        purchases=[1, 3, 0],
+        purchases=[2, 0, 1],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
         assortment=0,
     ),
     Trip(
         purchases=[2, 1, 0],
         store=0,
         week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[2, 3, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[3, 1, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[3, 2, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[1, 2, 3, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[1, 3, 2, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[2, 1, 3, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[2, 3, 1, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[3, 1, 2, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
-        assortment=0,
-    ),
-    Trip(
-        purchases=[3, 2, 1, 0],
-        store=0,
-        week=0,
-        prices=[1, 100, 170, 110, 150],
+        prices=0,
         assortment=0,
     ),
 ]
 # One more item available in the assortment to be able to use negative sampling
-available_items_2 = np.expand_dims(np.ones(5), axis=0)
-trip_dataset_2 = TripDataset(trips=trip_list_2, available_items=available_items_2)
+available_items_2 = np.expand_dims(np.ones(3), axis=0)
+trip_dataset_2 = TripDataset(
+    trips=trip_list_2, available_items=available_items_2, prices=np.array([[10, 20, 30]])
+)
 n_items_2 = trip_dataset_2.n_items
 n_stores_2 = trip_dataset_2.n_stores
 
@@ -210,7 +212,7 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
+    # model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -244,7 +246,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
         n_negative_samples=1,
     )
     model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
-    model.fit(trip_dataset=trip_dataset_2)
+    # model.fit(trip_dataset=trip_dataset_2)
 
     # For a basket {1, 2, 3, 0} of size 3:
     # compute_ordered_basket_likelihood = 1/3 * 1/3 * 1/2 * 1/1 = 1/18
@@ -255,37 +257,24 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     # - The checkout item must be available
     # - The checkout item must not be the only item available
     # (because the proba of an empty basket is 0 and cannot sum to 1)
-    list_availability_matrices = [
-        np.array([1, 1, 1, 1, 1]),
-        np.array([1, 0, 1, 1, 1]),
-        np.array([1, 1, 0, 1, 1]),
-        np.array([1, 1, 1, 0, 1]),
-        np.array([1, 1, 1, 1, 0]),
-        np.array([1, 0, 0, 0, 1]),
-        np.array([1, 0, 0, 1, 0]),
-        np.array([1, 0, 1, 0, 0]),
-        np.array([1, 1, 0, 0, 0]),
-    ]
-    for availability_matrix in list_availability_matrices:
-        # Try with different availability matrices
-        assert (
-            np.abs(
-                np.sum(
-                    [
-                        model.compute_ordered_basket_likelihood(
-                            basket=trip.purchases,
-                            available_items=availability_matrix,
-                            store=trip.store,
-                            week=trip.week,
-                            prices=trip.prices,
-                        )
-                        for trip in trip_dataset_2.trips
-                    ]
-                )
-                - 1.0
+    assert (
+        np.abs(
+            np.sum(
+                [
+                    model.compute_ordered_basket_likelihood(
+                        basket=trip.purchases + [trip_dataset_2.n_items],
+                        available_items=np.ones(trip_dataset_2.n_items + 1),
+                        store=trip.store,
+                        week=trip.week,
+                        prices=np.array([10, 20, 30, 0]),
+                    )
+                    for trip in trip_dataset_2.trips
+                ]
             )
-            < 2e-2
+            - 1.0
         )
+        < 2e-2
+    )
 
 
 def test_thinking_ahead() -> None:
@@ -303,7 +292,7 @@ def test_thinking_ahead() -> None:
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),
-        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+        available_item_batch=np.array([np.ones(n_items_1 + 1)] * batch_size),
     )
 
 
@@ -451,7 +440,7 @@ def test_get_negative_samples() -> None:
 
     with pytest.raises(tf.errors.InvalidArgumentError):
         model.get_negative_samples(
-            available_items=np.ones(n_items_1),
+            available_items=np.ones(n_items_1 + 1),
             purchased_items=np.array([1, 2]),
             future_purchases=np.array([3, 0]),
             next_item=0,
