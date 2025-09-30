@@ -182,7 +182,6 @@ class BaseBasketModel:
         """
         return
 
-    # Not clear
     def compute_item_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
