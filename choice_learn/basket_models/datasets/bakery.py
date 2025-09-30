@@ -1,5 +1,6 @@
 """Base TripDataset loader for the Bakery dataset from Benson et al. (2018)."""
 
+import sys
 import tarfile
 
 import numpy as np
@@ -31,7 +32,14 @@ def load_bakery(as_frame=False):
         file_names = tar.getnames()
 
         # We extract all the files
-        tar.extractall(path=archive_path.parent, filter="data")
+        if sys.version_info >= (3, 12):
+            tar.extractall(path=archive_path.parent, filter="data")
+        else:
+            # Basic security check for older python versions
+            for member in tar.getmembers():
+                if ".." in member.name or member.name.startswith("/"):
+                    raise ValueError(f"tar archive contains unsafe path: {member.name}")
+            tar.extractall(path=archive_path.parent)
 
         # We want to read the uchoice-Bakery.txt file (second file in the archive)
         csv_file_to_read = file_names[1]
