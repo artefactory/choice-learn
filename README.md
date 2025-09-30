@@ -20,6 +20,7 @@
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
 [![cite](https://img.shields.io/badge/Citation-BibTeX-cyan)](./CITATION.bib)
+[![cite](https://img.shields.io/badge/ECMLPKDD-BibTeX-cyan)](./CITATION_AC.bib)
 </div>
 
 Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models. It is optimized to efficiently handle large-scale choice data while minimizing RAM usage.
@@ -293,14 +294,13 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 
 ```bash
 @inproceedings{Desir2025
-  doi = {},
-  url = {},
-  publisher = {},
-  author = {Jules Désir and Vincent Auriau and Martin Možina and Emmanuel Malherbe},
+  doi = {10.1007/978-3-032-06118-8_8},
+  url = {https://doi.org/10.1007/978-3-032-06118-8_8},
+  publisher = {Springer Nature Switzerland},
+  author = {Jules D{\'e}sir and Vincent Auriau and Martin Mo{\v{z}}ina and Emmanuel Malherbe},
   title = {Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
-  booktitle={Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
-  year={2025},
-  organization={Springer}
+  booktitle={Machine Learning and Knowledge Discovery in Databases. ECML PKDD 2025.},
+  year={2026}
 }
 ```
 
