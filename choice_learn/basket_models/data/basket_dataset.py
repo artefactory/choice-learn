@@ -25,6 +25,7 @@ class Trip:
         assortment: Union[int, np.ndarray],
         store: int = 0,
         week: int = 0,
+        user_id: int = 0,
     ) -> None:
         """Initialize the trip.
 
@@ -57,6 +58,7 @@ class Trip:
         self.week = week
         self.prices = prices
         self.assortment = assortment
+        self.user_id = user_id
 
         self.trip_length = len(purchases)
 
@@ -69,7 +71,7 @@ class Trip:
             Representation of the trip
         """
         desc = f"Trip with {self.trip_length} purchases {self.purchases}"
-        desc += f" at store {self.store} in week {self.week}"
+        desc += f" at store {self.store} in week {self.week} by user {self.user_id}"
         desc += f" with prices {self.prices} and assortment {self.assortment}"
         return desc
 
@@ -93,9 +95,7 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(
-        self, trips: list[Trip], available_items: np.ndarray = None, prices: np.ndarray = None
-    ) -> None:
+    def __init__(self, trips: list[Trip], available_items: np.ndarray) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -114,8 +114,7 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
-        self.prices = prices
-
+   
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
 
@@ -203,7 +202,7 @@ class TripDataset:
     def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
 
-        One transaction is a triplet (store, trip, item).
+        One transaction is a quadruplet (store, trip, item, user_id).
 
         Returns
         -------
@@ -217,7 +216,7 @@ class TripDataset:
         trans_id = 0
         for i, trip in enumerate(self.trips):
             for item in trip.purchases:
-                transactions[trans_id] = (trip.store, i, item)
+                transactions[trans_id] = (trip.store, i, item, trip.user_id)
                 trans_id += 1
 
         return transactions
@@ -273,7 +272,17 @@ class TripDataset:
             List of price arrays in the dataset
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
+    
+    def get_all_users(self) -> np.ndarray:
+        """Return the list of all users in the dataset.
 
+        Returns
+        -------
+        np.ndarray
+            List of users in the dataset
+        """
+        return np.array(list({self.trips[i].user_id for i in range(len(self))}))
+    
     @property
     def n_items(self) -> int:
         """Return the number of items available in the dataset.
@@ -295,6 +304,17 @@ class TripDataset:
             Number of stores in the dataset
         """
         return len(self.get_all_stores())
+    
+    @property
+    def n_users(self) -> int:
+        """Return the number of users in the dataset.
+
+        Returns
+        -------
+        int
+            Number of users in the dataset
+        """
+        return len(self.get_all_users())
 
     @property
     def n_assortments(self) -> int:
@@ -311,7 +331,7 @@ class TripDataset:
         self,
         trip_index: int,
     ) -> tuple[np.ndarray]:
-        """Get augmented data from a trip index - following AleaCarta method.
+        """Get augmented data from a trip index.
 
         Augmented data consists in removing one item from the basket that will be used
         as a target from the remaining items. It is done for all items, leading to returning:
@@ -321,6 +341,7 @@ class TripDataset:
             - weeks,
             - prices,
             - available items.
+            - user_id
 
         Parameters
         ----------
@@ -374,6 +395,7 @@ class TripDataset:
             # Then it is directly the availability matrix
             prices = trip.prices
 
+
         # Each item is linked to a basket, a store, a week, prices and an assortment
         return (
             permuted_purchases,  # Items
@@ -383,13 +405,14 @@ class TripDataset:
             np.full(length_trip, trip.week),  # Weeks
             np.tile(prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
+            np.full(length_trip, trip.user_id)  # User IDs
         )
 
     def get_subbaskets_augmented_data_from_trip_index(
         self,
         trip_index: int,
     ) -> tuple[np.ndarray]:
-        """Get augmented data from a trip index - following Shopper method.
+        """Get augmented data from a trip index.
 
         Augmented data includes all the transactions obtained sequentially from the trip.
         In particular, items in the basket are shuffled and sub-baskets are built iteratively
@@ -420,11 +443,11 @@ class TripDataset:
 
         # Draw a random permutation of the items in the basket without the checkout item 0
         # TODO at a later stage: improve by sampling several permutations here
-        permutation_list = list(permutations(range(length_trip)))
+        permutation_list = list(permutations(range(length_trip - 1)))
         permutation = random.sample(permutation_list, 1)[0]  # nosec
 
         # Permute the basket while keeping the checkout item 0 at the end
-        permuted_purchases = np.array([trip.purchases[j] for j in permutation] + [self.n_items])
+        permuted_purchases = np.array([trip.purchases[j] for j in permutation] + [0])
 
         # Truncate the baskets: for each batch sample, we consider the truncation possibilities
         # ranging from an empty basket to the basket with all the elements except the checkout item
@@ -433,7 +456,7 @@ class TripDataset:
         padded_truncated_purchases = np.array(
             [
                 np.concatenate((permuted_purchases[:i], -1 * np.ones(self.max_length - i)))
-                for i in range(0, length_trip + 1)
+                for i in range(0, length_trip)
             ],
             dtype=int,
         )
@@ -450,7 +473,7 @@ class TripDataset:
                         -1 * np.ones(self.max_length - len(permuted_purchases) + i + 1),
                     )
                 )
-                for i in range(0, length_trip + 1)
+                for i in range(0, length_trip)
             ],
             dtype=int,
         )
@@ -461,17 +484,6 @@ class TripDataset:
         else:  # np.ndarray
             # Then it is directly the availability matrix
             assortment = trip.assortment
-        # end-of-basket item always available
-        assortment = np.concatenate([assortment, [1.0]])
-
-        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
-            # Then it is the assortment ID (ie its index in self.available_items)
-            prices = self.prices[trip.prices]
-        else:  # np.ndarray
-            # Then it is directly the availability matrix
-            prices = trip.prices
-        # end-of-basket item always 0.
-        prices = np.concatenate([prices, [0.0]])
 
         # Each item is linked to a basket, the future purchases,
         # a store, a week, prices and an assortment
@@ -479,10 +491,11 @@ class TripDataset:
             permuted_purchases,  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
-            np.full(length_trip + 1, trip.store),  # Stores
-            np.full(length_trip + 1, trip.week),  # Weeks
-            np.tile(prices, (length_trip + 1, 1)),  # Prices
-            np.tile(assortment, (length_trip + 1, 1)),  # Available items
+            np.full(length_trip, trip.store),  # Stores
+            np.full(length_trip, trip.week),  # Weeks
+            np.tile(trip.prices, (length_trip, 1)),  # Prices
+            np.tile(assortment, (length_trip, 1)),  # Available items
+            np.full(length_trip, trip.user_id),  # User IDs
         )
 
     def iter_batch(
@@ -510,8 +523,8 @@ class TripDataset:
         ------
         tuple[np.ndarray]
             For each item in the batch: item, basket, future purchases,
-            store, week, prices, available items
-            Length must 7
+            store, week, prices, available items, user_id
+            Length must be 8
         """
         # Get trip indexes
         num_trips = len(self)
@@ -523,28 +536,17 @@ class TripDataset:
             trip_indexes = np.random.default_rng().permutation(trip_indexes)
 
         # Initialize the buffer
-        if data_method == "shopper":
-            buffer = (
-                np.empty(0, dtype=int),  # Items
-                np.empty((0, self.max_length), dtype=int),  # Baskets
-                np.empty((0, self.max_length), dtype=int),  # Future purchases
-                np.empty(0, dtype=int),  # Stores
-                np.empty(0, dtype=int),  # Weeks
-                np.empty((0, self.n_items + 1), dtype=int),  # Prices
-                np.empty((0, self.n_items + 1), dtype=int),  # Available items
-            )
-        elif data_method == "aleacarta":
-            buffer = (
-                np.empty(0, dtype=int),  # Items
-                np.empty((0, self.max_length), dtype=int),  # Baskets
-                np.empty((0, self.max_length), dtype=int),  # Future purchases
-                np.empty(0, dtype=int),  # Stores
-                np.empty(0, dtype=int),  # Weeks
-                np.empty((0, self.n_items), dtype=int),  # Prices
-                np.empty((0, self.n_items), dtype=int),  # Available items
-            )
-        else:
-            raise ValueError(f"Unknown data method: {data_method}")
+        buffer = (
+            np.empty(0, dtype=int),  # Items
+            np.empty((0, self.max_length), dtype=int),  # Baskets
+            np.empty((0, self.max_length), dtype=int),  # Future purchases
+            np.empty(0, dtype=int),  # Stores
+            np.empty(0, dtype=int),  # Weeks
+            np.empty((0, self.n_items), dtype=int),  # Prices
+            np.empty((0, self.n_items), dtype=int),  # Available items
+            np.empty(0, dtype=int),  # User IDs
+        )
+
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
