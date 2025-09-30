@@ -11,6 +11,11 @@ def test_bakery_loader():
     bakery = load_bakery(as_frame=True)
     assert isinstance(bakery, pd.DataFrame)
     assert len(bakery) == 75000
+
     bakery = load_bakery()
     assert isinstance(bakery, TripDataset)
     assert len(bakery) == 75000
+
+    bakery = load_bakery(load_5_25_version=True)
+    assert isinstance(bakery, TripDataset)
+    assert len(bakery) == 67488
