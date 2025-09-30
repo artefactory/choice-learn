@@ -118,7 +118,7 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 - The **TripDataset** class is designed to handle choice datasets with bundle - or baskets - of choices. It can be used on your own dataset. [[Example]](notebooks/basket_models/basket_data.ipynb)
 - Many academic datasets are integrated in the library and ready to be used:
 
-| Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
+| Single Choice Dataset    | Raw Data | Origin | *from choice_learn.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
 | SwissMetro  | [csv](./choice_learn/datasets/data/swissmetro.csv.gz) | Bierlaire et al. (2001) [[2]](#trident-references) | *load_swissmetro* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_swissmetro) |
 | ModeCanada | [csv](./choice_learn/datasets/data/ModeCanada.csv.gz) | Forinash and Koppelman (1993) [[3]](#trident-references) | *load_modecanada* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_modecanada) |
@@ -130,7 +130,11 @@ If you are new to choice modeling, you can check this [resource](https://www.pub
 | TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | *load_tafeng* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_tafeng/) |
 | ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | *load_expedia* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_expedia/) |
 | London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
-| Bakery Dataset | [url]() | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.bakery.load_bakery) |
+
+| Basket Dataset    | Raw Data | Origin | *from choice_learn.basket_models.datasets import* | Doc |
+| ---------- | :----: | ------ | ------ | :---: |
+| Bakery Dataset | [url](https://www.cs.cornell.edu/~arb/data/uchoice-Bakery/) | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
+| Badminton Dataset | [url]() | Désir et al. (2025) [[17]](#trident-references) | *SyntheticDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
 
 
 ### Auxiliary tools

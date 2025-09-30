@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from choice_learn.basket_models.basic_attention_model import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
-from choice_learn.basket_models.data.synthetic_dataset import SyntheticDataGenerator
+from choice_learn.basket_models.datasets import SyntheticDataGenerator
 
 # Test hyperparameters
 epochs = 4
