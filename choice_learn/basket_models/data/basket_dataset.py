@@ -114,7 +114,7 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
-   
+
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
 
@@ -272,7 +272,7 @@ class TripDataset:
             List of price arrays in the dataset
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
-    
+
     def get_all_users(self) -> np.ndarray:
         """Return the list of all users in the dataset.
 
@@ -282,7 +282,7 @@ class TripDataset:
             List of users in the dataset
         """
         return np.array(list({self.trips[i].user_id for i in range(len(self))}))
-    
+
     @property
     def n_items(self) -> int:
         """Return the number of items available in the dataset.
@@ -304,7 +304,7 @@ class TripDataset:
             Number of stores in the dataset
         """
         return len(self.get_all_stores())
-    
+
     @property
     def n_users(self) -> int:
         """Return the number of users in the dataset.
@@ -395,7 +395,6 @@ class TripDataset:
             # Then it is directly the availability matrix
             prices = trip.prices
 
-
         # Each item is linked to a basket, a store, a week, prices and an assortment
         return (
             permuted_purchases,  # Items
@@ -405,7 +404,7 @@ class TripDataset:
             np.full(length_trip, trip.week),  # Weeks
             np.tile(prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
-            np.full(length_trip, trip.user_id)  # User IDs
+            np.full(length_trip, trip.user_id),  # User IDs
         )
 
     def get_subbaskets_augmented_data_from_trip_index(
