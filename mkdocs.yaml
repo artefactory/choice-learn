@@ -102,6 +102,7 @@ nav:
       - TaFeng Dataset: references/datasets/references_tafeng.md
       - ICDM Expedia Dataset: references/datasets/references_expedia.md
       - Bakery Dataset: references/basket_models/datasets/references_bakery.md
+      - Badminton Dataset: references/basket_models/datasets/synthetic_dataset.md
     - Choice Models:
       - Base Model: references/models/references_base_model.md
       - Baseline Models: references/models/references_baseline_models.md
