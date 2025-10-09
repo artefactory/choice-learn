@@ -25,6 +25,7 @@ class Trip:
         assortment: Union[int, np.ndarray],
         store: int = 0,
         week: int = 0,
+        user_id: int = 0,
     ) -> None:
         """Initialize the trip.
 
@@ -57,6 +58,7 @@ class Trip:
         self.week = week
         self.prices = prices
         self.assortment = assortment
+        self.user_id = user_id
 
         self.trip_length = len(purchases)
 
@@ -69,7 +71,7 @@ class Trip:
             Representation of the trip
         """
         desc = f"Trip with {self.trip_length} purchases {self.purchases}"
-        desc += f" at store {self.store} in week {self.week}"
+        desc += f" at store {self.store} in week {self.week} by user {self.user_id}"
         desc += f" with prices {self.prices} and assortment {self.assortment}"
         return desc
 
@@ -200,7 +202,7 @@ class TripDataset:
     def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
 
-        One transaction is a triplet (store, trip, item).
+        One transaction is a quadruplet (store, trip, item, user_id).
 
         Returns
         -------
@@ -214,7 +216,7 @@ class TripDataset:
         trans_id = 0
         for i, trip in enumerate(self.trips):
             for item in trip.purchases:
-                transactions[trans_id] = (trip.store, i, item)
+                transactions[trans_id] = (trip.store, i, item, trip.user_id)
                 trans_id += 1
 
         return transactions
@@ -271,6 +273,16 @@ class TripDataset:
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
 
+    def get_all_users(self) -> np.ndarray:
+        """Return the list of all users in the dataset.
+
+        Returns
+        -------
+        np.ndarray
+            List of users in the dataset
+        """
+        return np.array(list({self.trips[i].user_id for i in range(len(self))}))
+
     @property
     def n_items(self) -> int:
         """Return the number of items available in the dataset.
@@ -292,6 +304,17 @@ class TripDataset:
             Number of stores in the dataset
         """
         return len(self.get_all_stores())
+
+    @property
+    def n_users(self) -> int:
+        """Return the number of users in the dataset.
+
+        Returns
+        -------
+        int
+            Number of users in the dataset
+        """
+        return len(self.get_all_users())
 
     @property
     def n_assortments(self) -> int:
@@ -318,6 +341,7 @@ class TripDataset:
             - weeks,
             - prices,
             - available items.
+            - user_id
 
         Parameters
         ----------
@@ -380,6 +404,7 @@ class TripDataset:
             np.full(length_trip, trip.week),  # Weeks
             np.tile(prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
+            np.full(length_trip, trip.user_id),  # User IDs
         )
 
     def get_subbaskets_augmented_data_from_trip_index(
@@ -469,6 +494,7 @@ class TripDataset:
             np.full(length_trip, trip.week),  # Weeks
             np.tile(trip.prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
+            np.full(length_trip, trip.user_id),  # User IDs
         )
 
     def iter_batch(
@@ -496,8 +522,8 @@ class TripDataset:
         ------
         tuple[np.ndarray]
             For each item in the batch: item, basket, future purchases,
-            store, week, prices, available items
-            Length must 7
+            store, week, prices, available items, user_id
+            Length must be 8
         """
         # Get trip indexes
         num_trips = len(self)
@@ -517,6 +543,7 @@ class TripDataset:
             np.empty(0, dtype=int),  # Weeks
             np.empty((0, self.n_items), dtype=int),  # Prices
             np.empty((0, self.n_items), dtype=int),  # Available items
+            np.empty(0, dtype=int),  # User IDs
         )
 
         if batch_size == -1:
