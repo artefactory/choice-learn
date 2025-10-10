@@ -182,7 +182,6 @@ class BaseBasketModel:
         """
         return
 
-    # Not clear
     def compute_item_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -566,6 +565,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Variable:
         """Train the model for one step.
 
@@ -609,6 +609,7 @@ class BaseBasketModel:
                 week_batch=week_batch,
                 price_batch=price_batch,
                 available_item_batch=available_item_batch,
+                user_batch = user_batch
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
 
@@ -680,6 +681,7 @@ class BaseBasketModel:
                 week_batch,
                 price_batch,
                 available_item_batch,
+                user_batch,
             ) in enumerate(inner_range):
                 self.callbacks.on_train_batch_begin(batch_nb)
 
@@ -691,6 +693,7 @@ class BaseBasketModel:
                     week_batch=week_batch,
                     price_batch=price_batch,
                     available_item_batch=available_item_batch,
+                    user_batch=user_batch,
                 )
                 train_logs["train_loss"].append(batch_loss)
                 temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
@@ -738,6 +741,7 @@ class BaseBasketModel:
                     week_batch,
                     price_batch,
                     available_item_batch,
+                    user_batch,
                 ) in enumerate(
                     val_dataset.iter_batch(
                         shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
@@ -755,6 +759,7 @@ class BaseBasketModel:
                             week_batch=week_batch,
                             price_batch=price_batch,
                             available_item_batch=available_item_batch,
+                            user_batch=user_batch,
                         )[0]
                     )
                     val_logs["val_loss"].append(val_losses[-1])
@@ -823,6 +828,7 @@ class BaseBasketModel:
             week_batch,
             price_batch,
             available_item_batch,
+            user_batch,
         ) in inner_range:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]

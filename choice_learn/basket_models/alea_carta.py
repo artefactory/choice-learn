@@ -527,6 +527,7 @@ class AleaCarta(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -652,3 +653,79 @@ class AleaCarta(BaseBasketModel):
 
         # Normalize by the batch size and the number of negative samples
         return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
+
+
+    def hit_rate(
+            self,
+            trip_dataset: np.ndarray,
+            batch_size: int = 32,
+            hit_k: int = 10,
+    ):
+        """
+        Compute the hit rate for the given item batch.
+
+        Parameters
+        ----------
+        item_batch: np.ndarray
+            Batch of item IDs (shape: (batch_size,))
+
+        Returns
+        -------
+        float
+            Hit rate (proportion of relevant items retrieved)
+        """
+       
+       
+        inner_range = trip_dataset.iter_batch(
+            shuffle=False, batch_size=batch_size, data_method="aleacarta"
+        )
+
+        hits = 0
+        total = 0
+
+        for (
+            item_batch,
+            basket_batch,
+            _,
+            store_batch,
+            week_batch,
+            price_batch,
+            available_item_batch,
+            user_batch,
+        ) in inner_range:
+            batch_size = len(item_batch)
+            mask = tf.cast(tf.not_equal(basket_batch, -1), dtype=tf.int32)
+
+
+            basket_batch = tf.tile(basket_batch, [self.n_items, 1])
+
+            all_utilities = self.compute_batch_utility(
+                item_batch=np.tile(np.arange(self.n_items), batch_size),
+                basket_batch=basket_batch,
+                store_batch=np.tile(store_batch, [self.n_items]),
+                week_batch=np.tile(week_batch, [self.n_items]),
+                price_batch=np.tile(price_batch, [self.n_items, 1]),
+                available_item_batch=np.tile(available_item_batch, [self.n_items, 1]),
+            ) # Shape: (batch_size * n_items,)
+
+            all_utilities = tf.reshape(all_utilities, (batch_size, self.n_items)) # Shape: (batch_size, n_items)
+
+            # We remove the items in each basket from the recommendations in all_utilities
+
+            # 1 if item is in the basket, 0 otherwise
+            mask = tf.reduce_max(tf.one_hot(mask, depth=self.n_items, dtype=tf.int32), axis=1) # Shape: (batch_size, n_items)
+
+            max =  tf.reduce_max(all_utilities)
+            mask = tf.cast(mask, dtype=tf.float32)
+            
+            inf_mask = mask * tf.constant(max, dtype=tf.float32) # Shape: (batch_size, n_items)
+
+            all_utilities = all_utilities + inf_mask # Shape: (batch_size, n_items)
+
+            top_k_indices = tf.math.top_k(all_utilities, k=hit_k).indices.numpy()
+
+            hit = np.sum(np.isin(item_batch, top_k_indices))
+            total += len(item_batch)
+            hits += hit
+
+        return hits / total if total > 0 else 0.0
