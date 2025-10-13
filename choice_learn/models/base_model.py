@@ -539,7 +539,7 @@ class ChoiceModel:
             elif isinstance(v, (list, tuple)):
                 if all(isinstance(item, (int, float, str, dict)) for item in v):
                     params[k] = v
-                else:
+                elif k != "_trainable_weights":
                     logging.warning(
                         """Attribute '%s' is a list with non-serializable
                          types and will not be saved.""",
@@ -550,7 +550,7 @@ class ChoiceModel:
 
         # Save optimizer state
         if save_opt and not isinstance(self.optimizer, str):
-            (Path(path) / "optimizer").mkdir(parents=True)
+            (Path(path) / "optimizer").mkdir(parents=True, exist_ok=True)
             config = self.optimizer.get_config()
             weights_store = {}
             self.optimizer.save_own_variables(weights_store)
