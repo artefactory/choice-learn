@@ -282,7 +282,6 @@ class ChoiceModel:
             if not self.instantiated:
                 raise ValueError("Model not instantiated. Please call .instantiate() first.")
         epochs = self.epochs
-        print(epochs)
         batch_size = self.batch_size
 
         losses_history = {"train_loss": []}
@@ -555,9 +554,14 @@ class ChoiceModel:
             weights_store = {}
             self.optimizer.save_own_variables(weights_store)
             for key, value in weights_store.items():
+                if isinstance(value, tf.Variable):
+                    value = value.numpy()
                 weights_store[key] = value.tolist()
             if "learning_rate" in config.keys():
-                config["learning_rate"] = config["learning_rate"].tolist()
+                if isinstance(config["learning_rate"], tf.Variable):
+                    config["learning_rate"] = config["learning_rate"].numpy()
+                if isinstance(config["learning_rate"], np.float32):
+                    config["learning_rate"] = config["learning_rate"].tolist()
             with open(os.path.join(path, "optimizer", "config.json"), "w") as f:
                 json.dump(config, f)
             with open(os.path.join(path, "optimizer", "weights_store.json"), "w") as f:
@@ -578,7 +582,8 @@ class ChoiceModel:
             Loaded ChoiceModel
         """
         # To improve for non string attributes
-        params = json.load(open(Path(path) / "params.json"))
+        with open(Path(path) / "params.json") as f:
+            params = json.load(f)
 
         obj = cls(optimizer=params["optimizer_name"])
         obj._trainable_weights = []
@@ -597,12 +602,14 @@ class ChoiceModel:
             setattr(obj, k, v)
 
         if Path.is_dir(Path(path) / "optimizer"):
-            config = json.load(open(Path(path) / "optimizer" / "config.json"))
+            with open(Path(path) / "optimizer" / "config.json") as f:
+                config = json.load(f)
             # obj.optimizer = tf.keras.optimizers.get(params["optimizer_name"]).from_config(config)
             obj.optimizer = obj.optimizer.from_config(config)
             obj.optimizer.build(var_list=obj.trainable_weights)
 
-            store = json.load(open(Path(path) / "optimizer" / "weights_store.json"))
+            with open(Path(path) / "optimizer" / "weights_store.json") as f:
+                store = json.load(f)
             for key, value in store.items():
                 store[key] = np.array(value, dtype=np.float32)
             obj.optimizer.load_own_variables(store)
