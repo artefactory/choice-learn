@@ -272,7 +272,7 @@ If you consider this package or any of its feature useful for your research, con
 <img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
 </a>
 
-```bash
+```bibtex
 @article{Auriau2024,
   doi = {10.21105/joss.06899},
   url = {https://doi.org/10.21105/joss.06899},
@@ -292,7 +292,7 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 <img align="left" width="100"src="https://ecmlpkdd-storage.s3.eu-central-1.amazonaws.com/ECML_1_e012008d41.png" />
 </a>
 
-```bash
+```bibtex
 @inproceedings{desir2025,
   doi = {10.1007/978-3-032-06118-8_8},
   url = {https://doi.org/10.1007/978-3-032-06118-8_8},
