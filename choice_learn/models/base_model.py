@@ -544,7 +544,7 @@ class ChoiceModel:
                          types and will not be saved.""",
                         k,
                     )
-        with open(os.path.join(path, "params.json"), "w") as f:
+        with open(Path(path) / "params.json", "w") as f:
             json.dump(params, f)
 
         # Save optimizer state
@@ -562,9 +562,9 @@ class ChoiceModel:
                     config["learning_rate"] = config["learning_rate"].numpy()
                 if isinstance(config["learning_rate"], np.float32):
                     config["learning_rate"] = config["learning_rate"].tolist()
-            with open(os.path.join(path, "optimizer", "config.json"), "w") as f:
+            with open(Path(path) / "optimizer" / "config.json", "w") as f:
                 json.dump(config, f)
-            with open(os.path.join(path, "optimizer", "weights_store.json"), "w") as f:
+            with open(Path(path) / "optimizer" / "weights_store.json", "w") as f:
                 json.dump(weights_store, f)
 
     @classmethod
