@@ -5,6 +5,7 @@ from typing import Union
 
 import numpy as np
 import tensorflow as tf
+import time
 
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import Trip
@@ -21,7 +22,7 @@ class AleaCarta(BaseBasketModel):
     def __init__(
         self,
         item_intercept: bool = True,
-        price_effects: bool = True,
+        price_effects: bool = False,
         seasonal_effects: bool = False,
         latent_sizes: dict[str] = {"preferences": 4, "price": 4, "season": 4},
         n_negative_samples: int = 2,
@@ -265,6 +266,7 @@ class AleaCarta(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray = None,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the items in basket_batch.
 
@@ -448,6 +450,7 @@ class AleaCarta(BaseBasketModel):
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
                 available_item_batch=available_item_batch,
+                user_batch=None,
             )
         ).numpy()
 
@@ -517,7 +520,7 @@ class AleaCarta(BaseBasketModel):
         # Keep only n_samples
         return negative_samples[:n_samples]
 
-    # @tf.function  # Graph mode
+    #@tf.function  # Graph mode
     def compute_batch_loss(
         self,
         item_batch: np.ndarray,
@@ -568,9 +571,11 @@ class AleaCarta(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        self.timing["compute_batch_loss"] = time.time() 
         _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
+
 
         # Negative sampling
         negative_samples = tf.reshape(
@@ -594,7 +599,7 @@ class AleaCarta(BaseBasketModel):
             # Flatten 2D --> 1D
             shape=[-1],
         )
-
+        self.timing["negative_sampling"] = time.time()  - self.timing["compute_batch_loss"]
         augmented_item_batch = tf.cast(
             tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
         )
@@ -608,7 +613,7 @@ class AleaCarta(BaseBasketModel):
             # the first axis of params and indices
             batch_dims=1,
         )
-
+        self.timing["compute_utility_start"] = time.time()  
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
@@ -617,7 +622,9 @@ class AleaCarta(BaseBasketModel):
             week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,
             available_item_batch=available_item_batch,
+            user_batch=user_batch
         )
+        self.timing["compute_utility_end"] = time.time() - self.timing["compute_utility_start"]
 
         positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
         negative_samples_utilities = tf.gather(
@@ -651,10 +658,11 @@ class AleaCarta(BaseBasketModel):
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
 
+        self.timing["compute_loss_end"] = time.time() - self.timing["compute_batch_loss"]
         # Normalize by the batch size and the number of negative samples
         return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
 
-
+    #@tf.function  # Graph mode
     def hit_rate(
             self,
             trip_dataset: np.ndarray,
@@ -668,6 +676,8 @@ class AleaCarta(BaseBasketModel):
         ----------
         item_batch: np.ndarray
             Batch of item IDs (shape: (batch_size,))
+        hit_k: int
+            Number of top recommendations to consider for the hit rate calculation
 
         Returns
         -------
@@ -680,23 +690,23 @@ class AleaCarta(BaseBasketModel):
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
 
-        hits = 0
+        hit = tf.constant(0, shape=(len(hit_k),), dtype=tf.int32)
+
         total = 0
 
         for (
             item_batch,
             basket_batch,
-            _,
-            store_batch,
-            week_batch,
-            price_batch,
-            available_item_batch,
+            _, # future_batch not used here
+            store_batch, # store_batch not used here
+            week_batch, # week_batch not used here
+            price_batch, # price_batch not used here
+            available_item_batch, # available_item_batch not used here
             user_batch,
         ) in inner_range:
             batch_size = len(item_batch)
-            mask = tf.cast(tf.not_equal(basket_batch, -1), dtype=tf.int32)
-
-
+            #mask = tf.cast(tf.not_equal(basket_batch, -1), dtype=tf.int32)
+            mask = tf.reduce_max(tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1)
             basket_batch = tf.tile(basket_batch, [self.n_items, 1])
 
             all_utilities = self.compute_batch_utility(
@@ -710,22 +720,34 @@ class AleaCarta(BaseBasketModel):
 
             all_utilities = tf.reshape(all_utilities, (batch_size, self.n_items)) # Shape: (batch_size, n_items)
 
+            ####--------------------------------------------------------------
             # We remove the items in each basket from the recommendations in all_utilities
 
             # 1 if item is in the basket, 0 otherwise
-            mask = tf.reduce_max(tf.one_hot(mask, depth=self.n_items, dtype=tf.int32), axis=1) # Shape: (batch_size, n_items)
-
-            max =  tf.reduce_max(all_utilities)
             mask = tf.cast(mask, dtype=tf.float32)
+            max = tf.reduce_max(all_utilities) 
+            inf_mask = mask * max # Shape: (batch_size, n_items)
             
-            inf_mask = mask * tf.constant(max, dtype=tf.float32) # Shape: (batch_size, n_items)
+            all_utilities = all_utilities - inf_mask # Shape: (batch_size, n_items)
+            ####--------------------------------------------------------------
 
-            all_utilities = all_utilities + inf_mask # Shape: (batch_size, n_items)
+            # Vérifie si chaque item de item_batch est dans les top_k_indices de sa ligne
+            hit_list = []
+            for k in hit_k:
+                # Vérifie si chaque item de item_batch est dans les top_k_indices de sa ligne
+                top_k_indices = tf.math.top_k(all_utilities, k=k).indices # Shape: (batch_size, hit_k)
+                top_k_indices_tf = tf.convert_to_tensor(top_k_indices, dtype=tf.int32)
+                hits_per_batch = tf.reduce_any(tf.equal(
+                                                    tf.cast(top_k_indices_tf, tf.int32),
+                                                    tf.cast(tf.expand_dims(item_batch, axis=1), tf.int32)
+                                                ),
+                                                axis=1
+                                            )
 
-            top_k_indices = tf.math.top_k(all_utilities, k=hit_k).indices.numpy()
-
-            hit = np.sum(np.isin(item_batch, top_k_indices))
-            total += len(item_batch)
-            hits += hit
-
-        return hits / total if total > 0 else 0.0
+                hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.int32))
+                hit_list.append(hits)
+            tf.convert_to_tensor(hit_list)
+            total += batch_size
+            hit += hit_list
+        
+        return hit / total if total > 0 else 0.0
