@@ -285,12 +285,16 @@ class ChoiceModel:
         batch_size = self.batch_size
 
         losses_history = {"train_loss": []}
-        t_range = tqdm.trange(epochs, position=0)
+        if verbose >= 0 and verbose < 2:
+            t_range = tqdm.trange(epochs, position=0)
+        else:
+            t_range = range(epochs)
 
         self.callbacks.on_train_begin()
-
         # Iterate of epochs
         for epoch_nb in t_range:
+            if verbose >= 2:
+                print(f"Start Epoch {epoch_nb}")
             self.callbacks.on_epoch_begin(epoch_nb)
             t_start = time.time()
             train_logs = {"train_loss": []}
@@ -340,7 +344,7 @@ class ChoiceModel:
 
                     if verbose > 0:
                         inner_range.set_description(
-                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                            f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
 
             # In this case we do not need to batch the sample_weights
@@ -444,7 +448,7 @@ class ChoiceModel:
         self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
-    @tf.function(reduce_retracing=True)
+    @tf.function()
     def batch_predict(
         self,
         shared_features_by_choice,
