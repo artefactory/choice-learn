@@ -239,7 +239,8 @@ class TripDataset:
         np.ndarray
             List of baskets in the dataset
         """
-        return np.array([self.trips[i].purchases for i in range(len(self))])
+        
+        return [self.trips[i].purchases for i in range(len(self))]
 
     def get_all_stores(self) -> np.ndarray:
         """Return the list of all stores in the dataset.
@@ -273,7 +274,7 @@ class TripDataset:
         """
         return np.array([self.trips[i].prices for i in range(len(self))])
 
-    def get_all_users(self) -> np.ndarray:
+    def get_all_users(self, shuffled: bool = False) -> np.ndarray:
         """Return the list of all users in the dataset.
 
         Returns
@@ -281,6 +282,10 @@ class TripDataset:
         np.ndarray
             List of users in the dataset
         """
+        if shuffled:
+            user_ids = list({self.trips[i].user_id for i in range(len(self))})
+            random.shuffle(user_ids)  # nosec
+            return np.array(user_ids)
         return np.array(list({self.trips[i].user_id for i in range(len(self))}))
 
     @property
@@ -496,6 +501,57 @@ class TripDataset:
             np.tile(assortment, (length_trip, 1)),  # Available items
             np.full(length_trip, trip.user_id),  # User IDs
         )
+    
+    def get_sequential_movie_data_from_trip_index(
+        self,
+        trip_index: int,
+    ) -> tuple[np.ndarray]:
+        """Get augmented data from a trip index for sequential movie recommendation.
+
+        Parameters
+        ----------
+        trip_index: int
+            Index of the trip from which to get the data
+
+        Returns
+        -------
+        tuple[np.ndarray]
+            For each sample (ie transaction) from the trip:
+            item, basket, future purchases, store, week, prices, available items, user_id
+            Length must be 8
+        """
+        # Get the trip from the index
+        trip = self.trips[trip_index]
+        length_trip = len(trip.purchases)
+        purchases = np.array(trip.purchases)
+        
+        padded_truncated_purchases = np.array(
+            [purchases[:5]],
+            dtype=int,
+        )
+        
+        padded_future_purchases = np.array(
+            [np.pad(purchases[6:], (0, 2 - len(purchases[6:])), constant_values=-1)],
+            dtype=int,
+        )
+        if isinstance(trip.assortment, int):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            assortment = self.available_items[trip.assortment]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            assortment = trip.assortment
+        
+
+        return (
+            np.array([purchases[5]]),  # Items
+            padded_truncated_purchases,  # Baskets
+            padded_future_purchases,  # Future purchases
+            np.array([trip.store]),  # Stores
+            np.array([trip.week]),  # Weeks
+            np.array(trip.prices),  # Prices
+            np.array([assortment]),  # Available items
+            np.array([trip.user_id]),  # User IDs
+        )
 
     def iter_batch(
         self,
@@ -533,7 +589,7 @@ class TripDataset:
         # TODO: shuffling on the trip indexes or on the item indexes?
         if shuffle:
             trip_indexes = np.random.default_rng().permutation(trip_indexes)
-
+            print("Shuffling trip indexes for batch iteration.", trip_indexes)
         # Initialize the buffer
         buffer = (
             np.empty(0, dtype=int),  # Items
@@ -546,6 +602,18 @@ class TripDataset:
             np.empty(0, dtype=int),  # User IDs
         )
 
+        if data_method == "sequential_movie":
+            buffer = (
+            np.empty(0, dtype=int),  # Items
+            np.empty((0, 5), dtype=int),  # Baskets
+            np.empty((0, 2), dtype=int),  # Future purchases
+            np.empty(0, dtype=int),  # Stores
+            np.empty(0, dtype=int),  # Weeks
+            np.empty((0, self.n_items), dtype=int),  # Prices
+            np.empty((0, self.n_items), dtype=int),  # Available items
+            np.empty(0, dtype=int),  # User IDs
+        )
+        
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
@@ -557,8 +625,13 @@ class TripDataset:
                     additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
                         trip_index
                     )
+                elif data_method == "sequential_movie":
+                    additional_trip_data = self.get_sequential_movie_data_from_trip_index(
+                        trip_index
+                    )
                 else:
                     raise ValueError(f"Unknown data method: {data_method}")
+                
                 buffer = tuple(
                     np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
                 )
@@ -595,6 +668,10 @@ class TripDataset:
                                 self.get_one_vs_all_augmented_data_from_trip_index(
                                     trip_indexes[index]
                                 )
+                            )
+                        elif data_method == "sequential_movie":
+                            additional_trip_data = self.get_sequential_movie_data_from_trip_index(
+                                trip_indexes[index]
                             )
                         else:
                             raise ValueError(f"Unknown data method: {data_method}")

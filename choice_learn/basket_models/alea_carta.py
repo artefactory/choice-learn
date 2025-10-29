@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 import tensorflow as tf
 import time
-
+import tqdm
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import Trip
 
@@ -571,7 +571,7 @@ class AleaCarta(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        self.timing["compute_batch_loss"] = time.time() 
+        self.timing["compute_batch_loss"] = time.perf_counter() 
         _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
@@ -599,7 +599,7 @@ class AleaCarta(BaseBasketModel):
             # Flatten 2D --> 1D
             shape=[-1],
         )
-        self.timing["negative_sampling"] = time.time()  - self.timing["compute_batch_loss"]
+        self.timing["negative_sampling"] = time.perf_counter()  - self.timing["compute_batch_loss"]
         augmented_item_batch = tf.cast(
             tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
         )
@@ -613,7 +613,7 @@ class AleaCarta(BaseBasketModel):
             # the first axis of params and indices
             batch_dims=1,
         )
-        self.timing["compute_utility_start"] = time.time()  
+        self.timing["compute_utility_start"] = time.perf_counter()  
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
@@ -624,7 +624,7 @@ class AleaCarta(BaseBasketModel):
             available_item_batch=available_item_batch,
             user_batch=user_batch
         )
-        self.timing["compute_utility_end"] = time.time() - self.timing["compute_utility_start"]
+        self.timing["compute_utility_end"] = time.perf_counter() - self.timing["compute_utility_start"]
 
         positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
         negative_samples_utilities = tf.gather(
@@ -658,16 +658,16 @@ class AleaCarta(BaseBasketModel):
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
 
-        self.timing["compute_loss_end"] = time.time() - self.timing["compute_batch_loss"]
+        self.timing["compute_loss_end"] = time.perf_counter() - self.timing["compute_batch_loss"]
         # Normalize by the batch size and the number of negative samples
-        return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
+        return tf.reduce_sum(bce) / (batch_size ), loglikelihood
 
     #@tf.function  # Graph mode
     def hit_rate(
             self,
             trip_dataset: np.ndarray,
-            batch_size: int = 32,
-            hit_k: int = 10,
+            batch_size: int = 1024,
+            hit_k: list = [10],
     ):
         """
         Compute the hit rate for the given item batch.
@@ -685,7 +685,6 @@ class AleaCarta(BaseBasketModel):
             Hit rate (proportion of relevant items retrieved)
         """
        
-       
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
@@ -702,13 +701,16 @@ class AleaCarta(BaseBasketModel):
             week_batch, # week_batch not used here
             price_batch, # price_batch not used here
             available_item_batch, # available_item_batch not used here
-            user_batch,
+            _,
         ) in inner_range:
             batch_size = len(item_batch)
             #mask = tf.cast(tf.not_equal(basket_batch, -1), dtype=tf.int32)
             mask = tf.reduce_max(tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1)
-            basket_batch = tf.tile(basket_batch, [self.n_items, 1])
+            
+            basket_batch = tf.repeat(basket_batch, repeats=self.n_items, axis=0)
+            #basket_batch = tf.tile(basket_batch, [self.n_items, 1])
 
+            # ATTENTION : FAUDRA CHANGER ICI POUR LE STORE, WEEK, PRICE, AVAILABLE
             all_utilities = self.compute_batch_utility(
                 item_batch=np.tile(np.arange(self.n_items), batch_size),
                 basket_batch=basket_batch,
@@ -725,7 +727,7 @@ class AleaCarta(BaseBasketModel):
 
             # 1 if item is in the basket, 0 otherwise
             mask = tf.cast(mask, dtype=tf.float32)
-            max = tf.reduce_max(all_utilities) 
+            max = 100
             inf_mask = mask * max # Shape: (batch_size, n_items)
             
             all_utilities = all_utilities - inf_mask # Shape: (batch_size, n_items)
@@ -751,3 +753,63 @@ class AleaCarta(BaseBasketModel):
             hit += hit_list
         
         return hit / total if total > 0 else 0.0
+    
+    def mrr(
+            self,
+            trip_dataset: np.ndarray,
+            batch_size: int = 1024,
+    ):
+        
+        inner_range = trip_dataset.iter_batch(
+            shuffle=False, batch_size=batch_size, data_method="aleacarta"
+        )
+        
+        mean_rank = tf.constant(0, dtype=tf.float32)
+
+        total = 0
+       
+        for (
+            item_batch,
+            basket_batch,
+            _, # future_batch not used here
+            store_batch, # store_batch not used here
+            week_batch, # week_batch not used here
+            price_batch, # price_batch not used here
+            available_item_batch, # available_item_batch not used here
+            _,
+        ) in inner_range:
+            batch_size = len(item_batch)
+            mask = tf.reduce_max(tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1) # Shape: (batch_size, n_items)
+            basket_batch = tf.repeat(basket_batch, repeats=self.n_items, axis=0)
+          
+            all_distances = self.compute_batch_utility(
+               item_batch=np.tile(np.arange(self.n_items), batch_size),
+                basket_batch=basket_batch,
+                store_batch=np.tile(store_batch, [self.n_items]),
+                week_batch=np.tile(week_batch, [self.n_items]),
+                price_batch=np.tile(price_batch, [self.n_items, 1]),
+                available_item_batch=np.tile(available_item_batch, [self.n_items, 1])
+            ) # Shape: (batch_size * n_items,)
+            all_distances = tf.reshape(all_distances, (batch_size, self.n_items)) # Shape: (batch_size, n_items)
+
+            
+            ####--------------------------------------------------------------
+            # We remove the items in each basket from the recommendations in all_distances
+            # 1 if item is in the basket, 0 otherwise
+            max = 100.0
+            mask = tf.cast(mask, dtype=tf.float32)
+           
+            inf_mask = mask * max # Shape: (batch_size, n_items)
+            all_distances = all_distances - inf_mask # Shape: (batch_size, n_items)
+            ####--------------------------------------------------------------
+
+            ranks = tf.argsort(tf.argsort(-all_distances, axis=1), axis=1) + 1 # Shape: (batch_size, n_items)
+            item_batch_indices = tf.stack([tf.range(batch_size), item_batch], axis=1) # Shape: (batch_size, 2)
+            item_ranks = tf.gather_nd(ranks, item_batch_indices) # Shape: (batch_size,)
+
+            mean_rank += tf.reduce_sum(tf.cast(1/item_ranks, dtype=tf.float32))
+            
+            total += batch_size
+        print("mean_rank:", mean_rank)
+        print("total:", total)
+        return mean_rank/total if total > 0 else 0.0

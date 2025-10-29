@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+from pyexpat import model
 import random
 import time
 from abc import abstractmethod
@@ -380,7 +381,8 @@ class BaseBasketModel:
         return ordered_basket_likelihood
 
     # Check the 0-exit-item functionment
-    # @tf.function  # TODO: make it work with tf.function
+
+    #@tf.function  # TODO: make it work with tf.function
     def compute_basket_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -600,6 +602,7 @@ class BaseBasketModel:
         batch_loss: tf.Tensor
             Value of the loss for the batch
         """
+        step_start = time.perf_counter()
         with tf.GradientTape() as tape:
             batch_loss = self.compute_batch_loss(
                 item_batch=item_batch,
@@ -609,12 +612,12 @@ class BaseBasketModel:
                 week_batch=week_batch,
                 price_batch=price_batch,
                 available_item_batch=available_item_batch,
-                user_batch = user_batch
+                user_batch=user_batch,
             )[0]
         grads = tape.gradient(batch_loss, self.trainable_weights)
 
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-
+        self.timing["train_step_end"] = time.perf_counter() - step_start
         return batch_loss
 
     def fit(
@@ -647,10 +650,11 @@ class BaseBasketModel:
         batch_size = self.batch_size
 
         history = {"train_loss": [], "val_loss": []}
+
         t_range = tqdm.trange(self.epochs, position=0)
-
+        self.is_training = True
         self.callbacks.on_train_begin()
-
+        self.timing = {}
         # Iterate of epochs
         for epoch_nb in t_range:
             self.callbacks.on_epoch_begin(epoch_nb)
@@ -683,8 +687,11 @@ class BaseBasketModel:
                 available_item_batch,
                 user_batch,
             ) in enumerate(inner_range):
+                
                 self.callbacks.on_train_batch_begin(batch_nb)
 
+                self.t0 = time.perf_counter()
+                self.timing["t0"] = self.t0
                 batch_loss = self.train_step(
                     item_batch=item_batch,
                     basket_batch=basket_batch,
@@ -695,18 +702,20 @@ class BaseBasketModel:
                     available_item_batch=available_item_batch,
                     user_batch=user_batch,
                 )
+                batch_end = time.perf_counter()
+                self.timing["batch_end"] = batch_end - self.t0 
+
                 train_logs["train_loss"].append(batch_loss)
-                temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
                 self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                 # Optimization Steps
                 epoch_losses.append(batch_loss)
-
+                
                 if verbose > 0:
                     inner_range.set_description(
                         f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
                     )
-
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
             if batch_size != -1:
@@ -716,10 +725,11 @@ class BaseBasketModel:
                     axis=0,
                 )
                 epoch_losses = tf.multiply(epoch_losses, coefficients)
-                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
+                epoch_loss = tf.reduce_sum(epoch_losses) / len(trip_dataset)
             else:
-                epoch_loss = tf.reduce_mean(epoch_losses)
+                epoch_loss = tf.reduce_sum(epoch_losses) / len(trip_dataset)
 
+            #print("epoch_losses:", epoch_losses)
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
@@ -744,7 +754,7 @@ class BaseBasketModel:
                     user_batch,
                 ) in enumerate(
                     val_dataset.iter_batch(
-                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                        shuffle=False, batch_size=batch_size, data_method=self.train_iter_method
                     )
                 ):
                     self.callbacks.on_batch_begin(batch_nb)
@@ -763,23 +773,35 @@ class BaseBasketModel:
                         )[0]
                     )
                     val_logs["val_loss"].append(val_losses[-1])
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
+                    temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
 
-                val_loss = tf.reduce_mean(val_losses)
+                if batch_size != -1:
+                    last_batch_size = len(item_batch)
+                    coefficients = tf.concat(
+                        [tf.ones(len(val_losses) - 1) * batch_size, [last_batch_size]],
+                        axis=0,
+                    )
+                    val_losses = tf.multiply(val_losses, coefficients)
+                    val_loss = tf.reduce_sum(val_losses) / len(val_dataset)
+                else:
+                    val_loss = tf.reduce_sum(val_losses) / len(val_dataset)
+
+                #print("val_loss:", val_loss)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", val_loss.numpy())
                     desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
                 history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
                 train_logs = {**train_logs, **val_logs}
 
-            temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+            temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
 
             t_range.set_description(desc)
             t_range.refresh()
 
-        temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+        self.is_training = False
+        temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
         return history
 
@@ -818,7 +840,7 @@ class BaseBasketModel:
         n_evals = 0
 
         inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
+            shuffle=True, batch_size=batch_size, data_method="aleacarta"
         )
         for (
             item_batch,
@@ -938,6 +960,12 @@ class BaseBasketModel:
             else:
                 non_init_params[key] = val
 
+        if cls.__name__ == "SelfAttentionModel":
+                init_params["w"] = 0
+                init_params["gamma"] = 0
+                if "latent_sizes" not in init_params:
+                    init_params["latent_sizes"] = {"short_term": 4, "long_term": 0}
+
         # Initialize model
         model = cls(**init_params)
 
@@ -945,7 +973,13 @@ class BaseBasketModel:
         for key, val in non_init_params.items():
             setattr(model, key, val)
 
+      
+                
         # Load weights
         model._load_weights(path)
+
+        if cls.__name__ == "SelfAttentionModel" or cls.__name__ == "Movie_SelfAttentionModel":
+            setattr(model, "Wq", getattr(model, "Queries"))
+            setattr(model, "Wk", getattr(model, "Keys"))
 
         return model
