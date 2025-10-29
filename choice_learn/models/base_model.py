@@ -380,7 +380,7 @@ class ChoiceModel:
 
                     if verbose > 0:
                         inner_range.set_description(
-                            f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
+                            f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
 
             # Take into account the fact that the last batch may have a
