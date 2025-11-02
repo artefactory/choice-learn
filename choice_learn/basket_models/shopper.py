@@ -6,7 +6,9 @@ from typing import Union
 import numpy as np
 import tensorflow as tf
 
+from ..tf_ops import softmax_with_availabilities
 from .base_basket_model import BaseBasketModel
+from .data.basket_dataset import Trip
 
 
 class Shopper(BaseBasketModel):
@@ -166,12 +168,27 @@ class Shopper(BaseBasketModel):
             trainable=True,
             name="rho",
         )
+        # end-of-basket rho
+        self.rho_eob = tf.Variable(
+            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                shape=(1, self.latent_sizes["preferences"])
+            ),  # Dimension for 1 item: latent_sizes["preferences"]
+            trainable=True,
+            name="rho_eob",
+        )
         self.alpha = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                 shape=(n_items, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="alpha",
+        )
+        self.alpha_eob = tf.Variable(  # end-of-basket alpha
+            tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                shape=(1, self.latent_sizes["preferences"])
+            ),  # Dimension for 1 item: latent_sizes["preferences"]
+            trainable=True,
+            name="alpha_eob",
         )
         self.theta = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
@@ -186,7 +203,7 @@ class Shopper(BaseBasketModel):
             self.lambda_ = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     # No lambda for the checkout item (set to 0 later)
-                    shape=(n_items - 1,)  # Dimension for 1 item: 1
+                    shape=(n_items,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
                 name="lambda_",
@@ -201,6 +218,14 @@ class Shopper(BaseBasketModel):
                 trainable=True,
                 name="beta",
             )
+            self.beta_eob = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
+                    shape=(1, self.latent_sizes["price"])
+                ),  # Dimension for 1 item: latent_sizes["price"]
+                trainable=True,
+                name="beta_eob",
+            )
+
             self.gamma = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=1.0, seed=42)(
                     shape=(n_stores, self.latent_sizes["price"])
@@ -217,6 +242,13 @@ class Shopper(BaseBasketModel):
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
                 name="mu",
+            )
+            self.mu_eob = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(1, self.latent_sizes["season"])
+                ),  # Dimension for 1 item: latent_sizes["season"]
+                trainable=True,
+                name="mu_eob",
             )
             self.delta = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
@@ -237,16 +269,16 @@ class Shopper(BaseBasketModel):
         list[tf.Variable]
             Latent parameters of the model
         """
-        weights = [self.rho, self.alpha, self.theta]
+        weights = [self.rho, self.rho_eob, self.alpha, self.alpha_eob, self.theta]
 
         if self.item_intercept:
             weights.append(self.lambda_)
 
         if self.price_effects:
-            weights.extend([self.beta, self.gamma])
+            weights.extend([self.beta, self.beta_eob, self.gamma])
 
         if self.seasonal_effects:
-            weights.extend([self.mu, self.delta])
+            weights.extend([self.mu, self.mu_eob, self.delta])
 
         return weights
 
@@ -266,6 +298,113 @@ class Shopper(BaseBasketModel):
             Data generation method.
         """
         return "shopper"
+
+    # Not clear
+    def compute_item_likelihood(
+        self,
+        basket: Union[None, np.ndarray] = None,
+        available_items: Union[None, np.ndarray] = None,
+        store: Union[None, int] = None,
+        week: Union[None, int] = None,
+        prices: Union[None, np.ndarray] = None,
+        trip: Union[None, Trip] = None,
+    ) -> tf.Tensor:
+        """Compute the likelihood of all items for a given trip.
+
+        Take as input directly a Trip object or separately basket, available_items,
+        store, week and prices.
+
+        Parameters
+        ----------
+        basket: np.ndarray or None, optional
+            ID the of items already in the basket, by default None
+        available_items: np.ndarray or None, optional
+            Matrix indicating the availability (1) or not (0) of the products,
+            by default None
+            Shape must be (n_items,)
+        store: int or None, optional
+            Store id, by default None
+        week: int or None, optional
+            Week number, by default None
+        prices: np.ndarray or None, optional
+            Prices of all the items in the dataset, by default None
+            Shape must be (n_items,)
+        trip: Trip or None, optional
+            Trip object containing basket, available_items, store,
+            week and prices, by default None
+
+        Returns
+        -------
+        likelihood: tf.Tensor
+            Likelihood of all items for a given trip
+            Shape must be (n_items,)
+        """
+        if trip is None:
+            # Trip not provided as an argument
+            # Then basket, available_items, store, week and prices must be provided
+            if (
+                basket is None
+                or available_items is None
+                or store is None
+                or week is None
+                or prices is None
+            ):
+                raise ValueError(
+                    "If trip is None, then basket, available_items, store, week, and "
+                    "prices must be provided as arguments."
+                )
+
+        else:
+            # Trip directly provided as an argument
+            if isinstance(trip.assortment, int):
+                # Then it is the assortment ID (ie its index in the attribute
+                # available_items of the TripDataset), but we do not have the
+                # the TripDataset as input here
+                raise ValueError(
+                    "The assortment ID is not enough to compute the likelihood. "
+                    "Please provide the availability matrix directly (array of shape (n_items,) "
+                    "indicating the availability (1) or not (0) of the products)."
+                )
+
+            return self.compute_item_likelihood(
+                basket=trip.purchases,
+                available_items=trip.assortment,
+                store=trip.store,
+                week=trip.week,
+                prices=trip.prices,
+                trip=None,
+            )
+
+        # Prevent unintended side effects from in-place modifications
+        available_items_copy = available_items.copy()
+        for basket_item in basket:
+            if basket_item != -1:
+                available_items_copy[basket_item] = 0.0
+
+        if len(prices) == self.n_items:
+            prices = np.concatenate([prices, [0.0]], axis=0)
+        if len(available_items_copy) == self.n_items:
+            available_items_copy = np.concatenate([available_items_copy, [0.0]], axis=0)
+        # Compute the utility of all the items
+        all_utilities = self.compute_batch_utility(
+            # All items
+            item_batch=np.arange(self.n_items + 1),
+            # For each item: same basket / store / week / prices / available items
+            basket_batch=np.array([basket for _ in range(self.n_items + 1)]),
+            store_batch=np.array([store for _ in range(self.n_items + 1)]),
+            week_batch=np.array([week for _ in range(self.n_items + 1)]),
+            price_batch=prices,
+            available_item_batch=np.array([available_items_copy for _ in range(self.n_items + 1)]),
+        )
+
+        # Softmax on the utilities
+        return softmax_with_availabilities(
+            items_logit_by_choice=all_utilities,  # Shape: (n_items,)
+            available_items_by_choice=available_items_copy,  # Shape: (n_items,)
+            axis=-1,
+            normalize_exit=False,
+            eps=None,
+        )
 
     def thinking_ahead(
         self,
@@ -320,7 +459,7 @@ class Shopper(BaseBasketModel):
         # TODO: avoid a for loop on ragged_basket_batch at a later stage
         for idx in tf.range(ragged_basket_batch.shape[0]):
             basket = tf.gather(ragged_basket_batch, idx)
-            if len(basket) != 0 and basket[-1] == 0:
+            if len(basket) != 0 and basket[-1] == self.n_items:
                 # No thinking ahead when the basket ends already with the checkout item 0
                 total_next_step_utilities = tf.tensor_scatter_nd_update(
                     tensor=total_next_step_utilities, indices=[[idx]], updates=[0]
@@ -330,7 +469,7 @@ class Shopper(BaseBasketModel):
                 # Basket with the hypothetical current item
                 next_basket = tf.concat([basket, [item_batch[idx]]], axis=0)
                 # Get the list of available items based on the availability matrix
-                item_ids = tf.range(self.n_items)
+                item_ids = tf.range(self.n_items + 1)
                 available_mask = tf.equal(available_item_batch[idx], 1)
                 assortment = tf.boolean_mask(item_ids, available_mask)
                 hypothetical_next_purchases = tf.boolean_mask(
@@ -349,13 +488,13 @@ class Shopper(BaseBasketModel):
                     # Compute the dot product along the last dimension between the embeddings
                     # of the given store's theta and alpha of all the items
                     hypothetical_store_preferences = tf.reduce_sum(
-                        theta_store[idx] * self.alpha, axis=1
+                        theta_store[idx] * tf.concat([self.alpha, self.alpha_eob], axis=0), axis=1
                     )
 
                     if self.item_intercept:
                         # Manually enforce the lambda of the checkout item to be 0
                         # (equivalent to translating the lambda values)
-                        hypothetical_item_intercept = tf.concat([[0.0], self.lambda_], axis=0)
+                        hypothetical_item_intercept = tf.concat([self.lambda_, [0.0]], axis=0)
                     else:
                         hypothetical_item_intercept = tf.zeros_like(hypothetical_store_preferences)
 
@@ -365,7 +504,10 @@ class Shopper(BaseBasketModel):
                             # Compute the dot product along the last dimension between
                             # the embeddings of the given store's gamma and beta
                             # of all the items
-                            * tf.reduce_sum(gamma_store[idx] * self.beta, axis=1)
+                            * tf.reduce_sum(
+                                gamma_store[idx] * tf.concat([self.beta, self.beta_eob], axis=0),
+                                axis=1,
+                            )
                             * tf.math.log(price_batch[idx] + self.epsilon_price)
                         )
                     else:
@@ -375,7 +517,7 @@ class Shopper(BaseBasketModel):
                         # Compute the dot product along the last dimension between the embeddings
                         # of delta of the given week and mu of all the items
                         hypothetical_seasonal_effects = tf.reduce_sum(
-                            delta_week[idx] * self.mu, axis=1
+                            delta_week[idx] * tf.concat([self.mu, self.mu_eob], axis=0), axis=1
                         )
                     else:
                         hypothetical_seasonal_effects = tf.zeros_like(
@@ -404,12 +546,13 @@ class Shopper(BaseBasketModel):
                     for inner_idx in tf.range(len(hypothetical_next_purchases)):
                         next_item_id = tf.gather(hypothetical_next_purchases, inner_idx)
                         rho_next_item = tf.gather(
-                            self.rho, indices=next_item_id
+                            tf.concat([self.rho, self.rho_eob], axis=0), indices=next_item_id
                         )  # Shape: (latent_size,)
                         # Gather the embeddings using a tensor of indices
                         # (before ensure that indices are integers)
                         next_alpha_by_basket = tf.gather(
-                            self.alpha, indices=tf.cast(next_basket, dtype=tf.int32)
+                            tf.concat([self.alpha, self.alpha_eob], axis=0),
+                            indices=tf.cast(next_basket, dtype=tf.int32),
                         )  # Shape: (len(next_basket), latent_size)
                         # Divide the sum of alpha embeddings by the number of items
                         # in the basket of the next step (always > 0)
@@ -483,20 +626,20 @@ class Shopper(BaseBasketModel):
         available_item_batch = tf.cast(available_item_batch, dtype=tf.int32)
 
         theta_store = tf.gather(self.theta, indices=store_batch)
-        alpha_item = tf.gather(self.alpha, indices=item_batch)
+        alpha_item = tf.gather(tf.concat([self.alpha, self.alpha_eob], axis=0), indices=item_batch)
         # Compute the dot product along the last dimension
         store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
 
         if self.item_intercept:
             # Manually enforce the lambda of the checkout item to be 0
             # (equivalent to translating the lambda values)
-            item_intercept = tf.gather(tf.concat([[0.0], self.lambda_], axis=0), indices=item_batch)
+            item_intercept = tf.gather(tf.concat([self.lambda_, [0.0]], axis=0), indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
 
         if self.price_effects:
             gamma_store = tf.gather(self.gamma, indices=store_batch)
-            beta_item = tf.gather(self.beta, indices=item_batch)
+            beta_item = tf.gather(tf.concat([self.beta, self.beta_eob], axis=0), indices=item_batch)
             # Add epsilon to avoid NaN values (log(0))
             price_effects = (
                 -1
@@ -510,7 +653,7 @@ class Shopper(BaseBasketModel):
 
         if self.seasonal_effects:
             delta_week = tf.gather(self.delta, indices=week_batch)
-            mu_item = tf.gather(self.mu, indices=item_batch)
+            mu_item = tf.gather(tf.concat([self.mu, self.mu_eob], axis=0), indices=item_batch)
             # Compute the dot product along the last dimension
             seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
         else:
@@ -558,7 +701,7 @@ class Shopper(BaseBasketModel):
         # Compute the sum of the alpha embeddings for each basket
         alpha_sum = tf.reduce_sum(alpha_by_basket, axis=1)
 
-        rho_item = tf.gather(self.rho, indices=item_batch)
+        rho_item = tf.gather(tf.concat([self.rho, self.rho_eob], axis=0), indices=item_batch)
 
         # Divide each sum of alpha embeddings by the number of items in the corresponding basket
         # Avoid NaN values (division by 0)
@@ -634,7 +777,7 @@ class Shopper(BaseBasketModel):
         next_item = tf.cast(tf.convert_to_tensor(next_item), dtype=tf.int32)
 
         # Get the list of available items based on the availability matrix
-        item_ids = tf.range(self.n_items)
+        item_ids = tf.range(self.n_items + 1)
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
@@ -726,6 +869,9 @@ class Shopper(BaseBasketModel):
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
+        print(batch_size, available_item_batch.shape, item_batch.shape)
+        print(basket_batch.shape, future_batch.shape, item_batch.shape)
+        print(available_item_batch[batch_size - 1])
         negative_samples = tf.reshape(
             tf.transpose(
                 tf.reshape(
