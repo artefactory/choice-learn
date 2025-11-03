@@ -64,7 +64,8 @@ def load_bakery(as_frame=False):
     # Dummy prices, all equal to 1
     prices = np.array([[1] * n_item])
     trips_list = [
-        Trip(purchases=purchases, assortment=0, prices=prices, user_id=0) for purchases in list_purchases
+        Trip(purchases=purchases, assortment=0, prices=prices, user_id=0)
+        for purchases in list_purchases
     ]
 
     return TripDataset(trips=trips_list, available_items=availability_matrix)

@@ -3,12 +3,12 @@
 import json
 import logging
 import os
-from pyexpat import model
 import random
 import time
 from abc import abstractmethod
 from datetime import datetime
 from pathlib import Path
+from pyexpat import model
 from typing import Union
 
 import numpy as np
@@ -382,7 +382,7 @@ class BaseBasketModel:
 
     # Check the 0-exit-item functionment
 
-    #@tf.function  # TODO: make it work with tf.function
+    # @tf.function  # TODO: make it work with tf.function
     def compute_basket_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -687,7 +687,6 @@ class BaseBasketModel:
                 available_item_batch,
                 user_batch,
             ) in enumerate(inner_range):
-                
                 self.callbacks.on_train_batch_begin(batch_nb)
 
                 self.t0 = time.perf_counter()
@@ -703,7 +702,7 @@ class BaseBasketModel:
                     user_batch=user_batch,
                 )
                 batch_end = time.perf_counter()
-                self.timing["batch_end"] = batch_end - self.t0 
+                self.timing["batch_end"] = batch_end - self.t0
 
                 train_logs["train_loss"].append(batch_loss)
                 temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
@@ -711,7 +710,7 @@ class BaseBasketModel:
 
                 # Optimization Steps
                 epoch_losses.append(batch_loss)
-                
+
                 if verbose > 0:
                     inner_range.set_description(
                         f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
@@ -729,7 +728,7 @@ class BaseBasketModel:
             else:
                 epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
 
-            #print("epoch_losses:", epoch_losses)
+            # print("epoch_losses:", epoch_losses)
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
@@ -743,7 +742,7 @@ class BaseBasketModel:
             # Test on val_dataset if provided
             if val_dataset is not None:
                 val_losses = []
-                
+
                 for batch_nb, (
                     item_batch,
                     basket_batch,
@@ -762,17 +761,17 @@ class BaseBasketModel:
                     self.callbacks.on_test_batch_begin(batch_nb)
 
                     val_losses.append(
-                            self.compute_batch_loss(
-                                item_batch=item_batch,
-                                basket_batch=basket_batch,
-                                future_batch=future_batch,
-                                store_batch=store_batch,
-                                week_batch=week_batch,
-                                price_batch=price_batch,
-                                available_item_batch=available_item_batch,
-                                user_batch=user_batch,
-                            )[0]
-                        )
+                        self.compute_batch_loss(
+                            item_batch=item_batch,
+                            basket_batch=basket_batch,
+                            future_batch=future_batch,
+                            store_batch=store_batch,
+                            week_batch=week_batch,
+                            price_batch=price_batch,
+                            available_item_batch=available_item_batch,
+                            user_batch=user_batch,
+                        )[0]
+                    )
                     val_logs["val_loss"].append(val_losses[-1])
                     temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
@@ -791,7 +790,7 @@ class BaseBasketModel:
                 if self.train_iter_method == "sequential_movie":
                     val_losses = [self.mrr(val_dataset)]
 
-                #print("val_loss:", val_loss)
+                # print("val_loss:", val_loss)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", val_loss.numpy())
                     desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
@@ -965,10 +964,10 @@ class BaseBasketModel:
                 non_init_params[key] = val
 
         if cls.__name__ == "SelfAttentionModel":
-                init_params["w"] = 0
-                init_params["gamma"] = 0
-                if "latent_sizes" not in init_params:
-                    init_params["latent_sizes"] = {"short_term": 4, "long_term": 0}
+            init_params["w"] = 0
+            init_params["gamma"] = 0
+            if "latent_sizes" not in init_params:
+                init_params["latent_sizes"] = {"short_term": 4, "long_term": 0}
 
         # Initialize model
         model = cls(**init_params)
@@ -977,8 +976,6 @@ class BaseBasketModel:
         for key, val in non_init_params.items():
             setattr(model, key, val)
 
-      
-                
         # Load weights
         model._load_weights(path)
 

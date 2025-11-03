@@ -81,7 +81,9 @@ class SyntheticDataGenerator:
             )
         )
 
-    def select_first_item(self, available_sets: np.ndarray, available_items: np.ndarray, user_id: int) -> tuple:
+    def select_first_item(
+        self, available_sets: np.ndarray, available_items: np.ndarray, user_id: int
+    ) -> tuple:
         """Select the first item and its nest randomly from the available sets.
 
         Parameters
@@ -101,10 +103,10 @@ class SyntheticDataGenerator:
         chosen_item = np.random.choice(
             [i for i in self.items_nest[chosen_nest] if i in available_items]
         )
-        if self.user_profile is not None and self.user_profile[user_id]["nest"]== chosen_nest:
+        if self.user_profile is not None and self.user_profile[user_id]["nest"] == chosen_nest:
             if self.user_profile[user_id]["item"] in available_items and np.random.rand() < 0.7:
                 chosen_item = self.user_profile[user_id]["item"]
-        
+
         return chosen_item, chosen_nest
 
     def complete_basket(
@@ -134,12 +136,20 @@ class SyntheticDataGenerator:
                 and np.random.random() < self.proba_complementary_items
             ):
                 try:
-                    if self.user_profile is not None and self.user_profile[user_id]["nest"] == nest_id:
-                        if self.user_profile[user_id]["item"] in available_items and np.random.rand() < 0.7:
+                    if (
+                        self.user_profile is not None
+                        and self.user_profile[user_id]["nest"] == nest_id
+                    ):
+                        if (
+                            self.user_profile[user_id]["item"] in available_items
+                            and np.random.rand() < 0.7
+                        ):
                             basket.append(self.user_profile[user_id]["item"])
-                        else :
-                            basket.append(np.random.choice([i for i in items if i in available_items]))
-                    else :
+                        else:
+                            basket.append(
+                                np.random.choice([i for i in items if i in available_items])
+                            )
+                    else:
                         basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
                     logging.warning(
@@ -209,7 +219,10 @@ class SyntheticDataGenerator:
                 available_sets=available_sets, available_items=available_items, user_id=user_id
             )
             basket = self.complete_basket(
-                first_chosen_item, first_chosen_nest, available_items=available_items, user_id=user_id
+                first_chosen_item,
+                first_chosen_nest,
+                available_items=available_items,
+                user_id=user_id,
             )
             basket = self.add_noise(basket, available_items=available_items)
         else:
@@ -246,7 +259,9 @@ class SyntheticDataGenerator:
         """
 
         user_id = np.random.randint(0, self.nb_users) if self.user_profile is not None else None
-        basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(int)
+        basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
+            int
+        )
         return Trip(
             purchases=basket,
             # Assuming uniform price of 1.0 for simplicity

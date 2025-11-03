@@ -59,7 +59,7 @@ class Trip:
         self.prices = prices
         self.assortment = assortment
         self.user_id = user_id
-    
+
         self.trip_length = len(purchases)
 
     def __str__(self) -> str:
@@ -95,9 +95,12 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip], available_items: np.ndarray,
-                #  neg_dict: dict
-                  ) -> None:
+    def __init__(
+        self,
+        trips: list[Trip],
+        available_items: np.ndarray,
+        #  neg_dict: dict
+    ) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -116,7 +119,7 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
-        #self.neg_dict = neg_dict
+        # self.neg_dict = neg_dict
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -242,7 +245,7 @@ class TripDataset:
         np.ndarray
             List of baskets in the dataset
         """
-        
+
         return [self.trips[i].purchases for i in range(len(self))]
 
     def get_all_stores(self) -> np.ndarray:
@@ -504,7 +507,7 @@ class TripDataset:
             np.tile(assortment, (length_trip, 1)),  # Available items
             np.full(length_trip, trip.user_id),  # User IDs
         )
-    
+
     def get_sequential_movie_data_from_trip_index(
         self,
         trip_index: int,
@@ -527,12 +530,12 @@ class TripDataset:
         trip = self.trips[trip_index]
         length_trip = len(trip.purchases)
         purchases = np.array(trip.purchases)
-        
+
         padded_truncated_purchases = np.array(
             [purchases[:5]],
             dtype=int,
         )
-        
+
         padded_future_purchases = np.array(
             [np.pad(purchases[6:], (0, 2 - len(purchases[6:])), constant_values=-1)],
             dtype=int,
@@ -543,10 +546,9 @@ class TripDataset:
         else:  # np.ndarray
             # Then it is directly the availability matrix
             assortment = trip.assortment
-        
 
-        #if len(self.neg_dict) >0:
-         #   padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
+        # if len(self.neg_dict) >0:
+        #   padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
 
         return (
             np.array([purchases[5]]),  # Items
@@ -595,7 +597,7 @@ class TripDataset:
         # TODO: shuffling on the trip indexes or on the item indexes?
         if shuffle:
             trip_indexes = np.random.default_rng().permutation(trip_indexes)
-            
+
         # Initialize the buffer
         buffer = (
             np.empty(0, dtype=int),  # Items
@@ -610,16 +612,16 @@ class TripDataset:
 
         if data_method == "sequential_movie":
             buffer = (
-            np.empty(0, dtype=int),  # Items
-            np.empty((0, 5), dtype=int),  # Baskets
-            np.empty((0, 736), dtype=int),  # Future purchases
-            np.empty(0, dtype=int),  # Stores
-            np.empty(0, dtype=int),  # Weeks
-            np.empty((0, self.n_items), dtype=int),  # Prices
-            np.empty((0, self.n_items), dtype=int),  # Available items
-            np.empty(0, dtype=int),  # User IDs
-        )
-        
+                np.empty(0, dtype=int),  # Items
+                np.empty((0, 5), dtype=int),  # Baskets
+                np.empty((0, 736), dtype=int),  # Future purchases
+                np.empty(0, dtype=int),  # Stores
+                np.empty(0, dtype=int),  # Weeks
+                np.empty((0, self.n_items), dtype=int),  # Prices
+                np.empty((0, self.n_items), dtype=int),  # Available items
+                np.empty(0, dtype=int),  # User IDs
+            )
+
         if batch_size == -1:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
@@ -637,7 +639,7 @@ class TripDataset:
                     )
                 else:
                     raise ValueError(f"Unknown data method: {data_method}")
-                
+
                 buffer = tuple(
                     np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
                 )
@@ -716,19 +718,19 @@ class TripDataset:
             return TripDataset(
                 trips=[self.trips[index]],
                 available_items=self.available_items,
-                #neg_dict=self.neg_dict
+                # neg_dict=self.neg_dict
             )
         if isinstance(index, (list, np.ndarray, range)):
             return TripDataset(
                 trips=[self.trips[i] for i in index],
                 available_items=self.available_items,
-                #neg_dict=self.neg_dict
+                # neg_dict=self.neg_dict
             )
         if isinstance(index, slice):
             return TripDataset(
                 trips=self.trips[index],
                 available_items=self.available_items,
-                #neg_dict=self.neg_dict
+                # neg_dict=self.neg_dict
             )
 
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
