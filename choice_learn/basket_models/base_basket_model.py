@@ -725,9 +725,9 @@ class BaseBasketModel:
                     axis=0,
                 )
                 epoch_losses = tf.multiply(epoch_losses, coefficients)
-                epoch_loss = tf.reduce_sum(epoch_losses) / len(trip_dataset)
+                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
             else:
-                epoch_loss = tf.reduce_sum(epoch_losses) / len(trip_dataset)
+                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
 
             #print("epoch_losses:", epoch_losses)
             history["train_loss"].append(epoch_loss)
@@ -743,6 +743,7 @@ class BaseBasketModel:
             # Test on val_dataset if provided
             if val_dataset is not None:
                 val_losses = []
+                
                 for batch_nb, (
                     item_batch,
                     basket_batch,
@@ -754,24 +755,24 @@ class BaseBasketModel:
                     user_batch,
                 ) in enumerate(
                     val_dataset.iter_batch(
-                        shuffle=False, batch_size=batch_size, data_method=self.train_iter_method
+                        shuffle=False, batch_size=-1, data_method=self.train_iter_method
                     )
                 ):
                     self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
                     val_losses.append(
-                        self.compute_batch_loss(
-                            item_batch=item_batch,
-                            basket_batch=basket_batch,
-                            future_batch=future_batch,
-                            store_batch=store_batch,
-                            week_batch=week_batch,
-                            price_batch=price_batch,
-                            available_item_batch=available_item_batch,
-                            user_batch=user_batch,
-                        )[0]
-                    )
+                            self.compute_batch_loss(
+                                item_batch=item_batch,
+                                basket_batch=basket_batch,
+                                future_batch=future_batch,
+                                store_batch=store_batch,
+                                week_batch=week_batch,
+                                price_batch=price_batch,
+                                available_item_batch=available_item_batch,
+                                user_batch=user_batch,
+                            )[0]
+                        )
                     val_logs["val_loss"].append(val_losses[-1])
                     temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
@@ -783,9 +784,12 @@ class BaseBasketModel:
                         axis=0,
                     )
                     val_losses = tf.multiply(val_losses, coefficients)
-                    val_loss = tf.reduce_sum(val_losses) / len(val_dataset)
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
                 else:
-                    val_loss = tf.reduce_sum(val_losses) / len(val_dataset)
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+
+                if self.train_iter_method == "sequential_movie":
+                    val_losses = [self.mrr(val_dataset)]
 
                 #print("val_loss:", val_loss)
                 if verbose > 1:

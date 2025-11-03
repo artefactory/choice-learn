@@ -59,7 +59,7 @@ class Trip:
         self.prices = prices
         self.assortment = assortment
         self.user_id = user_id
-
+    
         self.trip_length = len(purchases)
 
     def __str__(self) -> str:
@@ -95,7 +95,9 @@ class Trip:
 class TripDataset:
     """Class for a dataset of trips."""
 
-    def __init__(self, trips: list[Trip], available_items: np.ndarray) -> None:
+    def __init__(self, trips: list[Trip], available_items: np.ndarray,
+                #  neg_dict: dict
+                  ) -> None:
         """Initialize the dataset.
 
         Parameters
@@ -114,6 +116,7 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
+        #self.neg_dict = neg_dict
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -542,6 +545,9 @@ class TripDataset:
             assortment = trip.assortment
         
 
+        #if len(self.neg_dict) >0:
+         #   padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
+
         return (
             np.array([purchases[5]]),  # Items
             padded_truncated_purchases,  # Baskets
@@ -589,7 +595,7 @@ class TripDataset:
         # TODO: shuffling on the trip indexes or on the item indexes?
         if shuffle:
             trip_indexes = np.random.default_rng().permutation(trip_indexes)
-            print("Shuffling trip indexes for batch iteration.", trip_indexes)
+            
         # Initialize the buffer
         buffer = (
             np.empty(0, dtype=int),  # Items
@@ -606,7 +612,7 @@ class TripDataset:
             buffer = (
             np.empty(0, dtype=int),  # Items
             np.empty((0, 5), dtype=int),  # Baskets
-            np.empty((0, 2), dtype=int),  # Future purchases
+            np.empty((0, 736), dtype=int),  # Future purchases
             np.empty(0, dtype=int),  # Stores
             np.empty(0, dtype=int),  # Weeks
             np.empty((0, self.n_items), dtype=int),  # Prices
@@ -710,16 +716,19 @@ class TripDataset:
             return TripDataset(
                 trips=[self.trips[index]],
                 available_items=self.available_items,
+                #neg_dict=self.neg_dict
             )
         if isinstance(index, (list, np.ndarray, range)):
             return TripDataset(
                 trips=[self.trips[i] for i in index],
                 available_items=self.available_items,
+                #neg_dict=self.neg_dict
             )
         if isinstance(index, slice):
             return TripDataset(
                 trips=self.trips[index],
                 available_items=self.available_items,
+                #neg_dict=self.neg_dict
             )
 
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
