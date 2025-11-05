@@ -20,6 +20,7 @@
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06899/status.svg)](https://doi.org/10.21105/joss.06899)
 [![cite](https://img.shields.io/badge/Citation-BibTeX-cyan)](./CITATION.bib)
+[![cite](https://img.shields.io/badge/ECMLPKDD-BibTeX-cyan)](./CITATION_AC.bib)
 </div>
 
 Choice-Learn is a Python package designed to help you formulate, estimate, and deploy discrete choice models. It is optimized to efficiently handle large-scale choice data while minimizing RAM usage.
@@ -271,7 +272,7 @@ If you consider this package or any of its feature useful for your research, con
 <img align="left" width="100"src="https://github.com/openjournals/joss/blob/main/docs/logos/joss-logo.png?raw=true" />
 </a>
 
-```bash
+```bibtex
 @article{Auriau2024,
   doi = {10.21105/joss.06899},
   url = {https://doi.org/10.21105/joss.06899},
@@ -291,14 +292,14 @@ If you make use of the *AleaCarta* model [[17]](#trident-references), consider c
 <img align="left" width="100"src="https://ecmlpkdd-storage.s3.eu-central-1.amazonaws.com/ECML_1_e012008d41.png" />
 </a>
 
-```bash
-@inproceedings{Desir2025
-  doi = {},
-  url = {},
-  publisher = {},
-  author = {Jules Désir and Vincent Auriau and Martin Možina and Emmanuel Malherbe},
-  title = {Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
+```bibtex
+@inproceedings{desir2025,
+  doi = {10.1007/978-3-032-06118-8_8},
+  url = {https://doi.org/10.1007/978-3-032-06118-8_8},
+  title={Better Capturing Interactions Between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling},
+  author={D{\'e}sir, Jules and Auriau, Vincent and Mo{\v{z}}ina, Martin and Malherbe, Emmanuel},
   booktitle={Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
+  pages={125--142},
   year={2025},
   organization={Springer}
 }

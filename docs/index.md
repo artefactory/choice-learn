@@ -40,6 +40,8 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - The [TaFeng](./references/datasets/references_tafeng.md) dataset from Kaggle
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
     - [London Passenger Mode Choice](./references/datasets/references_base.md)
+    - [The Bakery Dataset](./references/basket_models/datasets/references_bakery.md)
+    - [The Badminton Dataset](./references/basket_models/datasets/synthetic_dataset.md)
 
 ### Single Choice Models
 - [Custom modeling](./notebooks/introduction/4_model_customization.md)
