@@ -375,8 +375,6 @@ class AleaCarta(BaseBasketModel):
             gamma_i * gamma_by_basket, axis=-1
         )  # Shape: (batch_size, None)
         # Sum over the items in the basket
-        # basket_size = tf.map_fn(tf.size, item_indices_ragged)
-        # basket_size = tf.cast(tf.clip_by_value(tf.reduce_sum(basket_batch > 0), 1., tf.shape(basket_batch)[1]), tf.float32)
         basket_interaction_utility = (
             tf.reduce_sum(basket_interaction_utility, axis=-1) / basket_size
         )
