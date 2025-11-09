@@ -367,9 +367,9 @@ class AleaCarta(BaseBasketModel):
             # Gather the embeddings using a ragged tensor of indices
             gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
             basket_size = tf.cast(item_indices_ragged.row_lengths(), dtype=tf.float32)
-            
-        gamma_by_basket = (
-            tf.reduce_sum(gamma_by_basket, axis=1) / tf.maximum(tf.expand_dims(basket_size, axis=-1), 1.0)
+
+        gamma_by_basket = tf.reduce_sum(gamma_by_basket, axis=1) / tf.maximum(
+            tf.expand_dims(basket_size, axis=-1), 1.0
         )
         # Basket interaction: one vs all
         # gamma_i = tf.expand_dims(gamma_item, axis=1)  # Shape: (batch_size, 1, latent_size)
