@@ -740,8 +740,10 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if True:
-                    val_loss = self.evaluate(val_dataset, hit_k=None, metrics=[self.mean_reciprocal_rank])["mean_reciprocal_rank"]
-                else : 
+                    val_loss = self.evaluate(
+                        val_dataset, hit_k=None, metrics=[self.mean_reciprocal_rank]
+                    )["mean_reciprocal_rank"]
+                else:
                     for batch_nb, (
                         item_batch,
                         basket_batch,

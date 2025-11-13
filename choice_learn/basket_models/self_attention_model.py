@@ -643,7 +643,6 @@ class SelfAttentionModel(BaseBasketModel):
         else:
             return total_loss / (batch_size * self.n_negative_samples), _
 
-
     def evaluate(
         self,
         trip_dataset: TripDataset,
