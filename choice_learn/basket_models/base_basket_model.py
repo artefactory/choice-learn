@@ -266,13 +266,15 @@ class BaseBasketModel:
 
         # Compute the utility of all the items
         print(np.shape(np.array([basket for _ in range(self.n_items)])))
-        gamma_basket = self.embed_basket(basket_batch=np.array([basket for _ in range(self.n_items)]))
+        gamma_basket = self.embed_basket(
+            basket_batch=np.array([basket for _ in range(self.n_items)])
+        )
         print(tf.shape(gamma_basket))
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.arange(self.n_items),
             # For each item: same basket / store / week / prices / available items
-            gamma_by_basket= gamma_basket,
+            gamma_by_basket=gamma_basket,
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
@@ -742,7 +744,7 @@ class BaseBasketModel:
                 val_losses = []
                 if evaluate_val_dataset_with_metric:
                     val_loss = self.evaluate(
-                        val_dataset, batch_size = 256, hit_k=None, metrics=[self.mean_reciprocal_rank]
+                        val_dataset, batch_size=256, hit_k=None, metrics=[self.mean_reciprocal_rank]
                     )["mean_reciprocal_rank"]
                 else:
                     for batch_nb, (
@@ -960,7 +962,6 @@ class BaseBasketModel:
                 init_params[key] = val
             else:
                 non_init_params[key] = val
-
 
         # Initialize model
         model = cls(**init_params)

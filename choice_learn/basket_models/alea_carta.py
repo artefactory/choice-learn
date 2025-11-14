@@ -82,7 +82,7 @@ class AleaCarta(BaseBasketModel):
         self.price_effects = price_effects
         self.seasonal_effects = seasonal_effects
         self.l2_regularization = l2_regularization
-        
+
         if "preferences" not in latent_sizes.keys():
             logging.warning(
                 "No latent size value has been specified for preferences, "
@@ -373,14 +373,15 @@ class AleaCarta(BaseBasketModel):
         else:
             # Gather the embeddings using a ragged tensor of indices and then sum them in each basket
             gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
-           
 
         gamma_by_basket = tf.reduce_mean(gamma_by_basket, axis=1)
 
         has_nan_row = tf.reduce_any(tf.math.is_nan(gamma_by_basket), axis=1)
         condition_mask = tf.expand_dims(has_nan_row, axis=1)
         zeros = tf.zeros_like(gamma_by_basket)
-        gamma_by_basket = tf.where(condition_mask, zeros, gamma_by_basket) # Shape: (batch_size, latent_size)
+        gamma_by_basket = tf.where(
+            condition_mask, zeros, gamma_by_basket
+        )  # Shape: (batch_size, latent_size)
 
         return gamma_by_basket
 
@@ -427,7 +428,7 @@ class AleaCarta(BaseBasketModel):
         )  # Shape: (batch_size,)
 
         return interaction_utility + preference_utility
-    
+
     def compute_interaction_utility(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
@@ -451,7 +452,7 @@ class AleaCarta(BaseBasketModel):
         """
 
         item_batch = tf.cast(item_batch, dtype=tf.int32)
-        gamma_item = tf.gather(self.gamma, indices=item_batch) # Shape: (batch_size, latent_size)
+        gamma_item = tf.gather(self.gamma, indices=item_batch)  # Shape: (batch_size, latent_size)
 
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
@@ -523,17 +524,15 @@ class AleaCarta(BaseBasketModel):
 
         # Basket utility = sum of the utilities of the items in the basket
         gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
-        return (
-            tf.reduce_sum(
-                self.compute_batch_utility(
-                    item_batch=basket,
-                    gamma_by_basket=gamma_by_basket,
-                    store_batch=np.array([store] * len_basket),
-                    week_batch=np.array([week] * len_basket),
-                    price_batch=prices,
-                )
-            ).numpy()
-        )
+        return tf.reduce_sum(
+            self.compute_batch_utility(
+                item_batch=basket,
+                gamma_by_basket=gamma_by_basket,
+                store_batch=np.array([store] * len_basket),
+                week_batch=np.array([week] * len_basket),
+                price_batch=prices,
+            )
+        ).numpy()
 
     def get_negative_samples(
         self,
@@ -732,7 +731,9 @@ class AleaCarta(BaseBasketModel):
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
-        ridge_regularization = self.l2_regularization * (tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta))
+        ridge_regularization = self.l2_regularization * (
+            tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta)
+        )
         # Normalize by the batch size and the number of negative samples
         return tf.reduce_sum(bce + ridge_regularization) / (batch_size), loglikelihood
 
@@ -774,12 +775,15 @@ class AleaCarta(BaseBasketModel):
             )  # Shape: (batch_size, n_items)
             gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
 
-            all_distances = self.compute_interaction_utility(
+            all_distances = (
+                self.compute_interaction_utility(
                     item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
                     gamma_by_basket=tf.repeat(gamma_by_basket, repeats=self.n_items, axis=0),
-                ) + intercept[: batch_size * self.n_items]
+                )
+                + intercept[: batch_size * self.n_items]
+            )
             # Shape: (batch_size * n_items,)
-            
+
             all_distances = tf.reshape(all_distances, (batch_size, self.n_items))
 
             ####--------------------------------------------------------------
