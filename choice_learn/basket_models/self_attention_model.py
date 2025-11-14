@@ -11,7 +11,7 @@ from .data.basket_dataset import TripDataset
 
 class SelfAttentionModel(BaseBasketModel):
     """
-    Class for the self attention model for basket recommendation. 
+    Class for the self attention model for basket recommendation.
     Basket Choice Modeling
     Inspired by the paper: "Next Item Recommendation with Self-Attention"  Shuai Zhang, Lina Yao,  Yi Tay, and Aixin Sun.
     The algorithm was modified and adapted to the basket recommendation task.
@@ -373,7 +373,9 @@ class SelfAttentionModel(BaseBasketModel):
 
         short_distance = self.compute_batch_short_distance(item_batch, m_batch, is_training)
 
-        total_distance = self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
+        total_distance = (
+            self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
+        )
 
         return total_distance
 
@@ -488,7 +490,7 @@ class SelfAttentionModel(BaseBasketModel):
         user_batch: np.ndarray
             Batch of user IDs (integers) for each purchased item
             Shape must be (batch_size,)
-        is_training: bool   
+        is_training: bool
             Whether the model is in training mode or not, to activate dropout if needed. True by default, cause compute_batch_loss is only used during training.
 
         Returns
@@ -581,18 +583,18 @@ class SelfAttentionModel(BaseBasketModel):
         trip_dataset: TripDataset,
         batch_size: int = 32,
         hit_k: list = None,
-        metrics: list[callable] = None,  
+        metrics: list[callable] = None,
     ):
         """Evaluate the model on the given dataset using the specified metric.
-        
+
         Parameters
         ----------
         hit_k : list
-            List of k values for hit rate calculation. 
+            List of k values for hit rate calculation.
         metrics : list of callable
             List of metric functions to evaluate. Each function should take
             (all_distances, item_batch, hit_k) as parameters and return a score.
-       
+
         Returns
         -------
         dict
