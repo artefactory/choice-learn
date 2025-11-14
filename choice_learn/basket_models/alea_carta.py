@@ -1,7 +1,6 @@
 """Implementation of the AleaCarta model."""
 
 import logging
-import time
 from typing import Union
 
 import numpy as np

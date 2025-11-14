@@ -1,13 +1,9 @@
 """Implementation of an attention-based model for item recommendation."""
 
-import os
-import sys
-import time
 from typing import Union
 
 import numpy as np
 import tensorflow as tf
-import tqdm
 
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import TripDataset
@@ -15,16 +11,17 @@ from .data.basket_dataset import TripDataset
 
 class SelfAttentionModel(BaseBasketModel):
     """
-    Class for the self attention model for basket recommendation.
-
+    Class for the self attention model for basket recommendation. 
+    Basket Choice Modeling
+    Inspired by the paper: "Next Item Recommendation with Self-Attention"  Shuai Zhang, Lina Yao,  Yi Tay, and Aixin Sun.
+    The algorithm was modified and adapted to the basket recommendation task.
     """
 
     def __init__(
         self,
         latent_sizes: dict[str, int] = {"short_term": 10, "long_term": 10},
-        L: int = 1,
-        gamma: float = 0.5,
-        w: float = 0.5,
+        hinge_margin: float = 0.5,
+        short_term_ratio: float = 0.5,
         n_negative_samples: int = 2,
         optimizer: str = "adam",
         callbacks: Union[tf.keras.callbacks.CallbackList, None] = None,
@@ -44,11 +41,9 @@ class SelfAttentionModel(BaseBasketModel):
         ----------
         latent_size : int
             Size of the item embeddings.
-        L : int
-            Maximum number of items in the basket to consider.
-        gamma : float
+        hinge_margin : float
             Margin parameter for the hinge loss.
-        w : float
+        short_term_weight : float
             Weighting factor between long-term and short-term preferences.
         n_negative_samples : int
             Number of negative samples to use in training.
@@ -75,9 +70,8 @@ class SelfAttentionModel(BaseBasketModel):
             if val not in ["short_term", "long_term"]:
                 raise ValueError(f"Unknown value for latent_sizes dict: {val}.")
 
-        self.L = L
-        self.gamma = gamma
-        self.w = w
+        self.hinge_margin = hinge_margin
+        self.short_term_ratio = short_term_ratio
         self.n_negative_samples = n_negative_samples
 
         self.latent_sizes = latent_sizes
@@ -256,7 +250,7 @@ class SelfAttentionModel(BaseBasketModel):
                 Tensor containing the vector of contexts embeddings.
             attention_weights : tf.Tensor
                 [batch_size, L, L] tf.Tensor
-                Tensor containing the matrix of attention.
+                Tensor containing the attention matrix.
         """
 
         # self.X.assign(tf.clip_by_norm(self.X, clip_norm=1.0, axes=1))
@@ -297,36 +291,20 @@ class SelfAttentionModel(BaseBasketModel):
     def compute_batch_short_distance(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
-        m_batch: np.ndarray,
+        m_batch: tf.Tensor,
         is_training: bool,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items in basket_batch.
+        """Compute the short distance of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
-        item_batch: np.ndarray or tf.Tensor
+        item_batch: or tf.Tensor
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size, max_basket_size)
-        store_batch: np.ndarray
-            Batch of store IDs (integers) for each purchased item
-            Shape must be (batch_size,)
-        week_batch: np.ndarray
-            Batch of week numbers (integers) for each purchased item
-            Shape must be (batch_size,)
-        price_batch: np.ndarray
-            Batch of prices (floats) for each purchased item
-            Shape must be (batch_size,)
-        available_item_batch: np.ndarray
-            Batch of availability matrices (indicating the availability (1) or not (0)
-            of the products) (arrays) for each purchased item
-            Shape must be (batch_size, n_items)
-        user_batch: np.ndarray
-            Batch of user IDs (integers) for each purchased item
-            Shape must be (batch_size,)
+        m_batch: tf.Tensor
+            Batch of context embeddings for each purchased item
+            Shape must be (batch_size, latent_size)
 
         Returns
         -------
@@ -349,7 +327,7 @@ class SelfAttentionModel(BaseBasketModel):
         item_batch: Union[np.ndarray, tf.Tensor],
         user_batch: np.ndarray = None,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items in basket_batch.
+        """Compute the long distance of all the items in item_batch given the user.
 
         Parameters
         ----------
@@ -357,22 +335,7 @@ class SelfAttentionModel(BaseBasketModel):
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size, max_basket_size)
-        store_batch: np.ndarray
-            Batch of store IDs (integers) for each purchased item
-            Shape must be (batch_size,)
-        week_batch: np.ndarray
-            Batch of week numbers (integers) for each purchased item
-            Shape must be (batch_size,)
-        price_batch: np.ndarray
-            Batch of prices (floats) for each purchased item
-            Shape must be (batch_size,)
-        available_item_batch: np.ndarray
-            Batch of availability matrices (indicating the availability (1) or not (0)
-            of the products) (arrays) for each purchased item
-            Shape must be (batch_size, n_items)
+
         user_batch: np.ndarray
             Batch of user IDs (integers) for each purchased item
             Shape must be (batch_size,)
@@ -410,7 +373,7 @@ class SelfAttentionModel(BaseBasketModel):
 
         short_distance = self.compute_batch_short_distance(item_batch, m_batch, is_training)
 
-        total_distance = self.w * long_distance + (1 - self.w) * short_distance
+        total_distance = self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
 
         return total_distance
 
@@ -525,6 +488,8 @@ class SelfAttentionModel(BaseBasketModel):
         user_batch: np.ndarray
             Batch of user IDs (integers) for each purchased item
             Shape must be (batch_size,)
+        is_training: bool   
+            Whether the model is in training mode or not, to activate dropout if needed. True by default, cause compute_batch_loss is only used during training.
 
         Returns
         -------
@@ -600,15 +565,14 @@ class SelfAttentionModel(BaseBasketModel):
             + tf.nn.l2_loss(self.Wk)
         )
 
-        gamma_scalar = tf.squeeze(self.gamma)
         hinge_loss = (
-            tf.maximum(float(0), gamma_scalar + pos - neg) + ridge_regularization
+            tf.maximum(float(0), self.hinge_margin + pos - neg) + ridge_regularization
         )  # (batch_size, n_negative_samples)
         total_loss = tf.reduce_sum(hinge_loss)
 
         # Normalize by the batch size and the number of negative samples
-        if tf.reduce_any(self.gamma > 0):
-            return total_loss / (batch_size * self.n_negative_samples * self.gamma), _
+        if tf.reduce_any(self.hinge_margin > 0):
+            return total_loss / (batch_size * self.n_negative_samples * self.hinge_margin), _
         else:
             return total_loss / (batch_size * self.n_negative_samples), _
 
@@ -617,9 +581,23 @@ class SelfAttentionModel(BaseBasketModel):
         trip_dataset: TripDataset,
         batch_size: int = 32,
         hit_k: list = None,
-        metrics: list[callable] = None,  # Change *metrics to a named parameter
+        metrics: list[callable] = None,  
     ):
-        """Evaluate the model on the given dataset using the specified metric."""
+        """Evaluate the model on the given dataset using the specified metric.
+        
+        Parameters
+        ----------
+        hit_k : list
+            List of k values for hit rate calculation. 
+        metrics : list of callable
+            List of metric functions to evaluate. Each function should take
+            (all_distances, item_batch, hit_k) as parameters and return a score.
+       
+        Returns
+        -------
+        dict
+            Dictionary with metric names as keys and their corresponding scores as values.
+        """
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )

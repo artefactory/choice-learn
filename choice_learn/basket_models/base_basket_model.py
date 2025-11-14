@@ -657,7 +657,6 @@ class BaseBasketModel:
         history = {"train_loss": [], "val_loss": []}
 
         t_range = tqdm.trange(self.epochs, position=0)
-        self.is_training = True
         self.callbacks.on_train_begin()
         # Iterate of epochs
         for epoch_nb in t_range:
@@ -740,7 +739,6 @@ class BaseBasketModel:
 
             # Test on val_dataset if provided
             if val_dataset is not None:
-                self.is_training = False
                 val_losses = []
                 if evaluate_val_dataset_with_metric:
                     val_loss = self.evaluate(
@@ -796,14 +794,12 @@ class BaseBasketModel:
                     desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
                 history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
                 train_logs = {**train_logs, **val_logs}
-            self.is_training = True
             temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
 
             t_range.set_description(desc)
             t_range.refresh()
 
-        self.is_training = False
         temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
         return history

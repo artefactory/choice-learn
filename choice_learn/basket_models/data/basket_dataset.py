@@ -99,7 +99,6 @@ class TripDataset:
         self,
         trips: list[Trip],
         available_items: np.ndarray,
-        #  neg_dict: dict
     ) -> None:
         """Initialize the dataset.
 
@@ -119,7 +118,6 @@ class TripDataset:
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = len(self.get_transactions())
         self.available_items = available_items
-        # self.neg_dict = neg_dict
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -556,9 +554,6 @@ class TripDataset:
             # Then it is directly the availability matrix
             assortment = trip.assortment
 
-        # if len(self.neg_dict) >0:
-        # padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
-
         return (
             np.array([purchases[L]]),  # Items
             padded_truncated_purchases,  # Baskets
@@ -724,19 +719,16 @@ class TripDataset:
             return TripDataset(
                 trips=[self.trips[index]],
                 available_items=self.available_items,
-                # neg_dict=self.neg_dict
             )
         if isinstance(index, (list, np.ndarray, range)):
             return TripDataset(
                 trips=[self.trips[i] for i in index],
                 available_items=self.available_items,
-                # neg_dict=self.neg_dict
             )
         if isinstance(index, slice):
             return TripDataset(
                 trips=self.trips[index],
                 available_items=self.available_items,
-                # neg_dict=self.neg_dict
             )
 
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
