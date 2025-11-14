@@ -40,13 +40,17 @@ class SyntheticDataGenerator:
                                       ["compl", "", "neutral", "neutral"],
                                       ["neutral", "neutral", "", "neutral"],
                                       ["neutral", "neutral", "neutral", ""]]
-                user_profile = {0:{ "nest" : 0, "item" : 0}, 1: {"nest" : 0, "item" : 1}, 2: {"nest" : 0, "item" : 2}}
+            user_profile = {0:{ "nest" : 0, "item" : 0}, 1: {"nest" : 0, "item" : 1}, 2: {"nest" : 0, "item" : 2}}
+                Dictionary defining user profiles with preferred nest and item. Structure is:
+                {user_id: {"nest": nest, "item": preferred_item}, ...}
             proba_complementary_items : float
                 Probability of adding complementary items to the basket.
             proba_neutral_items : float
                 Probability of adding neutral items to the basket.
             noise_proba : float
                 Probability of adding noise items to the basket.
+            nb_users : int
+                Number of users in the dataset.
         """
         self.proba_complementary_items = proba_complementary_items
         self.proba_neutral_items = proba_neutral_items
