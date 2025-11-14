@@ -35,6 +35,7 @@ class AleaCarta(BaseBasketModel):
         weight_decay: Union[float, None] = None,
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
+        l2_regularization: float = 0.0,
         **kwargs,
     ) -> None:
         """Initialize the AleaCarta model.
@@ -80,7 +81,8 @@ class AleaCarta(BaseBasketModel):
         self.item_intercept = item_intercept
         self.price_effects = price_effects
         self.seasonal_effects = seasonal_effects
-
+        self.l2_regularization = l2_regularization
+        
         if "preferences" not in latent_sizes.keys():
             logging.warning(
                 "No latent size value has been specified for preferences, "
@@ -730,7 +732,7 @@ class AleaCarta(BaseBasketModel):
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
-        ridge_regularization = 0.000001 * (tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta))
+        ridge_regularization = self.l2_regularization * (tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta))
         # Normalize by the batch size and the number of negative samples
         return tf.reduce_sum(bce + ridge_regularization) / (batch_size), loglikelihood
 

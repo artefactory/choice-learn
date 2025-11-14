@@ -265,11 +265,14 @@ class BaseBasketModel:
                 available_items_copy[basket_item] = 0.0
 
         # Compute the utility of all the items
+        print(np.shape(np.array([basket for _ in range(self.n_items)])))
+        gamma_basket = self.embed_basket(basket_batch=np.array([basket for _ in range(self.n_items)]))
+        print(tf.shape(gamma_basket))
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.arange(self.n_items),
             # For each item: same basket / store / week / prices / available items
-            basket_batch=np.array([basket for _ in range(self.n_items)]),
+            gamma_by_basket= gamma_basket,
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
@@ -603,7 +606,6 @@ class BaseBasketModel:
         batch_loss: tf.Tensor
             Value of the loss for the batch
         """
-        step_start = time.perf_counter()
         with tf.GradientTape() as tape:
             batch_loss = self.compute_batch_loss(
                 item_batch=item_batch,
@@ -625,6 +627,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
         verbose: int = 0,
+        evaluate_val_dataset_with_metric: bool = True,
     ) -> dict:
         """Fit the model to the data in order to estimate the latent parameters.
 
@@ -688,7 +691,6 @@ class BaseBasketModel:
             ) in enumerate(inner_range):
                 self.callbacks.on_train_batch_begin(batch_nb)
 
-                self.t0 = time.perf_counter()
                 batch_loss = self.train_step(
                     item_batch=item_batch,
                     basket_batch=basket_batch,
@@ -699,7 +701,6 @@ class BaseBasketModel:
                     available_item_batch=available_item_batch,
                     user_batch=user_batch,
                 )
-                batch_end = time.perf_counter()
 
                 train_logs["train_loss"].append(batch_loss)
                 temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
@@ -725,7 +726,6 @@ class BaseBasketModel:
             else:
                 epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
 
-            # print("epoch_losses:", epoch_losses)
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
@@ -738,10 +738,11 @@ class BaseBasketModel:
 
             # Test on val_dataset if provided
             if val_dataset is not None:
+                self.is_training = False
                 val_losses = []
-                if True:
+                if evaluate_val_dataset_with_metric:
                     val_loss = self.evaluate(
-                        val_dataset, hit_k=None, metrics=[self.mean_reciprocal_rank]
+                        val_dataset, batch_size = 256, hit_k=None, metrics=[self.mean_reciprocal_rank]
                     )["mean_reciprocal_rank"]
                 else:
                     for batch_nb, (
@@ -788,13 +789,12 @@ class BaseBasketModel:
                     else:
                         val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
 
-                # print("val_loss:", val_loss)
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", val_loss.numpy())
                     desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
                 history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
                 train_logs = {**train_logs, **val_logs}
-
+            self.is_training = True
             temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
 
@@ -841,7 +841,7 @@ class BaseBasketModel:
         n_evals = 0
 
         inner_range = trip_dataset.iter_batch(
-            shuffle=True, batch_size=batch_size, data_method="aleacarta"
+            shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
         for (
             item_batch,
@@ -851,7 +851,7 @@ class BaseBasketModel:
             week_batch,
             price_batch,
             available_item_batch,
-            user_batch,
+            _,
         ) in inner_range:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]
@@ -961,11 +961,6 @@ class BaseBasketModel:
             else:
                 non_init_params[key] = val
 
-        if cls.__name__ == "SelfAttentionModel":
-            init_params["w"] = 0
-            init_params["gamma"] = 0
-            if "latent_sizes" not in init_params:
-                init_params["latent_sizes"] = {"short_term": 4, "long_term": 0}
 
         # Initialize model
         model = cls(**init_params)
@@ -976,9 +971,5 @@ class BaseBasketModel:
 
         # Load weights
         model._load_weights(path)
-
-        if cls.__name__ == "SelfAttentionModel" or cls.__name__ == "Movie_SelfAttentionModel":
-            setattr(model, "Wq", getattr(model, "Queries"))
-            setattr(model, "Wk", getattr(model, "Keys"))
 
         return model
