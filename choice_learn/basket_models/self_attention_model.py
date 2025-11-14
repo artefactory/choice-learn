@@ -582,7 +582,7 @@ class SelfAttentionModel(BaseBasketModel):
         self,
         trip_dataset: TripDataset,
         batch_size: int = 32,
-        hit_k: list = None,
+        hit_k: list = [50],
         metrics: list[callable] = None,
     ):
         """Evaluate the model on the given dataset using the specified metric.
@@ -660,37 +660,3 @@ class SelfAttentionModel(BaseBasketModel):
             results[nom_metrique] = results[nom_metrique] / float(total)
         return results
 
-    def hit_rate(self, all_distances, item_batch, hit_k):
-        """Compute the hit rate at k for the given distances."""
-
-        hit_list = []
-        for k in hit_k:
-            top_k_indices = tf.math.top_k(-all_distances, k=k).indices  # Shape: (batch_size, hit_k)
-            hits_per_batch = tf.reduce_any(
-                tf.equal(
-                    tf.cast(top_k_indices, tf.int32),
-                    tf.cast(tf.expand_dims(item_batch, axis=1), tf.int32),
-                ),
-                axis=1,
-            )
-            hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32))
-            hit_list.append(hits)
-        hit_list = tf.convert_to_tensor(hit_list)
-
-        return hit_list
-
-    def mean_reciprocal_rank(self, all_distances, item_batch, _):
-        """Compute the mean reciprocal rank for the given distances."""
-
-        batch_size = tf.shape(item_batch)[0]
-        ranks = (
-            tf.argsort(tf.argsort(all_distances, axis=1), axis=1) + 1
-        )  # Shape: (batch_size, n_items)
-        item_batch_indices = tf.stack(
-            [tf.range(batch_size), item_batch], axis=1
-        )  # Shape: (batch_size, 2)
-        item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
-
-        mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32))
-
-        return mean_rank

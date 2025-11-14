@@ -629,7 +629,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
         verbose: int = 0,
-        evaluate_val_dataset_with_metric: bool = True,
+        metrics:  list[callable] = None,
     ) -> dict:
         """Fit the model to the data in order to estimate the latent parameters.
 
@@ -654,7 +654,7 @@ class BaseBasketModel:
 
         batch_size = self.batch_size
 
-        history = {"train_loss": [], "val_loss": []}
+        history = {"train_loss": [], "val_loss": [], "val_metrics": []}
 
         t_range = tqdm.trange(self.epochs, position=0)
         self.callbacks.on_train_begin()
@@ -740,10 +740,10 @@ class BaseBasketModel:
             # Test on val_dataset if provided
             if val_dataset is not None:
                 val_losses = []
-                if evaluate_val_dataset_with_metric:
+                if metrics is not None:
                     val_loss = self.evaluate(
-                        val_dataset, batch_size=256, hit_k=None, metrics=[self.mean_reciprocal_rank]
-                    )["mean_reciprocal_rank"]
+                        val_dataset, batch_size=256, metrics=metrics
+                    )
                 else:
                     for batch_nb, (
                         item_batch,
@@ -790,10 +790,15 @@ class BaseBasketModel:
                         val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
 
                 if verbose > 1:
-                    print("Test Negative-LogLikelihood:", val_loss.numpy())
-                    desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
-                history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
-                train_logs = {**train_logs, **val_logs}
+                    if metrics is not None:
+                        print("Validation Metrics:", list(val_loss.values())[0].numpy())
+                        desc += ", Val Metrics " + ", ".join(str(np.round(float(v), 4)) for v in val_loss if isinstance(v, (int, float, np.floating)))                    
+                        history["val_metrics"] = history.get("val_metrics", []) + [list(val_loss.values())[0]]
+                    else:
+                        print("Test Negative-LogLikelihood:", val_loss.numpy())
+                        desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
+                        history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
+                        train_logs = {**train_logs, **val_logs}
             temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
 
