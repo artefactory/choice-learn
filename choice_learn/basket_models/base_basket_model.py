@@ -629,7 +629,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
         verbose: int = 0,
-        metrics:  list[callable] = None,
+        metrics: list[callable] = None,
     ) -> dict:
         """Fit the model to the data in order to estimate the latent parameters.
 
@@ -741,9 +741,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate(
-                        val_dataset, batch_size=256, metrics=metrics
-                    )
+                    val_loss = self.evaluate(val_dataset, batch_size=256, metrics=metrics)
                 else:
                     for batch_nb, (
                         item_batch,
@@ -792,8 +790,14 @@ class BaseBasketModel:
                 if verbose > 1:
                     if metrics is not None:
                         print("Validation Metrics:", list(val_loss.values())[0].numpy())
-                        desc += ", Val Metrics " + ", ".join(str(np.round(float(v), 4)) for v in val_loss if isinstance(v, (int, float, np.floating)))                    
-                        history["val_metrics"] = history.get("val_metrics", []) + [list(val_loss.values())[0]]
+                        desc += ", Val Metrics " + ", ".join(
+                            str(np.round(float(v), 4))
+                            for v in val_loss
+                            if isinstance(v, (int, float, np.floating))
+                        )
+                        history["val_metrics"] = history.get("val_metrics", []) + [
+                            list(val_loss.values())[0]
+                        ]
                     else:
                         print("Test Negative-LogLikelihood:", val_loss.numpy())
                         desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"

@@ -659,4 +659,3 @@ class SelfAttentionModel(BaseBasketModel):
             nom_metrique = metrique_func.__name__
             results[nom_metrique] = results[nom_metrique] / float(total)
         return results
-
