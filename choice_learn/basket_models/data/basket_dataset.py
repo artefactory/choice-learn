@@ -511,8 +511,8 @@ class TripDataset:
     def get_sequential_data_from_trip_index(
         self,
         trip_index: int,
-        L: int=5,
-        T: int=3,
+        L: int = 5,
+        T: int = 3,
     ) -> tuple[np.ndarray]:
         """Get augmented data from a trip index for sequential movie recommendation.
 
@@ -521,7 +521,7 @@ class TripDataset:
         trip_index: int
             Index of the trip from which to get the data
         L: Lenght of sequence we consider: example L=5 means we consider the 5th item as target and
-           the first 5 items as the basket. 
+           the first 5 items as the basket.
         T: Number of future purchases to consider: example T=3 means we consider the next 3 items after the target item as future purchases.
         Returns
         -------
@@ -540,7 +540,13 @@ class TripDataset:
         )
 
         padded_future_purchases = np.array(
-            [np.pad(purchases[L+1:L+1+T], (0, max(0, T - len(purchases[L+1:L+1+T]))), constant_values=-1)],
+            [
+                np.pad(
+                    purchases[L + 1 : L + 1 + T],
+                    (0, max(0, T - len(purchases[L + 1 : L + 1 + T]))),
+                    constant_values=-1,
+                )
+            ],
             dtype=int,
         )
         if isinstance(trip.assortment, int):
@@ -551,7 +557,7 @@ class TripDataset:
             assortment = trip.assortment
 
         # if len(self.neg_dict) >0:
-            #padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
+        # padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
 
         return (
             np.array([purchases[L]]),  # Items
@@ -636,9 +642,7 @@ class TripDataset:
                         trip_index
                     )
                 elif data_method == "sequential":
-                    additional_trip_data = self.get_sequential_data_from_trip_index(
-                        trip_index
-                    )
+                    additional_trip_data = self.get_sequential_data_from_trip_index(trip_index)
                 else:
                     raise ValueError(f"Unknown data method: {data_method}")
 

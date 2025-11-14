@@ -118,7 +118,7 @@ class SelfAttentionModel(BaseBasketModel):
             Number of unique items in the dataset.
         n_users : int
             Number of unique users in the dataset.
-        
+
         Variables
         ----------
         X : tf.Variable
@@ -141,7 +141,7 @@ class SelfAttentionModel(BaseBasketModel):
             trainable=True,
             constraint=tf.keras.constraints.MaxNorm(max_value=1.0, axis=1),
             name="X",
-        ) 
+        )
 
         self.V = tf.Variable(
             tf.random_normal_initializer(mean=0.0, stddev=0.01, seed=42)(
@@ -232,7 +232,7 @@ class SelfAttentionModel(BaseBasketModel):
             all_inf_row = tf.reduce_all(tf.math.is_inf(scaled_scores), axis=-1)  # (batch_size, L)
             # We set to zero the first value of the rows where all values are -inf to avoid NaNs in softmax
             indices = tf.where(all_inf_row)
-            indices_full = tf.concat([indices, tf.zeros_like(indices[:, :1])], axis=1)   
+            indices_full = tf.concat([indices, tf.zeros_like(indices[:, :1])], axis=1)
             updates = tf.zeros([tf.shape(indices_full)[0]], dtype=scaled_scores.dtype)
             scaled_scores = tf.tensor_scatter_nd_update(scaled_scores, indices_full, updates)
 
@@ -262,9 +262,7 @@ class SelfAttentionModel(BaseBasketModel):
         # self.X.assign(tf.clip_by_norm(self.X, clip_norm=1.0, axes=1))
         padding_vector = tf.zeros(shape=[1, self.d])  # Forme (1, d)
         padded_X = tf.concat([self.X, padding_vector], axis=0)
-        X_future_batch = tf.gather(
-            padded_X, indices=context_items
-        )  # Shape: (batch_size, L, d)
+        X_future_batch = tf.gather(padded_X, indices=context_items)  # Shape: (batch_size, L, d)
 
         Q_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wq))  # Shape: (batch_size, L, d)
         K_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wk))
@@ -295,7 +293,6 @@ class SelfAttentionModel(BaseBasketModel):
         )
         m_batch = tf.squeeze(m_batch, axis=1)  # Shape: (batch_size,)
         return m_batch, attention_weights
-
 
     def compute_batch_short_distance(
         self,
@@ -395,11 +392,8 @@ class SelfAttentionModel(BaseBasketModel):
         U_user_batch = tf.gather(U_batch, indices=user_batch)  # Shape: (batch_size, d)
 
         long_term_distance = tf.reduce_sum(
-            tf.square(
-                    U_user_batch
-                    - V_future_batch
-                ), axis=-1)  # Shape: (batch_size, 1)
-
+            tf.square(U_user_batch - V_future_batch), axis=-1
+        )  # Shape: (batch_size, 1)
 
         return long_term_distance
 
@@ -486,7 +480,6 @@ class SelfAttentionModel(BaseBasketModel):
 
         # Keep only n_samples
         return negative_samples[:n_samples]
-
 
     # @tf.function  # Graph mode
     def compute_batch_loss(
@@ -576,7 +569,7 @@ class SelfAttentionModel(BaseBasketModel):
         augmented_item_batch = tf.cast(
             tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
         )
-        
+
         basket_batch_ragged = tf.cast(
             tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
             dtype=tf.int32,
@@ -600,7 +593,11 @@ class SelfAttentionModel(BaseBasketModel):
         pos = tf.tile(positive_samples_distance, [self.n_negative_samples])
 
         ridge_regularization = self.l2_regularization * (
-            tf.nn.l2_loss(self.U) + tf.nn.l2_loss(self.V) + tf.nn.l2_loss(self.X)+ tf.nn.l2_loss(self.Wq) + tf.nn.l2_loss(self.Wk)
+            tf.nn.l2_loss(self.U)
+            + tf.nn.l2_loss(self.V)
+            + tf.nn.l2_loss(self.X)
+            + tf.nn.l2_loss(self.Wq)
+            + tf.nn.l2_loss(self.Wk)
         )
 
         gamma_scalar = tf.squeeze(self.gamma)
@@ -644,11 +641,11 @@ class SelfAttentionModel(BaseBasketModel):
                 tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1
             )  # Shape: (batch_size, n_items)
             basket_batch_ragged = tf.cast(
-            tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
-            dtype=tf.int32,
-        )
+                tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
+                dtype=tf.int32,
+            )
             basket_batch = basket_batch_ragged.to_tensor(self.n_items)
-            m_batch, _ = self.embed_context(basket_batch, is_training = False)
+            m_batch, _ = self.embed_context(basket_batch, is_training=False)
             all_distances = self.compute_batch_distance(
                 item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
                 m_batch=m_batch,
