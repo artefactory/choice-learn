@@ -508,9 +508,11 @@ class TripDataset:
             np.full(length_trip, trip.user_id),  # User IDs
         )
 
-    def get_sequential_movie_data_from_trip_index(
+    def get_sequential_data_from_trip_index(
         self,
         trip_index: int,
+        L: int=5,
+        T: int=3,
     ) -> tuple[np.ndarray]:
         """Get augmented data from a trip index for sequential movie recommendation.
 
@@ -518,13 +520,14 @@ class TripDataset:
         ----------
         trip_index: int
             Index of the trip from which to get the data
-
+        L: Lenght of sequence we consider: example L=5 means we consider the 5th item as target and
+           the first 5 items as the basket. 
+        T: Number of future purchases to consider: example T=3 means we consider the next 3 items after the target item as future purchases.
         Returns
         -------
         tuple[np.ndarray]
             For each sample (ie transaction) from the trip:
             item, basket, future purchases, store, week, prices, available items, user_id
-            Length must be 8
         """
         # Get the trip from the index
         trip = self.trips[trip_index]
@@ -532,12 +535,12 @@ class TripDataset:
         purchases = np.array(trip.purchases)
 
         padded_truncated_purchases = np.array(
-            [purchases[:5]],
+            [purchases[:L]],
             dtype=int,
         )
 
         padded_future_purchases = np.array(
-            [np.pad(purchases[6:], (0, 2 - len(purchases[6:])), constant_values=-1)],
+            [np.pad(purchases[L+1:L+1+T], (0, max(0, T - len(purchases[L+1:L+1+T]))), constant_values=-1)],
             dtype=int,
         )
         if isinstance(trip.assortment, int):
@@ -548,10 +551,10 @@ class TripDataset:
             assortment = trip.assortment
 
         # if len(self.neg_dict) >0:
-        #   padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
+            #padded_future_purchases = [np.pad (self.neg_dict[trip.user_id], (0, 736 - len(self.neg_dict[trip.user_id])), constant_values=-1)]
 
         return (
-            np.array([purchases[5]]),  # Items
+            np.array([purchases[L]]),  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
             np.array([trip.store]),  # Stores
@@ -587,7 +590,6 @@ class TripDataset:
         tuple[np.ndarray]
             For each item in the batch: item, basket, future purchases,
             store, week, prices, available items, user_id
-            Length must be 8
         """
         # Get trip indexes
         num_trips = len(self)
@@ -610,11 +612,11 @@ class TripDataset:
             np.empty(0, dtype=int),  # User IDs
         )
 
-        if data_method == "sequential_movie":
+        if data_method == "sequential":
             buffer = (
                 np.empty(0, dtype=int),  # Items
                 np.empty((0, 5), dtype=int),  # Baskets
-                np.empty((0, 736), dtype=int),  # Future purchases
+                np.empty((0, 3), dtype=int),  # Future purchases
                 np.empty(0, dtype=int),  # Stores
                 np.empty(0, dtype=int),  # Weeks
                 np.empty((0, self.n_items), dtype=int),  # Prices
@@ -633,8 +635,8 @@ class TripDataset:
                     additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
                         trip_index
                     )
-                elif data_method == "sequential_movie":
-                    additional_trip_data = self.get_sequential_movie_data_from_trip_index(
+                elif data_method == "sequential":
+                    additional_trip_data = self.get_sequential_data_from_trip_index(
                         trip_index
                     )
                 else:
@@ -677,8 +679,8 @@ class TripDataset:
                                     trip_indexes[index]
                                 )
                             )
-                        elif data_method == "sequential_movie":
-                            additional_trip_data = self.get_sequential_movie_data_from_trip_index(
+                        elif data_method == "sequential":
+                            additional_trip_data = self.get_sequential_data_from_trip_index(
                                 trip_indexes[index]
                             )
                         else:
