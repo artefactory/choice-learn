@@ -844,23 +844,23 @@ class BaseBasketModel:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]
             for basket, item, available_items, store, week, prices in zip(
-                            basket_batch,
-                            item_batch,
-                            available_item_batch,
-                            store_batch,
-                            week_batch,
-                            price_batch,
-                        ):
-                        y_pred =  self.compute_item_likelihood(
-                                    basket=basket,
-                                    available_items=available_items,
-                                    store=store,
-                                    week=week,
-                                    prices=prices,
-                                )
-                        for metric in exec_metrics:
-                            # Use update_state, not append(metric(...))
-                            metric.update_state(y_true=item, y_pred=y_pred)
+                basket_batch,
+                item_batch,
+                available_item_batch,
+                store_batch,
+                week_batch,
+                price_batch,
+            ):
+                y_pred = self.compute_item_likelihood(
+                    basket=basket,
+                    available_items=available_items,
+                    store=store,
+                    week=week,
+                    prices=prices,
+                )
+                for metric in exec_metrics:
+                    # Use update_state, not append(metric(...))
+                    metric.update_state(y_true=item, y_pred=y_pred)
 
         # After the loops, get the final results
         metrics_values = {metric.name: metric.result() for metric in exec_metrics}
