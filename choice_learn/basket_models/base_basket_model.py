@@ -812,7 +812,7 @@ class BaseBasketModel:
         """
         if not isinstance(metrics, list):
             metrics = [metrics]
-        
+
         exec_metrics = []
         for metric in metrics:
             if not isinstance(metric, tf.keras.metrics.metric.Metric):
@@ -838,23 +838,23 @@ class BaseBasketModel:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]
             for basket, item, available_items, store, week, prices in zip(
-                            basket_batch,
-                            item_batch,
-                            available_item_batch,
-                            store_batch,
-                            week_batch,
-                            price_batch,
-                        ):
-                        y_pred =  self.compute_item_likelihood(
-                                    basket=basket,
-                                    available_items=available_items,
-                                    store=store,
-                                    week=week,
-                                    prices=prices,
-                                )
-                        for metric in exec_metrics:
-                            metrics_values[metric.name].append(metric(y_pred=y_pred, y_true=item))
-                                
+                basket_batch,
+                item_batch,
+                available_item_batch,
+                store_batch,
+                week_batch,
+                price_batch,
+            ):
+                y_pred = self.compute_item_likelihood(
+                    basket=basket,
+                    available_items=available_items,
+                    store=store,
+                    week=week,
+                    prices=prices,
+                )
+                for metric in exec_metrics:
+                    metrics_values[metric.name].append(metric(y_pred=y_pred, y_true=item))
+
             n_evals += len(item_batch)
 
         for key, value in metrics_values.keys():
