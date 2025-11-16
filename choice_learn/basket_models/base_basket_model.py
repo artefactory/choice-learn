@@ -783,6 +783,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         batch_size: int = 32,
         epsilon_eval: float = 1e-9,
+        metrics="nll",
     ) -> tf.Tensor:
         r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
@@ -809,7 +810,17 @@ class BaseBasketModel:
             Value of the mean loss (nll) for the dataset,
             Shape must be (1,)
         """
-        sum_loglikelihoods = 0.0
+        if not isinstance(metrics, list):
+            metrics = [metrics]
+        
+        exec_metrics = []
+        for metric in metrics:
+            if not isinstance(metric, tf.keras.metrics.metric.Metric):
+                exec_metrics.append(tf.keras.metrics.get(metric))
+            else:
+                exec_metrics.append(metric)
+
+        metrics_values = {metric.name: [] for metric in exec_metrics}
         n_evals = 0
 
         inner_range = trip_dataset.iter_batch(
@@ -826,32 +837,30 @@ class BaseBasketModel:
         ) in inner_range:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]
-            sum_loglikelihoods += np.sum(
-                np.log(
-                    [
-                        self.compute_item_likelihood(
-                            basket=basket,
-                            available_items=available_items,
-                            store=store,
-                            week=week,
-                            prices=prices,
-                        )[item]
-                        + epsilon_eval
-                        for basket, item, available_items, store, week, prices in zip(
+            for basket, item, available_items, store, week, prices in zip(
                             basket_batch,
                             item_batch,
                             available_item_batch,
                             store_batch,
                             week_batch,
                             price_batch,
-                        )
-                    ]
-                )
-            )
+                        ):
+                        y_pred =  self.compute_item_likelihood(
+                                    basket=basket,
+                                    available_items=available_items,
+                                    store=store,
+                                    week=week,
+                                    prices=prices,
+                                )
+                        for metric in exec_metrics:
+                            metrics_values[metric.name].append(metric(y_pred=y_pred, y_true=item))
+                                
             n_evals += len(item_batch)
 
+        for key, value in metrics_values.keys():
+            metrics_values[key] = value / n_evals
         # Predicted mean negative log-likelihood over all the batches
-        return -1 * sum_loglikelihoods / n_evals
+        return metrics_values
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.
