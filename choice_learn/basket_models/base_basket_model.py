@@ -784,7 +784,7 @@ class BaseBasketModel:
         batch_size: int = 32,
         epsilon_eval: float = 1e-9,
         metrics="nll",
-    ) -> tf.Tensor:
+    ) -> dict:
         r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
         Predicts the probabilities according to the model and then computes the
@@ -815,13 +815,19 @@ class BaseBasketModel:
 
         exec_metrics = []
         for metric in metrics:
-            if not isinstance(metric, tf.keras.metrics.metric.Metric):
+            if metric == "nll":
+                exec_metrics.append(
+                    tf.keras.metrics.SparseCategoricalCrossentropy(name="nll", from_logits=False)
+                )
+            elif not isinstance(metric, tf.keras.metrics.metric.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
             else:
                 exec_metrics.append(metric)
 
+        for metric in exec_metrics:
+            metric.reset_states()
+
         metrics_values = {metric.name: [] for metric in exec_metrics}
-        n_evals = 0
 
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
@@ -838,28 +844,26 @@ class BaseBasketModel:
             # Sum of the log-likelihoods of all the baskets in the batch
             basket_batch = [basket[basket != -1] for basket in basket_batch]
             for basket, item, available_items, store, week, prices in zip(
-                basket_batch,
-                item_batch,
-                available_item_batch,
-                store_batch,
-                week_batch,
-                price_batch,
-            ):
-                y_pred = self.compute_item_likelihood(
-                    basket=basket,
-                    available_items=available_items,
-                    store=store,
-                    week=week,
-                    prices=prices,
-                )
-                for metric in exec_metrics:
-                    metrics_values[metric.name].append(metric(y_pred=y_pred, y_true=item))
+                            basket_batch,
+                            item_batch,
+                            available_item_batch,
+                            store_batch,
+                            week_batch,
+                            price_batch,
+                        ):
+                        y_pred =  self.compute_item_likelihood(
+                                    basket=basket,
+                                    available_items=available_items,
+                                    store=store,
+                                    week=week,
+                                    prices=prices,
+                                )
+                        for metric in exec_metrics:
+                            # Use update_state, not append(metric(...))
+                            metric.update_state(y_true=item, y_pred=y_pred)
 
-            n_evals += len(item_batch)
-
-        for key, value in metrics_values.keys():
-            metrics_values[key] = value / n_evals
-        # Predicted mean negative log-likelihood over all the batches
+        # After the loops, get the final results
+        metrics_values = {metric.name: metric.result() for metric in exec_metrics}
         return metrics_values
 
     def save_model(self, path: str) -> None:
