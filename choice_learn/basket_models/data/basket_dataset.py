@@ -509,18 +509,18 @@ class TripDataset:
     def get_sequential_data_from_trip_index(
         self,
         trip_index: int,
-        L: int = 5,
-        T: int = 3,
+        sequence_length: int = 5,
+        n_future_purchases: int = 3,
     ) -> tuple[np.ndarray]:
-        """Get augmented data from a trip index for sequential movie recommendation.
+        """Get augmented data from a trip index for sequential recommendation.
 
         Parameters
         ----------
         trip_index: int
             Index of the trip from which to get the data
-        L: Lenght of sequence we consider: example L=5 means we consider the 5th item as target and
+        sequence_length: Lenght of sequence we consider: example sequence_length=5 means we consider the 5th item as target and
            the first 5 items as the basket.
-        T: Number of future purchases to consider: example T=3 means we consider the next 3 items after the target item as future purchases.
+        n_future_purchases: Number of future purchases to consider: example n_future_purchases=3 means we consider the next 3 items after the target item as future purchases.
         Returns
         -------
         tuple[np.ndarray]
@@ -533,15 +533,15 @@ class TripDataset:
         purchases = np.array(trip.purchases)
 
         padded_truncated_purchases = np.array(
-            [purchases[:L]],
+            [purchases[:sequence_length]],
             dtype=int,
         )
 
         padded_future_purchases = np.array(
             [
                 np.pad(
-                    purchases[L + 1 : L + 1 + T],
-                    (0, max(0, T - len(purchases[L + 1 : L + 1 + T]))),
+                    purchases[sequence_length + 1 : sequence_length + 1 + n_future_purchases],
+                    (0, max(0, n_future_purchases - len(purchases[sequence_length + 1 : sequence_length + 1 + n_future_purchases]))),
                     constant_values=-1,
                 )
             ],
@@ -555,7 +555,7 @@ class TripDataset:
             assortment = trip.assortment
 
         return (
-            np.array([purchases[L]]),  # Items
+            np.array([purchases[sequence_length]]),  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
             np.array([trip.store]),  # Stores

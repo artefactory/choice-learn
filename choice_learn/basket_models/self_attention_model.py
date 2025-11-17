@@ -315,10 +315,7 @@ class SelfAttentionModel(BaseBasketModel):
 
         X_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, d)
 
-        # X_item_target = tf.expand_dims(X_item_target, axis=1) # Shape: (batch_size, 1, d)
         short_term_distance = tf.reduce_sum(tf.square(m_batch - X_item_target), axis=-1)
-
-        # short_term_distance = tf.squeeze(short_term_distance, axis=1) # Shape: (batch_size,)
 
         return short_term_distance
 
@@ -446,7 +443,6 @@ class SelfAttentionModel(BaseBasketModel):
         # Keep only n_samples
         return negative_samples[:n_samples]
 
-    # @tf.function  # Graph mode
     def compute_batch_loss(
         self,
         item_batch: np.ndarray,
@@ -637,10 +633,10 @@ class SelfAttentionModel(BaseBasketModel):
             ####--------------------------------------------------------------
             # We remove the items in each basket from the recommendations in all_distances
             # 1 if item is in the basket, 0 otherwise
-            max = 100.0
+            inf_penalty = 100.0
             mask = tf.cast(mask, dtype=tf.float32)
 
-            inf_mask = mask * max  # Shape: (batch_size, n_items)
+            inf_mask = mask * inf_penalty  # Shape: (batch_size, n_items)
             all_distances = all_distances + inf_mask  # Shape: (batch_size, n_items)
             ####----------------------------------------------------------
 

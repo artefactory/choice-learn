@@ -1,14 +1,9 @@
-import itertools
-import logging
-import os
-import sys
-
 import numpy as np
 import pytest
 import tensorflow as tf
 
 from choice_learn.basket_models.data import Trip, TripDataset
-from choice_learn.basket_models.data.synthetic_dataset import SyntheticDataGenerator
+from choice_learn.basket_models.datasets import SyntheticDataGenerator
 from choice_learn.basket_models.self_attention_model import SelfAttentionModel
 
 items_nest = {0: [0, 1, 2], 1: [3, 4, 5], 2: [6, 7, 8]}

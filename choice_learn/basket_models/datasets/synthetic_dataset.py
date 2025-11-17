@@ -20,7 +20,6 @@ class SyntheticDataGenerator:
         noise_proba: float = 0.05,
         plant_seed: int = None,
         user_profile: dict = None,
-        nb_users: int = None,
     ) -> None:
         """Initialize the data generator with parameters for basket generation.
 
@@ -49,8 +48,6 @@ class SyntheticDataGenerator:
                 Probability of adding neutral items to the basket.
             noise_proba : float
                 Probability of adding noise items to the basket.
-            nb_users : int
-                Number of users in the dataset.
         """
         self.proba_complementary_items = proba_complementary_items
         self.proba_neutral_items = proba_neutral_items
@@ -58,7 +55,6 @@ class SyntheticDataGenerator:
         self.items_nest = items_nest
         self.nests_interactions = nests_interactions
         self.user_profile = user_profile
-        self.nb_users = nb_users
 
         if plant_seed is not None:
             np.random.seed(plant_seed)
@@ -262,7 +258,7 @@ class SyntheticDataGenerator:
                 A Trip object containing the generated basket.
         """
 
-        user_id = np.random.randint(0, self.nb_users) if self.user_profile is not None else None
+        user_id = np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else None
         basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
             int
         )
