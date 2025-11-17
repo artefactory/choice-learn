@@ -388,7 +388,7 @@ class AleaCarta(BaseBasketModel):
     def compute_batch_utility(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
-        gamma_by_basket: np.ndarray,
+        basket_batch: np.ndarray,
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
@@ -414,12 +414,17 @@ class AleaCarta(BaseBasketModel):
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
         """
+
+
         preference_utility = self.compute_preference_utility(
             item_batch=item_batch,
             store_batch=store_batch,
             week_batch=week_batch,
             price_batch=price_batch,
         )  # Shape: (batch_size,)
+
+        # Basket utility = sum of the utilities of the items in the basket
+        gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
 
         interaction_utility = self.compute_interaction_utility(
             item_batch=item_batch,
@@ -521,12 +526,10 @@ class AleaCarta(BaseBasketModel):
             [np.delete(basket, i) for i in range(len_basket)]
         )  # Shape: (len_basket, len(basket) - 1)
 
-        # Basket utility = sum of the utilities of the items in the basket
-        gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
         return tf.reduce_sum(
             self.compute_batch_utility(
                 item_batch=basket,
-                gamma_by_basket=gamma_by_basket,
+                basket_batch=basket_batch,
                 store_batch=np.array([store] * len_basket),
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
@@ -690,10 +693,9 @@ class AleaCarta(BaseBasketModel):
             batch_dims=1,
         )
         # Compute the utility of all the available items
-        gamma_basket = self.embed_basket(basket_batch=basket_batch)
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
-            gamma_by_basket=tf.tile(gamma_basket, [self.n_negative_samples + 1, 1]),
+            basket_batch=tf.tile(basket_batch, [self.n_negative_samples + 1, 1]),
             store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
             week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,

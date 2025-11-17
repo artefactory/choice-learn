@@ -265,20 +265,17 @@ class BaseBasketModel:
                 available_items_copy[basket_item] = 0.0
 
         # Compute the utility of all the items
-        print(np.shape(np.array([basket for _ in range(self.n_items)])))
         gamma_basket = self.embed_basket(
             basket_batch=np.array([basket for _ in range(self.n_items)])
         )
-        print(tf.shape(gamma_basket))
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.arange(self.n_items),
             # For each item: same basket / store / week / prices / available items
-            gamma_by_basket=gamma_basket,
+            basket_batch=np.array([basket for _ in range(self.n_items)]),
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
-            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
         )
 
         # Softmax on the utilities
