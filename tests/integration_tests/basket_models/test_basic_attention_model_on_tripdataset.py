@@ -73,7 +73,7 @@ available_items_1 = np.array(
 )
 trip_dataset_1 = TripDataset(trips=trip_list_1, available_items=available_items_1)
 n_items_1 = trip_dataset_1.n_items
-n_stores_1 = trip_dataset_1.n_stores
+n_user_ids_1 = trip_dataset_1.n_stores
 
 # Toy dataset 2: all the possibilities for an assortment of 3 items
 # with store, week and prices fixed

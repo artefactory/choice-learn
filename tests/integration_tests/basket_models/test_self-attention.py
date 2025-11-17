@@ -24,7 +24,6 @@ data = SyntheticDataGenerator(
     proba_neutral_items=0.0,
     noise_proba=0.0,
     user_profile=user_profile,
-    nb_users=3,
 )
 
 data = data.generate_trip_dataset(n_baskets=1000, assortments_matrix=np.ones((1, 9)))
@@ -111,7 +110,7 @@ def test_embed_context() -> None:
     )
 
     m_batch, attention_weights = model.embed_context(
-        context_items=tf.constant([[0, 6, 3], [1, 3, 7]]),
+        context_items=tf.constant([[0, 6, 3], [1, 3, 7]]), is_training=False
     )
     assert m_batch.shape == (2, 5)  # Shape = (batch_size, short_term_latent_size)
     assert attention_weights.shape == (
@@ -129,9 +128,12 @@ def test_compute_distance() -> None:
         n_users=data.n_users,
     )
 
+    m_batch, _ = model.embed_context(
+        context_items=tf.constant([[0, 6, 3], [1, 3, 7]]), is_training=False
+    )
     distances = model.compute_batch_distance(
         item_batch=tf.constant([1, 3]),
-        basket_batch=tf.constant([[3, 6], [1, 6]]),
+        m_batch=m_batch,
         user_batch=tf.constant([0, 1]),
     )
 
@@ -159,7 +161,25 @@ def test_compute_loss() -> None:
     )
     assert loss.dtype == tf.float32  # Scalar loss
 
+def hit_rate(all_distances, item_batch, hit_k):
+        """Compute the hit rate at k for the given distances."""
 
+        hit_list = []
+        for k in hit_k:
+            top_k_indices = tf.math.top_k(-all_distances, k=k).indices  # Shape: (batch_size, hit_k)
+            hits_per_batch = tf.reduce_any(
+                tf.equal(
+                    tf.cast(top_k_indices, tf.int32),
+                    tf.cast(tf.expand_dims(item_batch, axis=1), tf.int32),
+                ),
+                axis=1,
+            )
+            hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32))
+            hit_list.append(hits)
+        hit_list = tf.convert_to_tensor(hit_list)
+
+        return hit_list
+    
 def test_hit_rate():
     """Test the hit_rate method."""
     model = SelfAttentionModel()
@@ -168,7 +188,7 @@ def test_hit_rate():
         n_users=data.n_users,
     )
 
-    hr = model.hit_rate(
+    hr = hit_rate(
         all_distances=tf.constant([[0.1, 9.9, 0.2, 9.9], [9.9, 0.1, 9.9, 0.2]]),
         item_batch=np.array([3, 1]),
         hit_k=[1, 2],
@@ -178,6 +198,17 @@ def test_hit_rate():
     assert hr[0].numpy() == 1.0  # Hit@1
     assert hr[1].numpy() == 1.0  # Hit@2
 
+def mean_reciprocal_rank(all_distances, item_batch, _):
+        """Compute the mean reciprocal rank for the given distances.
+        """
+        batch_size = tf.shape(item_batch)[0]
+        ranks = tf.argsort(tf.argsort(all_distances, axis=1), axis=1) + 1 # Shape: (batch_size, n_items)
+        item_batch_indices = tf.stack([tf.range(batch_size), item_batch], axis=1) # Shape: (batch_size, 2)
+        item_ranks = tf.gather_nd(ranks, item_batch_indices) # Shape: (batch_size,)
+
+        mean_rank = tf.reduce_sum(tf.cast(1/item_ranks, dtype=tf.float32))
+
+        return mean_rank
 
 def test_mrr():
     """Test the mrr method."""
@@ -186,10 +217,10 @@ def test_mrr():
         n_items=data.n_items,
         n_users=data.n_users,
     )
-
-    mrr = model.mrr(
-        trip_dataset=data,
-        batch_size=32,
+    mrr = mean_reciprocal_rank(
+        all_distances=tf.constant([[0.1, 9.9, 0.2, 9.9], [9.9, 0.1, 9.9, 0.2]]),
+        item_batch=np.array([3, 1]),
+        _=None,
     )
 
     assert mrr.shape == ()  # Scalar MRR
@@ -207,7 +238,7 @@ def test_evaluate():
         trip_dataset=data,
         batch_size=32,
         hit_k=[1, 5],
-        metrics=[model.mean_reciprocal_rank, model.hit_rate],
+        metrics=[mean_reciprocal_rank, hit_rate],
     )
 
     assert isinstance(score, dict)  # Score is a dictionary
