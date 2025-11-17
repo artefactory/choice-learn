@@ -337,10 +337,14 @@ def test_evaluate_load_and_save() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    eff_loss = model.evaluate(trip_dataset=trip_dataset_1,)
+    eff_loss = model.evaluate(
+        trip_dataset=trip_dataset_1,
+    )
     model.save_model("test_aleacarta")
     loaded_model = AleaCarta.load_model("test_aleacarta")
-    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1, )
+    loaded_loss = loaded_model.evaluate(
+        trip_dataset=trip_dataset_1,
+    )
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)

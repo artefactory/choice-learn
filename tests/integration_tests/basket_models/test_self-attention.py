@@ -161,25 +161,27 @@ def test_compute_loss() -> None:
     )
     assert loss.dtype == tf.float32  # Scalar loss
 
+
 def hit_rate(all_distances, item_batch, hit_k):
-        """Compute the hit rate at k for the given distances."""
+    """Compute the hit rate at k for the given distances."""
 
-        hit_list = []
-        for k in hit_k:
-            top_k_indices = tf.math.top_k(-all_distances, k=k).indices  # Shape: (batch_size, hit_k)
-            hits_per_batch = tf.reduce_any(
-                tf.equal(
-                    tf.cast(top_k_indices, tf.int32),
-                    tf.cast(tf.expand_dims(item_batch, axis=1), tf.int32),
-                ),
-                axis=1,
-            )
-            hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32))
-            hit_list.append(hits)
-        hit_list = tf.convert_to_tensor(hit_list)
+    hit_list = []
+    for k in hit_k:
+        top_k_indices = tf.math.top_k(-all_distances, k=k).indices  # Shape: (batch_size, hit_k)
+        hits_per_batch = tf.reduce_any(
+            tf.equal(
+                tf.cast(top_k_indices, tf.int32),
+                tf.cast(tf.expand_dims(item_batch, axis=1), tf.int32),
+            ),
+            axis=1,
+        )
+        hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32))
+        hit_list.append(hits)
+    hit_list = tf.convert_to_tensor(hit_list)
 
-        return hit_list
-    
+    return hit_list
+
+
 def test_hit_rate():
     """Test the hit_rate method."""
     model = SelfAttentionModel()
@@ -198,17 +200,22 @@ def test_hit_rate():
     assert hr[0].numpy() == 1.0  # Hit@1
     assert hr[1].numpy() == 1.0  # Hit@2
 
+
 def mean_reciprocal_rank(all_distances, item_batch, _):
-        """Compute the mean reciprocal rank for the given distances.
-        """
-        batch_size = tf.shape(item_batch)[0]
-        ranks = tf.argsort(tf.argsort(all_distances, axis=1), axis=1) + 1 # Shape: (batch_size, n_items)
-        item_batch_indices = tf.stack([tf.range(batch_size), item_batch], axis=1) # Shape: (batch_size, 2)
-        item_ranks = tf.gather_nd(ranks, item_batch_indices) # Shape: (batch_size,)
+    """Compute the mean reciprocal rank for the given distances."""
+    batch_size = tf.shape(item_batch)[0]
+    ranks = (
+        tf.argsort(tf.argsort(all_distances, axis=1), axis=1) + 1
+    )  # Shape: (batch_size, n_items)
+    item_batch_indices = tf.stack(
+        [tf.range(batch_size), item_batch], axis=1
+    )  # Shape: (batch_size, 2)
+    item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
 
-        mean_rank = tf.reduce_sum(tf.cast(1/item_ranks, dtype=tf.float32))
+    mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32))
 
-        return mean_rank
+    return mean_rank
+
 
 def test_mrr():
     """Test the mrr method."""
