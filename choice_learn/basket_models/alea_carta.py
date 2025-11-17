@@ -327,7 +327,8 @@ class AleaCarta(BaseBasketModel):
 
         # The effects of item intercept, store preferences, price sensitivity
         # and seasonal effects are combined in the per-item per-trip latent variable
-        psi = tf.reduce_sum(
+        
+        return tf.reduce_sum(
             [
                 item_intercept,
                 store_preferences,
@@ -335,8 +336,7 @@ class AleaCarta(BaseBasketModel):
                 seasonal_effects,
             ],
             axis=0,
-        )  # Shape: (batch_size,)
-        return psi
+        ) # Shape: (batch_size,)
 
     def embed_basket(
         self,
@@ -378,11 +378,10 @@ class AleaCarta(BaseBasketModel):
         has_nan_row = tf.reduce_any(tf.math.is_nan(gamma_by_basket), axis=1)
         condition_mask = tf.expand_dims(has_nan_row, axis=1)
         zeros = tf.zeros_like(gamma_by_basket)
-        gamma_by_basket = tf.where(
+
+        return tf.where(
             condition_mask, zeros, gamma_by_basket
         )  # Shape: (batch_size, latent_size)
-
-        return gamma_by_basket
 
     # @tf.function  # Graph mode
     def compute_batch_utility(
@@ -460,11 +459,10 @@ class AleaCarta(BaseBasketModel):
 
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
-        basket_interaction_utility = tf.reduce_sum(
-            gamma_by_basket * gamma_item, axis=1
-        )  # Shape: (batch_size,)
 
-        return basket_interaction_utility
+        return tf.reduce_sum(
+            gamma_by_basket * gamma_item, axis=-1
+        )  # Shape: (batch_size,)
 
     def compute_basket_utility(
         self,
@@ -472,7 +470,6 @@ class AleaCarta(BaseBasketModel):
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
-        available_item_batch: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
         r"""Compute the utility of an (unordered) basket.
@@ -516,7 +513,6 @@ class AleaCarta(BaseBasketModel):
             basket = trip.purchases
             store = trip.store
             week = trip.week
-            available_item_batch = trip.assortment
             prices = [trip.prices[item_id] for item_id in basket]
 
         len_basket = len(basket)
@@ -653,6 +649,7 @@ class AleaCarta(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        _ = user_batch  # Unused for this model
         _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)

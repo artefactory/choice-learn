@@ -8,7 +8,6 @@ import time
 from abc import abstractmethod
 from datetime import datetime
 from pathlib import Path
-from pyexpat import model
 from typing import Union
 
 import numpy as np
