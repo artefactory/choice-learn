@@ -327,7 +327,7 @@ class AleaCarta(BaseBasketModel):
 
         # The effects of item intercept, store preferences, price sensitivity
         # and seasonal effects are combined in the per-item per-trip latent variable
-        
+
         return tf.reduce_sum(
             [
                 item_intercept,
@@ -336,7 +336,7 @@ class AleaCarta(BaseBasketModel):
                 seasonal_effects,
             ],
             axis=0,
-        ) # Shape: (batch_size,)
+        )  # Shape: (batch_size,)
 
     def embed_basket(
         self,
@@ -379,9 +379,7 @@ class AleaCarta(BaseBasketModel):
         condition_mask = tf.expand_dims(has_nan_row, axis=1)
         zeros = tf.zeros_like(gamma_by_basket)
 
-        return tf.where(
-            condition_mask, zeros, gamma_by_basket
-        )  # Shape: (batch_size, latent_size)
+        return tf.where(condition_mask, zeros, gamma_by_basket)  # Shape: (batch_size, latent_size)
 
     # @tf.function  # Graph mode
     def compute_batch_utility(
@@ -413,7 +411,6 @@ class AleaCarta(BaseBasketModel):
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
         """
-
 
         preference_utility = self.compute_preference_utility(
             item_batch=item_batch,
@@ -460,9 +457,7 @@ class AleaCarta(BaseBasketModel):
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
 
-        return tf.reduce_sum(
-            gamma_by_basket * gamma_item, axis=-1
-        )  # Shape: (batch_size,)
+        return tf.reduce_sum(gamma_by_basket * gamma_item, axis=-1)  # Shape: (batch_size,)
 
     def compute_basket_utility(
         self,

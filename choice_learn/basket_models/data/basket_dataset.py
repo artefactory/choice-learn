@@ -541,7 +541,18 @@ class TripDataset:
             [
                 np.pad(
                     purchases[sequence_length + 1 : sequence_length + 1 + n_future_purchases],
-                    (0, max(0, n_future_purchases - len(purchases[sequence_length + 1 : sequence_length + 1 + n_future_purchases]))),
+                    (
+                        0,
+                        max(
+                            0,
+                            n_future_purchases
+                            - len(
+                                purchases[
+                                    sequence_length + 1 : sequence_length + 1 + n_future_purchases
+                                ]
+                            ),
+                        ),
+                    ),
                     constant_values=-1,
                 )
             ],
