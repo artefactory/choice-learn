@@ -17,6 +17,7 @@ import tqdm
 from ..tf_ops import softmax_with_availabilities
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
+from ..utils.metrics import NegativeLogLikeliHood
 
 
 class BaseBasketModel:
@@ -817,7 +818,7 @@ class BaseBasketModel:
         for metric in metrics:
             if metric == "nll":
                 exec_metrics.append(
-                    tf.keras.metrics.SparseCategoricalCrossentropy(name="nll", from_logits=False)
+                    NegativeLogLikeliHood(sparse=True, from_logits=False)
                 )
             elif not isinstance(metric, tf.keras.metrics.metric.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
