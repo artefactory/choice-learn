@@ -15,9 +15,9 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
+from ..utils.metrics import NegativeLogLikeliHood
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
-from ..utils.metrics import NegativeLogLikeliHood
 
 
 class BaseBasketModel:
@@ -818,7 +818,7 @@ class BaseBasketModel:
         for metric in metrics:
             if metric == "nll":
                 exec_metrics.append(
-                    NegativeLogLikeliHood(sparse=True, from_logits=False)
+                    NegativeLogLikeliHood(sparse=True, from_logits=False, epsilon=epsilon_eval)
                 )
             elif not isinstance(metric, tf.keras.metrics.metric.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
@@ -827,8 +827,6 @@ class BaseBasketModel:
 
         for metric in exec_metrics:
             metric.reset_states()
-
-        metrics_values = {metric.name: [] for metric in exec_metrics}
 
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
@@ -864,8 +862,7 @@ class BaseBasketModel:
                     metric.update_state(y_true=item, y_pred=y_pred)
 
         # After the loops, get the final results
-        metrics_values = {metric.name: metric.result() for metric in exec_metrics}
-        return metrics_values
+        return {metric.name: metric.result() for metric in exec_metrics}
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.

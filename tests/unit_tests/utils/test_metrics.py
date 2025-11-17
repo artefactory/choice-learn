@@ -1,7 +1,5 @@
 """Test the metrics functions and classes."""
 
-import numpy as np
-
 from choice_learn.utils.metrics import NegativeLogLikeliHood
 
 
@@ -9,51 +7,50 @@ def test_custom_categorical_crossentropy():
     """Test the NegativeLogLikeliHood metric class."""
     met = NegativeLogLikeliHood()
     met.update_state(
-        y_true=[[0.0, 1.0]], 
+        y_true=[[0.0, 1.0]],
         y_pred=[[0.0, 1.0]],
     )
     assert met.result() == 0.0
     met.reset_state()
     met.update_state(
-        y_true=[[0.0, 1.0]], 
+        y_true=[[0.0, 1.0]],
         y_pred=[[1.0, 0.0]],
     )
     assert met.result() > 20.0
 
     met = NegativeLogLikeliHood(sparse=True)
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[0.0, 1.0]],
     )
     assert met.result() == 0.0
     met.reset_state()
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[1.0, 0.0]],
     )
     assert met.result() > 20.0
 
-
     met = NegativeLogLikeliHood(sparse=True, from_logits=True)
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[0.0, 21.0]],
     )
     assert met.result() < 1e-10
     met.reset_state()
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[21.0, 0.0]],
     )
     assert met.result() > 20.0
 
     met.reset_state()
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[2.0, 4.0]],
     )
     met.update_state(
-        y_true=[0], 
+        y_true=[0],
         y_pred=[[4.0, 2.0]],
     )
     assert met.result() > 0.1269
@@ -61,15 +58,16 @@ def test_custom_categorical_crossentropy():
 
     met.reset_state()
     met.update_state(
-        y_true=[0], 
+        y_true=[0],
         y_pred=[[2.0, 4.0]],
     )
     met.update_state(
-        y_true=[1], 
+        y_true=[1],
         y_pred=[[4.0, 2.0]],
     )
     assert met.result() > 2.1269
     assert met.result() > 2.1270
+
 
 # def test_sample_weights():
 #     """Test sample_weight parametrization of CCE loss."""
