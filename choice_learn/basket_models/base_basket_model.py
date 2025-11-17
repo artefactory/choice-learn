@@ -268,15 +268,15 @@ class BaseBasketModel:
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
             # All items
-            item_batch=np.arange(self.n_items),
+            item_batch=np.expand_dims(np.arange(self.n_items), axis=0),
             # For each item: same basket / store / week / prices / available items
-            basket_batch=np.array([basket for _ in range(self.n_items)]),
-            store_batch=np.array([store for _ in range(self.n_items)]),
-            week_batch=np.array([week for _ in range(self.n_items)]),
-            price_batch=prices,
-            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
+            basket_batch=np.expand_dims(basket, axis=0),
+            store_batch=np.expand_dims(store, axis=0),
+            week_batch=np.expand_dims(week, axis=0),
+            price_batch=np.expand_dims(prices, axis=0),
+            available_item_batch=np.expand_dims(available_items_copy, axis=0),
         )
-
+        print(all_utilities)
         # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
@@ -782,7 +782,6 @@ class BaseBasketModel:
     def evaluate(
         self,
         trip_dataset: TripDataset,
-        batch_size: int = 32,
         epsilon_eval: float = 1e-9,
         metrics="nll",
     ) -> dict:
@@ -826,40 +825,33 @@ class BaseBasketModel:
                 exec_metrics.append(metric)
 
         for metric in exec_metrics:
-            metric.reset_states()
+            metric.reset_state()
 
-        inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        )
-        for (
-            item_batch,
-            basket_batch,
-            _,
-            store_batch,
-            week_batch,
-            price_batch,
-            available_item_batch,
-        ) in inner_range:
+        for trip in trip_dataset.trips:
             # Sum of the log-likelihoods of all the baskets in the batch
-            basket_batch = [basket[basket != -1] for basket in basket_batch]
-            for basket, item, available_items, store, week, prices in zip(
-                basket_batch,
-                item_batch,
-                available_item_batch,
-                store_batch,
-                week_batch,
-                price_batch,
-            ):
+            if isinstance(trip.assortment, int):
+                available_items = trip_dataset.available_items[trip.assortment]
+            else:
+                available_items = trip.assortment
+            if isinstance(trip.prices, int):
+                prices = trip_dataset.prices[trip.prices]
+            else:
+                prices = trip.prices
+            for i in range(len(trip.purchases)):
+                print(trip.purchases)
+                print(trip_dataset.available_items[trip.assortment])
                 y_pred = self.compute_item_likelihood(
-                    basket=basket,
+                    basket=np.concatenate([trip.purchases[:i], trip.purchases[i + 1 :]]).astype(
+                        int
+                    ),
                     available_items=available_items,
-                    store=store,
-                    week=week,
+                    store=trip.store,
+                    week=trip.week,
                     prices=prices,
                 )
                 for metric in exec_metrics:
                     # Use update_state, not append(metric(...))
-                    metric.update_state(y_true=item, y_pred=y_pred)
+                    metric.update_state(y_true=trip.purchases[i], y_pred=y_pred)
 
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}

@@ -57,6 +57,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0)
         if sample_weight is not None:
             pass
+        print(tf.math.log(y_pred), y_pred)
         self.nll.assign(self.nll - tf.reduce_sum(y_true * tf.math.log(y_pred)))
         self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
 

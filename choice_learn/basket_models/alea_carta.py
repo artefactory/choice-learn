@@ -299,6 +299,8 @@ class AleaCarta(BaseBasketModel):
         """
         _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
+        if len(tf.shape(item_batch)) == 1:
+            item_batch = tf.expand_dims(item_batch, axis=1)
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
         week_batch = tf.cast(week_batch, dtype=tf.int32)
@@ -307,7 +309,7 @@ class AleaCarta(BaseBasketModel):
         theta_store = tf.gather(self.theta, indices=store_batch)
         gamma_item = tf.gather(self.gamma, indices=item_batch)
         # Compute the dot product along the last dimension
-        store_preferences = tf.reduce_sum(theta_store * gamma_item, axis=1)
+        store_preferences = tf.einsum("kj,klj->kl", theta_store, gamma_item)
 
         if self.item_intercept:
             item_intercept = tf.gather(self.alpha, indices=item_batch)
@@ -321,7 +323,7 @@ class AleaCarta(BaseBasketModel):
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
-                * tf.reduce_sum(delta_store * beta_item, axis=1)
+                * tf.einsum("kj,klj->kl", delta_store, beta_item)
                 * tf.math.log(price_batch + self.epsilon_price)
             )
         else:
@@ -332,9 +334,8 @@ class AleaCarta(BaseBasketModel):
             nu_week = tf.gather(self.nu, indices=week_batch)
             mu_item = tf.gather(self.mu, indices=item_batch)
             # Compute the dot product along the last dimension
-            seasonal_effects = tf.reduce_sum(nu_week * mu_item, axis=1)
+            seasonal_effects = tf.einsum("kj,klj->kl", nu_week, mu_item)
         else:
-            nu_week = tf.zeros_like(week_batch)
             seasonal_effects = tf.zeros_like(store_preferences)
 
         # The effects of item intercept, store preferences, price sensitivity
@@ -374,9 +375,9 @@ class AleaCarta(BaseBasketModel):
         # Basket interaction: one vs all
         # gamma_i = tf.expand_dims(gamma_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
-        basket_interaction_utility = tf.reduce_sum(
-            gamma_item * gamma_by_basket, axis=-1
-        )  # Shape: (batch_size, None)
+
+        basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
+
         # Sum over the items in the basket
         return psi + basket_interaction_utility
 
@@ -573,55 +574,65 @@ class AleaCarta(BaseBasketModel):
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
-        negative_samples = tf.reshape(
-            tf.transpose(
-                tf.stack(
-                    [
-                        self.get_negative_samples(
-                            available_items=available_item_batch[idx],
-                            purchased_items=basket_batch[idx],
-                            next_item=item_batch[idx],
-                            n_samples=self.n_negative_samples,
-                        )
-                        for idx in range(batch_size)
-                    ],
-                    axis=0,
-                ),
-                # Reshape to have at the beginning of the array all the first negative samples
-                # of all positive samples, then all the second negative samples, etc.
-                # (same logic as for the calls to np.tile)
-            ),
-            # Flatten 2D --> 1D
-            shape=[-1],
+        # negative_samples = tf.reshape(
+        #     tf.transpose(
+        #         tf.stack(
+        #             [
+        #                 self.get_negative_samples(
+        #                     available_items=available_item_batch[idx],
+        #                     purchased_items=basket_batch[idx],
+        #                     next_item=item_batch[idx],
+        #                     n_samples=self.n_negative_samples,
+        #                 )
+        #                 for idx in range(batch_size)
+        #             ],
+        #             axis=0,
+        #         ),
+        #         # Reshape to have at the beginning of the array all the first negative samples
+        #         # of all positive samples, then all the second negative samples, etc.
+        #         # (same logic as for the calls to np.tile)
+        #     ),
+        #     # Flatten 2D --> 1D
+        #     shape=[-1],
+        # )
+        negative_samples = tf.stack(
+            [
+                self.get_negative_samples(
+                    available_items=available_item_batch[idx],
+                    purchased_items=basket_batch[idx],
+                    next_item=item_batch[idx],
+                    n_samples=self.n_negative_samples,
+                )
+                for idx in range(batch_size)
+            ],
+            axis=0,
         )
 
         augmented_item_batch = tf.cast(
-            tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
+            tf.concat([tf.expand_dims(item_batch, axis=-1), negative_samples], axis=1),
+            dtype=tf.int32,
         )
-        prices_tiled = tf.tile(price_batch, [self.n_negative_samples + 1, 1])
+        # prices_tiled = tf.tile(price_batch, [self.n_negative_samples + 1, 1])
         # Each time, pick only the price of the item in augmented_item_batch from the
         # corresponding price array
         augmented_price_batch = tf.gather(
-            params=prices_tiled,
+            params=price_batch,
             indices=augmented_item_batch,
-            # batch_dims=1 is equivalent to having an outer loop over
-            # the first axis of params and indices
-            batch_dims=1,
         )
 
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
-            basket_batch=tf.tile(basket_batch, [self.n_negative_samples + 1, 1]),
-            store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
-            week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
+            basket_batch=basket_batch,
+            store_batch=store_batch,
+            week_batch=week_batch,
             price_batch=augmented_price_batch,
             available_item_batch=available_item_batch,
         )
 
-        positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
+        positive_samples_utilities = tf.gather(params=all_utilities, indices=[0], axis=1)
         negative_samples_utilities = tf.gather(
-            all_utilities, tf.range(batch_size, tf.shape(all_utilities)[0])
+            params=all_utilities, indices=tf.range(1, self.n_negative_samples + 1), axis=1
         )
 
         # Log-likelihood of a batch = sum of log-likelihoods of its samples
@@ -632,7 +643,7 @@ class AleaCarta(BaseBasketModel):
                 tf.sigmoid(
                     tf.tile(
                         positive_samples_utilities,
-                        [self.n_negative_samples],
+                        [1, self.n_negative_samples],
                     )
                     - negative_samples_utilities
                 )
@@ -646,7 +657,7 @@ class AleaCarta(BaseBasketModel):
                     tf.ones_like(positive_samples_utilities),
                     tf.zeros_like(negative_samples_utilities),
                 ],
-                axis=0,
+                axis=1,
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
