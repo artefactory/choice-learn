@@ -389,6 +389,7 @@ class AleaCarta(BaseBasketModel):
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
+        available_item_batch: Union[np.ndarray, tf.Tensor] = None,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
 
@@ -411,7 +412,7 @@ class AleaCarta(BaseBasketModel):
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
         """
-
+        _ = available_item_batch
         preference_utility = self.compute_preference_utility(
             item_batch=item_batch,
             store_batch=store_batch,
@@ -731,7 +732,7 @@ class AleaCarta(BaseBasketModel):
         return tf.reduce_sum(bce + ridge_regularization) / (batch_size), loglikelihood
 
     # @tf.function  # Graph mode
-    def evaluate(
+    def evaluate2(
         self,
         trip_dataset: TripDataset,
         batch_size: int = 32,

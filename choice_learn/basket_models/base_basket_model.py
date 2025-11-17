@@ -264,9 +264,6 @@ class BaseBasketModel:
                 available_items_copy[basket_item] = 0.0
 
         # Compute the utility of all the items
-        gamma_basket = self.embed_basket(
-            basket_batch=np.array([basket for _ in range(self.n_items)])
-        )
         all_utilities = self.compute_batch_utility(
             # All items
             item_batch=np.arange(self.n_items),
@@ -275,6 +272,7 @@ class BaseBasketModel:
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
+            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
         )
 
         # Softmax on the utilities
@@ -737,7 +735,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate(val_dataset, batch_size=256, metrics=metrics)
+                    val_loss = self.evaluate2(val_dataset, batch_size=256, metrics=metrics)
                 else:
                     for batch_nb, (
                         item_batch,

@@ -292,7 +292,6 @@ class SelfAttentionModel(BaseBasketModel):
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
         m_batch: tf.Tensor,
-        is_training: bool,
     ) -> tf.Tensor:
         """Compute the short distance of all the items in item_batch given the items in basket_batch.
 
@@ -362,13 +361,12 @@ class SelfAttentionModel(BaseBasketModel):
         item_batch: np.ndarray,
         m_batch: np.ndarray,
         user_batch: np.ndarray,
-        is_training: bool,
     ) -> tf.Tensor:
         """Compute the total distance (long + short term) of all the items in item_batch."""
 
         long_distance = self.compute_batch_long_distance(item_batch, user_batch)
 
-        short_distance = self.compute_batch_short_distance(item_batch, m_batch, is_training)
+        short_distance = self.compute_batch_short_distance(item_batch, m_batch)
 
         total_distance = (
             self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
@@ -544,7 +542,6 @@ class SelfAttentionModel(BaseBasketModel):
             item_batch=augmented_item_batch,
             m_batch=tf.tile(m_batch, [self.n_negative_samples + 1, 1]),
             user_batch=tf.tile(user_batch, [self.n_negative_samples + 1]),
-            is_training=is_training,
         )
 
         positive_samples_distance = tf.gather(all_distance, tf.range(batch_size))
@@ -624,9 +621,8 @@ class SelfAttentionModel(BaseBasketModel):
             m_batch, _ = self.embed_context(basket_batch, is_training=False)
             all_distances = self.compute_batch_distance(
                 item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-                m_batch=m_batch,
+                m_batch=tf.repeat(m_batch, repeats=self.n_items, axis=0),
                 user_batch=tf.repeat(user_batch, repeats=self.n_items),
-                is_training=False,
             )  # Shape: (batch_size * n_items,)
             all_distances = tf.reshape(all_distances, (batch_size, self.n_items))
 

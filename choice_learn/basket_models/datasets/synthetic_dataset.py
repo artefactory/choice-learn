@@ -82,7 +82,7 @@ class SyntheticDataGenerator:
         )
 
     def select_first_item(
-        self, available_sets: np.ndarray, available_items: np.ndarray, user_id: int
+        self, available_sets: np.ndarray, available_items: np.ndarray, user_id: int=None
     ) -> tuple:
         """Select the first item and its nest randomly from the available sets.
 
@@ -110,7 +110,7 @@ class SyntheticDataGenerator:
         return chosen_item, chosen_nest
 
     def complete_basket(
-        self, first_item: int, first_nest: int, available_items: np.ndarray, user_id: int
+        self, first_item: int, first_nest: int, available_items: np.ndarray, user_id: int=None
     ) -> list:
         """Completes the basket by adding items based on the relations of the first item.
 
