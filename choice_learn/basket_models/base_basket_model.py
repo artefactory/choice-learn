@@ -270,12 +270,12 @@ class BaseBasketModel:
             # All items
             item_batch=np.expand_dims(np.arange(self.n_items), axis=0),
             # For each item: same basket / store / week / prices / available items
-            basket_batch=np.expand_dims(basket, axis=0),
+            basket_batch=np.expand_dims(basket, axis=0).astype(int),
             store_batch=np.expand_dims(store, axis=0),
             week_batch=np.expand_dims(week, axis=0),
             price_batch=np.expand_dims(prices, axis=0),
             available_item_batch=np.expand_dims(available_items_copy, axis=0),
-        )
+        )[0]
         # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
@@ -364,8 +364,6 @@ class BaseBasketModel:
 
         ordered_basket_likelihood = 1.0
         for j in range(0, len(basket)):
-            next_item_id = basket[j]
-
             # Compute the likelihood of the j-th item of the basket
             ordered_basket_likelihood *= self.compute_item_likelihood(
                 basket=basket[:j],
@@ -373,10 +371,10 @@ class BaseBasketModel:
                 store=store,
                 week=week,
                 prices=prices,
-            )[next_item_id].numpy()
+            )[basket[j]].numpy()
 
             # This item is not available anymore
-            available_items_copy[next_item_id] = 0
+            available_items_copy[basket[j]] = 0
 
         return ordered_basket_likelihood
 
@@ -610,10 +608,9 @@ class BaseBasketModel:
                 price_batch=price_batch,
                 available_item_batch=available_item_batch,
             )[0]
+
         grads = tape.gradient(batch_loss, self.trainable_weights)
-
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-
         return batch_loss
 
     def fit(
@@ -851,7 +848,9 @@ class BaseBasketModel:
                 predicted_probabilities.append(y_pred)
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
-                metric.update_state(y_true=trip.purchases, y_pred=tf.stack(predicted_probabilities))
+                metric.update_state(
+                    y_true=trip.purchases, y_pred=tf.stack(predicted_probabilities, axis=0)
+                )
 
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}

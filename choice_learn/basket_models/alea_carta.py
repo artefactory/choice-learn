@@ -305,6 +305,10 @@ class AleaCarta(BaseBasketModel):
                 and are:{item_batch.shape} and {price_batch.shape}""")
             item_batch = tf.expand_dims(item_batch, axis=1)
             price_batch = tf.expand_dims(price_batch, axis=1)
+            squeeze = True
+        else:
+            squeeze = False
+
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
         week_batch = tf.cast(week_batch, dtype=tf.int32)
@@ -380,7 +384,9 @@ class AleaCarta(BaseBasketModel):
         basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
 
         # Sum over the items in the basket
-        return tf.squeeze(psi + basket_interaction_utility)
+        if squeeze:
+            return tf.gather(psi + basket_interaction_utility, 0, axis=1)
+        return psi + basket_interaction_utility
 
     def compute_basket_utility(
         self,
