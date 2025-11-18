@@ -176,7 +176,7 @@ def test_no_intercept() -> None:
         basket_batch=np.array([[1, 2, 3]] * batch_size),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
-        price_batch=np.random.uniform(1, 10, batch_size),
+        price_batch=np.random.uniform(1, 10, (batch_size,)),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
 
@@ -338,10 +338,10 @@ def test_evaluate_load_and_save() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    eff_loss = model.evaluate(trip_dataset=trip_dataset_1)
+    eff_loss = model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     model.save_model("test_aleacarta")
     loaded_model = AleaCarta.load_model("test_aleacarta")
-    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
+    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
