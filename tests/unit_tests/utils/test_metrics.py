@@ -54,7 +54,7 @@ def test_custom_categorical_crossentropy():
         y_pred=[[4.0, 2.0]],
     )
     assert met.result() > 0.1269
-    assert met.result() > 0.1270
+    assert met.result() < 0.1270
 
     met.reset_state()
     met.update_state(
