@@ -162,6 +162,35 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     )
 
 
+def test_with_intercept() -> None:
+    """Test the Shopper model without item intercepts."""
+    model = AleaCarta(item_intercept=True)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    batch_size = 4
+    prices = np.random.uniform(1, 10, (batch_size,))
+    pre_utilities = model.compute_batch_utility(
+        item_batch=np.array([4, 5, 6, 0]),
+        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        store_batch=np.array([0] * batch_size),
+        week_batch=np.array([0] * batch_size),
+        price_batch=prices,
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+    )
+    aft_utilities = model.compute_batch_utility(
+        item_batch=np.array([[4, 5, 6, 0]]),
+        basket_batch=np.array([[1, 2, 3]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.expand_dims(prices, axis=0),
+        available_item_batch=np.array([np.ones(n_items_1)]),
+    )
+    assert np.isclose(pre_utilities, tf.transpose(aft_utilities)).all()
+
+
 def test_no_intercept() -> None:
     """Test the Shopper model without item intercepts."""
     model = AleaCarta(item_intercept=False)
@@ -171,14 +200,24 @@ def test_no_intercept() -> None:
     )
 
     batch_size = 4
-    model.compute_batch_utility(
+    prices = np.random.uniform(1, 10, (batch_size,))
+    pre_utilities = model.compute_batch_utility(
         item_batch=np.array([4, 5, 6, 0]),
         basket_batch=np.array([[1, 2, 3]] * batch_size),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
-        price_batch=np.random.uniform(1, 10, (batch_size,)),
+        price_batch=prices,
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
+    aft_utilities = model.compute_batch_utility(
+        item_batch=np.array([[4, 5, 6, 0]]),
+        basket_batch=np.array([[1, 2, 3]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.expand_dims(prices, axis=0),
+        available_item_batch=np.array([np.ones(n_items_1)]),
+    )
+    assert np.isclose(pre_utilities, tf.transpose(aft_utilities)).all()
 
 
 def test_compute_item_likelihood() -> None:

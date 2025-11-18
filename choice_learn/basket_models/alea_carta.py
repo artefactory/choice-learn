@@ -319,7 +319,6 @@ class AleaCarta(BaseBasketModel):
             item_intercept = tf.gather(self.alpha, indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
-
         if self.price_effects:
             delta_store = tf.gather(self.delta, indices=store_batch)
             beta_item = tf.gather(self.beta, indices=item_batch)
@@ -377,9 +376,7 @@ class AleaCarta(BaseBasketModel):
             tf.expand_dims(basket_size, axis=-1), 1.0
         )
         # Basket interaction: one vs all
-        # gamma_i = tf.expand_dims(gamma_item, axis=1)  # Shape: (batch_size, 1, latent_size)
         # Compute the dot product along the last dimension (latent_size)
-
         basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
 
         # Sum over the items in the basket

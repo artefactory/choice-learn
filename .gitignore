@@ -144,3 +144,4 @@ choice_learn/datasets/cache/*
 choice_learn/datasets/data/lpmc.dat
 choice_learn/datasets/data/uc?id=1qV8qmiHTq6y5fwgN0_hRXyKreNKrF72E&export=download
 choice_learn/datasets/data/uchoice-Bakery/
+choice_learn/datasets/data/test_data.csv
