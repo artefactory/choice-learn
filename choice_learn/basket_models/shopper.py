@@ -482,10 +482,20 @@ class Shopper(BaseBasketModel):
         price_batch = tf.cast(price_batch, dtype=tf.float32)
         available_item_batch = tf.cast(available_item_batch, dtype=tf.int32)
 
+        if len(tf.shape(item_batch)) == 1:
+            if len(tf.shape(price_batch)) != 1:
+                raise ValueError(f"""Arguments price_batch and item_batch should have same shape
+                and are:{item_batch.shape} and {price_batch.shape}""")
+            item_batch = tf.expand_dims(item_batch, axis=1)
+            price_batch = tf.expand_dims(price_batch, axis=1)
+            squeeze = True
+        else:
+            squeeze = False
+
         theta_store = tf.gather(self.theta, indices=store_batch)
         alpha_item = tf.gather(self.alpha, indices=item_batch)
         # Compute the dot product along the last dimension
-        store_preferences = tf.reduce_sum(theta_store * alpha_item, axis=1)
+        store_preferences = tf.einsum("kj,klj->kl", theta_store, alpha_item)
 
         if self.item_intercept:
             # Manually enforce the lambda of the checkout item to be 0
@@ -501,7 +511,7 @@ class Shopper(BaseBasketModel):
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
-                * tf.reduce_sum(gamma_store * beta_item, axis=1)
+                * tf.einsum("kj,klj->kl", gamma_store, beta_item)
                 * tf.math.log(price_batch + self.epsilon_price)
             )
         else:
@@ -512,7 +522,7 @@ class Shopper(BaseBasketModel):
             delta_week = tf.gather(self.delta, indices=week_batch)
             mu_item = tf.gather(self.mu, indices=item_batch)
             # Compute the dot product along the last dimension
-            seasonal_effects = tf.reduce_sum(delta_week * mu_item, axis=1)
+            seasonal_effects = tf.einsum("kj,klj->kl", delta_week, mu_item)
         else:
             delta_week = tf.zeros_like(week_batch)
             seasonal_effects = tf.zeros_like(store_preferences)
@@ -574,25 +584,35 @@ class Shopper(BaseBasketModel):
         )
 
         # Compute the dot product along the last dimension
-        basket_interaction_utility = tf.reduce_sum(rho_item * alpha_average, axis=1)
+        basket_interaction_utility = tf.einsum("kj,klj->kl", alpha_average, rho_item)
 
         item_utilities = psi + basket_interaction_utility
 
         # No thinking ahead
         if not self.think_ahead:
+            if squeeze:
+                return tf.gather(item_utilities, 0, axis=1)
             return item_utilities
 
         # Thinking ahead
-        next_step_utilities = self.thinking_ahead(
-            item_batch=item_batch,
-            ragged_basket_batch=item_indices_ragged,
-            price_batch=price_batch,
-            available_item_batch=available_item_batch,
-            theta_store=theta_store,
-            gamma_store=gamma_store,  # 0 if self.price_effects is False
-            delta_week=delta_week,  # 0 if self.seasonal_effects is False
+        next_step_utilities = tf.stack(
+            [
+                self.thinking_ahead(
+                    item_batch=tf.gather(item_batch, i, axis=1),
+                    ragged_basket_batch=item_indices_ragged,
+                    price_batch=price_batch,
+                    available_item_batch=available_item_batch,
+                    theta_store=theta_store,
+                    gamma_store=gamma_store,  # 0 if self.price_effects is False
+                    delta_week=delta_week,  # 0 if self.seasonal_effects is False
+                )
+                for i in range(tf.shape(item_batch)[1])
+            ],
+            axis=-1,
         )
 
+        if squeeze:
+            return tf.gather(item_utilities + next_step_utilities, 0, axis=1)
         return item_utilities + next_step_utilities
 
     def get_negative_samples(

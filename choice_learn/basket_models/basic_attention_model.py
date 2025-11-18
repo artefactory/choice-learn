@@ -428,7 +428,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         else:
             self.negative_samples_distribution = (1 / trip_dataset.n_items) * np.ones(
                 (trip_dataset.n_items,)
-            )
+            ).astype("float32")
 
         history = super().fit(trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose)
 
