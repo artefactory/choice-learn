@@ -188,7 +188,7 @@ def test_with_intercept() -> None:
         price_batch=np.expand_dims(prices, axis=0),
         available_item_batch=np.array([np.ones(n_items_1)]),
     )
-    assert np.isclose(pre_utilities, tf.transpose(aft_utilities)).all()
+    assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
 
 
 def test_no_intercept() -> None:
@@ -217,7 +217,7 @@ def test_no_intercept() -> None:
         price_batch=np.expand_dims(prices, axis=0),
         available_item_batch=np.array([np.ones(n_items_1)]),
     )
-    assert np.isclose(pre_utilities, tf.transpose(aft_utilities)).all()
+    assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
 
 
 def test_compute_item_likelihood() -> None:
@@ -356,6 +356,7 @@ def test_get_negative_samples() -> None:
 
 def test_fit() -> None:
     """Test the fit method."""
+    tf.compat.v1.enable_eager_execution()
     model = AleaCarta(batch_size=-1)
     model.instantiate(
         n_items=n_items_1,
