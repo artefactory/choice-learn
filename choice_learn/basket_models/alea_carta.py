@@ -300,7 +300,11 @@ class AleaCarta(BaseBasketModel):
         _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         if len(tf.shape(item_batch)) == 1:
+            if len(tf.shape(price_batch)) != 1:
+                raise ValueError(f"""Arguments price_batch and item_batch should have same shape
+                and are:{item_batch.shape} and {price_batch.shape}""")
             item_batch = tf.expand_dims(item_batch, axis=1)
+            price_batch = tf.expand_dims(price_batch, axis=1)
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
         week_batch = tf.cast(week_batch, dtype=tf.int32)
@@ -379,7 +383,7 @@ class AleaCarta(BaseBasketModel):
         basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
 
         # Sum over the items in the basket
-        return psi + basket_interaction_utility
+        return tf.squeeze(psi + basket_interaction_utility)
 
     def compute_basket_utility(
         self,
@@ -616,10 +620,8 @@ class AleaCarta(BaseBasketModel):
         # Each time, pick only the price of the item in augmented_item_batch from the
         # corresponding price array
         augmented_price_batch = tf.gather(
-            params=price_batch,
-            indices=augmented_item_batch,
+            params=price_batch, indices=augmented_item_batch, batch_dims=1
         )
-
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,

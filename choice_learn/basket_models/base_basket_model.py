@@ -276,7 +276,6 @@ class BaseBasketModel:
             price_batch=np.expand_dims(prices, axis=0),
             available_item_batch=np.expand_dims(available_items_copy, axis=0),
         )
-        print(all_utilities)
         # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
@@ -837,9 +836,9 @@ class BaseBasketModel:
                 prices = trip_dataset.prices[trip.prices]
             else:
                 prices = trip.prices
+
+            predicted_probabilities = []
             for i in range(len(trip.purchases)):
-                print(trip.purchases)
-                print(trip_dataset.available_items[trip.assortment])
                 y_pred = self.compute_item_likelihood(
                     basket=np.concatenate([trip.purchases[:i], trip.purchases[i + 1 :]]).astype(
                         int
@@ -849,9 +848,10 @@ class BaseBasketModel:
                     week=trip.week,
                     prices=prices,
                 )
-                for metric in exec_metrics:
-                    # Use update_state, not append(metric(...))
-                    metric.update_state(y_true=trip.purchases[i], y_pred=y_pred)
+                predicted_probabilities.append(y_pred)
+            for metric in exec_metrics:
+                # Use update_state, not append(metric(...))
+                metric.update_state(y_true=trip.purchases, y_pred=tf.stack(predicted_probabilities))
 
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}
