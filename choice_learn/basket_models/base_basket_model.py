@@ -815,6 +815,15 @@ class BaseBasketModel:
                 exec_metrics.append(
                     NegativeLogLikeliHood(sparse=True, from_logits=False, epsilon=epsilon_eval)
                 )
+                exec_metrics.append(
+                    NegativeLogLikeliHood(
+                        sparse=True,
+                        from_logits=False,
+                        epsilon=epsilon_eval,
+                        average_on_batch=True,
+                        name="basketwise-nll",
+                    )
+                )
             elif not isinstance(metric, tf.keras.metrics.metric.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
             else:

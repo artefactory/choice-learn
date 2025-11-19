@@ -8,24 +8,52 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
 
     Parameters
     ----------
-    tf : _type_
-        _description_
+    from_logits : bool, optional
+        Whether provided values are logits or probabilities, by default False
+    sparse : bool, optional
+        Whether y_true is given as an index or a one-hot, by default False
+    epsilon : float, optional
+        Lower bound for log(.), by default 1e-10
+    name : str, optional
+        Name of operation, by default "negative_log_likelihood"
+    axis : int, optional
+        axis on which to apply the metric, by default -1
     """
 
     def __init__(
         self,
         from_logits=False,
         sparse=False,
+        average_on_batch=False,
         epsilon=1e-10,
         name="negative_log_likelihood",
         axis=-1,
         **kwargs,
     ):
+        """Initialize metric.
+
+        Parameters
+        ----------
+        from_logits : bool, optional
+            Whether provided values are logits or probabilities, by default False
+        sparse : bool, optional
+            Whether y_true is given as an index or a one-hot, by default False
+        epsilon : float, optional
+            Lower bound for log(.), by default 1e-10
+        average_on_batch: bool, optional
+            Whether the metric should be averaged over each batch. Typically used to
+            get metrics averaged by Trip, by default False
+        name : str, optional
+            Name of operation, by default "negative_log_likelihood"
+        axis : int, optional
+            axis on which to apply the metric, by default -1
+        """
         super().__init__(name=name, **kwargs)
         self.nll = self.add_variable(shape=(), initializer="zeros", name="neg_ll")
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
         self.from_logits = from_logits
         self.sparse = sparse
+        self.average_on_batch = average_on_batch
         self.epsilon = epsilon
         self.axis = axis
 
@@ -34,12 +62,12 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
 
         Parameters
         ----------
-        y_true : _type_
-            _description_
-        y_pred : _type_
-            _description_
-        sample_weight : _type_, optional
-            _description_, by default None
+        y_true : np.ndarray
+            Ground Truth value
+        y_pred : np.ndarray
+            Predicted values
+        sample_weight : np.ndarray, optional
+            sample wise weight, by default None
         """
         if self.axis == -1:
             if not len(tf.shape(y_pred)) == 2:
@@ -55,18 +83,27 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
 
         # Apply label clipping to avoid log(0) and such issues
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0)
-        if sample_weight is not None:
-            pass
-        print(tf.math.log(y_pred), y_pred)
-        self.nll.assign(self.nll - tf.reduce_sum(y_true * tf.math.log(y_pred)))
-        self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+        if sample_weight is None:
+            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred))
+        else:
+            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred) * sample_weight)
+
+        if self.average_on_batch:
+            self.nll.assign(self.nll + tf.reduce_mean(nll_value))
+            self.n_evals.assign(self.n_evals + 1)
+        else:
+            self.nll.assign(self.nll + nll_value)
+            if sample_weight is None:
+                self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+            else:
+                self.n_evals.assign(self.n_evals + tf.reduce_sum(sample_weight))
 
     def result(self):
         """Compute the current metric value.
 
         Returns
         -------
-        _type_
-            _description_
+        float
+            Negative Log Likelihood value
         """
-        return self.nll / self.n_evals
+        return tf.math.divide_no_nan(self.nll, self.n_evals)

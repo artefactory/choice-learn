@@ -304,58 +304,6 @@ def test_compute_ordered_basket_likelihood() -> None:
         model.compute_ordered_basket_likelihood(trip=trip)
 
 
-# def test_compute_basket_likelihood(caplog) -> None:
-#     """Test the compute_basket_likelihood method."""
-#     model = AttentionBasedContextEmbedding()
-#     model.instantiate(
-#         n_items=n_items_1,
-#     )
-
-#     with pytest.raises(ValueError):
-#         # Trip not provided as an argument
-#         # Then basket, available_items, store, week and prices must be provided
-#         model.compute_basket_likelihood(
-#             basket=np.array([1, 2, 0]),
-#             available_items=np.ones(n_items_1),
-#             store=0,
-#             week=0,
-#         )
-
-#     with pytest.raises(ValueError):
-#         # Trip directly provided as an argument
-#         # Then trip.assortment must be an np.ndarray
-#         trip = Trip(
-#             purchases=np.array([1, 2, 0]),
-#             store=0,
-#             week=0,
-#             prices=np.random.uniform(1, 10, n_items_1),
-#             assortment=0,
-#         )
-#         model.compute_basket_likelihood(trip=trip)
-
-#     # With verbose
-#     model.compute_basket_likelihood(
-#         basket=np.array([1, 2, 0]),
-#         available_items=np.ones(n_items_1),
-#         store=0,
-#         week=0,
-#         prices=np.random.uniform(1, 10, n_items_1),
-#         verbose=1,
-#     )
-
-#     # Too many permutations
-#     with caplog.at_level(logging.WARNING):
-#         model.compute_basket_likelihood(
-#             basket=np.array([1, 2, 0]),
-#             available_items=np.ones(n_items_1),
-#             store=0,
-#             week=0,
-#             prices=np.random.uniform(1, 10, n_items_1),
-#             n_permutations=3,  # > 2! = 2
-#         )
-#         assert "Warning: n_permutations > n! (all permutations)." in caplog.text
-
-
 def test_get_negative_samples() -> None:
     """Test the get_negative_samples method."""
     model = AttentionBasedContextEmbedding()

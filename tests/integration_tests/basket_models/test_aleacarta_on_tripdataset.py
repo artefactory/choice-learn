@@ -356,7 +356,6 @@ def test_get_negative_samples() -> None:
 
 def test_fit() -> None:
     """Test the fit method."""
-    tf.compat.v1.enable_eager_execution()
     model = AleaCarta(batch_size=-1)
     model.instantiate(
         n_items=n_items_1,
@@ -385,3 +384,89 @@ def test_evaluate_load_and_save() -> None:
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
+
+
+def test_randoms_few() -> None:
+    """Test few random things."""
+    latent_sizes = {"preferences": 6, "price": 0, "season": 0}
+    n_negative_samples = 2
+    optimizer = "adam"
+    lr = 1e-2
+    epochs = 400
+    batch_size = 32
+
+    model = AleaCarta(
+        item_intercept=False,
+        price_effects=False,
+        seasonal_effects=False,
+        latent_sizes=latent_sizes,
+        n_negative_samples=n_negative_samples,
+        optimizer=optimizer,
+        lr=lr,
+        epochs=epochs,
+        batch_size=batch_size,
+    )
+
+    model.instantiate(n_items=7, n_stores=2)
+
+    utilities = model.compute_batch_utility(
+        item_batch=np.array(([2, 3], [2, 4])),
+        basket_batch=np.array([[0, 1], [0, 1]]),
+        store_batch=np.array([0, 0]),
+        week_batch=np.array([0, 0]),
+        price_batch=np.array(
+            [
+                [
+                    7.89437192,
+                    9.41370182,
+                ],
+                [7.89437192, 2.9295548],
+            ]
+        ),
+        available_item_batch=np.array(
+            [
+                [1, 1, 1, 1, 1, 0, 0],
+                [1, 1, 1, 1, 1, 0, 0],
+            ]
+        ),
+    )
+    assert np.isclose(utilities[0][0], utilities[1][0]).all()
+
+    utilities_0 = model.compute_batch_utility(
+        item_batch=np.array([3]),
+        basket_batch=np.array([[0, 1]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.ones((1,)),
+        available_item_batch=np.ones((1, 7)),
+    )
+    utilities_1 = (
+        model.compute_batch_utility(
+            item_batch=np.array([3]),
+            basket_batch=np.array([[1]]),
+            store_batch=np.array([0]),
+            week_batch=np.array([0]),
+            price_batch=np.ones((1,)),
+            available_item_batch=np.ones((1, 7)),
+        )
+        + model.compute_batch_utility(
+            item_batch=np.array([3]),
+            basket_batch=np.array([[0]]),
+            store_batch=np.array([0]),
+            week_batch=np.array([0]),
+            price_batch=np.ones((1,)),
+            available_item_batch=np.ones((1, 7)),
+        )
+    ) / 2
+    assert np.isclose(utilities_0, utilities_1).all()
+
+    utilities = model.compute_batch_utility(
+        item_batch=np.array([[3, 4], [4, 3]]),
+        basket_batch=np.array([[0, 1], [1, 0]]),
+        store_batch=np.array([0, 0]),
+        week_batch=np.array([0, 0]),
+        price_batch=np.ones((2, 2)),
+        available_item_batch=np.ones((2, 7)),
+    )
+    assert np.isclose(utilities[0][0], utilities[1][1]).all()
+    assert np.isclose(utilities[0][1], utilities[1][0]).all()
