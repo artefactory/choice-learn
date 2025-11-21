@@ -1,5 +1,7 @@
 """Test the metrics functions and classes."""
 
+import numpy as np
+
 from choice_learn.utils.metrics import NegativeLogLikeliHood
 
 
@@ -69,33 +71,41 @@ def test_custom_categorical_crossentropy():
     assert met.result() < 2.1270
 
 
-# def test_sample_weights():
-#     """Test sample_weight parametrization of CCE loss."""
-#     exact_nll = CustomCategoricalCrossEntropy(
-#         from_logits=False,
-#         label_smoothing=0.0,
-#         sparse=False,
-#         axis=-1,
-#         epsilon=1e-35,
-#         name="exact_categorical_crossentropy",
-#         reduction="sum_over_batch_size",
-#     )
+def test_sample_weights():
+    """Test sample_weight use for NLL metric."""
+    exact_nll = NegativeLogLikeliHood(
+        from_logits=False,
+        sparse=False,
+        axis=-1,
+        epsilon=1e-35,
+        name="exact_categorical_crossentropy",
+    )
 
-#     value_ref = exact_nll(
-#         y_true=[[0.0, 1.0], [1.0, 0.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
-#     )
-#     value_1 = exact_nll(
-#         y_true=[[0.0, 1.0], [1.0, 0.0], [1.0, 0.0]],
-#         y_pred=[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]],
-#         sample_weight=[1.0, 1.0, 1.0],
-#     )
-#     value_2 = exact_nll(
-#         y_true=[[0.0, 1.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8]], sample_weight=[1.0, 2.0]
-#     )
-#     value_3 = exact_nll(
-#         y_true=[[0.0, 1.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8]], sample_weight=[0.5, 1.0]
-#     )
+    exact_nll.update_state(
+        y_true=[[0.0, 1.0], [1.0, 0.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+    )
+    value_ref = exact_nll.result()
+    exact_nll.reset_state()
+    exact_nll.update_state(
+        y_true=[[0.0, 1.0], [1.0, 0.0], [1.0, 0.0]],
+        y_pred=[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]],
+        sample_weight=[1.0, 1.0, 1.0],
+    )
+    value_1 = exact_nll.result()
+    exact_nll.reset_state()
 
-#     assert value_ref == value_1
-#     assert value_ref == value_2 * 2 / 3
-#     assert value_ref == value_3 * 4 / 3
+    exact_nll.update_state(
+        y_true=[[0.0, 1.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8]], sample_weight=[1.0, 2.0]
+    )
+    value_2 = exact_nll.result()
+    exact_nll.reset_state()
+
+    exact_nll.update_state(
+        y_true=[[0.0, 1.0], [1.0, 0.0]], y_pred=[[0.2, 0.8], [0.2, 0.8]], sample_weight=[0.5, 1.0]
+    )
+    value_3 = exact_nll.result()
+    exact_nll.reset_state()
+
+    assert np.allclose(value_ref, value_1)
+    assert np.allclose(value_ref, value_2)
+    assert np.allclose(value_ref, value_3)
