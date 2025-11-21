@@ -370,7 +370,8 @@ class AleaCarta(BaseBasketModel):
                 tf.zeros((len(basket_batch), 0, self.gamma.shape[1]))
             )
         else:
-            # Gather the embeddings using a ragged tensor of indices and then sum them in each basket
+            # Gather the embeddings using a ragged tensor  
+            # of indices and then sum them in each basket
             gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
 
         gamma_by_basket = tf.reduce_mean(gamma_by_basket, axis=1)
@@ -439,19 +440,21 @@ class AleaCarta(BaseBasketModel):
 
         Parameters
         ----------
+
         item_batch: np.ndarray or tf.Tensor
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
         gamma_by_basket: np.ndarray
             Embedding of all the baskets in basket_batch
+            Shape must be (batch_size, latent_size)
+            
         Returns
         -------
         basket_interaction_utility: tf.Tensor
             Interaction utility of all the items in item_batch
             Shape must be (batch_size,)
         """
-
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         gamma_item = tf.gather(self.gamma, indices=item_batch)  # Shape: (batch_size, latent_size)
 
@@ -728,8 +731,10 @@ class AleaCarta(BaseBasketModel):
         ridge_regularization = self.l2_regularization * (
             tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta)
         )
+        if self.item_intercept:
+            ridge_regularization += self.l2_regularization * tf.nn.l2_loss(self.alpha)
         # Normalize by the batch size and the number of negative samples
-        return tf.reduce_sum(bce + ridge_regularization) / (batch_size), loglikelihood
+        return tf.reduce_sum(bce + ridge_regularization) / (batch_size * (self.n_negative_samples + 1)), loglikelihood
 
     # @tf.function  # Graph mode
     def evaluate2(
@@ -747,12 +752,6 @@ class AleaCarta(BaseBasketModel):
         total = 0
         results = {}
 
-        intercept = self.compute_preference_utility(
-            item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-            store_batch=np.tile([0] * batch_size, [self.n_items]),
-            week_batch=np.tile([0] * batch_size, [self.n_items]),
-            price_batch=np.tile([1] * batch_size, [self.n_items]),
-        )
         for (
             item_batch,
             basket_batch,
@@ -768,7 +767,12 @@ class AleaCarta(BaseBasketModel):
                 tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1
             )  # Shape: (batch_size, n_items)
             gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
-
+            intercept = self.compute_preference_utility(
+                item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
+                store_batch=tf.tile(store_batch, [self.n_items]),
+                week_batch=tf.tile(week_batch, [self.n_items]),
+                price_batch= tf.reshape(price_batch, [-1]),
+        )
             all_distances = (
                 self.compute_interaction_utility(
                     item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
@@ -785,8 +789,9 @@ class AleaCarta(BaseBasketModel):
             # 1 if item is in the basket, 0 otherwise
             inf_penalty = 100.0
             mask = tf.cast(mask, dtype=tf.float32)
+            available_mask = tf.cast(available_item_batch, dtype=tf.float32)
 
-            inf_mask = mask * inf_penalty  # Shape: (batch_size, n_items)
+            inf_mask = mask * inf_penalty + (1 - available_mask) * inf_penalty # Shape: (batch_size, n_items)
             all_distances = all_distances - inf_mask  # Shape: (batch_size, n_items)
             ####----------------------------------------------------------
             total += batch_size
