@@ -372,9 +372,7 @@ class AleaCarta(BaseBasketModel):
         else:
             # Gather the embeddings using a ragged tensor
             # of indices and then sum them in each basket
-            gamma_by_basket = tf.ragged.map_flat_values(
-                tf.gather, self.gamma, item_indices_ragged
-            )
+            gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
 
         gamma_by_basket = tf.reduce_mean(gamma_by_basket, axis=1)
 
@@ -382,9 +380,7 @@ class AleaCarta(BaseBasketModel):
         condition_mask = tf.expand_dims(has_nan_row, axis=1)
         zeros = tf.zeros_like(gamma_by_basket)
 
-        return tf.where(
-            condition_mask, zeros, gamma_by_basket
-        )  # Shape: (batch_size, latent_size)
+        return tf.where(condition_mask, zeros, gamma_by_basket)  # Shape: (batch_size, latent_size)
 
     # @tf.function  # Graph mode
     def compute_batch_utility(
@@ -461,16 +457,12 @@ class AleaCarta(BaseBasketModel):
             Shape must be (batch_size,)
         """
         item_batch = tf.cast(item_batch, dtype=tf.int32)
-        gamma_item = tf.gather(
-            self.gamma, indices=item_batch
-        )  # Shape: (batch_size, latent_size)
+        gamma_item = tf.gather(self.gamma, indices=item_batch)  # Shape: (batch_size, latent_size)
 
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
 
-        return tf.reduce_sum(
-            gamma_by_basket * gamma_item, axis=-1
-        )  # Shape: (batch_size,)
+        return tf.reduce_sum(gamma_by_basket * gamma_item, axis=-1)  # Shape: (batch_size,)
 
     def compute_basket_utility(
         self,
@@ -579,9 +571,7 @@ class AleaCarta(BaseBasketModel):
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
-        not_to_be_chosen = tf.concat(
-            [purchased_items, tf.expand_dims(next_item, axis=0)], axis=0
-        )
+        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
 
         # Sample negative items from the assortment excluding not_to_be_chosen
         negative_samples = tf.boolean_mask(
@@ -792,9 +782,7 @@ class AleaCarta(BaseBasketModel):
             all_distances = (
                 self.compute_interaction_utility(
                     item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-                    gamma_by_basket=tf.repeat(
-                        gamma_by_basket, repeats=self.n_items, axis=0
-                    ),
+                    gamma_by_basket=tf.repeat(gamma_by_basket, repeats=self.n_items, axis=0),
                 )
                 + intercept[: batch_size * self.n_items]
             )

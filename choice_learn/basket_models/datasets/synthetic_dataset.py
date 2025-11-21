@@ -109,14 +109,8 @@ class SyntheticDataGenerator:
         chosen_item = np.random.choice(
             [i for i in self.items_nest[chosen_nest] if i in available_items]
         )
-        if (
-            self.user_profile is not None
-            and self.user_profile[user_id]["nest"] == chosen_nest
-        ):
-            if (
-                self.user_profile[user_id]["item"] in available_items
-                and np.random.rand() < 0.7
-            ):
+        if self.user_profile is not None and self.user_profile[user_id]["nest"] == chosen_nest:
+            if self.user_profile[user_id]["item"] in available_items and np.random.rand() < 0.7:
                 chosen_item = self.user_profile[user_id]["item"]
 
         return chosen_item, chosen_nest
@@ -164,31 +158,22 @@ class SyntheticDataGenerator:
                             basket.append(self.user_profile[user_id]["item"])
                         else:
                             basket.append(
-                                np.random.choice(
-                                    [i for i in items if i in available_items]
-                                )
+                                np.random.choice([i for i in items if i in available_items])
                             )
                     else:
-                        basket.append(
-                            np.random.choice([i for i in items if i in available_items])
-                        )
+                        basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
                     logging.warning(
                         f"Warning: No more complementary items available in nest {nest_id}"
                     )
                     pass
             elif (
-                interactions[nest_id] == "neutral"
-                and np.random.random() < self.proba_neutral_items
+                interactions[nest_id] == "neutral" and np.random.random() < self.proba_neutral_items
             ):
                 try:
-                    basket.append(
-                        np.random.choice([i for i in items if i in available_items])
-                    )
+                    basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
-                    logging.warning(
-                        f"Warning: No more neutral items available in nest {nest_id}"
-                    )
+                    logging.warning(f"Warning: No more neutral items available in nest {nest_id}")
                     pass
         return basket
 
@@ -208,9 +193,7 @@ class SyntheticDataGenerator:
         """
         if np.random.rand() <= self.noise_proba:
             try:
-                basket.append(
-                    np.random.choice([i for i in available_items if i not in basket])
-                )
+                basket.append(np.random.choice([i for i in available_items if i not in basket]))
             except IndexError:
                 logging.warning(
                     "Warning: No more items available to add as noise.Returning the current basket."
@@ -293,13 +276,11 @@ class SyntheticDataGenerator:
                 A Trip object containing the generated basket.
         """
         user_id = (
-            np.random.randint(0, len(self.user_profile))
-            if self.user_profile is not None
-            else None
+            np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else None
         )
-        basket = self.generate_basket(
-            assortment, len_basket=len_basket, user_id=user_id
-        ).astype(int)
+        basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
+            int
+        )
         return Trip(
             purchases=basket,
             # Assuming uniform price of 1.0 for simplicity
@@ -338,9 +319,7 @@ class SyntheticDataGenerator:
         assortments = []
         assortment_id = np.random.randint(0, len(assortments_matrix))
         for _ in range(n_baskets):
-            trip = self.generate_trip(
-                assortments_matrix[assortment_id], len_basket=len_basket
-            )
+            trip = self.generate_trip(assortments_matrix[assortment_id], len_basket=len_basket)
             assortments.append(assortments_matrix[assortment_id])
             trips.append(trip)
 

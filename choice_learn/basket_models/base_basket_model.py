@@ -82,16 +82,12 @@ class BaseBasketModel:
                 momentum=momentum,
             )
         else:
-            logging.warning(
-                f"Optimizer {optimizer} not implemented, switching for default Adam"
-            )
+            logging.warning(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(
                 learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
             )
 
-        self.callbacks = tf.keras.callbacks.CallbackList(
-            callbacks, add_history=True, model=None
-        )
+        self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
         self.callbacks.set_model(self)
         self.lr = lr
         self.epochs = epochs
@@ -141,9 +137,7 @@ class BaseBasketModel:
         str
             Data generation method.
         """
-        raise ValueError(
-            "Argument 'train_iter_method' should be defined in child class."
-        )
+        raise ValueError("Argument 'train_iter_method' should be defined in child class.")
 
     @abstractmethod
     def compute_batch_utility(
@@ -279,9 +273,7 @@ class BaseBasketModel:
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
-            available_item_batch=np.array(
-                [available_items_copy for _ in range(self.n_items)]
-            ),
+            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
         )
 
         # Softmax on the utilities
@@ -654,9 +646,7 @@ class BaseBasketModel:
         """
         if not self.instantiated:
             # Lazy instantiation
-            self.instantiate(
-                n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores
-            )
+            self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
 
         batch_size = self.batch_size
 
@@ -751,9 +741,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate2(
-                        val_dataset, batch_size=512, metrics=metrics
-                    )
+                    val_loss = self.evaluate2(val_dataset, batch_size=512, metrics=metrics)
                 else:
                     for batch_nb, (
                         item_batch,
@@ -818,9 +806,7 @@ class BaseBasketModel:
                     else:
                         print("Test Negative-LogLikelihood:", val_loss.numpy())
                         desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
-                        history["val_loss"] = history.get("val_loss", []) + [
-                            val_loss.numpy()
-                        ]
+                        history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
                         train_logs = {**train_logs, **val_logs}
             temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)

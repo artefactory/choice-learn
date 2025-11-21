@@ -131,9 +131,7 @@ class SelfAttentionModel(BaseBasketModel):
         ##############
 
         self.X = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(
-                shape=(n_items, self.d)
-            ),
+            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(shape=(n_items, self.d)),
             trainable=True,
             constraint=tf.keras.constraints.MaxNorm(max_value=1.0, axis=1),
             name="X",
@@ -158,17 +156,13 @@ class SelfAttentionModel(BaseBasketModel):
         )
 
         self.Wq = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(
-                shape=(self.d, self.d)
-            ),
+            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(shape=(self.d, self.d)),
             trainable=True,
             name="Wq",
         )
 
         self.Wk = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(
-                shape=(self.d, self.d)
-            ),
+            tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(shape=(self.d, self.d)),
             trainable=True,
             name="Wk",
         )
@@ -221,9 +215,7 @@ class SelfAttentionModel(BaseBasketModel):
 
         else:
             # Masque de la diagonale, désactivé pour l'instant
-            diag_mask = tf.eye(
-                tf.shape(basket_batch)[1], batch_shape=[batch_size], dtype=tf.bool
-            )
+            diag_mask = tf.eye(tf.shape(basket_batch)[1], batch_shape=[batch_size], dtype=tf.bool)
             scaled_scores = tf.where(
                 diag_mask,
                 tf.constant(-np.inf, dtype=scaled_scores.dtype),
@@ -236,20 +228,14 @@ class SelfAttentionModel(BaseBasketModel):
                 mask_col, scaled_scores, tf.constant(-np.inf, dtype=scaled_scores.dtype)
             )
 
-            all_inf_row = tf.reduce_all(
-                tf.math.is_inf(scaled_scores), axis=-1
-            )  # (batch_size, L)
+            all_inf_row = tf.reduce_all(tf.math.is_inf(scaled_scores), axis=-1)  # (batch_size, L)
             # We set to zero the first value of the rows where all values are -inf to avoid NaNs in softmax
             indices = tf.where(all_inf_row)
             indices_full = tf.concat([indices, tf.zeros_like(indices[:, :1])], axis=1)
             updates = tf.zeros([tf.shape(indices_full)[0]], dtype=scaled_scores.dtype)
-            scaled_scores = tf.tensor_scatter_nd_update(
-                scaled_scores, indices_full, updates
-            )
+            scaled_scores = tf.tensor_scatter_nd_update(scaled_scores, indices_full, updates)
 
-            attention_weights = tf.nn.softmax(
-                scaled_scores, axis=-1
-            )  # Shape: (batch_size, L, L)
+            attention_weights = tf.nn.softmax(scaled_scores, axis=-1)  # Shape: (batch_size, L, L)
 
         return attention_weights
 
@@ -275,13 +261,9 @@ class SelfAttentionModel(BaseBasketModel):
         # self.X.assign(tf.clip_by_norm(self.X, clip_norm=1.0, axes=1))
         padding_vector = tf.zeros(shape=[1, self.d])  # Forme (1, d)
         padded_X = tf.concat([self.X, padding_vector], axis=0)
-        X_future_batch = tf.gather(
-            padded_X, indices=context_items
-        )  # Shape: (batch_size, L, d)
+        X_future_batch = tf.gather(padded_X, indices=context_items)  # Shape: (batch_size, L, d)
 
-        Q_prime = tf.nn.relu(
-            tf.matmul(X_future_batch, self.Wq)
-        )  # Shape: (batch_size, L, d)
+        Q_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wq))  # Shape: (batch_size, L, d)
         K_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wk))
 
         if is_training:
@@ -294,9 +276,7 @@ class SelfAttentionModel(BaseBasketModel):
             context_items, scaled_scores
         )  # Shape: (batch_size, L, L)
 
-        attention_output = tf.matmul(
-            attention_weights, X_future_batch
-        )  # Shape: (batch_size, L, d)
+        attention_output = tf.matmul(attention_weights, X_future_batch)  # Shape: (batch_size, L, d)
 
         mask = tf.not_equal(context_items, self.n_items)
         mask_float = tf.cast(mask, dtype=tf.float32)
@@ -373,9 +353,7 @@ class SelfAttentionModel(BaseBasketModel):
         V_batch = tf.cast(self.V, dtype=tf.float32)
         U_batch = tf.cast(self.U, dtype=tf.float32)
 
-        V_future_batch = tf.gather(
-            V_batch, indices=item_batch
-        )  # Shape: (batch_size, d)
+        V_future_batch = tf.gather(V_batch, indices=item_batch)  # Shape: (batch_size, d)
 
         U_user_batch = tf.gather(U_batch, indices=user_batch)  # Shape: (batch_size, d)
 
@@ -399,8 +377,7 @@ class SelfAttentionModel(BaseBasketModel):
         short_distance = self.compute_batch_short_distance(item_batch, m_batch)
 
         total_distance = (
-            self.short_term_ratio * long_distance
-            + (1 - self.short_term_ratio) * short_distance
+            self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
         )
 
         return total_distance
@@ -445,9 +422,7 @@ class SelfAttentionModel(BaseBasketModel):
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
-        not_to_be_chosen = tf.concat(
-            [purchased_items, tf.expand_dims(next_item, axis=0)], axis=0
-        )
+        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
 
         # Sample negative items from the assortment excluding not_to_be_chosen
         negative_samples = tf.boolean_mask(

@@ -95,9 +95,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42),
             name="Wo",
         )
-        self.wa = tf.Variable(
-            tf.random.normal((self.latent_size,), stddev=0.1, seed=42), name="wa"
-        )
+        self.wa = tf.Variable(tf.random.normal((self.latent_size,), stddev=0.1, seed=42), name="wa")
 
         self.empty_context_embedding = tf.Variable(
             tf.random.normal((self.latent_size,), stddev=0.1, seed=42),
@@ -216,9 +214,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         )
         context_embedding = self.embed_context(basket_batch_ragged)
         return tf.reduce_sum(
-            tf.multiply(
-                tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding
-            ),
+            tf.multiply(tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding),
             axis=1,
         )
 
@@ -261,9 +257,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
-        not_to_be_chosen = tf.concat(
-            [purchased_items, tf.expand_dims(next_item, axis=0)], axis=0
-        )
+        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
 
         # Sample negative items from the assortment excluding not_to_be_chosen
         negative_samples = tf.boolean_mask(
@@ -431,8 +425,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             raise TypeError("Dataset must be a TripDataset.")
 
         if (
-            max([len(trip.purchases) for trip in trip_dataset.trips])
-            + self.n_negative_samples
+            max([len(trip.purchases) for trip in trip_dataset.trips]) + self.n_negative_samples
             > self.n_items
         ):
             raise ValueError(
@@ -440,17 +433,13 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             )
 
         if self.nce_distribution == "natural":
-            self.negative_samples_distribution = self._get_items_frequencies(
-                trip_dataset
-            )
+            self.negative_samples_distribution = self._get_items_frequencies(trip_dataset)
         else:
             self.negative_samples_distribution = (1 / trip_dataset.n_items) * np.ones(
                 (trip_dataset.n_items,)
             )
 
-        history = super().fit(
-            trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose
-        )
+        history = super().fit(trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose)
 
         self.is_trained = True
 
