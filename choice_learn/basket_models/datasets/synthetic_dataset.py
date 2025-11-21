@@ -39,7 +39,7 @@ class SyntheticDataGenerator:
                                       ["compl", "", "neutral", "neutral"],
                                       ["neutral", "neutral", "", "neutral"],
                                       ["neutral", "neutral", "neutral", ""]]
-            user_profile = {0:{ "nest" : 0, "item" : 0}, 
+            user_profile = {0:{ "nest" : 0, "item" : 0},
                             1: {"nest" : 0, "item" : 1},
                             2: {"nest" : 0, "item" : 2}}
                 Dictionary defining user profiles with preferred nest and item. Structure is:

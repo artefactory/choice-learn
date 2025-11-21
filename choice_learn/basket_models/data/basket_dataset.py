@@ -519,12 +519,12 @@ class TripDataset:
         trip_index: int
             Index of the trip from which to get the data
         sequence_length: int
-            Lenght of sequence we consider: example sequence_length=5 means 
+            Lenght of sequence we consider: example sequence_length=5 means
             we consider the 5th item as target and the first 5 items as the basket.
         n_future_purchases: int
-            Number of future purchases to consider: example n_future_purchases=3 
+            Number of future purchases to consider: example n_future_purchases=3
             means we consider the next 3 items after the target item as future purchases.
-        
+
         Returns
         -------
         tuple[np.ndarray]

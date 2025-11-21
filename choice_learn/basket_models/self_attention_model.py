@@ -633,7 +633,9 @@ class SelfAttentionModel(BaseBasketModel):
             mask = tf.cast(mask, dtype=tf.float32)
             available_mask = tf.cast(available_item_batch, dtype=tf.float32)
 
-            inf_mask = mask * inf_penalty + (1 - available_mask) * inf_penalty  # Shape: (batch_size, n_items)
+            inf_mask = (
+                mask * inf_penalty + (1 - available_mask) * inf_penalty
+            )  # Shape: (batch_size, n_items)
             all_distances = all_distances + inf_mask  # Shape: (batch_size, n_items)
             ####----------------------------------------------------------
 

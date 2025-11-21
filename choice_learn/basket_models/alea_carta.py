@@ -370,7 +370,7 @@ class AleaCarta(BaseBasketModel):
                 tf.zeros((len(basket_batch), 0, self.gamma.shape[1]))
             )
         else:
-            # Gather the embeddings using a ragged tensor  
+            # Gather the embeddings using a ragged tensor
             # of indices and then sum them in each basket
             gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
 
@@ -448,7 +448,7 @@ class AleaCarta(BaseBasketModel):
         gamma_by_basket: np.ndarray
             Embedding of all the baskets in basket_batch
             Shape must be (batch_size, latent_size)
-            
+
         Returns
         -------
         basket_interaction_utility: tf.Tensor
@@ -734,7 +734,9 @@ class AleaCarta(BaseBasketModel):
         if self.item_intercept:
             ridge_regularization += self.l2_regularization * tf.nn.l2_loss(self.alpha)
         # Normalize by the batch size and the number of negative samples
-        return tf.reduce_sum(bce + ridge_regularization) / (batch_size * (self.n_negative_samples + 1)), loglikelihood
+        return tf.reduce_sum(bce + ridge_regularization) / (
+            batch_size * (self.n_negative_samples + 1)
+        ), loglikelihood
 
     # @tf.function  # Graph mode
     def evaluate2(
@@ -771,8 +773,8 @@ class AleaCarta(BaseBasketModel):
                 item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
                 store_batch=tf.tile(store_batch, [self.n_items]),
                 week_batch=tf.tile(week_batch, [self.n_items]),
-                price_batch= tf.reshape(price_batch, [-1]),
-        )
+                price_batch=tf.reshape(price_batch, [-1]),
+            )
             all_distances = (
                 self.compute_interaction_utility(
                     item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
@@ -791,7 +793,9 @@ class AleaCarta(BaseBasketModel):
             mask = tf.cast(mask, dtype=tf.float32)
             available_mask = tf.cast(available_item_batch, dtype=tf.float32)
 
-            inf_mask = mask * inf_penalty + (1 - available_mask) * inf_penalty # Shape: (batch_size, n_items)
+            inf_mask = (
+                mask * inf_penalty + (1 - available_mask) * inf_penalty
+            )  # Shape: (batch_size, n_items)
             all_distances = all_distances - inf_mask  # Shape: (batch_size, n_items)
             ####----------------------------------------------------------
             total += batch_size
