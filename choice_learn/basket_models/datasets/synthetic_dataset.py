@@ -39,7 +39,9 @@ class SyntheticDataGenerator:
                                       ["compl", "", "neutral", "neutral"],
                                       ["neutral", "neutral", "", "neutral"],
                                       ["neutral", "neutral", "neutral", ""]]
-            user_profile = {0:{ "nest" : 0, "item" : 0}, 1: {"nest" : 0, "item" : 1}, 2: {"nest" : 0, "item" : 2}}
+            user_profile = {0:{ "nest" : 0, "item" : 0}, 
+                            1: {"nest" : 0, "item" : 1},
+                            2: {"nest" : 0, "item" : 2}}
                 Dictionary defining user profiles with preferred nest and item. Structure is:
                 {user_id: {"nest": nest, "item": preferred_item}, ...}
             proba_complementary_items : float
@@ -257,7 +259,6 @@ class SyntheticDataGenerator:
             Trip
                 A Trip object containing the generated basket.
         """
-
         user_id = (
             np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else None
         )

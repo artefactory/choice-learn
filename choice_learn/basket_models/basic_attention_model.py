@@ -310,7 +310,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
-        user_batch: np.ndarray = None,
+        user_batch=None,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 

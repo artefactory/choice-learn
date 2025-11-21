@@ -606,7 +606,7 @@ class SelfAttentionModel(BaseBasketModel):
             _,  # store_batch not used here
             _,  # week_batch not used here
             _,  # price_batch not used here
-            _,  # available_item_batch not used here
+            available_item_batch,  # available_item_batch not used here
             user_batch,
         ) in inner_range:
             batch_size = tf.shape(item_batch)[0]
@@ -631,8 +631,9 @@ class SelfAttentionModel(BaseBasketModel):
             # 1 if item is in the basket, 0 otherwise
             inf_penalty = 100.0
             mask = tf.cast(mask, dtype=tf.float32)
+            available_mask = tf.cast(available_item_batch, dtype=tf.float32)
 
-            inf_mask = mask * inf_penalty  # Shape: (batch_size, n_items)
+            inf_mask = mask * inf_penalty + (1 - available_mask) * inf_penalty  # Shape: (batch_size, n_items)
             all_distances = all_distances + inf_mask  # Shape: (batch_size, n_items)
             ####----------------------------------------------------------
 

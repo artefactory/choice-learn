@@ -243,7 +243,6 @@ class TripDataset:
         np.ndarray
             List of baskets in the dataset
         """
-
         return np.array([self.trips[i].purchases for i in range(len(self))])
 
     def get_all_stores(self) -> np.ndarray:
@@ -516,11 +515,16 @@ class TripDataset:
 
         Parameters
         ----------
+
         trip_index: int
             Index of the trip from which to get the data
-        sequence_length: Lenght of sequence we consider: example sequence_length=5 means we consider the 5th item as target and
-           the first 5 items as the basket.
-        n_future_purchases: Number of future purchases to consider: example n_future_purchases=3 means we consider the next 3 items after the target item as future purchases.
+        sequence_length: int
+            Lenght of sequence we consider: example sequence_length=5 means 
+            we consider the 5th item as target and the first 5 items as the basket.
+        n_future_purchases: int
+            Number of future purchases to consider: example n_future_purchases=3 
+            means we consider the next 3 items after the target item as future purchases.
+        
         Returns
         -------
         tuple[np.ndarray]
@@ -529,7 +533,6 @@ class TripDataset:
         """
         # Get the trip from the index
         trip = self.trips[trip_index]
-        length_trip = len(trip.purchases)
         purchases = np.array(trip.purchases)
 
         padded_truncated_purchases = np.array(

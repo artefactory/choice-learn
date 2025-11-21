@@ -513,7 +513,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
-        user_batch: np.ndarray = None,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -735,7 +735,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate2(val_dataset, batch_size=256, metrics=metrics)
+                    val_loss = self.evaluate2(val_dataset, batch_size=512, metrics=metrics)
                 else:
                     for batch_nb, (
                         item_batch,
