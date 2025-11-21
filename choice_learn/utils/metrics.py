@@ -86,7 +86,9 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         if sample_weight is None:
             nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred))
         else:
-            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred) * sample_weight)
+            nll_value = -tf.reduce_sum(
+                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1)
+            )
 
         if self.average_on_batch:
             self.nll.assign(self.nll + tf.reduce_mean(nll_value))
