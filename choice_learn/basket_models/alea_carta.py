@@ -372,7 +372,9 @@ class AleaCarta(BaseBasketModel):
         else:
             # Gather the embeddings using a ragged tensor
             # of indices and then sum them in each basket
-            gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
+            gamma_by_basket = tf.ragged.map_flat_values(
+                tf.gather, self.gamma, item_indices_ragged
+            )
 
         gamma_by_basket = tf.reduce_mean(gamma_by_basket, axis=1)
 
@@ -380,7 +382,9 @@ class AleaCarta(BaseBasketModel):
         condition_mask = tf.expand_dims(has_nan_row, axis=1)
         zeros = tf.zeros_like(gamma_by_basket)
 
-        return tf.where(condition_mask, zeros, gamma_by_basket)  # Shape: (batch_size, latent_size)
+        return tf.where(
+            condition_mask, zeros, gamma_by_basket
+        )  # Shape: (batch_size, latent_size)
 
     # @tf.function  # Graph mode
     def compute_batch_utility(
@@ -436,7 +440,8 @@ class AleaCarta(BaseBasketModel):
         item_batch: Union[np.ndarray, tf.Tensor],
         gamma_by_basket: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items in basket_batch.
+        """Compute the utility of all the items in item_batch given the items
+        in basket_batch.
 
         Parameters
         ----------
@@ -456,12 +461,16 @@ class AleaCarta(BaseBasketModel):
             Shape must be (batch_size,)
         """
         item_batch = tf.cast(item_batch, dtype=tf.int32)
-        gamma_item = tf.gather(self.gamma, indices=item_batch)  # Shape: (batch_size, latent_size)
+        gamma_item = tf.gather(
+            self.gamma, indices=item_batch
+        )  # Shape: (batch_size, latent_size)
 
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
 
-        return tf.reduce_sum(gamma_by_basket * gamma_item, axis=-1)  # Shape: (batch_size,)
+        return tf.reduce_sum(
+            gamma_by_basket * gamma_item, axis=-1
+        )  # Shape: (batch_size,)
 
     def compute_basket_utility(
         self,
@@ -570,7 +579,9 @@ class AleaCarta(BaseBasketModel):
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
-        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
+        not_to_be_chosen = tf.concat(
+            [purchased_items, tf.expand_dims(next_item, axis=0)], axis=0
+        )
 
         # Sample negative items from the assortment excluding not_to_be_chosen
         negative_samples = tf.boolean_mask(
@@ -734,9 +745,11 @@ class AleaCarta(BaseBasketModel):
         if self.item_intercept:
             ridge_regularization += self.l2_regularization * tf.nn.l2_loss(self.alpha)
         # Normalize by the batch size and the number of negative samples
-        return tf.reduce_sum(bce + ridge_regularization) / (
-            batch_size * (self.n_negative_samples + 1)
-        ), loglikelihood
+        return (
+            tf.reduce_sum(bce + ridge_regularization)
+            / (batch_size * (self.n_negative_samples + 1)),
+            loglikelihood,
+        )
 
     # @tf.function  # Graph mode
     def evaluate2(
@@ -746,7 +759,8 @@ class AleaCarta(BaseBasketModel):
         hit_k: list = [50],
         metrics: list[callable] = None,  # Change *metrics to a named parameter
     ):
-        """Evaluate the model on the given dataset using the specified metric."""
+        """Evaluate the model on the given dataset using the specified
+        metric."""
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
@@ -778,7 +792,9 @@ class AleaCarta(BaseBasketModel):
             all_distances = (
                 self.compute_interaction_utility(
                     item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-                    gamma_by_basket=tf.repeat(gamma_by_basket, repeats=self.n_items, axis=0),
+                    gamma_by_basket=tf.repeat(
+                        gamma_by_basket, repeats=self.n_items, axis=0
+                    ),
                 )
                 + intercept[: batch_size * self.n_items]
             )

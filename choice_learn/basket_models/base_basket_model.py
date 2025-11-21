@@ -82,12 +82,16 @@ class BaseBasketModel:
                 momentum=momentum,
             )
         else:
-            logging.warning(f"Optimizer {optimizer} not implemented, switching for default Adam")
+            logging.warning(
+                f"Optimizer {optimizer} not implemented, switching for default Adam"
+            )
             self.optimizer = tf.keras.optimizers.Adam(
                 learning_rate=lr, clipvalue=grad_clip_value, weight_decay=weight_decay
             )
 
-        self.callbacks = tf.keras.callbacks.CallbackList(callbacks, add_history=True, model=None)
+        self.callbacks = tf.keras.callbacks.CallbackList(
+            callbacks, add_history=True, model=None
+        )
         self.callbacks.set_model(self)
         self.lr = lr
         self.epochs = epochs
@@ -137,7 +141,9 @@ class BaseBasketModel:
         str
             Data generation method.
         """
-        raise ValueError("Argument 'train_iter_method' should be defined in child class.")
+        raise ValueError(
+            "Argument 'train_iter_method' should be defined in child class."
+        )
 
     @abstractmethod
     def compute_batch_utility(
@@ -149,7 +155,8 @@ class BaseBasketModel:
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the 5 other data.
+        """Compute the utility of all the items in item_batch given the 5 other
+        data.
 
         Parameters
         ----------
@@ -272,7 +279,9 @@ class BaseBasketModel:
             store_batch=np.array([store for _ in range(self.n_items)]),
             week_batch=np.array([week for _ in range(self.n_items)]),
             price_batch=prices,
-            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
+            available_item_batch=np.array(
+                [available_items_copy for _ in range(self.n_items)]
+            ),
         )
 
         # Softmax on the utilities
@@ -625,7 +634,8 @@ class BaseBasketModel:
         verbose: int = 0,
         metrics: list[callable] = None,
     ) -> dict:
-        """Fit the model to the data in order to estimate the latent parameters.
+        """Fit the model to the data in order to estimate the latent
+        parameters.
 
         Parameters
         ----------
@@ -644,7 +654,9 @@ class BaseBasketModel:
         """
         if not self.instantiated:
             # Lazy instantiation
-            self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
+            self.instantiate(
+                n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores
+            )
 
         batch_size = self.batch_size
 
@@ -663,7 +675,9 @@ class BaseBasketModel:
             if verbose > 0:
                 inner_range = tqdm.tqdm(
                     trip_dataset.iter_batch(
-                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                        shuffle=True,
+                        batch_size=batch_size,
+                        data_method=self.train_iter_method,
                     ),
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=1,
@@ -671,7 +685,9 @@ class BaseBasketModel:
                 )
             else:
                 inner_range = trip_dataset.iter_batch(
-                    shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                    shuffle=True,
+                    batch_size=batch_size,
+                    data_method=self.train_iter_method,
                 )
 
             for batch_nb, (
@@ -735,7 +751,9 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate2(val_dataset, batch_size=512, metrics=metrics)
+                    val_loss = self.evaluate2(
+                        val_dataset, batch_size=512, metrics=metrics
+                    )
                 else:
                     for batch_nb, (
                         item_batch,
@@ -748,7 +766,9 @@ class BaseBasketModel:
                         user_batch,
                     ) in enumerate(
                         val_dataset.iter_batch(
-                            shuffle=False, batch_size=-1, data_method=self.train_iter_method
+                            shuffle=False,
+                            batch_size=-1,
+                            data_method=self.train_iter_method,
                         )
                     ):
                         self.callbacks.on_batch_begin(batch_nb)
@@ -773,7 +793,10 @@ class BaseBasketModel:
                     if batch_size != -1:
                         last_batch_size = len(item_batch)
                         coefficients = tf.concat(
-                            [tf.ones(len(val_losses) - 1) * batch_size, [last_batch_size]],
+                            [
+                                tf.ones(len(val_losses) - 1) * batch_size,
+                                [last_batch_size],
+                            ],
                             axis=0,
                         )
                         val_losses = tf.multiply(val_losses, coefficients)
@@ -795,7 +818,9 @@ class BaseBasketModel:
                     else:
                         print("Test Negative-LogLikelihood:", val_loss.numpy())
                         desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
-                        history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
+                        history["val_loss"] = history.get("val_loss", []) + [
+                            val_loss.numpy()
+                        ]
                         train_logs = {**train_logs, **val_logs}
             temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
@@ -931,7 +956,9 @@ class BaseBasketModel:
                     self,
                     weight_name,
                     tf.Variable(
-                        np.load(os.path.join(directory, file)), trainable=True, name=weight_name
+                        np.load(os.path.join(directory, file)),
+                        trainable=True,
+                        name=weight_name,
                     ),
                 )
 

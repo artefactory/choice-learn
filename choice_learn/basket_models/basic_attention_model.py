@@ -11,12 +11,12 @@ from .data.basket_dataset import TripDataset
 
 
 class AttentionBasedContextEmbedding(BaseBasketModel):
-    """
-    Class for the attention-based model.
+    """Class for the attention-based model.
 
-    Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian, and Wei Liu.
-    "Attention-based transactional context embedding for next-item recommendation."
-    In Proceedings of the AAAI conference on artificial intelligence, vol. 32, no. 1. 2018.
+    Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian,
+    and Wei Liu. "Attention-based transactional context embedding for
+    next-item recommendation." In Proceedings of the AAAI conference on
+    artificial intelligence, vol. 32, no. 1. 2018.
     """
 
     def __init__(
@@ -88,12 +88,16 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         self.n_items = n_items
 
         self.Wi = tf.Variable(
-            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42), name="Wi"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42),
+            name="Wi",
         )
         self.Wo = tf.Variable(
-            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42), name="Wo"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42),
+            name="Wo",
         )
-        self.wa = tf.Variable(tf.random.normal((self.latent_size,), stddev=0.1, seed=42), name="wa")
+        self.wa = tf.Variable(
+            tf.random.normal((self.latent_size,), stddev=0.1, seed=42), name="wa"
+        )
 
         self.empty_context_embedding = tf.Variable(
             tf.random.normal((self.latent_size,), stddev=0.1, seed=42),
@@ -170,7 +174,8 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items in basket_batch.
+        """Compute the utility of all the items in item_batch given the items
+        in basket_batch.
 
         Parameters
         ----------
@@ -211,7 +216,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         )
         context_embedding = self.embed_context(basket_batch_ragged)
         return tf.reduce_sum(
-            tf.multiply(tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding),
+            tf.multiply(
+                tf.gather(self.Wo, tf.cast(item_batch, tf.int32)), context_embedding
+            ),
             axis=1,
         )
 
@@ -254,7 +261,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         available_mask = tf.equal(available_items, 1)
         assortment = tf.boolean_mask(item_ids, available_mask)
 
-        not_to_be_chosen = tf.concat([purchased_items, tf.expand_dims(next_item, axis=0)], axis=0)
+        not_to_be_chosen = tf.concat(
+            [purchased_items, tf.expand_dims(next_item, axis=0)], axis=0
+        )
 
         # Sample negative items from the assortment excluding not_to_be_chosen
         negative_samples = tf.boolean_mask(
@@ -367,7 +376,12 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             ),
         )
         pos_score = self.compute_batch_utility(
-            item_batch, basket_batch, store_batch, week_batch, price_batch, available_item_batch
+            item_batch,
+            basket_batch,
+            store_batch,
+            week_batch,
+            price_batch,
+            available_item_batch,
         )
         neg_scores = tf.map_fn(
             lambda neg_items: self.compute_batch_utility(
@@ -382,15 +396,20 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             fn_output_signature=tf.float32,
         )
         # neg_scores = tf.reshape(neg_scores, (-1, self.n_negative_samples))
-        return self.loss(
-            logit_true=pos_score,
-            logit_negative=tf.transpose(neg_scores),
-            freq_true=tf.gather(self.negative_samples_distribution, tf.cast(item_batch, tf.int32)),
-            freq_negative=tf.gather(
-                self.negative_samples_distribution,
-                tf.cast(tf.transpose(negative_samples), tf.int32),
+        return (
+            self.loss(
+                logit_true=pos_score,
+                logit_negative=tf.transpose(neg_scores),
+                freq_true=tf.gather(
+                    self.negative_samples_distribution, tf.cast(item_batch, tf.int32)
+                ),
+                freq_negative=tf.gather(
+                    self.negative_samples_distribution,
+                    tf.cast(tf.transpose(negative_samples), tf.int32),
+                ),
             ),
-        ), 1e-10
+            1e-10,
+        )
 
     def fit(
         self,
@@ -412,7 +431,8 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             raise TypeError("Dataset must be a TripDataset.")
 
         if (
-            max([len(trip.purchases) for trip in trip_dataset.trips]) + self.n_negative_samples
+            max([len(trip.purchases) for trip in trip_dataset.trips])
+            + self.n_negative_samples
             > self.n_items
         ):
             raise ValueError(
@@ -420,13 +440,17 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             )
 
         if self.nce_distribution == "natural":
-            self.negative_samples_distribution = self._get_items_frequencies(trip_dataset)
+            self.negative_samples_distribution = self._get_items_frequencies(
+                trip_dataset
+            )
         else:
             self.negative_samples_distribution = (1 / trip_dataset.n_items) * np.ones(
                 (trip_dataset.n_items,)
             )
 
-        history = super().fit(trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose)
+        history = super().fit(
+            trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose
+        )
 
         self.is_trained = True
 

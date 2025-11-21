@@ -11,9 +11,10 @@ from ..utils.permutation import permutations
 class Trip:
     """Class for a trip.
 
-    A trip is a sequence of purchases made at a specific time and
-    at a specific store with given prices and a specific assortment.
-    It can be seen as the content of a time-stamped purchase receipt with store identification.
+    A trip is a sequence of purchases made at a specific time and at a
+    specific store with given prices and a specific assortment. It can
+    be seen as the content of a time-stamped purchase receipt with store
+    identification.
 
     Trip = (purchases, store, week, prices, assortment)
     """
@@ -185,7 +186,9 @@ class TripDataset:
             # Concatenate the arrays of availability matrices
             # /!\ When concatenating 2 TripDatasets, the indices of the availability matrices
             # changes
-            available_items=np.concatenate((self.available_items, other.available_items), axis=0),
+            available_items=np.concatenate(
+                (self.available_items, other.available_items), axis=0
+            ),
         )
 
     def get_trip(self, index: int) -> Trip:
@@ -389,7 +392,9 @@ class TripDataset:
             dtype=int,
         )
 
-        if not (isinstance(trip.assortment, np.ndarray) or isinstance(trip.assortment, list)):
+        if not (
+            isinstance(trip.assortment, np.ndarray) or isinstance(trip.assortment, list)
+        ):
             # Then it is the assortment ID (ie its index in self.available_items)
             assortment = self.available_items[trip.assortment]
         else:  # np.ndarray
@@ -462,7 +467,9 @@ class TripDataset:
         # numpy arrays for tiling and numpy arrays must have the same length)
         padded_truncated_purchases = np.array(
             [
-                np.concatenate((permuted_purchases[:i], -1 * np.ones(self.max_length - i)))
+                np.concatenate(
+                    (permuted_purchases[:i], -1 * np.ones(self.max_length - i))
+                )
                 for i in range(0, length_trip)
             ],
             dtype=int,
@@ -543,7 +550,9 @@ class TripDataset:
         padded_future_purchases = np.array(
             [
                 np.pad(
-                    purchases[sequence_length + 1 : sequence_length + 1 + n_future_purchases],
+                    purchases[
+                        sequence_length + 1 : sequence_length + 1 + n_future_purchases
+                    ],
                     (
                         0,
                         max(
@@ -551,7 +560,10 @@ class TripDataset:
                             n_future_purchases
                             - len(
                                 purchases[
-                                    sequence_length + 1 : sequence_length + 1 + n_future_purchases
+                                    sequence_length
+                                    + 1 : sequence_length
+                                    + 1
+                                    + n_future_purchases
                                 ]
                             ),
                         ),
@@ -585,7 +597,8 @@ class TripDataset:
         shuffle: bool = False,
         data_method: str = "shopper",
     ) -> object:
-        """Iterate over a TripDataset to return batches of items of length batch_size.
+        """Iterate over a TripDataset to return batches of items of length
+        batch_size.
 
         Parameters
         ----------
@@ -643,20 +656,23 @@ class TripDataset:
             # Get the whole dataset in one batch
             for trip_index in trip_indexes:
                 if data_method == "shopper":
-                    additional_trip_data = self.get_subbaskets_augmented_data_from_trip_index(
-                        trip_index
+                    additional_trip_data = (
+                        self.get_subbaskets_augmented_data_from_trip_index(trip_index)
                     )
                 elif data_method == "aleacarta":
-                    additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
-                        trip_index
+                    additional_trip_data = (
+                        self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
                     )
                 elif data_method == "sequential":
-                    additional_trip_data = self.get_sequential_data_from_trip_index(trip_index)
+                    additional_trip_data = self.get_sequential_data_from_trip_index(
+                        trip_index
+                    )
                 else:
                     raise ValueError(f"Unknown data method: {data_method}")
 
                 buffer = tuple(
-                    np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
+                    np.concatenate((buffer[i], additional_trip_data[i]))
+                    for i in range(len(buffer))
                 )
 
             # Yield the whole dataset
@@ -693,8 +709,10 @@ class TripDataset:
                                 )
                             )
                         elif data_method == "sequential":
-                            additional_trip_data = self.get_sequential_data_from_trip_index(
-                                trip_indexes[index]
+                            additional_trip_data = (
+                                self.get_sequential_data_from_trip_index(
+                                    trip_indexes[index]
+                                )
                             )
                         else:
                             raise ValueError(f"Unknown data method: {data_method}")
