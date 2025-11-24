@@ -1,8 +1,9 @@
+"""Integration tests for SelfAttentionModel."""
+
 import numpy as np
 import pytest
 import tensorflow as tf
 
-from choice_learn.basket_models.data import Trip, TripDataset
 from choice_learn.basket_models.datasets import SyntheticDataGenerator
 from choice_learn.basket_models.self_attention_model import SelfAttentionModel
 
@@ -60,6 +61,7 @@ def test_fit() -> None:
 
 
 def test_mask_attention() -> None:
+    """Test the masked_attention method."""
     model = SelfAttentionModel()
     model.instantiate(
         n_items=data.n_items,
@@ -164,7 +166,6 @@ def test_compute_loss() -> None:
 
 def hit_rate(all_distances, item_batch, hit_k):
     """Compute the hit rate at k for the given distances."""
-
     hit_list = []
     for k in hit_k:
         top_k_indices = tf.math.top_k(-all_distances, k=k).indices  # Shape: (batch_size, hit_k)
@@ -177,9 +178,8 @@ def hit_rate(all_distances, item_batch, hit_k):
         )
         hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32))
         hit_list.append(hits)
-    hit_list = tf.convert_to_tensor(hit_list)
 
-    return hit_list
+    return tf.convert_to_tensor(hit_list)
 
 
 def test_hit_rate():
@@ -212,9 +212,7 @@ def mean_reciprocal_rank(all_distances, item_batch, _):
     )  # Shape: (batch_size, 2)
     item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
 
-    mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32))
-
-    return mean_rank
+    return tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32))
 
 
 def test_mrr():

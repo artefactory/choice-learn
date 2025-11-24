@@ -172,8 +172,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items
-        in basket_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -313,7 +312,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
-        user_batch=None,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -355,6 +354,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             Shape must be (1,)
         """
         _ = future_batch
+        _ = user_batch
         negative_samples = tf.transpose(
             tf.stack(
                 [

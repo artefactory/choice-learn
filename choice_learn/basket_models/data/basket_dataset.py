@@ -516,7 +516,6 @@ class TripDataset:
 
         Parameters
         ----------
-
         trip_index: int
             Index of the trip from which to get the data
         sequence_length: int
@@ -586,8 +585,7 @@ class TripDataset:
         shuffle: bool = False,
         data_method: str = "shopper",
     ) -> object:
-        """Iterate over a TripDataset to return batches of items of length
-        batch_size.
+        """Iterate over a TripDataset to return batches of items of length batch_size.
 
         Parameters
         ----------

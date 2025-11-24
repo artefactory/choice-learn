@@ -149,8 +149,7 @@ class BaseBasketModel:
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the 5 other
-        data.
+        """Compute the utility of all the items in item_batch given the 5 other data.
 
         Parameters
         ----------
@@ -626,8 +625,7 @@ class BaseBasketModel:
         verbose: int = 0,
         metrics: list[callable] = None,
     ) -> dict:
-        """Fit the model to the data in order to estimate the latent
-        parameters.
+        """Fit the model to the data in order to estimate the latent parameters.
 
         Parameters
         ----------

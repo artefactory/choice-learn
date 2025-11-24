@@ -683,7 +683,7 @@ class Shopper(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
-        user_batch=None,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -723,6 +723,7 @@ class Shopper(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        _ = user_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 

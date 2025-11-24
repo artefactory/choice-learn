@@ -13,7 +13,8 @@ class SelfAttentionModel(BaseBasketModel):
     """Class for the self attention model for basket recommendation.
 
     Basket Choice Modeling
-    Inspired by the paper: "Next Item Recommendation with Self-Attention"  Shuai Zhang, Lina Yao,  Yi Tay, and Aixin Sun.
+    Inspired by the paper: "Next Item Recommendation with Self-Attention"  Shuai Zhang, Lina Yao,
+    Yi Tay, and Aixin Sun.
     The algorithm was modified and adapted to the basket recommendation task.
     """
 
@@ -204,7 +205,6 @@ class SelfAttentionModel(BaseBasketModel):
         Applying a mask to ignore padding items. Also applied a mask on
         the diagonal to avoid attending to the same item, if activated
         """
-
         batch_size = tf.shape(basket_batch)[0]
         mask = tf.not_equal(
             basket_batch, self.n_items
@@ -229,7 +229,8 @@ class SelfAttentionModel(BaseBasketModel):
             )
 
             all_inf_row = tf.reduce_all(tf.math.is_inf(scaled_scores), axis=-1)  # (batch_size, L)
-            # We set to zero the first value of the rows where all values are -inf to avoid NaNs in softmax
+            # We set to zero the first value of the rows where all values are -inf to avoid NaNs in
+            # softmax
             indices = tf.where(all_inf_row)
             indices_full = tf.concat([indices, tf.zeros_like(indices[:, :1])], axis=1)
             updates = tf.zeros([tf.shape(indices_full)[0]], dtype=scaled_scores.dtype)
@@ -257,26 +258,24 @@ class SelfAttentionModel(BaseBasketModel):
                 [batch_size, L, L] tf.Tensor
                 Tensor containing the attention matrix.
         """
-
-        # self.X.assign(tf.clip_by_norm(self.X, clip_norm=1.0, axes=1))
         padding_vector = tf.zeros(shape=[1, self.d])  # Forme (1, d)
-        padded_X = tf.concat([self.X, padding_vector], axis=0)
-        X_future_batch = tf.gather(padded_X, indices=context_items)  # Shape: (batch_size, L, d)
+        padded_items = tf.concat([self.X, padding_vector], axis=0)
+        x_basket = tf.gather(padded_items, indices=context_items)  # Shape: (batch_size, L, d)
 
-        Q_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wq))  # Shape: (batch_size, L, d)
-        K_prime = tf.nn.relu(tf.matmul(X_future_batch, self.Wk))
+        q_prime = tf.nn.relu(tf.matmul(x_basket, self.Wq))  # Shape: (batch_size, L, d)
+        k_prime = tf.nn.relu(tf.matmul(x_basket, self.Wk))
 
         if is_training:
-            Q_prime = tf.nn.dropout(Q_prime, rate=self.dropout_rate)
-            K_prime = tf.nn.dropout(K_prime, rate=self.dropout_rate)
+            q_prime = tf.nn.dropout(q_prime, rate=self.dropout_rate)
+            k_prime = tf.nn.dropout(k_prime, rate=self.dropout_rate)
 
-        scores = tf.matmul(Q_prime, K_prime, transpose_b=True)
+        scores = tf.matmul(q_prime, k_prime, transpose_b=True)
         scaled_scores = scores / tf.sqrt(float(self.d))
         attention_weights = self.masked_attention(
             context_items, scaled_scores
         )  # Shape: (batch_size, L, L)
 
-        attention_output = tf.matmul(attention_weights, X_future_batch)  # Shape: (batch_size, L, d)
+        attention_output = tf.matmul(attention_weights, x_basket)  # Shape: (batch_size, L, d)
 
         mask = tf.not_equal(context_items, self.n_items)
         mask_float = tf.cast(mask, dtype=tf.float32)
@@ -298,8 +297,7 @@ class SelfAttentionModel(BaseBasketModel):
         item_batch: Union[np.ndarray, tf.Tensor],
         m_batch: tf.Tensor,
     ) -> tf.Tensor:
-        """Compute the short distance of all the items in item_batch given the
-        items in basket_batch.
+        """Compute the short distance of the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -317,20 +315,16 @@ class SelfAttentionModel(BaseBasketModel):
             Distance of all the items in item_batch from their ground truth embedding (X)
             Shape must be (batch_size,)
         """
+        x_item_target = tf.gather(self.x, indices=item_batch)  # Shape: (batch_size, d)
 
-        X_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, d)
-
-        short_term_distance = tf.reduce_sum(tf.square(m_batch - X_item_target), axis=-1)
-
-        return short_term_distance
+        return tf.reduce_sum(tf.square(m_batch - x_item_target), axis=-1)
 
     def compute_batch_long_distance(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
         user_batch: np.ndarray = None,
     ) -> tf.Tensor:
-        """Compute the long distance of all the items in item_batch given the
-        user.
+        """Compute the long distance of all the items in item_batch given the user.
 
         Parameters
         ----------
@@ -349,19 +343,15 @@ class SelfAttentionModel(BaseBasketModel):
             Distance of all the items in item_batch from their ground truth embedding (V)
             Shape must be (batch_size,)
         """
+        v_batch = tf.cast(self.V, dtype=tf.float32)
+        u_batch = tf.cast(self.U, dtype=tf.float32)
 
-        V_batch = tf.cast(self.V, dtype=tf.float32)
-        U_batch = tf.cast(self.U, dtype=tf.float32)
+        v_future_batch = tf.gather(v_batch, indices=item_batch)  # Shape: (batch_size, d)
 
-        V_future_batch = tf.gather(V_batch, indices=item_batch)  # Shape: (batch_size, d)
-
-        U_user_batch = tf.gather(U_batch, indices=user_batch)  # Shape: (batch_size, d)
-
-        long_term_distance = tf.reduce_sum(
-            tf.square(U_user_batch - V_future_batch), axis=-1
+        u_user_batch = tf.gather(u_batch, indices=user_batch)  # Shape: (batch_size, d)
+        return tf.reduce_sum(
+            tf.square(u_user_batch - v_future_batch), axis=-1
         )  # Shape: (batch_size, 1)
-
-        return long_term_distance
 
     def compute_batch_distance(
         self,
@@ -369,18 +359,12 @@ class SelfAttentionModel(BaseBasketModel):
         m_batch: np.ndarray,
         user_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the total distance (long + short term) of all the items in
-        item_batch."""
-
+        """Compute the total distance (long + short term) of all the items in item_batch."""
         long_distance = self.compute_batch_long_distance(item_batch, user_batch)
 
         short_distance = self.compute_batch_short_distance(item_batch, m_batch)
 
-        total_distance = (
-            self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
-        )
-
-        return total_distance
+        return self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
 
     def get_negative_samples(
         self,
@@ -411,7 +395,6 @@ class SelfAttentionModel(BaseBasketModel):
             Random sample of items, each of them distinct from
             the next item and from the items already in the basket
         """
-
         # Convert inputs to tensors
         available_items = tf.cast(tf.convert_to_tensor(available_items), dtype=tf.int32)
         purchased_items = tf.cast(tf.convert_to_tensor(purchased_items), dtype=tf.int32)
@@ -493,7 +476,8 @@ class SelfAttentionModel(BaseBasketModel):
             Batch of user IDs (integers) for each purchased item
             Shape must be (batch_size,)
         is_training: bool
-            Whether the model is in training mode or not, to activate dropout if needed. True by default, cause compute_batch_loss is only used during training.
+            Whether the model is in training mode or not, to activate dropout if needed.
+            True by default, cause compute_batch_loss is only used during training.
 
         Returns
         -------
@@ -503,7 +487,6 @@ class SelfAttentionModel(BaseBasketModel):
         _: None
             Placeholder to match the signature of the parent class method
         """
-
         _ = future_batch  # Unused for this model
         _ = store_batch  # Unused for this model
         _ = week_batch  # Unused for this model
@@ -579,8 +562,7 @@ class SelfAttentionModel(BaseBasketModel):
                 total_loss / (batch_size * self.n_negative_samples * self.hinge_margin),
                 _,
             )
-        else:
-            return total_loss / (batch_size * self.n_negative_samples), _
+        return total_loss / (batch_size * self.n_negative_samples), _
 
     def evaluate(
         self,

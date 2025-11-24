@@ -436,12 +436,10 @@ class AleaCarta(BaseBasketModel):
         item_batch: Union[np.ndarray, tf.Tensor],
         gamma_by_basket: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items
-        in basket_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
-
         item_batch: np.ndarray or tf.Tensor
             Batch of the purchased items ID (integers) for which to compute the utility
             Shape must be (batch_size,)
@@ -749,8 +747,7 @@ class AleaCarta(BaseBasketModel):
         hit_k: list = [50],
         metrics: list[callable] = None,  # Change *metrics to a named parameter
     ):
-        """Evaluate the model on the given dataset using the specified
-        metric."""
+        """Evaluate the model on the given dataset using the specified metric."""
         inner_range = trip_dataset.iter_batch(
             shuffle=False, batch_size=batch_size, data_method="aleacarta"
         )
