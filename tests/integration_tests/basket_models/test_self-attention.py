@@ -111,7 +111,7 @@ def test_embed_context() -> None:
         n_users=data.n_users,
     )
 
-    m_batch, attention_weights = model.embed_context(
+    m_batch, attention_weights = model.embed_basket(
         context_items=tf.constant([[0, 6, 3], [1, 3, 7]]), is_training=False
     )
     assert m_batch.shape == (2, 5)  # Shape = (batch_size, short_term_latent_size)
@@ -130,7 +130,7 @@ def test_compute_distance() -> None:
         n_users=data.n_users,
     )
 
-    m_batch, _ = model.embed_context(
+    m_batch, _ = model.embed_basket(
         context_items=tf.constant([[0, 6, 3], [1, 3, 7]]), is_training=False
     )
     distances = model.compute_batch_distance(

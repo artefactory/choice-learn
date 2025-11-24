@@ -308,7 +308,7 @@ class SelfAttentionModel(BaseBasketModel):
             Distance of all the items in item_batch from their ground truth embedding (X)
             Shape must be (batch_size,)
         """
-        x_item_target = tf.gather(self.x, indices=item_batch)  # Shape: (batch_size, d)
+        x_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, d)
 
         return tf.reduce_sum(tf.square(m_batch - x_item_target), axis=-1)
 
