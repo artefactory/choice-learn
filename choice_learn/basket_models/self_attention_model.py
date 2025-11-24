@@ -306,7 +306,8 @@ class SelfAttentionModel(BaseBasketModel):
         Parameters
         ----------
         item_batch: or tf.Tensor
-            Batch of the purchased items ID (integers) for which to compute the utility
+            Batch of the purchased items ID (integers) for which to compute the distance from their
+            basket.
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
         basket_embedding: tf.Tensor
@@ -335,7 +336,8 @@ class SelfAttentionModel(BaseBasketModel):
         Parameters
         ----------
         item_batch: np.ndarray or tf.Tensor
-            Batch of the purchased items ID (integers) for which to compute the utility
+            Batch of the purchased items ID (integers) for which to compute the distance from their
+            user.
             Shape must be (batch_size,)
             (positive and negative samples concatenated together)
 
@@ -375,6 +377,29 @@ class SelfAttentionModel(BaseBasketModel):
 
         short_distance = self.compute_batch_short_distance(item_batch, basket_embedding)
         return self.short_term_ratio * long_distance + (1 - self.short_term_ratio) * short_distance
+
+    def compute_batch_utility(
+        self,
+        item_batch,
+        basket_batch,
+        store_batch,
+        week_batch,
+        price_batch,
+        available_item_batch,
+        user_batch,
+        is_training: bool = False,
+    ) -> tf.Tensor:
+        """Compute the utility of all the items in item_batch."""
+        _ = store_batch  # Unused for this model
+        _ = week_batch  # Unused for this model
+        _ = price_batch  # Unused for this model
+        _ = available_item_batch  # Unused for this model
+        return -self.compute_batch_distance(
+            item_batch=item_batch,
+            basket_batch=basket_batch,
+            user_batch=user_batch,
+            is_training=is_training,
+        )
 
     def get_negative_samples(
         self,
