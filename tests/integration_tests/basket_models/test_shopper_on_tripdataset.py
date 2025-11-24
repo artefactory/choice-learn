@@ -483,8 +483,8 @@ def test_evaluate_load_and_save() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    eff_loss = model.evaluate(trip_dataset=trip_dataset_1)
+    eff_loss = model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     model.save_model("test_shopper")
     loaded_model = Shopper.load_model("test_shopper")
-    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)
+    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     assert np.isclose(eff_loss, loaded_loss)
