@@ -9,8 +9,7 @@ from ..data import Trip, TripDataset
 
 
 class SyntheticDataGenerator:
-    """Class to generate synthetic basket data based on predefined item sets
-    and their relations."""
+    """Class to generate synthetic basket data based on predefined item sets and their relations."""
 
     def __init__(
         self,
@@ -122,8 +121,7 @@ class SyntheticDataGenerator:
         available_items: np.ndarray,
         user_id: int = None,
     ) -> list:
-        """Completes the basket by adding items based on the relations of the
-        first item.
+        """Completes the basket by adding items based on the relations of the first item.
 
         Parameters
         ----------
@@ -178,8 +176,7 @@ class SyntheticDataGenerator:
         return basket
 
     def add_noise(self, basket: list, available_items) -> list:
-        """Add noise items to the basket based on the defined noise
-        probability.
+        """Add noise items to the basket based on the defined noise probability.
 
         Parameters
         ----------
@@ -210,8 +207,7 @@ class SyntheticDataGenerator:
         len_basket: int = None,
         user_id: int = None,
     ) -> list:
-        """Generate a basket of items based on the defined item sets and their
-        relations.
+        """Generate a basket of items based on the defined item sets and their relations.
 
         Parameters
         ----------

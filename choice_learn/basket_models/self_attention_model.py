@@ -93,13 +93,6 @@ class SelfAttentionModel(BaseBasketModel):
             **kwargs,
         )
 
-        if len(tf.config.get_visible_devices("GPU")):
-            # At least one available GPU
-            self.on_gpu = True
-        else:
-            # No available GPU
-            self.on_gpu = False
-
     def instantiate(
         self,
         n_items: int,
@@ -240,7 +233,7 @@ class SelfAttentionModel(BaseBasketModel):
 
         return attention_weights
 
-    def embed_context(self, context_items: tf.Tensor, is_training: bool) -> tf.Tensor:
+    def embed_basket(self, context_items: tf.Tensor, is_training: bool) -> tf.Tensor:
         """Return the context embedding matrix.
 
         Parameters
@@ -343,12 +336,9 @@ class SelfAttentionModel(BaseBasketModel):
             Distance of all the items in item_batch from their ground truth embedding (V)
             Shape must be (batch_size,)
         """
-        v_batch = tf.cast(self.V, dtype=tf.float32)
-        u_batch = tf.cast(self.U, dtype=tf.float32)
+        v_future_batch = tf.gather(self.V, indices=item_batch)  # Shape: (batch_size, d)
 
-        v_future_batch = tf.gather(v_batch, indices=item_batch)  # Shape: (batch_size, d)
-
-        u_user_batch = tf.gather(u_batch, indices=user_batch)  # Shape: (batch_size, d)
+        u_user_batch = tf.gather(self.U, indices=user_batch)  # Shape: (batch_size, d)
         return tf.reduce_sum(
             tf.square(u_user_batch - v_future_batch), axis=-1
         )  # Shape: (batch_size, 1)
@@ -527,7 +517,7 @@ class SelfAttentionModel(BaseBasketModel):
             dtype=tf.int32,
         )
         basket_batch = basket_batch_ragged.to_tensor(self.n_items)
-        m_batch, _ = self.embed_context(basket_batch, is_training)
+        m_batch, _ = self.embed_basket(basket_batch, is_training)
         # Compute the utility of all the available items
         all_distance = self.compute_batch_distance(
             item_batch=augmented_item_batch,
@@ -611,7 +601,7 @@ class SelfAttentionModel(BaseBasketModel):
                 dtype=tf.int32,
             )
             basket_batch = basket_batch_ragged.to_tensor(self.n_items)
-            m_batch, _ = self.embed_context(basket_batch, is_training=False)
+            m_batch, _ = self.embed_basket(basket_batch, is_training=False)
             all_distances = self.compute_batch_distance(
                 item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
                 m_batch=tf.repeat(m_batch, repeats=self.n_items, axis=0),
