@@ -274,9 +274,8 @@ class BaseBasketModel:
                 price_batch=np.expand_dims(prices, axis=0),
                 available_item_batch=np.expand_dims(available_items_copy, axis=0),
             )[0]
-
-            available_items_copy[np.where(basket >= 0)[0]] = 0.0
-            print("allu", all_utilities)
+            if len(np.where(basket >= 0)[0]) > 0:
+                available_items_copy[basket[np.where(basket >= 0)[0]]] = 0.0
         else:
             all_utilities = self.compute_batch_utility(
                 # All items
@@ -291,7 +290,8 @@ class BaseBasketModel:
                 available_item_batch=np.array(available_items_copy),
             )
             for i in range(tf.shape(basket)[0]):
-                available_items_copy[i, np.where(basket[i] >= 0)[0]] = 0.0
+                if len(np.where(basket[i] >= 0)[0]) > 0:
+                    available_items_copy[i, basket[i][np.where(basket[i] >= 0)[0]]] = 0.0
 
         # Softmax on the utilities
         return softmax_with_availabilities(
