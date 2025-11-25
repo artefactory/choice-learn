@@ -267,6 +267,7 @@ class AleaCarta(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: Union[np.ndarray, tf.Tensor],
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the items in basket_batch.
 
@@ -299,6 +300,7 @@ class AleaCarta(BaseBasketModel):
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
+        _ = user_batch
         _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         if len(tf.shape(item_batch)) == 1:
@@ -457,6 +459,7 @@ class AleaCarta(BaseBasketModel):
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
                 available_item_batch=available_item_batch,
+                user_batch=None,
             )
         ).numpy()
 
@@ -577,7 +580,7 @@ class AleaCarta(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
-        _ = user_batch  # Unused for this model
+        _ = user_batch
         _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
@@ -613,6 +616,7 @@ class AleaCarta(BaseBasketModel):
             week_batch=week_batch,
             price_batch=augmented_price_batch,
             available_item_batch=available_item_batch,
+            user_batch=None,
         )  # Shape: (batch_size * (n_negative_samples + 1),)
 
         positive_samples_utilities = tf.gather(params=all_utilities, indices=[0], axis=1)

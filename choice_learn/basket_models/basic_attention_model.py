@@ -176,6 +176,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the items in basket_batch.
 
@@ -212,7 +213,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         _ = price_batch
         _ = week_batch
         _ = available_item_batch
-
+        _ = user_batch
         if len(tf.shape(item_batch)) == 1:
             item_batch = tf.expand_dims(item_batch, axis=1)
             squeeze = True
@@ -384,6 +385,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             week_batch,
             price_batch,
             available_item_batch,
+            user_batch,
         )
         neg_scores = self.compute_batch_utility(
             item_batch=negative_samples,
@@ -392,6 +394,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             week_batch=week_batch,
             price_batch=price_batch,
             available_item_batch=available_item_batch,
+            user_batch=user_batch,
         )
 
         # neg_scores = tf.reshape(neg_scores, (-1, self.n_negative_samples))

@@ -84,17 +84,17 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         # Apply label clipping to avoid log(0) and such issues
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0)
         if sample_weight is None:
-            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred))
+            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=-1)
         else:
             nll_value = -tf.reduce_sum(
-                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1)
+                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1), axis=-1
             )
 
         if self.average_on_batch:
             self.nll.assign(self.nll + tf.reduce_mean(nll_value))
             self.n_evals.assign(self.n_evals + 1)
         else:
-            self.nll.assign(self.nll + nll_value)
+            self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
                 self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
             else:
@@ -109,3 +109,141 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
             Negative Log Likelihood value
         """
         return tf.math.divide_no_nan(self.nll, self.n_evals)
+
+    def reset_state(self):
+        """Reset all of the metric state variables."""
+        self.nll.assign(0.0)
+        self.n_evals.assign(0.0)
+
+
+class MRR(tf.keras.metrics.Metric):
+    """Compute Mean Reciprocal Rank."""
+
+    def __init__(
+        self,
+        average_on_batch=False,
+        name="mean_reciprocal_rank",
+        axis=-1,
+        **kwargs,
+    ):
+        super().__init__(name=name, **kwargs)
+        self.mrr = self.add_variable(shape=(), initializer="zeros", name="mrr")
+        self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
+        self.average_on_batch = average_on_batch
+        self.axis = axis
+
+    def update_state(self, y_true, y_pred):
+        """Accumulate statistics for the metric.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Ground Truth value
+        y_pred : np.ndarray
+            Predicted values
+        """
+        if self.axis == -1:
+            if not len(tf.shape(y_pred)) == 2:
+                raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
+        else:
+            y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.cast(y_true, dtype=tf.int32)
+
+        ranks = tf.argsort(tf.argsort(-y_pred, axis=1), axis=1) + 1  # Shape: (batch_size, n_items)
+        item_batch_indices = tf.stack(
+            [tf.range(len(y_true)), y_true], axis=1
+        )  # Shape: (batch_size, 2)
+        item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
+        mean_rank = tf.cast(1 / item_ranks, dtype=tf.float32)
+
+        if self.average_on_batch:
+            self.mrr.assign(self.mrr + tf.reduce_mean(mean_rank))
+            self.n_evals.assign(self.n_evals + 1)
+        else:
+            self.mrr.assign(self.mrr + tf.reduce_sum(mean_rank))
+            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+
+    def result(self):
+        """Compute the current metric value.
+
+        Returns
+        -------
+        float
+            Negative Log Likelihood value
+        """
+        return tf.math.divide_no_nan(self.mrr, self.n_evals)
+
+    def reset_state(self):
+        """Reset all of the metric state variables."""
+        self.mrr.assign(0.0)
+        self.n_evals.assign(0.0)
+
+
+class HitRate(tf.keras.metrics.Metric):
+    """Compute Hit Rate at k."""
+
+    def __init__(
+        self,
+        average_on_batch=False,
+        hit_k=[1, 5, 10],
+        name="hit_rate",
+        axis=-1,
+        **kwargs,
+    ):
+        super().__init__(name=name, **kwargs)
+        self.hit_rate = self.add_variable(shape=(len(hit_k),), initializer="zeros", name="hit_rate")
+        self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
+        self.average_on_batch = average_on_batch
+        self.axis = axis
+        self.hit_k = hit_k
+
+    def update_state(self, y_true, y_pred):
+        """Accumulate statistics for the metric.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Ground Truth value
+        y_pred : np.ndarray
+            Predicted values
+        """
+        if self.axis == -1:
+            if not len(tf.shape(y_pred)) == 2:
+                raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
+        else:
+            y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.cast(y_true, dtype=tf.int32)
+        hit_list = []
+        for k in self.hit_k:
+            top_k_indices = tf.math.top_k(y_pred, k=k).indices  # Shape: (batch_size, hit_k)
+            hits_per_batch = tf.reduce_any(
+                tf.equal(
+                    tf.cast(top_k_indices, tf.int32),
+                    tf.cast(tf.expand_dims(y_true, axis=1), tf.int32),
+                ),
+                axis=1,
+            )
+            hits = tf.cast(hits_per_batch, tf.float32)
+            hit_list.append(hits)
+        hit_list = tf.convert_to_tensor(hit_list)
+        if self.average_on_batch:
+            self.hit_rate.assign(self.hit_rate + tf.reduce_mean(hit_list, axis=1))
+            self.n_evals.assign(self.n_evals + 1)
+        else:
+            self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hit_list, axis=1))
+            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+
+    def result(self):
+        """Compute the current metric value.
+
+        Returns
+        -------
+        float
+            Negative Log Likelihood value
+        """
+        return tf.math.divide_no_nan(self.hit_rate, self.n_evals)
+
+    def reset_state(self):
+        """Reset all of the metric state variables."""
+        self.hit_rate.assign(tf.zeros_like(self.hit_rate))
+        self.n_evals.assign(0.0)

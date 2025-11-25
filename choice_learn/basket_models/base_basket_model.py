@@ -15,7 +15,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
-from ..utils.metrics import NegativeLogLikeliHood
+from ..utils.metrics import MRR, HitRate, NegativeLogLikeliHood
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
@@ -149,6 +149,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the 5 other data.
 
@@ -191,6 +192,7 @@ class BaseBasketModel:
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
+        user: Union[None, int] = None,
     ) -> tf.Tensor:
         """Compute the likelihood of all items for a given trip.
 
@@ -231,10 +233,11 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be provided as arguments."
+                    "If trip is None, then basket, available_items, store, week, prices, and "
+                    "user must be provided as arguments."
                 )
 
         else:
@@ -255,6 +258,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
             )
 
@@ -274,6 +278,7 @@ class BaseBasketModel:
             week_batch=np.expand_dims(week, axis=0),
             price_batch=np.expand_dims(prices, axis=0),
             available_item_batch=np.expand_dims(available_items_copy, axis=0),
+            user_batch=np.expand_dims(user, axis=0),
         )[0]
         # Softmax on the utilities
         return softmax_with_availabilities(
@@ -292,6 +297,7 @@ class BaseBasketModel:
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
+        user: Union[None, int] = None,
     ) -> float:
         r"""Compute the utility of an ordered basket.
 
@@ -332,10 +338,11 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be providedas arguments."
+                    "If trip is None, then basket, available_items, store, week, prices, and "
+                    "user must be provided as arguments."
                 )
 
         else:
@@ -355,6 +362,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
             )
 
@@ -369,6 +377,7 @@ class BaseBasketModel:
                 available_items=available_items_copy,
                 store=store,
                 week=week,
+                user=user,
                 prices=prices,
             )[basket[j]].numpy()
 
@@ -387,6 +396,7 @@ class BaseBasketModel:
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
+        user: Union[None, int] = None,
         trip: Union[None, Trip] = None,
         n_permutations: int = 1,
         verbose: int = 0,
@@ -436,6 +446,7 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
                     "If trip is None, then basket, available_items, store, week, and "
@@ -459,6 +470,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
                 n_permutations=n_permutations,
                 verbose=verbose,
@@ -492,6 +504,7 @@ class BaseBasketModel:
                         available_items=available_items,
                         store=store,
                         week=week,
+                        user=user,
                         prices=prices,
                     )
                     for permutation in permutation_list
@@ -737,7 +750,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate2(val_dataset, batch_size=512, metrics=metrics)
+                    val_loss = self.evaluate(val_dataset, batch_size=512, metrics=metrics)
                 else:
                     for batch_nb, (
                         item_batch,
@@ -819,6 +832,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         epsilon_eval: float = 1e-9,
         metrics="nll",
+        hit_k: list = [1, 5, 10],
     ) -> dict:
         r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
@@ -863,7 +877,15 @@ class BaseBasketModel:
                         name="basketwise-nll",
                     )
                 )
-            elif not isinstance(metric, tf.keras.metrics.metric.Metric):
+            elif metric == "mrr":
+                exec_metrics.append(MRR(average_on_batch=False))
+                exec_metrics.append(MRR(average_on_batch=True, name="basketwise-mrr"))
+            elif metric == "hit_rate":
+                exec_metrics.append(HitRate(average_on_batch=False, hit_k=hit_k))
+                exec_metrics.append(
+                    HitRate(average_on_batch=True, name="basketwise-hit_rate", hit_k=hit_k)
+                )
+            elif not isinstance(metric, tf.keras.metrics.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
             else:
                 exec_metrics.append(metric)
@@ -892,6 +914,7 @@ class BaseBasketModel:
                     store=trip.store,
                     week=trip.week,
                     prices=prices,
+                    user=trip.user_id,
                 )
                 predicted_probabilities.append(y_pred)
             for metric in exec_metrics:

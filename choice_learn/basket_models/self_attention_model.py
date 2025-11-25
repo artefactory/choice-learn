@@ -139,7 +139,6 @@ class SelfAttentionModel(BaseBasketModel):
                 shape=(n_items, self.d_long)
             ),
             trainable=True,
-            constraint=tf.keras.constraints.MaxNorm(max_value=1.0, axis=1),
             name="V",
         )
 
@@ -148,7 +147,6 @@ class SelfAttentionModel(BaseBasketModel):
                 shape=(self.n_users, self.d_long)
             ),
             trainable=True,
-            constraint=tf.keras.constraints.MaxNorm(max_value=1.0, axis=1),
             name="U",
         )
 
