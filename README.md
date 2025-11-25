@@ -36,6 +36,7 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
   - [Notebooks and Examples](#notebooks-and-examples)
   - [Documentation](#documentation)
   - [What's choice modeling ?](#whats-choice-modeling-)
+  - [Medium tutorials](#medium-tutorials)
 - [:trident: What's in there ?](#trident-whats-in-there-)
   - [Model Estimation](#model-estimation)
   - [Data](#data)
@@ -45,7 +46,7 @@ Additionally, Choice-Learn includes innovative models presented at academic conf
   - [Dependencies](#dependencies)
 - [:trident: Usage](#trident-usage)
 - [:trident: Contributing](#trident-contributing)
-- [:trident: Citation](#trident-citation)
+- [:trident: Citing choice-learn](#trident-citation)
   - [Affiliations](#affiliations)
 - [:trident: License](#trident-license)
 - [:trident: References](#trident-references)
@@ -81,6 +82,15 @@ The Choice-Learn package is supported by two peer-reviewed publications:
 Discrete choice models aim at explaining or predicting choices over a set of alternatives. Well known use-cases include analyzing people's choice of mean of transport or products purchases in stores.
 
 If you are new to choice modeling, you can check this [resource](https://www.publichealth.columbia.edu/research/population-health-methods/discrete-choice-model-and-analysis). The different notebooks from the [Getting Started](#trident-getting-started) section can also help you understand choice modeling and more importantly help you for your usecase.
+
+### Medium tutorials
+
+Here are two tutorials published on Medium that can help you
+
+- [Modeling customer decisions with choice-learn](https://medium.com/artefact-engineering-and-data-science/modeling-customers-decisions-in-python-with-the-choice-learn-package-37752cb7932e)
+- [Assortment optimization with discrete choice models in Python](https://medium.com/artefact-engineering-and-data-science/assortment-optimization-with-discrete-choice-models-in-python-2efc4d9a4aba)
+
+
 
 ## :trident: What's in there ?
 
