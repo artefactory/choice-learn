@@ -619,3 +619,98 @@ class TripDataset:
             )
 
         raise TypeError("Type of index must be int, list, np.ndarray, range or slice.")
+
+    def iter_batch_evaluate(
+        self,
+        trip_batch_size: int,
+    ) -> object:
+        """Iterate over a TripDataset to return batches w/ trip_batch_size Trips's subsamples.
+
+        Parameters
+        ----------
+        trip_batch_size: int
+            Batch size (number of Trips in the batch)
+
+        Yields
+        ------
+        tuple[np.ndarray]
+            For each item in the batch: item, basket, future purchases,
+            store, week, prices, available items
+            Length must 8
+        """
+        # Get trip indexes
+        num_trips = len(self)
+        trip_indexes = np.arange(num_trips)
+
+        # Initialize the buffer
+        buffer = (
+            np.empty(0, dtype=int),  # Items
+            np.empty((0, self.max_length), dtype=int),  # Baskets
+            np.empty((0, self.max_length), dtype=int),  # Future purchases
+            np.empty(0, dtype=int),  # Stores
+            np.empty(0, dtype=int),  # Weeks
+            np.empty((0, self.n_items), dtype=int),  # Prices
+            np.empty((0, self.n_items), dtype=int),  # Available items
+        )
+
+        if trip_batch_size == -1:
+            # Get the whole dataset in one batch
+            identifiers = []
+            for trip_index in trip_indexes:
+                additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
+                    trip_index
+                )
+                buffer = tuple(
+                    np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
+                )
+                identifiers.extend([trip_index] * len(additional_trip_data[0]))
+
+            # Yield the whole dataset
+            yield buffer, np.array(identifiers)
+
+        else:
+            # Yield batches of size batch_size while going through all the trips
+            index = 0
+            outer_break = False
+            while index < num_trips:
+                trip_identifier = []
+                buffer = (
+                    np.empty(0, dtype=int),  # Items
+                    np.empty((0, self.max_length), dtype=int),  # Baskets
+                    np.empty((0, self.max_length), dtype=int),  # Future purchases
+                    np.empty(0, dtype=int),  # Stores
+                    np.empty(0, dtype=int),  # Weeks
+                    np.empty((0, self.n_items), dtype=int),  # Prices
+                    np.empty((0, self.n_items), dtype=int),  # Available items
+                )
+                while np.max(trip_identifier, initial=-1) + 1 < trip_batch_size:
+                    if index >= num_trips:
+                        # Then the buffer is not full but there are no more trips to consider
+                        # Yield the batch partially filled
+                        yield buffer, np.array(trip_identifier)
+
+                        # Exit the TWO while loops when all trips have been considered
+                        outer_break = True
+                        break
+
+                    else:
+                        # Consider a new trip to fill the buffer
+                        additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
+                            trip_indexes[index]
+                        )
+                        index += 1
+
+                        # Fill the buffer with the new trip
+                        buffer = tuple(
+                            np.concatenate((buffer[i], additional_trip_data[i]))
+                            for i in range(len(buffer))
+                        )
+                        trip_identifier.extend(
+                            [np.max(trip_identifier, initial=-1) + 1] * len(additional_trip_data[0])
+                        )
+
+                if outer_break:
+                    break
+
+                # Yield the batch
+                yield buffer, np.array(trip_identifier)

@@ -251,8 +251,8 @@ class BaseBasketModel:
                 )
 
             return self.compute_item_likelihood(
-                basket=trip.purchases,
-                available_items=trip.assortment,
+                basket=np.array(trip.purchases),
+                available_items=np.array(trip.assortment),
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
@@ -261,21 +261,38 @@ class BaseBasketModel:
 
         # Prevent unintended side effects from in-place modifications
         available_items_copy = available_items.copy()
-        for basket_item in basket:
-            if basket_item != -1:
-                available_items_copy[basket_item] = 0.0
 
-        # Compute the utility of all the items
-        all_utilities = self.compute_batch_utility(
-            # All items
-            item_batch=np.expand_dims(np.arange(self.n_items), axis=0),
-            # For each item: same basket / store / week / prices / available items
-            basket_batch=np.expand_dims(basket, axis=0).astype(int),
-            store_batch=np.expand_dims(store, axis=0),
-            week_batch=np.expand_dims(week, axis=0),
-            price_batch=np.expand_dims(prices, axis=0),
-            available_item_batch=np.expand_dims(available_items_copy, axis=0),
-        )[0]
+        if len(tf.shape(basket)) == 1:
+            # Compute the utility of all the items
+            all_utilities = self.compute_batch_utility(
+                # All items
+                item_batch=np.expand_dims(np.arange(self.n_items), axis=0),
+                # For each item: same basket / store / week / prices / available items
+                basket_batch=np.expand_dims(basket, axis=0).astype(int),
+                store_batch=np.expand_dims(store, axis=0),
+                week_batch=np.expand_dims(week, axis=0),
+                price_batch=np.expand_dims(prices, axis=0),
+                available_item_batch=np.expand_dims(available_items_copy, axis=0),
+            )[0]
+
+            available_items_copy[np.where(basket >= 0)[0]] = 0.0
+            print("allu", all_utilities)
+        else:
+            all_utilities = self.compute_batch_utility(
+                # All items
+                item_batch=np.tile(
+                    np.expand_dims(np.arange(self.n_items), axis=0), [tf.shape(basket)[0], 1]
+                ),
+                # For each item: same basket / store / week / prices / available items
+                basket_batch=np.array(basket).astype(int),
+                store_batch=np.array(store).astype(int),
+                week_batch=np.array(week).astype(int),
+                price_batch=np.array(prices).astype("float32"),
+                available_item_batch=np.array(available_items_copy),
+            )
+            for i in range(tf.shape(basket)[0]):
+                available_items_copy[i, np.where(basket[i] >= 0)[0]] = 0.0
+
         # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
@@ -488,7 +505,7 @@ class BaseBasketModel:
                 [
                     self.compute_ordered_basket_likelihood(
                         # The last item should always be the checkout item 0
-                        basket=[basket[i] for i in permutation] + [0],
+                        basket=np.array([basket[i] for i in permutation] + [0]),
                         available_items=available_items,
                         store=store,
                         week=week,
@@ -778,6 +795,7 @@ class BaseBasketModel:
     def evaluate(
         self,
         trip_dataset: TripDataset,
+        trip_batch_size: int = 32,
         epsilon_eval: float = 1e-9,
         metrics="nll",
     ) -> dict:
@@ -794,7 +812,7 @@ class BaseBasketModel:
             Dataset on which to apply to prediction
         n_permutations: int, optional
             Number of permutations to average over, by default 1
-        batch_size: int, optional
+        trip_batch_size: int, optional
             Batch size, by default 32
         epsilon_eval: float, optional
             Small value to avoid log(0) in the computation of the log-likelihood,
@@ -832,33 +850,24 @@ class BaseBasketModel:
         for metric in exec_metrics:
             metric.reset_state()
 
-        for trip in trip_dataset.trips:
+        # for trip in trip_dataset.trips:
+        for data_batch, identifier_batch in trip_dataset.iter_batch_evaluate(
+            trip_batch_size=trip_batch_size
+        ):
             # Sum of the log-likelihoods of all the baskets in the batch
-            if isinstance(trip.assortment, int):
-                available_items = trip_dataset.available_items[trip.assortment]
-            else:
-                available_items = trip.assortment
-            if isinstance(trip.prices, int):
-                prices = trip_dataset.prices[trip.prices]
-            else:
-                prices = trip.prices
 
-            predicted_probabilities = []
-            for i in range(len(trip.purchases)):
-                y_pred = self.compute_item_likelihood(
-                    basket=np.concatenate([trip.purchases[:i], trip.purchases[i + 1 :]]).astype(
-                        int
-                    ),
-                    available_items=available_items,
-                    store=trip.store,
-                    week=trip.week,
-                    prices=prices,
-                )
-                predicted_probabilities.append(y_pred)
+            predicted_probabilities = self.compute_item_likelihood(
+                basket=data_batch[1],
+                available_items=data_batch[6],
+                store=data_batch[3],
+                week=data_batch[4],
+                prices=data_batch[5],
+            )
+
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
                 metric.update_state(
-                    y_true=trip.purchases, y_pred=tf.stack(predicted_probabilities, axis=0)
+                    y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
                 )
 
         # After the loops, get the final results
