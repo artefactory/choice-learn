@@ -71,7 +71,7 @@ nav:
       - Intoduction to data handling: notebooks/introduction/2_data_handling.md
       - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
       - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
-      - Basket Data Handling: notebooks/basket_models/basket_data_handling.md
+      - Basket Data Handling: notebooks/basket_models/basket_data.md
     - Modeling Single Choices:
       - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
       - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
@@ -126,4 +126,7 @@ nav:
       - Permutation: references/basket_models/utils/references_permutation.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
+    - Utils:
+        - Tensorflow Operations: references/tf_ops.md
+        - Metrics: references/utils/metrics.md
   - explanations.md

@@ -15,6 +15,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
+from ..utils.metrics import NegativeLogLikeliHood
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
@@ -266,15 +267,14 @@ class BaseBasketModel:
         # Compute the utility of all the items
         all_utilities = self.compute_batch_utility(
             # All items
-            item_batch=np.arange(self.n_items),
+            item_batch=np.expand_dims(np.arange(self.n_items), axis=0),
             # For each item: same basket / store / week / prices / available items
-            basket_batch=np.array([basket for _ in range(self.n_items)]),
-            store_batch=np.array([store for _ in range(self.n_items)]),
-            week_batch=np.array([week for _ in range(self.n_items)]),
-            price_batch=prices,
-            available_item_batch=np.array([available_items_copy for _ in range(self.n_items)]),
-        )
-
+            basket_batch=np.expand_dims(basket, axis=0).astype(int),
+            store_batch=np.expand_dims(store, axis=0),
+            week_batch=np.expand_dims(week, axis=0),
+            price_batch=np.expand_dims(prices, axis=0),
+            available_item_batch=np.expand_dims(available_items_copy, axis=0),
+        )[0]
         # Softmax on the utilities
         return softmax_with_availabilities(
             items_logit_by_choice=all_utilities,  # Shape: (n_items,)
@@ -363,8 +363,6 @@ class BaseBasketModel:
 
         ordered_basket_likelihood = 1.0
         for j in range(0, len(basket)):
-            next_item_id = basket[j]
-
             # Compute the likelihood of the j-th item of the basket
             ordered_basket_likelihood *= self.compute_item_likelihood(
                 basket=basket[:j],
@@ -372,10 +370,10 @@ class BaseBasketModel:
                 store=store,
                 week=week,
                 prices=prices,
-            )[next_item_id].numpy()
+            )[basket[j]].numpy()
 
             # This item is not available anymore
-            available_items_copy[next_item_id] = 0
+            available_items_copy[basket[j]] = 0
 
         return ordered_basket_likelihood
 
@@ -613,8 +611,8 @@ class BaseBasketModel:
                 available_item_batch=available_item_batch,
                 user_batch=user_batch,
             )[0]
-        grads = tape.gradient(batch_loss, self.trainable_weights)
 
+        grads = tape.gradient(batch_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         return batch_loss
 
@@ -819,9 +817,9 @@ class BaseBasketModel:
     def evaluate(
         self,
         trip_dataset: TripDataset,
-        batch_size: int = 32,
         epsilon_eval: float = 1e-9,
-    ) -> tf.Tensor:
+        metrics="nll",
+    ) -> dict:
         r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
         Predicts the probabilities according to the model and then computes the
@@ -847,50 +845,63 @@ class BaseBasketModel:
             Value of the mean loss (nll) for the dataset,
             Shape must be (1,)
         """
-        sum_loglikelihoods = 0.0
-        n_evals = 0
+        if not isinstance(metrics, list):
+            metrics = [metrics]
 
-        inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        )
-        for (
-            item_batch,
-            basket_batch,
-            _,
-            store_batch,
-            week_batch,
-            price_batch,
-            available_item_batch,
-            _,
-        ) in inner_range:
-            # Sum of the log-likelihoods of all the baskets in the batch
-            basket_batch = [basket[basket != -1] for basket in basket_batch]
-            sum_loglikelihoods += np.sum(
-                np.log(
-                    [
-                        self.compute_item_likelihood(
-                            basket=basket,
-                            available_items=available_items,
-                            store=store,
-                            week=week,
-                            prices=prices,
-                        )[item]
-                        + epsilon_eval
-                        for basket, item, available_items, store, week, prices in zip(
-                            basket_batch,
-                            item_batch,
-                            available_item_batch,
-                            store_batch,
-                            week_batch,
-                            price_batch,
-                        )
-                    ]
+        exec_metrics = []
+        for metric in metrics:
+            if metric == "nll":
+                exec_metrics.append(
+                    NegativeLogLikeliHood(sparse=True, from_logits=False, epsilon=epsilon_eval)
                 )
-            )
-            n_evals += len(item_batch)
+                exec_metrics.append(
+                    NegativeLogLikeliHood(
+                        sparse=True,
+                        from_logits=False,
+                        epsilon=epsilon_eval,
+                        average_on_batch=True,
+                        name="basketwise-nll",
+                    )
+                )
+            elif not isinstance(metric, tf.keras.metrics.metric.Metric):
+                exec_metrics.append(tf.keras.metrics.get(metric))
+            else:
+                exec_metrics.append(metric)
 
-        # Predicted mean negative log-likelihood over all the batches
-        return -1 * sum_loglikelihoods / n_evals
+        for metric in exec_metrics:
+            metric.reset_state()
+
+        for trip in trip_dataset.trips:
+            # Sum of the log-likelihoods of all the baskets in the batch
+            if isinstance(trip.assortment, int):
+                available_items = trip_dataset.available_items[trip.assortment]
+            else:
+                available_items = trip.assortment
+            if isinstance(trip.prices, int):
+                prices = trip_dataset.prices[trip.prices]
+            else:
+                prices = trip.prices
+
+            predicted_probabilities = []
+            for i in range(len(trip.purchases)):
+                y_pred = self.compute_item_likelihood(
+                    basket=np.concatenate([trip.purchases[:i], trip.purchases[i + 1 :]]).astype(
+                        int
+                    ),
+                    available_items=available_items,
+                    store=trip.store,
+                    week=trip.week,
+                    prices=prices,
+                )
+                predicted_probabilities.append(y_pred)
+            for metric in exec_metrics:
+                # Use update_state, not append(metric(...))
+                metric.update_state(
+                    y_true=trip.purchases, y_pred=tf.stack(predicted_probabilities, axis=0)
+                )
+
+        # After the loops, get the final results
+        return {metric.name: metric.result() for metric in exec_metrics}
 
     def save_model(self, path: str) -> None:
         """Save the different models on disk.

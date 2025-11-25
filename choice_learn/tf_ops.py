@@ -289,9 +289,9 @@ class NoiseConstrastiveEstimation(tf.keras.losses.Loss):
         Parameters
         ----------
         logit_true : np.ndarray | tf.Tensor
-            Ground truth samplelogits
+            Ground truth samples logit
         logit_negative : np.ndarray | tf.Tensor
-            Negative samples logits
+            Negative samples logit
         freq_true : np.ndarray | tf.Tensor
             Frequency / probabilty in data of true sample
         freq_negative : np.ndarray | tf.Tensor

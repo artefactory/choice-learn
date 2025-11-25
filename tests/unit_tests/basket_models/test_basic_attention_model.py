@@ -198,7 +198,7 @@ def test_evaluate_uniform():
     expected_loss = -np.log(1.0 / n_items)
 
     # Evaluate
-    eval_loss = model.evaluate(dataset)
+    eval_loss = model.evaluate(dataset)["negative_log_likelihood"]
     assert np.allclose(eval_loss, expected_loss, atol=1e-5), "Loss does not match expected value!"
 
 

@@ -259,15 +259,16 @@ class AleaCarta(BaseBasketModel):
         """
         return "aleacarta"
 
-    # @tf.function  # Graph mode
-    def compute_preference_utility(
+    def compute_batch_utility(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
+        basket_batch: np.ndarray,
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
+        available_item_batch: np.ndarray,
     ) -> tf.Tensor:
-        """Compute the psi part of the utility of all the items in item_batch.
+        """Compute the utility of all the items in item_batch given the items in basket_batch.
 
         Parameters
         ----------
@@ -287,7 +288,30 @@ class AleaCarta(BaseBasketModel):
         price_batch: np.ndarray
             Batch of prices (floats) for each purchased item
             Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            Batch of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
+
+        Returns
+        -------
+        item_utilities: tf.Tensor
+            Utility of all the items in item_batch
+            Shape must be (batch_size,)
         """
+        _ = available_item_batch
+        item_batch = tf.cast(item_batch, dtype=tf.int32)
+        if len(tf.shape(item_batch)) == 1:
+            if len(tf.shape(price_batch)) != 1:
+                raise ValueError(f"""Arguments price_batch and item_batch should have same shape
+                and are:{item_batch.shape} and {price_batch.shape}""")
+            item_batch = tf.expand_dims(item_batch, axis=1)
+            price_batch = tf.expand_dims(price_batch, axis=1)
+            squeeze = True
+        else:
+            squeeze = False
+
+        basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
         week_batch = tf.cast(week_batch, dtype=tf.int32)
         price_batch = tf.cast(price_batch, dtype=tf.float32)
@@ -295,13 +319,12 @@ class AleaCarta(BaseBasketModel):
         theta_store = tf.gather(self.theta, indices=store_batch)
         gamma_item = tf.gather(self.gamma, indices=item_batch)
         # Compute the dot product along the last dimension
-        store_preferences = tf.reduce_sum(theta_store * gamma_item, axis=1)
+        store_preferences = tf.einsum("kj,klj->kl", theta_store, gamma_item)
 
         if self.item_intercept:
             item_intercept = tf.gather(self.alpha, indices=item_batch)
         else:
             item_intercept = tf.zeros_like(store_preferences)
-
         if self.price_effects:
             delta_store = tf.gather(self.delta, indices=store_batch)
             beta_item = tf.gather(self.beta, indices=item_batch)
@@ -309,7 +332,7 @@ class AleaCarta(BaseBasketModel):
             price_effects = (
                 -1
                 # Compute the dot product along the last dimension
-                * tf.reduce_sum(delta_store * beta_item, axis=1)
+                * tf.einsum("kj,klj->kl", delta_store, beta_item)
                 * tf.math.log(price_batch + self.epsilon_price)
             )
         else:
@@ -320,15 +343,13 @@ class AleaCarta(BaseBasketModel):
             nu_week = tf.gather(self.nu, indices=week_batch)
             mu_item = tf.gather(self.mu, indices=item_batch)
             # Compute the dot product along the last dimension
-            seasonal_effects = tf.reduce_sum(nu_week * mu_item, axis=1)
+            seasonal_effects = tf.einsum("kj,klj->kl", nu_week, mu_item)
         else:
-            nu_week = tf.zeros_like(week_batch)
             seasonal_effects = tf.zeros_like(store_preferences)
 
         # The effects of item intercept, store preferences, price sensitivity
         # and seasonal effects are combined in the per-item per-trip latent variable
-
-        return tf.reduce_sum(
+        psi = tf.reduce_sum(
             [
                 item_intercept,
                 store_preferences,
@@ -338,129 +359,36 @@ class AleaCarta(BaseBasketModel):
             axis=0,
         )  # Shape: (batch_size,)
 
-    def embed_basket(
-        self,
-        basket_batch: np.ndarray,
-    ) -> tf.Tensor:
-        """Compute the embedding of all the baskets in basket_batch.
-
-        Parameters
-        ----------
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size, max_basket_size)
-
-        Returns
-        -------
-        tf.Tensor
-            Embedding of all the baskets in basket_batch
-            Shape must be (batch_size, latent_size)
-        """
-        basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         # Create a RaggedTensor from the indices with padding removed
         item_indices_ragged = tf.cast(
             tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
             dtype=tf.int32,
         )
+
         if tf.size(item_indices_ragged) == 0:
             # Empty baskets: no gamma embeddings to gather
             # (It must be a ragged tensor here because TF's GraphMode requires the same
             # nested structure to be returned from all branches of a conditional)
             gamma_by_basket = tf.RaggedTensor.from_tensor(
-                tf.zeros((len(basket_batch), 0, self.gamma.shape[1]))
+                tf.zeros((len(item_batch), 0, self.gamma.shape[1]))
             )
+            basket_size = tf.ones((len(item_batch),))
         else:
-            # Gather the embeddings using a ragged tensor
-            # of indices and then sum them in each basket
+            # Gather the embeddings using a ragged tensor of indices
             gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
+            basket_size = tf.cast(item_indices_ragged.row_lengths(), dtype=tf.float32)
 
-        gamma_by_basket = tf.reduce_mean(gamma_by_basket, axis=1)
-
-        has_nan_row = tf.reduce_any(tf.math.is_nan(gamma_by_basket), axis=1)
-        condition_mask = tf.expand_dims(has_nan_row, axis=1)
-        zeros = tf.zeros_like(gamma_by_basket)
-
-        return tf.where(condition_mask, zeros, gamma_by_basket)  # Shape: (batch_size, latent_size)
-
-    # @tf.function  # Graph mode
-    def compute_batch_utility(
-        self,
-        item_batch: Union[np.ndarray, tf.Tensor],
-        basket_batch: np.ndarray,
-        store_batch: np.ndarray,
-        week_batch: np.ndarray,
-        price_batch: np.ndarray,
-        available_item_batch: Union[np.ndarray, tf.Tensor] = None,
-    ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch.
-
-        Parameters
-        ----------
-        item_batch: np.ndarray or tf.Tensor
-            Batch of the purchased items ID (integers) for which to compute the utility
-            Shape must be (batch_size,)
-            (positive and negative samples concatenated together)
-        basket_batch: np.ndarray
-            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
-            Shape must be (batch_size, max_basket_size)
-        store_batch: np.ndarray
-            Batch of store IDs (integers) for each purchased item
-            Shape must be (batch_size,)
-        week_batch: np.ndarray
-            Batch of week numbers (integers) for each purchased item
-            Shape must be (batch_size,)
-        price_batch: np.ndarray
-            Batch of prices (floats) for each purchased item
-            Shape must be (batch_size,)
-        """
-        _ = available_item_batch
-        preference_utility = self.compute_preference_utility(
-            item_batch=item_batch,
-            store_batch=store_batch,
-            week_batch=week_batch,
-            price_batch=price_batch,
-        )  # Shape: (batch_size,)
-
-        # Basket utility = sum of the utilities of the items in the basket
-        gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
-
-        interaction_utility = self.compute_interaction_utility(
-            item_batch=item_batch,
-            gamma_by_basket=gamma_by_basket,
-        )  # Shape: (batch_size,)
-
-        return interaction_utility + preference_utility
-
-    def compute_interaction_utility(
-        self,
-        item_batch: Union[np.ndarray, tf.Tensor],
-        gamma_by_basket: np.ndarray,
-    ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch given the items in basket_batch.
-
-        Parameters
-        ----------
-        item_batch: np.ndarray or tf.Tensor
-            Batch of the purchased items ID (integers) for which to compute the utility
-            Shape must be (batch_size,)
-            (positive and negative samples concatenated together)
-        gamma_by_basket: np.ndarray
-            Embedding of all the baskets in basket_batch
-            Shape must be (batch_size, latent_size)
-
-        Returns
-        -------
-        basket_interaction_utility: tf.Tensor
-            Interaction utility of all the items in item_batch
-            Shape must be (batch_size,)
-        """
-        item_batch = tf.cast(item_batch, dtype=tf.int32)
-        gamma_item = tf.gather(self.gamma, indices=item_batch)  # Shape: (batch_size, latent_size)
-
+        gamma_by_basket = tf.reduce_sum(gamma_by_basket, axis=1) / tf.maximum(
+            tf.expand_dims(basket_size, axis=-1), 1.0
+        )
         # Basket interaction: one vs all
         # Compute the dot product along the last dimension (latent_size)
+        basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
 
-        return tf.reduce_sum(gamma_by_basket * gamma_item, axis=-1)  # Shape: (batch_size,)
+        # Sum over the items in the basket
+        if squeeze:
+            return tf.gather(psi + basket_interaction_utility, 0, axis=1)
+        return psi + basket_interaction_utility
 
     def compute_basket_utility(
         self,
@@ -468,6 +396,7 @@ class AleaCarta(BaseBasketModel):
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
+        available_item_batch: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
     ) -> float:
         r"""Compute the utility of an (unordered) basket.
@@ -527,6 +456,7 @@ class AleaCarta(BaseBasketModel):
                 store_batch=np.array([store] * len_basket),
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
+                available_item_batch=available_item_batch,
             )
         ).numpy()
 
@@ -653,52 +583,41 @@ class AleaCarta(BaseBasketModel):
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
         # Negative sampling
-        negative_samples = tf.reshape(
-            tf.transpose(
-                tf.stack(
-                    [
-                        self.get_negative_samples(
-                            available_items=available_item_batch[idx],
-                            purchased_items=basket_batch[idx],
-                            next_item=item_batch[idx],
-                            n_samples=self.n_negative_samples,
-                        )
-                        for idx in range(batch_size)
-                    ],
-                    axis=0,
-                ),
-                # Reshape to have at the beginning of the array all the first negative samples
-                # of all positive samples, then all the second negative samples, etc.
-                # (same logic as for the calls to np.tile)
-            ),
-            # Flatten 2D --> 1D
-            shape=[-1],
+        negative_samples = tf.stack(
+            [
+                self.get_negative_samples(
+                    available_items=available_item_batch[idx],
+                    purchased_items=basket_batch[idx],
+                    next_item=item_batch[idx],
+                    n_samples=self.n_negative_samples,
+                )
+                for idx in range(batch_size)
+            ],
+            axis=0,
         )
         augmented_item_batch = tf.cast(
-            tf.concat([item_batch, negative_samples], axis=0), dtype=tf.int32
+            tf.concat([tf.expand_dims(item_batch, axis=-1), negative_samples], axis=1),
+            dtype=tf.int32,
         )
-        prices_tiled = tf.tile(price_batch, [self.n_negative_samples + 1, 1])
+
         # Each time, pick only the price of the item in augmented_item_batch from the
         # corresponding price array
         augmented_price_batch = tf.gather(
-            params=prices_tiled,
-            indices=augmented_item_batch,
-            # batch_dims=1 is equivalent to having an outer loop over
-            # the first axis of params and indices
-            batch_dims=1,
+            params=price_batch, indices=augmented_item_batch, batch_dims=1
         )
         # Compute the utility of all the available items
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
-            basket_batch=tf.tile(basket_batch, [self.n_negative_samples + 1, 1]),
-            store_batch=tf.tile(store_batch, [self.n_negative_samples + 1]),
-            week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
+            basket_batch=basket_batch,
+            store_batch=store_batch,
+            week_batch=week_batch,
             price_batch=augmented_price_batch,
+            available_item_batch=available_item_batch,
         )  # Shape: (batch_size * (n_negative_samples + 1),)
 
-        positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))
+        positive_samples_utilities = tf.gather(params=all_utilities, indices=[0], axis=1)
         negative_samples_utilities = tf.gather(
-            all_utilities, tf.range(batch_size, tf.shape(all_utilities)[0])
+            params=all_utilities, indices=tf.range(1, self.n_negative_samples + 1), axis=1
         )
 
         # Log-likelihood of a batch = sum of log-likelihoods of its samples
@@ -709,7 +628,7 @@ class AleaCarta(BaseBasketModel):
                 tf.sigmoid(
                     tf.tile(
                         positive_samples_utilities,
-                        [self.n_negative_samples],
+                        [1, self.n_negative_samples],
                     )
                     - negative_samples_utilities
                 )
@@ -723,7 +642,7 @@ class AleaCarta(BaseBasketModel):
                     tf.ones_like(positive_samples_utilities),
                     tf.zeros_like(negative_samples_utilities),
                 ],
-                axis=0,
+                axis=1,
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)

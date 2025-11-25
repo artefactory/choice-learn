@@ -162,6 +162,35 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
     )
 
 
+def test_with_intercept() -> None:
+    """Test the Shopper model without item intercepts."""
+    model = AleaCarta(item_intercept=True)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+
+    batch_size = 4
+    prices = np.random.uniform(1, 10, (batch_size,))
+    pre_utilities = model.compute_batch_utility(
+        item_batch=np.array([4, 5, 6, 0]),
+        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        store_batch=np.array([0] * batch_size),
+        week_batch=np.array([0] * batch_size),
+        price_batch=prices,
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+    )
+    aft_utilities = model.compute_batch_utility(
+        item_batch=np.array([[4, 5, 6, 0]]),
+        basket_batch=np.array([[1, 2, 3]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.expand_dims(prices, axis=0),
+        available_item_batch=np.array([np.ones(n_items_1)]),
+    )
+    assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
+
+
 def test_no_intercept() -> None:
     """Test the Shopper model without item intercepts."""
     model = AleaCarta(item_intercept=False)
@@ -171,13 +200,24 @@ def test_no_intercept() -> None:
     )
 
     batch_size = 4
-    model.compute_batch_utility(
+    prices = np.random.uniform(1, 10, (batch_size,))
+    pre_utilities = model.compute_batch_utility(
         item_batch=np.array([4, 5, 6, 0]),
         basket_batch=np.array([[1, 2, 3]] * batch_size),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
-        price_batch=np.random.uniform(1, 10, batch_size),
+        price_batch=prices,
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
+    aft_utilities = model.compute_batch_utility(
+        item_batch=np.array([[4, 5, 6, 0]]),
+        basket_batch=np.array([[1, 2, 3]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.expand_dims(prices, axis=0),
+        available_item_batch=np.array([np.ones(n_items_1)]),
+    )
+    assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
 
 
 def test_compute_item_likelihood() -> None:
@@ -337,14 +377,96 @@ def test_evaluate_load_and_save() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    eff_loss = model.evaluate(
-        trip_dataset=trip_dataset_1,
-    )
+    eff_loss = model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     model.save_model("test_aleacarta")
     loaded_model = AleaCarta.load_model("test_aleacarta")
-    loaded_loss = loaded_model.evaluate(
-        trip_dataset=trip_dataset_1,
-    )
+    loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
+
+
+def test_randoms_few() -> None:
+    """Test few random things."""
+    latent_sizes = {"preferences": 6, "price": 0, "season": 0}
+    n_negative_samples = 2
+    optimizer = "adam"
+    lr = 1e-2
+    epochs = 400
+    batch_size = 32
+
+    model = AleaCarta(
+        item_intercept=False,
+        price_effects=False,
+        seasonal_effects=False,
+        latent_sizes=latent_sizes,
+        n_negative_samples=n_negative_samples,
+        optimizer=optimizer,
+        lr=lr,
+        epochs=epochs,
+        batch_size=batch_size,
+    )
+
+    model.instantiate(n_items=7, n_stores=2)
+
+    utilities = model.compute_batch_utility(
+        item_batch=np.array(([2, 3], [2, 4])),
+        basket_batch=np.array([[0, 1], [0, 1]]),
+        store_batch=np.array([0, 0]),
+        week_batch=np.array([0, 0]),
+        price_batch=np.array(
+            [
+                [
+                    7.89437192,
+                    9.41370182,
+                ],
+                [7.89437192, 2.9295548],
+            ]
+        ),
+        available_item_batch=np.array(
+            [
+                [1, 1, 1, 1, 1, 0, 0],
+                [1, 1, 1, 1, 1, 0, 0],
+            ]
+        ),
+    )
+    assert np.isclose(utilities[0][0], utilities[1][0]).all()
+
+    utilities_0 = model.compute_batch_utility(
+        item_batch=np.array([3]),
+        basket_batch=np.array([[0, 1]]),
+        store_batch=np.array([0]),
+        week_batch=np.array([0]),
+        price_batch=np.ones((1,)),
+        available_item_batch=np.ones((1, 7)),
+    )
+    utilities_1 = (
+        model.compute_batch_utility(
+            item_batch=np.array([3]),
+            basket_batch=np.array([[1]]),
+            store_batch=np.array([0]),
+            week_batch=np.array([0]),
+            price_batch=np.ones((1,)),
+            available_item_batch=np.ones((1, 7)),
+        )
+        + model.compute_batch_utility(
+            item_batch=np.array([3]),
+            basket_batch=np.array([[0]]),
+            store_batch=np.array([0]),
+            week_batch=np.array([0]),
+            price_batch=np.ones((1,)),
+            available_item_batch=np.ones((1, 7)),
+        )
+    ) / 2
+    assert np.isclose(utilities_0, utilities_1).all()
+
+    utilities = model.compute_batch_utility(
+        item_batch=np.array([[3, 4], [4, 3]]),
+        basket_batch=np.array([[0, 1], [1, 0]]),
+        store_batch=np.array([0, 0]),
+        week_batch=np.array([0, 0]),
+        price_batch=np.ones((2, 2)),
+        available_item_batch=np.ones((2, 7)),
+    )
+    assert np.isclose(utilities[0][0], utilities[1][1]).all()
+    assert np.isclose(utilities[0][1], utilities[1][0]).all()
