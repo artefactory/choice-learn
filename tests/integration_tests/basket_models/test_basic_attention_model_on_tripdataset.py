@@ -213,7 +213,7 @@ def test_item_probabilities_sum_to_1() -> None:
                 np.abs(
                     np.sum(
                         model.compute_item_likelihood(
-                            basket=trip.purchases[:step],
+                            basket=np.array(trip.purchases[:step]),
                             available_items=np.ones(n_items_1),
                             store=trip.store,
                             week=trip.week,

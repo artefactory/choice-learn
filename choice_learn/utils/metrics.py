@@ -57,7 +57,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         self.epsilon = epsilon
         self.axis = axis
 
-    def update_state(self, y_true, y_pred, sample_weight=None):
+    def update_state(self, y_true, y_pred, batch=None, sample_weight=None):
         """Accumulate statistics for the metric.
 
         Parameters
@@ -84,17 +84,19 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         # Apply label clipping to avoid log(0) and such issues
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0)
         if sample_weight is None:
-            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred))
+            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=self.axis)
         else:
             nll_value = -tf.reduce_sum(
-                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1)
+                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1),
+                axis=self.axis,
             )
 
-        if self.average_on_batch:
-            self.nll.assign(self.nll + tf.reduce_mean(nll_value))
-            self.n_evals.assign(self.n_evals + 1)
+        if batch is not None and self.average_on_batch:
+            for _, idx in zip(*tf.unique(batch)):
+                self.nll.assign(self.nll + tf.reduce_mean(nll_value[idx]))
+                self.n_evals.assign(self.n_evals + 1)
         else:
-            self.nll.assign(self.nll + nll_value)
+            self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
                 self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
             else:
