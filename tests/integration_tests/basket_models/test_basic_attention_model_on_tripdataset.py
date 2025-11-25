@@ -218,6 +218,7 @@ def test_item_probabilities_sum_to_1() -> None:
                             store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
+                            user=trip.user_id,
                         )
                     )
                     - 1.0
@@ -240,6 +241,7 @@ def test_no_intercept() -> None:
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),
+        user_batch=np.array([0] * batch_size),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
 
@@ -255,10 +257,7 @@ def test_compute_item_likelihood() -> None:
         # Trip not provided as an argument
         # Then basket, available_items, store, week and prices must be provided
         model.compute_item_likelihood(
-            basket=np.array([1, 2, 3]),
-            available_items=np.ones(n_items_1),
-            store=0,
-            week=0,
+            basket=np.array([1, 2, 3]), available_items=np.ones(n_items_1), store=0, week=0, user=0
         )
 
     with pytest.raises(ValueError):
@@ -285,10 +284,7 @@ def test_compute_ordered_basket_likelihood() -> None:
         # Trip not provided as an argument
         # Then basket, available_items, store, week and prices must be provided
         model.compute_ordered_basket_likelihood(
-            basket=np.array([1, 2, 0]),
-            available_items=np.ones(n_items_1),
-            store=0,
-            week=0,
+            basket=np.array([1, 2, 0]), available_items=np.ones(n_items_1), store=0, week=0, user=0
         )
 
     with pytest.raises(ValueError):
@@ -299,6 +295,7 @@ def test_compute_ordered_basket_likelihood() -> None:
             store=0,
             week=0,
             prices=np.random.uniform(1, 10, n_items_1),
+            user_id=0,
             assortment=0,
         )
         model.compute_ordered_basket_likelihood(trip=trip)

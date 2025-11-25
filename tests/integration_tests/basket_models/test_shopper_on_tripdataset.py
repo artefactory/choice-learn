@@ -225,6 +225,7 @@ def test_item_probabilities_sum_to_1() -> None:
                             store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
+                            user=trip.user_id,
                         )
                     )
                     - 1.0
@@ -278,6 +279,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
                             store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
+                            user=trip.user_id,
                         )
                         for trip in trip_dataset_2.trips
                     ]
@@ -304,6 +306,7 @@ def test_thinking_ahead() -> None:
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+        user_batch=np.array([0] * batch_size),
     )
 
 
@@ -323,6 +326,7 @@ def test_no_intercept() -> None:
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+        user_batch=np.array([0] * batch_size),
     )
 
 
@@ -342,6 +346,7 @@ def test_compute_item_likelihood() -> None:
             available_items=np.ones(n_items_1),
             store=0,
             week=0,
+            user=0,
         )
 
     with pytest.raises(ValueError):
@@ -353,6 +358,7 @@ def test_compute_item_likelihood() -> None:
             week=0,
             prices=np.random.uniform(1, 10, n_items_1),
             assortment=0,
+            user_id=0,
         )
         model.compute_item_likelihood(trip=trip)
 
@@ -373,6 +379,7 @@ def test_compute_ordered_basket_likelihood() -> None:
             available_items=np.ones(n_items_1),
             store=0,
             week=0,
+            user=0,
         )
 
     with pytest.raises(ValueError):
@@ -404,6 +411,7 @@ def test_compute_basket_likelihood(caplog) -> None:
             available_items=np.ones(n_items_1),
             store=0,
             week=0,
+            user=0,
         )
 
     with pytest.raises(ValueError):
@@ -415,6 +423,7 @@ def test_compute_basket_likelihood(caplog) -> None:
             week=0,
             prices=np.random.uniform(1, 10, n_items_1),
             assortment=0,
+            user_id=0,
         )
         model.compute_basket_likelihood(trip=trip)
 
@@ -424,6 +433,7 @@ def test_compute_basket_likelihood(caplog) -> None:
         available_items=np.ones(n_items_1),
         store=0,
         week=0,
+        user=0,
         prices=np.random.uniform(1, 10, n_items_1),
         verbose=1,
     )
@@ -435,6 +445,7 @@ def test_compute_basket_likelihood(caplog) -> None:
             available_items=np.ones(n_items_1),
             store=0,
             week=0,
+            user=0,
             prices=np.random.uniform(1, 10, n_items_1),
             n_permutations=3,  # > 2! = 2
         )
