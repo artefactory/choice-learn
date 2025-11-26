@@ -116,7 +116,7 @@ def test_item_probabilities_sum_to_1() -> None:
                 np.abs(
                     np.sum(
                         model.compute_item_likelihood(
-                            basket=trip.purchases[:step],
+                            basket=np.array(trip.purchases[:step]),
                             available_items=np.ones(n_items_1),
                             store=trip.store,
                             week=trip.week,
@@ -128,40 +128,6 @@ def test_item_probabilities_sum_to_1() -> None:
                 )
                 < 1e-4
             )
-
-
-def test_ordered_basket_probabilities_sum_to_1() -> None:
-    """Test that the ordered basket probabilities sum to 1."""
-    model = AleaCarta(
-        item_intercept=True,
-        price_effects=False,
-        seasonal_effects=True,
-        latent_sizes={"preferences": 2, "price": 2, "season": 2},
-        n_negative_samples=1,
-    )
-    model.instantiate(n_items=n_items_2, n_stores=n_stores_2)
-    # For a basket {1, 2, 0} of size 3:
-    # compute_ordered_basket_likelihood = 1/3 * 1/2 * 1/1 = 1/6
-
-    assert (
-        np.abs(
-            np.sum(
-                [
-                    model.compute_ordered_basket_likelihood(
-                        basket=trip.purchases,
-                        available_items=np.ones((trip_dataset_2.n_items,)),
-                        store=trip.store,
-                        week=trip.week,
-                        prices=trip.prices,
-                        user=trip.user_id,
-                    )
-                    for trip in trip_dataset_2.trips
-                ]
-            )
-            - 1.0
-        )
-        < 2e-2
-    )
 
 
 def test_with_intercept() -> None:

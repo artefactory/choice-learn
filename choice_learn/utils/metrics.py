@@ -57,7 +57,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         self.epsilon = epsilon
         self.axis = axis
 
-    def update_state(self, y_true, y_pred, sample_weight=None):
+    def update_state(self, y_true, y_pred, batch=None, sample_weight=None):
         """Accumulate statistics for the metric.
 
         Parameters
@@ -84,15 +84,17 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         # Apply label clipping to avoid log(0) and such issues
         y_pred = tf.clip_by_value(y_pred, self.epsilon, 1.0)
         if sample_weight is None:
-            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=-1)
+            nll_value = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=self.axis)
         else:
             nll_value = -tf.reduce_sum(
-                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1), axis=-1
+                y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1),
+                axis=self.axis,
             )
 
-        if self.average_on_batch:
-            self.nll.assign(self.nll + tf.reduce_mean(nll_value))
-            self.n_evals.assign(self.n_evals + 1)
+        if batch is not None and self.average_on_batch:
+            for _, idx in zip(*tf.unique(batch)):
+                self.nll.assign(self.nll + tf.reduce_mean(nll_value[idx]))
+                self.n_evals.assign(self.n_evals + 1)
         else:
             self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
@@ -127,7 +129,12 @@ class MRR(tf.keras.metrics.Metric):
         self.average_on_batch = average_on_batch
         self.axis = axis
 
-    def update_state(self, y_true, y_pred):
+    def update_state(
+        self,
+        y_true,
+        y_pred,
+        batch=None,
+    ):
         """Accumulate statistics for the metric.
 
         Parameters
@@ -149,9 +156,9 @@ class MRR(tf.keras.metrics.Metric):
             [tf.range(len(y_true)), y_true], axis=1
         )  # Shape: (batch_size, 2)
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
-        mean_rank = tf.cast(1 / item_ranks, dtype=tf.float32)
+        mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32), axis=self.axis)
 
-        if self.average_on_batch:
+        if batch is not None and self.average_on_batch:
             self.mrr.assign(self.mrr + tf.reduce_mean(mean_rank))
             self.n_evals.assign(self.n_evals + 1)
         else:
@@ -191,7 +198,7 @@ class HitRate(tf.keras.metrics.Metric):
         self.average_on_batch = average_on_batch
         self.axis = axis
 
-    def update_state(self, y_true, y_pred):
+    def update_state(self, y_true, y_pred, batch=None):
         """Accumulate statistics for the metric.
 
         Parameters
@@ -216,8 +223,8 @@ class HitRate(tf.keras.metrics.Metric):
             ),
             axis=1,
         )
-        hits = tf.cast(hits_per_batch, tf.float32)
-        if self.average_on_batch:
+        hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32), axis=self.axis)
+        if batch is not None and self.average_on_batch:
             self.hit_rate.assign(self.hit_rate + tf.reduce_mean(hits))
             self.n_evals.assign(self.n_evals + 1)
         else:
