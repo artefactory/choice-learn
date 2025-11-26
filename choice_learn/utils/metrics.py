@@ -110,11 +110,6 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         """
         return tf.math.divide_no_nan(self.nll, self.n_evals)
 
-    def reset_state(self):
-        """Reset all of the metric state variables."""
-        self.nll.assign(0.0)
-        self.n_evals.assign(0.0)
-
 
 class MRR(tf.keras.metrics.Metric):
     """Compute Mean Reciprocal Rank."""
@@ -173,11 +168,6 @@ class MRR(tf.keras.metrics.Metric):
         """
         return tf.math.divide_no_nan(self.mrr, self.n_evals)
 
-    def reset_state(self):
-        """Reset all of the metric state variables."""
-        self.mrr.assign(0.0)
-        self.n_evals.assign(0.0)
-
 
 class HitRate(tf.keras.metrics.Metric):
     """Compute Hit Rate at k."""
@@ -185,17 +175,21 @@ class HitRate(tf.keras.metrics.Metric):
     def __init__(
         self,
         average_on_batch=False,
-        hit_k=[1, 5, 10],
-        name="hit_rate",
+        top_k: int = 10,
+        name=None,
         axis=-1,
         **kwargs,
     ):
+        if name is None:
+            name = f"hit_rate_at_{top_k}"
         super().__init__(name=name, **kwargs)
-        self.hit_rate = self.add_variable(shape=(len(hit_k),), initializer="zeros", name="hit_rate")
+        self.top_k = top_k
+        self.hit_rate = self.add_variable(
+            shape=(), initializer="zeros", name=f"hit_rate_at_{self.top_k}"
+        )
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
         self.average_on_batch = average_on_batch
         self.axis = axis
-        self.hit_k = hit_k
 
     def update_state(self, y_true, y_pred):
         """Accumulate statistics for the metric.
@@ -213,24 +207,21 @@ class HitRate(tf.keras.metrics.Metric):
         else:
             y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, dtype=tf.int32)
-        hit_list = []
-        for k in self.hit_k:
-            top_k_indices = tf.math.top_k(y_pred, k=k).indices  # Shape: (batch_size, hit_k)
-            hits_per_batch = tf.reduce_any(
-                tf.equal(
-                    tf.cast(top_k_indices, tf.int32),
-                    tf.cast(tf.expand_dims(y_true, axis=1), tf.int32),
-                ),
-                axis=1,
-            )
-            hits = tf.cast(hits_per_batch, tf.float32)
-            hit_list.append(hits)
-        hit_list = tf.convert_to_tensor(hit_list)
+
+        top_k_indices = tf.math.top_k(y_pred, k=self.top_k).indices  # Shape: (batch_size, top_k)
+        hits_per_batch = tf.reduce_any(
+            tf.equal(
+                tf.cast(top_k_indices, tf.int32),
+                tf.cast(tf.expand_dims(y_true, axis=1), tf.int32),
+            ),
+            axis=1,
+        )
+        hits = tf.cast(hits_per_batch, tf.float32)
         if self.average_on_batch:
-            self.hit_rate.assign(self.hit_rate + tf.reduce_mean(hit_list, axis=1))
+            self.hit_rate.assign(self.hit_rate + tf.reduce_mean(hits))
             self.n_evals.assign(self.n_evals + 1)
         else:
-            self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hit_list, axis=1))
+            self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hits))
             self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
 
     def result(self):
@@ -242,8 +233,3 @@ class HitRate(tf.keras.metrics.Metric):
             Negative Log Likelihood value
         """
         return tf.math.divide_no_nan(self.hit_rate, self.n_evals)
-
-    def reset_state(self):
-        """Reset all of the metric state variables."""
-        self.hit_rate.assign(tf.zeros_like(self.hit_rate))
-        self.n_evals.assign(0.0)

@@ -397,7 +397,6 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             user_batch=user_batch,
         )
 
-        # neg_scores = tf.reshape(neg_scores, (-1, self.n_negative_samples))
         return self.loss(
             logit_true=pos_score,
             logit_negative=neg_scores,

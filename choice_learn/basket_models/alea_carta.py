@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 from .base_basket_model import BaseBasketModel
-from .data.basket_dataset import Trip, TripDataset
+from .data.basket_dataset import Trip
 
 
 class AleaCarta(BaseBasketModel):
@@ -442,6 +442,7 @@ class AleaCarta(BaseBasketModel):
             basket = trip.purchases
             store = trip.store
             week = trip.week
+            available_item_batch = trip.assortment
             prices = [trip.prices[item_id] for item_id in basket]
 
         len_basket = len(basket)
@@ -650,89 +651,12 @@ class AleaCarta(BaseBasketModel):
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
-        ridge_regularization = self.l2_regularization * (
-            tf.nn.l2_loss(self.gamma) + tf.nn.l2_loss(self.theta)
+        ridge_regularization = self.l2_regularization * tf.add_n(
+            [tf.nn.l2_loss(weight) for weight in self.trainable_weights]
         )
-        if self.item_intercept:
-            ridge_regularization += self.l2_regularization * tf.nn.l2_loss(self.alpha)
         # Normalize by the batch size and the number of negative samples
         return (
             tf.reduce_sum(bce + ridge_regularization)
             / (batch_size * (self.n_negative_samples + 1)),
             loglikelihood,
         )
-
-    # @tf.function  # Graph mode
-    def evaluate2(
-        self,
-        trip_dataset: TripDataset,
-        batch_size: int = 32,
-        hit_k: list = [50],
-        metrics: list[callable] = None,  # Change *metrics to a named parameter
-    ):
-        """Evaluate the model on the given dataset using the specified metric."""
-        inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        )
-
-        total = 0
-        results = {}
-
-        for (
-            item_batch,
-            basket_batch,
-            _,  # future_batch not used here
-            store_batch,  # store_batch not used here
-            week_batch,  # week_batch not used here
-            price_batch,  # price_batch not used here
-            available_item_batch,  # available_item_batch not used here
-            _,
-        ) in inner_range:
-            batch_size = tf.shape(item_batch)[0]
-            mask = tf.reduce_max(
-                tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1
-            )  # Shape: (batch_size, n_items)
-            gamma_by_basket = self.embed_basket(basket_batch=basket_batch)
-            intercept = self.compute_preference_utility(
-                item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-                store_batch=tf.tile(store_batch, [self.n_items]),
-                week_batch=tf.tile(week_batch, [self.n_items]),
-                price_batch=tf.reshape(price_batch, [-1]),
-            )
-            all_distances = (
-                self.compute_interaction_utility(
-                    item_batch=tf.tile(np.arange(self.n_items), [batch_size]),
-                    gamma_by_basket=tf.repeat(gamma_by_basket, repeats=self.n_items, axis=0),
-                )
-                + intercept[: batch_size * self.n_items]
-            )
-            # Shape: (batch_size * n_items,)
-
-            all_distances = tf.reshape(all_distances, (batch_size, self.n_items))
-
-            ####--------------------------------------------------------------
-            # We remove the items in each basket from the recommendations in all_distances
-            # 1 if item is in the basket, 0 otherwise
-            inf_penalty = 100.0
-            mask = tf.cast(mask, dtype=tf.float32)
-            available_mask = tf.cast(available_item_batch, dtype=tf.float32)
-
-            inf_mask = (
-                mask * inf_penalty + (1 - available_mask) * inf_penalty
-            )  # Shape: (batch_size, n_items)
-            all_distances = all_distances - inf_mask  # Shape: (batch_size, n_items)
-            ####----------------------------------------------------------
-            total += batch_size
-            for metrique_func in metrics:
-                nom_metrique = metrique_func.__name__
-
-                score = metrique_func(-all_distances, item_batch, hit_k)
-
-                if nom_metrique not in results:
-                    results[nom_metrique] = 0.0
-
-                results[nom_metrique] += score
-        for metrique_func in metrics:
-            nom_metrique = metrique_func.__name__
-            results[nom_metrique] = results[nom_metrique] / float(total)
-        return results

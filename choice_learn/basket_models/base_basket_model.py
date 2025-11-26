@@ -15,7 +15,7 @@ import tensorflow as tf
 import tqdm
 
 from ..tf_ops import softmax_with_availabilities
-from ..utils.metrics import MRR, HitRate, NegativeLogLikeliHood
+from ..utils.metrics import NegativeLogLikeliHood
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
@@ -699,6 +699,7 @@ class BaseBasketModel:
                 available_item_batch,
                 user_batch,
             ) in enumerate(inner_range):
+                self.callbacks.on_batch_begin(batch_nb)
                 self.callbacks.on_train_batch_begin(batch_nb)
 
                 batch_loss = self.train_step(
@@ -751,55 +752,53 @@ class BaseBasketModel:
                 val_losses = []
                 if metrics is not None:
                     val_loss = self.evaluate(val_dataset, batch_size=512, metrics=metrics)
+                for batch_nb, (
+                    item_batch,
+                    basket_batch,
+                    future_batch,
+                    store_batch,
+                    week_batch,
+                    price_batch,
+                    available_item_batch,
+                    user_batch,
+                ) in enumerate(
+                    val_dataset.iter_batch(
+                        shuffle=False,
+                        batch_size=-1,
+                        data_method=self.train_iter_method,
+                    )
+                ):
+                    self.callbacks.on_test_batch_begin(batch_nb)
+
+                    val_losses.append(
+                        self.compute_batch_loss(
+                            item_batch=item_batch,
+                            basket_batch=basket_batch,
+                            future_batch=future_batch,
+                            store_batch=store_batch,
+                            week_batch=week_batch,
+                            price_batch=price_batch,
+                            available_item_batch=available_item_batch,
+                            user_batch=user_batch,
+                        )[0]
+                    )
+                    val_logs["val_loss"].append(val_losses[-1])
+                    temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
+                    self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
+
+                if batch_size != -1:
+                    last_batch_size = len(item_batch)
+                    coefficients = tf.concat(
+                        [
+                            tf.ones(len(val_losses) - 1) * batch_size,
+                            [last_batch_size],
+                        ],
+                        axis=0,
+                    )
+                    val_losses = tf.multiply(val_losses, coefficients)
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
                 else:
-                    for batch_nb, (
-                        item_batch,
-                        basket_batch,
-                        future_batch,
-                        store_batch,
-                        week_batch,
-                        price_batch,
-                        available_item_batch,
-                        user_batch,
-                    ) in enumerate(
-                        val_dataset.iter_batch(
-                            shuffle=False,
-                            batch_size=-1,
-                            data_method=self.train_iter_method,
-                        )
-                    ):
-                        self.callbacks.on_batch_begin(batch_nb)
-                        self.callbacks.on_test_batch_begin(batch_nb)
-
-                        val_losses.append(
-                            self.compute_batch_loss(
-                                item_batch=item_batch,
-                                basket_batch=basket_batch,
-                                future_batch=future_batch,
-                                store_batch=store_batch,
-                                week_batch=week_batch,
-                                price_batch=price_batch,
-                                available_item_batch=available_item_batch,
-                                user_batch=user_batch,
-                            )[0]
-                        )
-                        val_logs["val_loss"].append(val_losses[-1])
-                        temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
-                        self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
-
-                    if batch_size != -1:
-                        last_batch_size = len(item_batch)
-                        coefficients = tf.concat(
-                            [
-                                tf.ones(len(val_losses) - 1) * batch_size,
-                                [last_batch_size],
-                            ],
-                            axis=0,
-                        )
-                        val_losses = tf.multiply(val_losses, coefficients)
-                        val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
-                    else:
-                        val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
 
                 if verbose > 1:
                     if metrics is not None:
@@ -832,7 +831,6 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         epsilon_eval: float = 1e-9,
         metrics="nll",
-        hit_k: list = [1, 5, 10],
     ) -> dict:
         r"""Evaluate the model for each trip (unordered basket) in the dataset.
 
@@ -876,14 +874,6 @@ class BaseBasketModel:
                         average_on_batch=True,
                         name="basketwise-nll",
                     )
-                )
-            elif metric == "mrr":
-                exec_metrics.append(MRR(average_on_batch=False))
-                exec_metrics.append(MRR(average_on_batch=True, name="basketwise-mrr"))
-            elif metric == "hit_rate":
-                exec_metrics.append(HitRate(average_on_batch=False, hit_k=hit_k))
-                exec_metrics.append(
-                    HitRate(average_on_batch=True, name="basketwise-hit_rate", hit_k=hit_k)
                 )
             elif not isinstance(metric, tf.keras.metrics.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))

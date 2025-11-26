@@ -281,6 +281,11 @@ class TripDataset:
     def get_all_users(self, shuffled: bool = False) -> np.ndarray:
         """Return the list of all users in the dataset.
 
+        Parameters
+        ----------
+        shuffled: bool
+            Whether to shuffle the list of users or not, by default False
+
         Returns
         -------
         np.ndarray

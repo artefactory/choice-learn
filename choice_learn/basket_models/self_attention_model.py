@@ -6,7 +6,6 @@ import numpy as np
 import tensorflow as tf
 
 from .base_basket_model import BaseBasketModel
-from .data.basket_dataset import TripDataset
 
 
 class SelfAttentionModel(BaseBasketModel):
@@ -71,9 +70,9 @@ class SelfAttentionModel(BaseBasketModel):
             if val not in ["short_term", "long_term"]:
                 raise ValueError(f"Unknown value for latent_sizes dict: {val}.")
         if "short_term" not in latent_sizes:
-            raise ValueError("latent_sizes dict must contain a 'short_term' key.")
+            latent_sizes["short_term"] = 10
         if "long_term" not in latent_sizes:
-            raise ValueError("latent_sizes dict must contain a 'long_term' key (can be zero).")
+            latent_sizes["long_term"] = 10
 
         self.hinge_margin = hinge_margin
         self.short_term_ratio = short_term_ratio
@@ -241,6 +240,8 @@ class SelfAttentionModel(BaseBasketModel):
             basket_batch : tf.Tensor
                 [batch_size, L]
                 Tensor containing the list of the context items.
+            is_training : bool
+                Whether the model is in training mode or not, to activate dropout if needed.
 
         Returns
         -------
@@ -251,7 +252,7 @@ class SelfAttentionModel(BaseBasketModel):
                 [batch_size, L, L] tf.Tensor
                 Tensor containing the attention matrix.
         """
-        padding_vector = tf.zeros(shape=[1, self.d])  # Forme (1, d)
+        padding_vector = tf.zeros(shape=[1, self.d])  # Shape (1, d)
         padded_items = tf.concat([self.X, padding_vector], axis=0)
         x_basket = tf.gather(padded_items, indices=basket_batch)  # Shape: (batch_size, L, d)
 
@@ -363,7 +364,30 @@ class SelfAttentionModel(BaseBasketModel):
         user_batch: np.ndarray,
         is_training: bool,
     ) -> tf.Tensor:
-        """Compute the total distance (long + short term) of all the items in item_batch."""
+        """Compute the total distance (long + short term) of all the items in item_batch.
+
+        Parameters
+        ----------
+        item_batch: np.ndarray
+            Batch of the purchased items ID (integers) for which to compute the distance from their
+            basket.
+            Shape must be (batch_size, None)
+            (positive and negative samples concatenated together)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        user_batch: np.ndarray
+            Batch of user IDs (integers) for each purchased item
+            Shape must be (batch_size,)
+        is_training : bool
+            Whether the model is in training mode or not, to activate dropout if needed.
+
+        Returns
+        -------
+        total_distance: tf.Tensor
+            Total distance of all the items in item_batch from their ground truth embeddings
+            Shape must be (batch_size, None)
+        """
         basket_batch_ragged = tf.cast(
             tf.ragged.boolean_mask(basket_batch, basket_batch != -1),
             dtype=tf.int32,
@@ -387,7 +411,42 @@ class SelfAttentionModel(BaseBasketModel):
         user_batch,
         is_training: bool = False,
     ) -> tf.Tensor:
-        """Compute the utility of all the items in item_batch."""
+        """Compute the utility of all the items in item_batch.
+
+        Parameters
+        ----------
+        item_batch: np.ndarray
+            Batch of the purchased items ID (integers) for which to compute the utility from their
+            basket.
+            Shape must be (batch_size,)
+        basket_batch: np.ndarray
+            Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
+            Shape must be (batch_size, max_basket_size)
+        store_batch: np.ndarray
+            Batch of store IDs (integers) for each purchased item
+            Shape must be (batch_size,)
+        week_batch: np.ndarray
+            Batch of week numbers (integers) for each purchased item
+            Shape must be (batch_size,)
+        price_batch: np.ndarray
+            Batch of prices (floats) for each purchased item
+            Shape must be (batch_size,)
+        available_item_batch: np.ndarray
+            List of availability matrices (indicating the availability (1) or not (0)
+            of the products) (arrays) for each purchased item
+            Shape must be (batch_size, n_items)
+        user_batch: np.ndarray
+            Batch of user IDs (integers) for each purchased item
+            Shape must be (batch_size,)
+        is_training : bool
+            Whether the model is in training mode or not, to activate dropout if needed.
+
+        Returns
+        -------
+        tf.Tensor
+            Utility of all the items in item_batch
+            Shape must be (batch_size,)
+        """
         _ = store_batch  # Unused for this model
         _ = week_batch  # Unused for this model
         _ = price_batch  # Unused for this model
@@ -590,86 +649,3 @@ class SelfAttentionModel(BaseBasketModel):
                 _,
             )
         return total_loss / (batch_size * self.n_negative_samples), _
-
-    def evaluate2(
-        self,
-        trip_dataset: TripDataset,
-        batch_size: int = 32,
-        hit_k: list = [50],
-        metrics: list[callable] = None,
-    ):
-        """Evaluate the model on the given dataset using the specified metric.
-
-        Parameters
-        ----------
-        hit_k : list
-            List of k values for hit rate calculation.
-        metrics : list of callable
-            List of metric functions to evaluate. Each function should take
-            (all_distances, item_batch, hit_k) as parameters and return a score.
-
-        Returns
-        -------
-        dict
-            Dictionary with metric names as keys and their corresponding scores as values.
-        """
-        inner_range = trip_dataset.iter_batch(
-            shuffle=False, batch_size=batch_size, data_method="aleacarta"
-        )
-
-        total = 0
-        results = {}
-        for (
-            item_batch,
-            basket_batch,
-            _,  # future_batch not used here
-            _,  # store_batch not used here
-            _,  # week_batch not used here
-            _,  # price_batch not used here
-            available_item_batch,  # available_item_batch not used here
-            user_batch,
-        ) in inner_range:
-            batch_size = tf.shape(item_batch)[0]
-            mask = tf.reduce_max(
-                tf.one_hot(basket_batch, depth=self.n_items, dtype=tf.int32), axis=1
-            )  # Shape: (batch_size, n_items)
-            # We want augmented_item_batch to contain all items from 0 to n_items-1 on a second axis
-            augmented_item_batch = tf.tile(
-                tf.expand_dims(tf.range(self.n_items, dtype=tf.int32), axis=0), [batch_size, 1]
-            )  # Shape: (batch_size, n_items)
-            # -----Compute----------------------------------------------
-            all_distances = self.compute_batch_distance(
-                item_batch=augmented_item_batch,
-                basket_batch=basket_batch,
-                user_batch=user_batch,
-                is_training=False,
-            )  # Shape: (batch_size, n_items )
-            all_distances = tf.reshape(all_distances, (batch_size, self.n_items))
-            ####--------------------Mask------------------------------------------
-            # We remove the items in each basket from the recommendations in all_distances
-            # 1 if item is in the basket, 0 otherwise
-            inf_penalty = 100.0
-            mask = tf.cast(mask, dtype=tf.float32)
-            available_mask = tf.cast(available_item_batch, dtype=tf.float32)
-
-            inf_mask = (
-                mask * inf_penalty + (1 - available_mask) * inf_penalty
-            )  # Shape: (batch_size, n_items)
-            all_distances = all_distances + inf_mask  # Shape: (batch_size, n_items)
-            ####----------------------------------------------------------
-
-            total += batch_size
-            for metrique_func in metrics:
-                nom_metrique = metrique_func.__name__
-
-                score = metrique_func(all_distances, item_batch, hit_k)
-
-                if nom_metrique not in results:
-                    results[nom_metrique] = 0.0
-
-                results[nom_metrique] += score
-
-        for metrique_func in metrics:
-            nom_metrique = metrique_func.__name__
-            results[nom_metrique] = results[nom_metrique] / float(total)
-        return results
