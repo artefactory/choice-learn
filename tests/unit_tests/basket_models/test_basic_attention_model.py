@@ -124,6 +124,7 @@ def test_score():
         week_batch=tf.ones_like(target_items),
         price_batch=tf.ones_like(target_items),
         available_item_batch=tf.ones_like(target_items),
+        user_batch=tf.ones_like(target_items),
     )
     expected_scores = naive_basket_score(contexts, target_items)
 

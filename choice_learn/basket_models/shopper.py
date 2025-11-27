@@ -442,6 +442,7 @@ class Shopper(BaseBasketModel):
         store_batch: np.ndarray,
         week_batch: np.ndarray,
         price_batch: np.ndarray,
+        user_batch: np.ndarray,
         available_item_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch.
@@ -475,6 +476,7 @@ class Shopper(BaseBasketModel):
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
+        _ = user_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         basket_batch = tf.cast(basket_batch, dtype=tf.int32)
         store_batch = tf.cast(store_batch, dtype=tf.int32)
@@ -703,6 +705,7 @@ class Shopper(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -742,6 +745,7 @@ class Shopper(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        _ = user_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
 
@@ -794,6 +798,7 @@ class Shopper(BaseBasketModel):
             week_batch=tf.tile(week_batch, [self.n_negative_samples + 1]),
             price_batch=augmented_price_batch,
             available_item_batch=tf.tile(available_item_batch, [self.n_negative_samples + 1, 1]),
+            user_batch=tf.tile(user_batch, [self.n_negative_samples + 1]),
         )
 
         positive_samples_utilities = tf.gather(all_utilities, tf.range(batch_size))

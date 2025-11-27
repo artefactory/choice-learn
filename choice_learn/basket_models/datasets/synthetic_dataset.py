@@ -5,7 +5,7 @@ from typing import Union
 
 import numpy as np
 
-from ..data.basket_dataset import Trip, TripDataset
+from ..data import Trip, TripDataset
 
 
 class SyntheticDataGenerator:
@@ -19,6 +19,7 @@ class SyntheticDataGenerator:
         proba_neutral_items: float = 0.15,
         noise_proba: float = 0.05,
         plant_seed: int = None,
+        user_profile: dict = None,
     ) -> None:
         """Initialize the data generator with parameters for basket generation.
 
@@ -38,6 +39,11 @@ class SyntheticDataGenerator:
                                       ["compl", "", "neutral", "neutral"],
                                       ["neutral", "neutral", "", "neutral"],
                                       ["neutral", "neutral", "neutral", ""]]
+            user_profile = {0:{ "nest" : 0, "item" : 0},
+                            1: {"nest" : 0, "item" : 1},
+                            2: {"nest" : 0, "item" : 2}}
+                Dictionary defining user profiles with preferred nest and item. Structure is:
+                {user_id: {"nest": nest, "item": preferred_item}, ...}
             proba_complementary_items : float
                 Probability of adding complementary items to the basket.
             proba_neutral_items : float
@@ -50,6 +56,8 @@ class SyntheticDataGenerator:
         self.noise_proba = noise_proba
         self.items_nest = items_nest
         self.nests_interactions = nests_interactions
+        self.user_profile = user_profile
+
         if plant_seed is not None:
             np.random.seed(plant_seed)
 
@@ -75,7 +83,12 @@ class SyntheticDataGenerator:
             )
         )
 
-    def select_first_item(self, available_sets: np.ndarray, available_items: np.ndarray) -> tuple:
+    def select_first_item(
+        self,
+        available_sets: np.ndarray,
+        available_items: np.ndarray,
+        user_id: int = None,
+    ) -> tuple:
         """Select the first item and its nest randomly from the available sets.
 
         Parameters
@@ -91,13 +104,22 @@ class SyntheticDataGenerator:
                 A tuple containing the first item and its corresponding nest.
         """
         chosen_nest = np.random.choice(available_sets)
+
         chosen_item = np.random.choice(
             [i for i in self.items_nest[chosen_nest] if i in available_items]
         )
+        if self.user_profile is not None and self.user_profile[user_id]["nest"] == chosen_nest:
+            if self.user_profile[user_id]["item"] in available_items and np.random.rand() < 0.7:
+                chosen_item = self.user_profile[user_id]["item"]
+
         return chosen_item, chosen_nest
 
     def complete_basket(
-        self, first_item: int, first_nest: int, available_items: np.ndarray
+        self,
+        first_item: int,
+        first_nest: int,
+        available_items: np.ndarray,
+        user_id: int = None,
     ) -> list:
         """Completes the basket by adding items based on the relations of the first item.
 
@@ -123,7 +145,21 @@ class SyntheticDataGenerator:
                 and np.random.random() < self.proba_complementary_items
             ):
                 try:
-                    basket.append(np.random.choice([i for i in items if i in available_items]))
+                    if (
+                        self.user_profile is not None
+                        and self.user_profile[user_id]["nest"] == nest_id
+                    ):
+                        if (
+                            self.user_profile[user_id]["item"] in available_items
+                            and np.random.rand() < 0.7
+                        ):
+                            basket.append(self.user_profile[user_id]["item"])
+                        else:
+                            basket.append(
+                                np.random.choice([i for i in items if i in available_items])
+                            )
+                    else:
+                        basket.append(np.random.choice([i for i in items if i in available_items]))
                 except ValueError:
                     logging.warning(
                         f"Warning: No more complementary items available in nest {nest_id}"
@@ -166,7 +202,10 @@ class SyntheticDataGenerator:
         return basket
 
     def generate_basket(
-        self, assortment: Union[int, np.ndarray] = None, len_basket: int = None
+        self,
+        assortment: Union[int, np.ndarray] = None,
+        len_basket: int = None,
+        user_id: int = None,
     ) -> list:
         """Generate a basket of items based on the defined item sets and their relations.
 
@@ -189,10 +228,15 @@ class SyntheticDataGenerator:
 
         if len(available_sets) != 0:
             first_chosen_item, first_chosen_nest = self.select_first_item(
-                available_sets=available_sets, available_items=available_items
+                available_sets=available_sets,
+                available_items=available_items,
+                user_id=user_id,
             )
             basket = self.complete_basket(
-                first_chosen_item, first_chosen_nest, available_items=available_items
+                first_chosen_item,
+                first_chosen_nest,
+                available_items=available_items,
+                user_id=user_id,
             )
             basket = self.add_noise(basket, available_items=available_items)
         else:
@@ -202,7 +246,7 @@ class SyntheticDataGenerator:
             if not isinstance(len_basket, int) or len_basket < 1:
                 raise TypeError("len_basket should be an integer larger than 0.")
             if len(basket) < len_basket:
-                basket = self.generate_basket(assortment, len_basket)
+                basket = self.generate_basket(assortment, len_basket, user_id=user_id)
             else:
                 basket = np.random.choice(basket, len_basket, replace=False)
 
@@ -227,16 +271,25 @@ class SyntheticDataGenerator:
             Trip
                 A Trip object containing the generated basket.
         """
-        basket = self.generate_basket(assortment, len_basket=len_basket).astype(int)
+        user_id = (
+            np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else None
+        )
+        basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
+            int
+        )
         return Trip(
             purchases=basket,
             # Assuming uniform price of 1.0 for simplicity
             prices=np.ones((1, len(assortment))),
             assortment=assortment,
+            user_id=user_id,
         )
 
     def generate_trip_dataset(
-        self, n_baskets: int = 400, assortments_matrix: np.ndarray = None, len_basket: int = None
+        self,
+        n_baskets: int = 400,
+        assortments_matrix: np.ndarray = None,
+        len_basket: int = None,
     ) -> TripDataset:
         """Generate a TripDataset from the generated baskets.
 

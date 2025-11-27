@@ -122,6 +122,7 @@ Here are two tutorials published on Medium that can help you
 | Shopper | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/shopper.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/shopper.ipynb) | Ruiz et al. [[16]](#trident-references) &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *Shopper* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_shopper/) |
 | Alea Carta | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/alea_carta.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/alea_carta.ipynb) | Désir et al. [[17]](#trident-references) | *AleaCarta* | [#](https://artefactory.github.io/choice-learn/references/basket_models/references_alea_carta/) |
 | Base Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/basic_attention.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/basic_attention.ipynb) | Wang et al. [[18]](#trident-references) | *AttentionBasedContextEmbedding* | [#]() |
+| Self Attention | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/basket_models/self_attention.ipynb)  &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/basket_models/self_attention.ipynb) | Zang et al. [[20]](#trident-references) | *SelfAttentionModel* | [#]() |
 
 
 ### Data
@@ -377,8 +378,8 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [16] [SHOPPER: A Probabilistic Model of Consumer Choice with Substitutes and Complements](https://arxiv.org/abs/1711.03560), Ruiz, F. J. R.; Athey, S.; Blei, D. M. (2019)\
 [17] [Better Capturing Interactions between Products in Retail: Revisited Negative Sampling for Basket Choice Modeling](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Désir, J.; Auriau, V.; Možina, M.; Malherbe, E. (2025), ECML PKDDD\
 [18] [Attention-based Transactional Context Embedding for Next-Item Recommendation](https://ojs.aaai.org/index.php/AAAI/article/view/11851), Wans, S.; Liang, H.; Longbing,C.; Xiaoshui, H.; Defu, L.; Wei, L. (2018)\
-[19] [A Discrete Choice Model for Subset Selection.](https://www.cs.cornell.edu/~arb/papers/higher-order-choice-wsdm-2018.pdf), Benson, A.; Kumar, R.; Tomkins, A. (2018)
-
+[19] [A Discrete Choice Model for Subset Selection.](https://www.cs.cornell.edu/~arb/papers/higher-order-choice-wsdm-2018.pdf), Benson, A.; Kumar, R.; Tomkins, A. (2018)\
+[20] [Next Item Recommendation with Self-Attention.](https://recnlp2019.github.io/papers/RecNLP2019_paper_21.pdf), Zhang, S.; Yao, L.; Tay, Y.; Sun, A. (2018)\
 ### Code and Repositories
 
 *Official models implementations:*
@@ -388,4 +389,5 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [12] [ResLogit](https://github.com/LiTrans/reslogit)\
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
 [16] [Shopper](https://github.com/franrruiz/shopper-src)\
-[17] [AleaCarta](https://github.com/artefactory/alea-carta-est)
+[17] [AleaCarta](https://github.com/artefactory/alea-carta-est)\
+[20] [SelfAttention](https://github.com/artefactory/rd-self-attentive)

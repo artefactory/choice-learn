@@ -34,6 +34,7 @@ class AleaCarta(BaseBasketModel):
         weight_decay: Union[float, None] = None,
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
+        l2_regularization: float = 0.0,
         **kwargs,
     ) -> None:
         """Initialize the AleaCarta model.
@@ -79,6 +80,7 @@ class AleaCarta(BaseBasketModel):
         self.item_intercept = item_intercept
         self.price_effects = price_effects
         self.seasonal_effects = seasonal_effects
+        self.l2_regularization = l2_regularization
 
         if "preferences" not in latent_sizes.keys():
             logging.warning(
@@ -265,6 +267,7 @@ class AleaCarta(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: Union[np.ndarray, tf.Tensor],
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the items in basket_batch.
 
@@ -297,6 +300,7 @@ class AleaCarta(BaseBasketModel):
             Utility of all the items in item_batch
             Shape must be (batch_size,)
         """
+        _ = user_batch
         _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         if len(tf.shape(item_batch)) == 1:
@@ -448,7 +452,6 @@ class AleaCarta(BaseBasketModel):
             [np.delete(basket, i) for i in range(len_basket)]
         )  # Shape: (len_basket, len(basket) - 1)
 
-        # Basket utility = sum of the utilities of the items in the basket
         return tf.reduce_sum(
             self.compute_batch_utility(
                 item_batch=basket,
@@ -457,6 +460,7 @@ class AleaCarta(BaseBasketModel):
                 week_batch=np.array([week] * len_basket),
                 price_batch=prices,
                 available_item_batch=available_item_batch,
+                user_batch=None,
             )
         ).numpy()
 
@@ -536,6 +540,7 @@ class AleaCarta(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -576,6 +581,7 @@ class AleaCarta(BaseBasketModel):
             Approximated by difference of utilities between positive and negative samples
             Shape must be (1,)
         """
+        _ = user_batch
         _ = future_batch
         batch_size = len(item_batch)
         item_batch = tf.cast(item_batch, dtype=tf.int32)
@@ -593,7 +599,6 @@ class AleaCarta(BaseBasketModel):
             ],
             axis=0,
         )
-
         augmented_item_batch = tf.cast(
             tf.concat([tf.expand_dims(item_batch, axis=-1), negative_samples], axis=1),
             dtype=tf.int32,
@@ -612,7 +617,8 @@ class AleaCarta(BaseBasketModel):
             week_batch=week_batch,
             price_batch=augmented_price_batch,
             available_item_batch=available_item_batch,
-        )
+            user_batch=None,
+        )  # Shape: (batch_size * (n_negative_samples + 1),)
 
         positive_samples_utilities = tf.gather(params=all_utilities, indices=[0], axis=1)
         negative_samples_utilities = tf.gather(
@@ -645,6 +651,12 @@ class AleaCarta(BaseBasketModel):
             ),
             output=tf.nn.sigmoid(all_utilities),
         )  # Shape: (batch_size * (n_negative_samples + 1),)
-
+        ridge_regularization = self.l2_regularization * tf.add_n(
+            [tf.nn.l2_loss(weight) for weight in self.trainable_weights]
+        )
         # Normalize by the batch size and the number of negative samples
-        return tf.reduce_sum(bce) / (batch_size * self.n_negative_samples), loglikelihood
+        return (
+            tf.reduce_sum(bce + ridge_regularization)
+            / (batch_size * (self.n_negative_samples + 1)),
+            loglikelihood,
+        )

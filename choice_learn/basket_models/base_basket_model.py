@@ -149,6 +149,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the 5 other data.
 
@@ -183,7 +184,6 @@ class BaseBasketModel:
         """
         return
 
-    # Not clear
     def compute_item_likelihood(
         self,
         basket: Union[None, np.ndarray] = None,
@@ -192,6 +192,7 @@ class BaseBasketModel:
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
+        user: Union[None, int] = None,
     ) -> tf.Tensor:
         """Compute the likelihood of all items for a given trip.
 
@@ -232,10 +233,11 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be provided as arguments."
+                    "If trip is None, then basket, available_items, store, week, prices, and "
+                    "user must be provided as arguments."
                 )
 
         else:
@@ -256,6 +258,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
             )
 
@@ -273,6 +276,7 @@ class BaseBasketModel:
                 week_batch=np.expand_dims(week, axis=0),
                 price_batch=np.expand_dims(prices, axis=0),
                 available_item_batch=np.expand_dims(available_items_copy, axis=0),
+                user_batch=np.expand_dims(user, axis=0),
             )[0]
             if len(np.where(basket >= 0)[0]) > 0:
                 available_items_copy[basket[np.where(basket >= 0)[0]]] = 0.0
@@ -287,6 +291,7 @@ class BaseBasketModel:
                 store_batch=np.array(store).astype(int),
                 week_batch=np.array(week).astype(int),
                 price_batch=np.array(prices).astype("float32"),
+                user_batch=np.array(user).astype(int),
                 available_item_batch=np.array(available_items_copy),
             )
             for i in range(tf.shape(basket)[0]):
@@ -310,6 +315,7 @@ class BaseBasketModel:
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
         trip: Union[None, Trip] = None,
+        user: Union[None, int] = None,
     ) -> float:
         r"""Compute the utility of an ordered basket.
 
@@ -350,10 +356,11 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
-                    "If trip is None, then basket, available_items, store, week, and "
-                    "prices must be providedas arguments."
+                    "If trip is None, then basket, available_items, store, week, prices, and "
+                    "user must be provided as arguments."
                 )
 
         else:
@@ -373,6 +380,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
             )
 
@@ -387,6 +395,7 @@ class BaseBasketModel:
                 available_items=available_items_copy,
                 store=store,
                 week=week,
+                user=user,
                 prices=prices,
             )[basket[j]].numpy()
 
@@ -396,6 +405,7 @@ class BaseBasketModel:
         return ordered_basket_likelihood
 
     # Check the 0-exit-item functionment
+
     # @tf.function  # TODO: make it work with tf.function
     def compute_basket_likelihood(
         self,
@@ -404,6 +414,7 @@ class BaseBasketModel:
         store: Union[None, int] = None,
         week: Union[None, int] = None,
         prices: Union[None, np.ndarray] = None,
+        user: Union[None, int] = None,
         trip: Union[None, Trip] = None,
         n_permutations: int = 1,
         verbose: int = 0,
@@ -453,6 +464,7 @@ class BaseBasketModel:
                 or store is None
                 or week is None
                 or prices is None
+                or user is None
             ):
                 raise ValueError(
                     "If trip is None, then basket, available_items, store, week, and "
@@ -476,6 +488,7 @@ class BaseBasketModel:
                 store=trip.store,
                 week=trip.week,
                 prices=trip.prices,
+                user=trip.user_id,
                 trip=None,
                 n_permutations=n_permutations,
                 verbose=verbose,
@@ -509,6 +522,7 @@ class BaseBasketModel:
                         available_items=available_items,
                         store=store,
                         week=week,
+                        user=user,
                         prices=prices,
                     )
                     for permutation in permutation_list
@@ -528,6 +542,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -581,6 +596,7 @@ class BaseBasketModel:
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Variable:
         """Train the model for one step.
 
@@ -624,6 +640,7 @@ class BaseBasketModel:
                 week_batch=week_batch,
                 price_batch=price_batch,
                 available_item_batch=available_item_batch,
+                user_batch=user_batch,
             )[0]
 
         grads = tape.gradient(batch_loss, self.trainable_weights)
@@ -635,6 +652,7 @@ class BaseBasketModel:
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
         verbose: int = 0,
+        metrics: list[callable] = None,
     ) -> dict:
         """Fit the model to the data in order to estimate the latent parameters.
 
@@ -659,11 +677,10 @@ class BaseBasketModel:
 
         batch_size = self.batch_size
 
-        history = {"train_loss": [], "val_loss": []}
+        history = {"train_loss": [], "val_loss": [], "val_metrics": []}
+
         t_range = tqdm.trange(self.epochs, position=0)
-
         self.callbacks.on_train_begin()
-
         # Iterate of epochs
         for epoch_nb in t_range:
             self.callbacks.on_epoch_begin(epoch_nb)
@@ -675,7 +692,9 @@ class BaseBasketModel:
             if verbose > 0:
                 inner_range = tqdm.tqdm(
                     trip_dataset.iter_batch(
-                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                        shuffle=True,
+                        batch_size=batch_size,
+                        data_method=self.train_iter_method,
                     ),
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=1,
@@ -683,7 +702,9 @@ class BaseBasketModel:
                 )
             else:
                 inner_range = trip_dataset.iter_batch(
-                    shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                    shuffle=True,
+                    batch_size=batch_size,
+                    data_method=self.train_iter_method,
                 )
 
             for batch_nb, (
@@ -694,7 +715,9 @@ class BaseBasketModel:
                 week_batch,
                 price_batch,
                 available_item_batch,
+                user_batch,
             ) in enumerate(inner_range):
+                self.callbacks.on_batch_begin(batch_nb)
                 self.callbacks.on_train_batch_begin(batch_nb)
 
                 batch_loss = self.train_step(
@@ -705,9 +728,11 @@ class BaseBasketModel:
                     week_batch=week_batch,
                     price_batch=price_batch,
                     available_item_batch=available_item_batch,
+                    user_batch=user_batch,
                 )
+
                 train_logs["train_loss"].append(batch_loss)
-                temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
                 self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
 
                 # Optimization Steps
@@ -717,7 +742,6 @@ class BaseBasketModel:
                     inner_range.set_description(
                         f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
                     )
-
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
             if batch_size != -1:
@@ -729,7 +753,7 @@ class BaseBasketModel:
                 epoch_losses = tf.multiply(epoch_losses, coefficients)
                 epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
             else:
-                epoch_loss = tf.reduce_mean(epoch_losses)
+                epoch_loss = tf.reduce_sum(epoch_losses) / trip_dataset.n_samples
 
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
@@ -744,6 +768,8 @@ class BaseBasketModel:
             # Test on val_dataset if provided
             if val_dataset is not None:
                 val_losses = []
+                if metrics is not None:
+                    val_loss = self.evaluate(val_dataset, batch_size=512, metrics=metrics)
                 for batch_nb, (
                     item_batch,
                     basket_batch,
@@ -752,12 +778,14 @@ class BaseBasketModel:
                     week_batch,
                     price_batch,
                     available_item_batch,
+                    user_batch,
                 ) in enumerate(
                     val_dataset.iter_batch(
-                        shuffle=True, batch_size=batch_size, data_method=self.train_iter_method
+                        shuffle=False,
+                        batch_size=-1,
+                        data_method=self.train_iter_method,
                     )
                 ):
-                    self.callbacks.on_batch_begin(batch_nb)
                     self.callbacks.on_test_batch_begin(batch_nb)
 
                     val_losses.append(
@@ -769,26 +797,50 @@ class BaseBasketModel:
                             week_batch=week_batch,
                             price_batch=price_batch,
                             available_item_batch=available_item_batch,
+                            user_batch=user_batch,
                         )[0]
                     )
                     val_logs["val_loss"].append(val_losses[-1])
-                    temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
+                    temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
 
-                val_loss = tf.reduce_mean(val_losses)
-                if verbose > 1:
-                    print("Test Negative-LogLikelihood:", val_loss.numpy())
-                    desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
-                history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
-                train_logs = {**train_logs, **val_logs}
+                if batch_size != -1:
+                    last_batch_size = len(item_batch)
+                    coefficients = tf.concat(
+                        [
+                            tf.ones(len(val_losses) - 1) * batch_size,
+                            [last_batch_size],
+                        ],
+                        axis=0,
+                    )
+                    val_losses = tf.multiply(val_losses, coefficients)
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+                else:
+                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
 
-            temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+                if verbose > 1:
+                    if metrics is not None:
+                        print("Validation Metrics:", list(val_loss.values())[0].numpy())
+                        desc += ", Val Metrics " + ", ".join(
+                            str(np.round(float(v), 4))
+                            for v in val_loss
+                            if isinstance(v, (int, float, np.floating))
+                        )
+                        history["val_metrics"] = history.get("val_metrics", []) + [
+                            list(val_loss.values())[0]
+                        ]
+                    else:
+                        print("Test Negative-LogLikelihood:", val_loss.numpy())
+                        desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
+                        history["val_loss"] = history.get("val_loss", []) + [val_loss.numpy()]
+                        train_logs = {**train_logs, **val_logs}
+            temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
 
             t_range.set_description(desc)
             t_range.refresh()
 
-        temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
+        temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
         return history
 
@@ -842,7 +894,7 @@ class BaseBasketModel:
                         name="basketwise-nll",
                     )
                 )
-            elif not isinstance(metric, tf.keras.metrics.metric.Metric):
+            elif not isinstance(metric, tf.keras.metrics.Metric):
                 exec_metrics.append(tf.keras.metrics.get(metric))
             else:
                 exec_metrics.append(metric)
@@ -862,6 +914,7 @@ class BaseBasketModel:
                 store=data_batch[3],
                 week=data_batch[4],
                 prices=data_batch[5],
+                user=data_batch[7],
             )
 
             for metric in exec_metrics:
@@ -921,7 +974,9 @@ class BaseBasketModel:
                     self,
                     weight_name,
                     tf.Variable(
-                        np.load(os.path.join(directory, file)), trainable=True, name=weight_name
+                        np.load(os.path.join(directory, file)),
+                        trainable=True,
+                        name=weight_name,
                     ),
                 )
 

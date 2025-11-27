@@ -11,12 +11,12 @@ from .data.basket_dataset import TripDataset
 
 
 class AttentionBasedContextEmbedding(BaseBasketModel):
-    """
-    Class for the attention-based model.
+    """Class for the attention-based model.
 
-    Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian, and Wei Liu.
-    "Attention-based transactional context embedding for next-item recommendation."
-    In Proceedings of the AAAI conference on artificial intelligence, vol. 32, no. 1. 2018.
+    Wang, Shoujin, Liang Hu, Longbing Cao, Xiaoshui Huang, Defu Lian,
+    and Wei Liu. "Attention-based transactional context embedding for
+    next-item recommendation." In Proceedings of the AAAI conference on
+    artificial intelligence, vol. 32, no. 1. 2018.
     """
 
     def __init__(
@@ -88,10 +88,12 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         self.n_items = n_items
 
         self.Wi = tf.Variable(
-            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42), name="Wi"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42),
+            name="Wi",
         )
         self.Wo = tf.Variable(
-            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42), name="Wo"
+            tf.random.normal((self.n_items, self.latent_size), stddev=0.1, seed=42),
+            name="Wo",
         )
         self.wa = tf.Variable(tf.random.normal((self.latent_size,), stddev=0.1, seed=42), name="wa")
 
@@ -174,6 +176,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tf.Tensor:
         """Compute the utility of all the items in item_batch given the items in basket_batch.
 
@@ -210,7 +213,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         _ = price_batch
         _ = week_batch
         _ = available_item_batch
-
+        _ = user_batch
         if len(tf.shape(item_batch)) == 1:
             item_batch = tf.expand_dims(item_batch, axis=1)
             squeeze = True
@@ -320,6 +323,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         week_batch: np.ndarray,
         price_batch: np.ndarray,
         available_item_batch: np.ndarray,
+        user_batch: np.ndarray,
     ) -> tuple[tf.Variable]:
         """Compute log-likelihood and loss for one batch of items.
 
@@ -361,6 +365,7 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             Shape must be (1,)
         """
         _ = future_batch
+        _ = user_batch
         negative_samples = tf.stack(
             [
                 self.get_negative_samples(
@@ -374,7 +379,13 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             axis=0,
         )
         pos_score = self.compute_batch_utility(
-            item_batch, basket_batch, store_batch, week_batch, price_batch, available_item_batch
+            item_batch,
+            basket_batch,
+            store_batch,
+            week_batch,
+            price_batch,
+            available_item_batch,
+            user_batch,
         )
         neg_scores = self.compute_batch_utility(
             item_batch=negative_samples,
@@ -383,9 +394,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
             week_batch=week_batch,
             price_batch=price_batch,
             available_item_batch=available_item_batch,
+            user_batch=user_batch,
         )
 
-        # neg_scores = tf.reshape(neg_scores, (-1, self.n_negative_samples))
         return self.loss(
             logit_true=pos_score,
             logit_negative=neg_scores,

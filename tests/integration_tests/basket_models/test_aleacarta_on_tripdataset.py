@@ -121,6 +121,7 @@ def test_item_probabilities_sum_to_1() -> None:
                             store=trip.store,
                             week=trip.week,
                             prices=trip.prices,
+                            user=trip.user_id,
                         )
                     )
                     - 1.0
@@ -145,6 +146,7 @@ def test_with_intercept() -> None:
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
         price_batch=prices,
+        user_batch=np.array([0] * batch_size),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
     aft_utilities = model.compute_batch_utility(
@@ -153,6 +155,7 @@ def test_with_intercept() -> None:
         store_batch=np.array([0]),
         week_batch=np.array([0]),
         price_batch=np.expand_dims(prices, axis=0),
+        user_batch=np.array([0]),
         available_item_batch=np.array([np.ones(n_items_1)]),
     )
     assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
@@ -173,6 +176,7 @@ def test_no_intercept() -> None:
         basket_batch=np.array([[1, 2, 3]] * batch_size),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
+        user_batch=np.array([0] * batch_size),
         price_batch=prices,
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
     )
@@ -182,6 +186,7 @@ def test_no_intercept() -> None:
         store_batch=np.array([0]),
         week_batch=np.array([0]),
         price_batch=np.expand_dims(prices, axis=0),
+        user_batch=np.array([0]),
         available_item_batch=np.array([np.ones(n_items_1)]),
     )
     assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
@@ -265,6 +270,7 @@ def test_compute_basket_likelihood(caplog) -> None:
             available_items=np.ones(n_items_1),
             store=0,
             week=0,
+            user=0,
         )
 
     with pytest.raises(ValueError):
@@ -286,6 +292,7 @@ def test_compute_basket_likelihood(caplog) -> None:
         store=0,
         week=0,
         prices=np.random.uniform(1, 10, n_items_1),
+        user=0,
         verbose=1,
     )
 
@@ -297,6 +304,7 @@ def test_compute_basket_likelihood(caplog) -> None:
             store=0,
             week=0,
             prices=np.random.uniform(1, 10, n_items_1),
+            user=0,
             n_permutations=3,  # > 2! = 2
         )
         assert "Warning: n_permutations > n! (all permutations)." in caplog.text
@@ -381,6 +389,7 @@ def test_randoms_few() -> None:
         basket_batch=np.array([[0, 1], [0, 1]]),
         store_batch=np.array([0, 0]),
         week_batch=np.array([0, 0]),
+        user_batch=np.array([0, 0]),
         price_batch=np.array(
             [
                 [
@@ -404,6 +413,7 @@ def test_randoms_few() -> None:
         basket_batch=np.array([[0, 1]]),
         store_batch=np.array([0]),
         week_batch=np.array([0]),
+        user_batch=np.array([0]),
         price_batch=np.ones((1,)),
         available_item_batch=np.ones((1, 7)),
     )
@@ -413,6 +423,7 @@ def test_randoms_few() -> None:
             basket_batch=np.array([[1]]),
             store_batch=np.array([0]),
             week_batch=np.array([0]),
+            user_batch=np.array([0]),
             price_batch=np.ones((1,)),
             available_item_batch=np.ones((1, 7)),
         )
@@ -421,6 +432,7 @@ def test_randoms_few() -> None:
             basket_batch=np.array([[0]]),
             store_batch=np.array([0]),
             week_batch=np.array([0]),
+            user_batch=np.array([0]),
             price_batch=np.ones((1,)),
             available_item_batch=np.ones((1, 7)),
         )
@@ -432,6 +444,7 @@ def test_randoms_few() -> None:
         basket_batch=np.array([[0, 1], [1, 0]]),
         store_batch=np.array([0, 0]),
         week_batch=np.array([0, 0]),
+        user_batch=np.array([0, 0]),
         price_batch=np.ones((2, 2)),
         available_item_batch=np.ones((2, 7)),
     )
