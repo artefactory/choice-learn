@@ -769,7 +769,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate(val_dataset, batch_size=512, metrics=metrics)
+                    val_loss = self.evaluate(val_dataset, metrics=metrics)
                 for batch_nb, (
                     item_batch,
                     basket_batch,
