@@ -841,7 +841,7 @@ class BaseBasketModel:
     def evaluate(
         self,
         trip_dataset: TripDataset,
-        trip_batch_size: int = 128,
+        trip_batch_size: int = 32,
         epsilon_eval: float = 1e-9,
         metrics="nll",
     ) -> dict:
