@@ -1,0 +1,2958 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../basket_models/alea_carta/">
+      
+      
+        <link rel="next" href="../../../references/data/references_choice_dataset/">
+      
+      
+      <link rel="icon" href="../../../logo_choice_learn.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>Optimizing a product assortment - Choice-Learn</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.50c56a3b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../docs/.overrides/assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#assortment-example" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Choice-Learn" class="md-header__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Choice-Learn
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Optimizing a product assortment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 12a10 10 0 0 0 13 9.54 10 10 0 0 1 0-19.08A10 10 0 0 0 2 12Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3.55 19.09 1.41 1.41 1.8-1.79-1.42-1.42M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6c0-3.32-2.69-6-6-6m8 7h3v-2h-3m-2.76 7.71 1.8 1.79 1.41-1.41-1.79-1.8M20.45 5l-1.41-1.4-1.8 1.79 1.42 1.42M13 1h-2v3h2M6.76 5.39 4.96 3.6 3.55 5l1.79 1.81 1.42-1.42M1 13h3v-2H1m12 9h-2v3h2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Choice-Learn" class="md-nav__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    Choice-Learn
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HomePage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/1_introductive_example/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introductive Example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/2_data_handling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/3_model_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to choice modelling with the Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to model customization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    How-To Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data Handling
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Data Handling
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/2_data_handling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/dataset_creation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Exhaustive example of ChoiceDataset creation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/features_byID_examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimize RAM usage with Features Storage, in-depth examples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket Data Handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Single Choices
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Single Choices
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to Choice Models - the SimpleMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/3_model_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Building a custom choice model and handling hyper-parameters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/latent_class_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNLs Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/logistic_regression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    A reproductive example, the logistic regression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/models_finetuning/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Model Finetuning and general hyperparamters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SHOPPER model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Basket of purchases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Basket of purchases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction data handling, the TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AleaCarta model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox for choice modellers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox for choice modellers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Optimizing a product assortment
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Optimizing a product assortment
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Introduction
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-model-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice Model Specification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-model-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice Model Estimation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assortment-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assortment Optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Assortment Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preparing-the-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing the data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-learns-assortmentoptimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice-Learn's AssortmentOptimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#latent-class-assortment-optimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latent Class Assortment Optimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-capacity-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding capacity constraints
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pricing-and-assortment-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pricing and Assortment Optimization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ending-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ending Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    References
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            References
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_choice_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_indexer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset Indexer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Features Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Available Open-Source Datasets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Available Open-Source Datasets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_tafeng/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TaFeng Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_expedia/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ICDM Expedia Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/references_bakery/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bakery Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/synthetic_dataset.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Badminton Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Choice Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Choice Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_baseline_models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Baseline Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SimpleMNL Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class BaseModel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Basket Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Basket Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The AleaCarta model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_basic_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_self_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Self Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Trip and TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_preprocessing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket preprocessing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/utils/references_permutation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permutation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/toolbox/references_assortment_optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Assortment Optimizer and Pricing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/tf_ops.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tensorflow Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/utils/metrics.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Explanations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Introduction
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-model-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice Model Specification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-model-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice Model Estimation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assortment-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assortment Optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Assortment Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preparing-the-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing the data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choice-learns-assortmentoptimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choice-Learn's AssortmentOptimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#latent-class-assortment-optimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latent Class Assortment Optimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-capacity-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding capacity constraints
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pricing-and-assortment-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pricing and Assortment Optimization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ending-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ending Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="assortment-example">Assortment Example</h1>
+<p>A short example for assortment optimization under the conditional Logit and more.</p>
+<ul>
+<li><a href="#introduction">Intoduction</a><ul>
+<li><a href="#dataset">Dataset</a></li>
+<li><a href="#choice-model-specification">Choice model specification</a></li>
+<li><a href="#choice-model-estimation">Choice model estimation</a></li>
+</ul>
+</li>
+<li><a href="#assortment-optimization">Assortment Optimization</a><ul>
+<li><a href="#preparing-the-data">Preparing the data</a></li>
+<li><a href="#choice-learns-assortmentoptimizer">Choice-Learn's AssortmentOptimizer</a></li>
+<li><a href="#latent-class-assortment-optimizer">Assortment with Latent Class models</a></li>
+<li><a href="#adding-capacity-constraints">Adding Capacity Constraints</a></li>
+</ul>
+</li>
+<li><a href="#pricing-and-assortment-optimization">Pricing and assortment</a></li>
+</ul>
+<p><a href="https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install necessary requirements</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># If you run this notebook on Google Colab, or in standalone mode, you need to install</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># the required packages. Just uncomment the following lines:</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># !pip install choice-learn</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># If you run the notebook within the GitHub repository, you need to run the following lines,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># that can skipped otherwise:</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># Remove GPU use</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span></code></pre></div>
+<h2 id="introduction">Introduction</h2>
+<h3 id="dataset">Dataset</h3>
+<p>We will use the TaFeng Dataset that is available on <a href="https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset">Kaggle</a>. You can load it automatically with Choice-Learn !</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_tafeng</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Short illustration of the dataset</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">tafeng_df</span> <span class="o">=</span> <span class="n">load_tafeng</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">tafeng_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>TRANSACTION_DT</th>
+      <th>CUSTOMER_ID</th>
+      <th>AGE_GROUP</th>
+      <th>PIN_CODE</th>
+      <th>PRODUCT_SUBCLASS</th>
+      <th>PRODUCT_ID</th>
+      <th>AMOUNT</th>
+      <th>ASSET</th>
+      <th>SALES_PRICE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>11/1/2000</td>
+      <td>1104905</td>
+      <td>45-49</td>
+      <td>115</td>
+      <td>110411</td>
+      <td>4710199010372</td>
+      <td>2</td>
+      <td>24</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>11/1/2000</td>
+      <td>418683</td>
+      <td>45-49</td>
+      <td>115</td>
+      <td>120107</td>
+      <td>4710857472535</td>
+      <td>1</td>
+      <td>48</td>
+      <td>46</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>11/1/2000</td>
+      <td>1057331</td>
+      <td>35-39</td>
+      <td>115</td>
+      <td>100407</td>
+      <td>4710043654103</td>
+      <td>2</td>
+      <td>142</td>
+      <td>166</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>11/1/2000</td>
+      <td>1849332</td>
+      <td>45-49</td>
+      <td>Others</td>
+      <td>120108</td>
+      <td>4710126092129</td>
+      <td>1</td>
+      <td>32</td>
+      <td>38</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>11/1/2000</td>
+      <td>1981995</td>
+      <td>50-54</td>
+      <td>115</td>
+      <td>100205</td>
+      <td>4710176021445</td>
+      <td>1</td>
+      <td>14</td>
+      <td>18</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3 id="choice-model-specification">Choice Model Specification</h3>
+<p>In this example we will use the sales_price and age_group features to estimate a discrete choice model in the form of a conditional MNL:</p>
+<p>for a customer $z$ and a product $i$, we define the utility function:</p>
+<p>
+<script type="math/tex; mode=display">U(i, z) = u_i + e_{dem(z)} \cdot p_i</script>
+</p>
+<p>with:
+- $u_i$ the base utility of product $i$
+- $p_i$ the price of product $i$
+- $e_{dem(z)}$ the price elasticity of customer $z$ depending of its age</p>
+<p>We decide to estimate three coefficients of price elasticity for customers &lt;=25 y.o, 26&lt;=.&lt;=55 y.o. and =&gt;56 y.o.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Let&#39;s reload the TaFeng dataset as a Choice Dataset</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">load_tafeng</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">preprocessing</span><span class="o">=</span><span class="s2">&quot;assort_example&quot;</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># The age categories are encoded as OneHot features:</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Age Categories Encoding for choices 0, 4 and 16:&quot;</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shared_features_by_choice</span><span class="p">[</span><span class="mi">0</span><span class="p">][[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">]])</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>WARNING:root:Shared Features Names were not provided, will not be able to
+                                    fit models needing them such as Conditional Logit.
+WARNING:root:Items Features Names were not provided, will not be able to
+                                fit models needing them such as Conditional Logit.
+
+
+Age Categories Encoding for choices 0, 4 and 16:
+[[0. 1. 0.]
+ [1. 0. 0.]
+ [0. 0. 1.]]
+</code></pre></div>
+<p>Let's define a custom model that would fit our formulation using Choice-Learn's ChoiceModel inheritance:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.models.base_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChoiceModel</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">TaFengMNL</span><span class="p">(</span><span class="n">ChoiceModel</span><span class="p">):</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom model for the TaFeng dataset.&quot;&quot;&quot;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate of our custom model.&quot;&quot;&quot;</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="c1"># Standard inheritance stuff</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="c1"># Directly initialize weights in _trainable_weights</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>            <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal_initializer</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">25</span><span class="p">))),</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>            <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal_initializer</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        <span class="p">]</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="nd">@property</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">trainable_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all the models trainable weights.&quot;&quot;&quot;</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    <span class="nd">@property</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">base_utilities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return itemwise utilities.&quot;&quot;&quot;</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    <span class="nd">@property</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">price_elasticities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the price elasticities.&quot;&quot;&quot;</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">compute_batch_utility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>                              <span class="n">shared_features_by_choice</span><span class="p">,</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>                              <span class="n">items_features_by_choice</span><span class="p">,</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>                              <span class="n">available_items_by_choice</span><span class="p">,</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>                              <span class="n">choices</span><span class="p">):</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Define how the model computes the utility of a product.</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="sd">        Parameters</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="sd">        ----------</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="sd">        shared_features_by_choice : tuple of np.ndarray (choices_features)</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a><span class="sd">            a batch of shared features</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="sd">            Shape must be (n_choices, n_shared_features)</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="sd">        items_features_by_choice : tuple of np.ndarray (choices_items_features)</span>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a><span class="sd">            a batch of items features</span>
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="sd">            Shape must be (n_choices, n_items_features)</span>
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a><span class="sd">        available_items_by_choice : np.ndarray</span>
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="sd">            A batch of items availabilities</span>
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a><span class="sd">            Shape must be (n_choices, n_items)</span>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="sd">        choices_batch : np.ndarray</span>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="sd">            Choices</span>
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="sd">            Shape must be (n_choices, )</span>
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a>
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="sd">        Return:</span>
+</span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="sd">        --------</span>
+</span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="sd">        np.ndarray</span>
+</span><span id="__span-4-59"><a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a><span class="sd">            Utility of each product for each choice.</span>
+</span><span id="__span-4-60"><a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a><span class="sd">            Shape must be (n_choices, n_items)</span>
+</span><span id="__span-4-61"><a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-4-62"><a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a>        <span class="c1"># Unused arguments</span>
+</span><span id="__span-4-63"><a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a>        <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">available_items_by_choice</span><span class="p">,</span> <span class="n">choices</span><span class="p">)</span>
+</span><span id="__span-4-64"><a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a>
+</span><span id="__span-4-65"><a id="__codelineno-4-65" name="__codelineno-4-65" href="#__codelineno-4-65"></a>        <span class="c1"># Get the right price elasticity coefficient according to the age cateogry</span>
+</span><span id="__span-4-66"><a id="__codelineno-4-66" name="__codelineno-4-66" href="#__codelineno-4-66"></a>        <span class="n">price_coeffs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">shared_features_by_choice</span><span class="p">,</span>
+</span><span id="__span-4-67"><a id="__codelineno-4-67" name="__codelineno-4-67" href="#__codelineno-4-67"></a>                                    <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">price_elasticities</span><span class="p">),</span>
+</span><span id="__span-4-68"><a id="__codelineno-4-68" name="__codelineno-4-68" href="#__codelineno-4-68"></a>                                    <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-4-69"><a id="__codelineno-4-69" name="__codelineno-4-69" href="#__codelineno-4-69"></a>        <span class="c1"># Compute the utility: u_i + p_i * c</span>
+</span><span id="__span-4-70"><a id="__codelineno-4-70" name="__codelineno-4-70" href="#__codelineno-4-70"></a>        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">items_features_by_choice</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">price_coeffs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_utilities</span>
+</span></code></pre></div>
+<h3 id="choice-model-estimation">Choice Model Estimation</h3>
+<p>We estimate the coefficients values using .fit:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">model</span> <span class="o">=</span> <span class="n">TaFengMNL</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;lbfgs&quot;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">lbfgs_tolerance</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Using L-BFGS optimizer, setting up .fit() function
+
+
+WARNING:root:L-BFGS Opimization finished:
+WARNING:root:---------------------------------------------------------------
+WARNING:root:Number of iterations: 225
+WARNING:root:Algorithm converged before reaching max iterations: True
+</code></pre></div>
+<p>We can observe estimated coefficients with the .weights argument:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model Negative Log-Likelihood: &quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model Weights:&quot;</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Base Utilities u_i:&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">trainable_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Price Elasticities:&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">trainable_weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Model Negative Log-Likelihood:  tf.Tensor(2.7657256, shape=(), dtype=float32)
+Model Weights:
+Base Utilities u_i: [[ 0.5068263   2.935736    1.998015    0.5470789   0.72602475  1.0055478
+  -0.7196758  -0.970541   -0.00946927 -3.042058    1.0770373   1.6368566
+  -3.6405432  -1.2479168   3.0117846   1.6831478   1.8547137  -1.2627332
+  -1.1671457  -0.08575154 -1.773998   -1.9642268  -1.7941352   1.5037025
+  -0.7460297 ]]
+Price Elasticities: [[-0.06286521 -0.05761966 -0.05427208]]
+</code></pre></div>
+<p>As a short analysis we can observe that the price elasticiy in negative as expected and the younger the population the more impacted by the price.\
+Our models looks good enough for a first and fast modelization.
+Now let's see how to compute an optimal assortment using our model.</p>
+<h2 id="assortment-optimization">Assortment Optimization</h2>
+<h3 id="preparing-the-data">Preparing the data</h3>
+<p>The first step is to compute the utility of each product. Here, let's consider that the last prices will also be the future prices of our products in our future assortment.\
+It can be easily adapted if theses prices were to be changed.\
+We can compute each age category utility using the <em>compute_batch_utility</em> method of our ChoiceModel:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">future_prices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">dataset</span><span class="o">.</span><span class="n">items_features_by_choice</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">age_category</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">predicted_utilities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_batch_utility</span><span class="p">(</span><span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">age_category</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>                                                  <span class="n">items_features_by_choice</span><span class="o">=</span><span class="n">future_prices</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>                                                  <span class="n">available_items_by_choice</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>                                                  <span class="n">choices</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>                                                  <span class="p">)</span>
+</span></code></pre></div>
+<p>We compute the ratio of each age category appearance in our dataset to obtain an average utility for each product.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">age_frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shared_features_by_choice</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">final_utilities</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">for</span> <span class="n">freq</span><span class="p">,</span> <span class="n">ut</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">age_frequencies</span><span class="p">,</span> <span class="n">predicted_utilities</span><span class="p">):</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">final_utilities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="n">ut</span><span class="p">)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">final_utilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">final_utilities</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated final utilities for each product:&quot;</span><span class="p">,</span> <span class="n">final_utilities</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Estimated final utilities for each product: [-0.24978125 -0.3917887  -0.7043624  -0.5408898  -0.4812412  -0.38806686
+ -0.6586153  -0.93256587 -0.72640586 -1.5850058  -1.3158809  -0.17763059
+ -1.6322378  -0.83469564 -0.49966928 -0.80931807 -1.0566555  -0.8396344
+ -0.8077719  -0.69473463 -0.99102306 -1.0163671  -1.0167683  -1.3830209
+ -0.4294889 ]
+</code></pre></div>
+<p>We need to define what quantity needs to be optimized by our assortment. A usual answer is to optimize the revenue or margin. In our case we do not have these values, so let's say that we want to obtain the assortment with 12 products that will generate the highest turnover.</p>
+<h3 id="choice-learns-assortmentoptimizer">Choice-Learn's AssortmentOptimizer</h3>
+<p>Choice-Learn integrates algorithms for assortment planning based on Gurobi or OR-Tools. You can choose which solver you want by specifying <code>solver="gurobi"</code> or <code>solver="or-tools"</code>.\
+Gurobi needs a license (free for Academics), however, it is usually faster than the open-source OR-Tools.\
+Let's see an example.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">solver</span> <span class="o">=</span> <span class="s2">&quot;gurobi&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># solver = &quot;or-tools&quot;</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.toolbox.assortment_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">MNLAssortmentOptimizer</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">opt</span> <span class="o">=</span> <span class="n">MNLAssortmentOptimizer</span><span class="p">(</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">utilities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">final_utilities</span><span class="p">),</span> <span class="c1"># Utilities need to be transformed with exponential function</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">itemwise_values</span><span class="o">=</span><span class="n">future_prices</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1"># Values to optimize for each item, here price that is used to compute turnover</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">assortment_size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># Size of the assortment we want</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">assortment</span><span class="p">,</span> <span class="n">opt_obj</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Our Optimal Assortment is:&quot;</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">assortment</span><span class="p">)</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With an estimated average revenue of:&quot;</span><span class="p">,</span> <span class="n">opt_obj</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Our Optimal Assortment is:
+[0. 1. 1. 1. 0. 0. 0. 1. 1. 1. 1. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 1.
+ 0.]
+With an estimated average revenue of: 51.57688285623652
+</code></pre></div>
+<h3 id="latent-class-assortment-optimizer">Latent Class Assortment Optimizer</h3>
+<p>This simplistic version is not optimal since it uses an averaged utility of each product over the population resulting in an approximative probability.\
+Choice-Learn also proposes an implementation of the Mixed-Integer Programming approach described in [1]. This version works for latent class models and fits well in our case with different populations.\
+The usage is similar with the object LatentClassAssortmentOptimizer.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.toolbox.assortment_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LatentClassAssortmentOptimizer</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">opt</span> <span class="o">=</span> <span class="n">LatentClassAssortmentOptimizer</span><span class="p">(</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">class_weights</span><span class="o">=</span><span class="n">age_frequencies</span><span class="p">,</span> <span class="c1"># Weights of each class</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="n">class_utilities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">predicted_utilities</span><span class="p">),</span> <span class="c1"># utilities in the shape (n_classes, n_items)</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="n">itemwise_values</span><span class="o">=</span><span class="n">future_prices</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1"># Values to optimize for each item, here price that is used to compute turnover</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="n">assortment_size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># Size of the assortment we want</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">assortment</span><span class="p">,</span> <span class="n">opt_obj</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Our Optimal Assortment is:&quot;</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">assortment</span><span class="p">)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With an estimated average revenue of:&quot;</span><span class="p">,</span> <span class="n">opt_obj</span><span class="p">)</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Totalling&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">assortment</span><span class="p">),</span> <span class="s2">&quot;items in the assortment, which is fine with our limit of 12.&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Our Optimal Assortment is:
+[0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 1.
+ 0.]
+With an estimated average revenue of: 35.79552031037327
+Totalling 12.0 items in the assortment, which is fine with our limit of 12.
+</code></pre></div>
+<p>With this version, our results are slightly more precise - however we used integer in the LP formulation that can lead to slower results with large number of items.</p>
+<h3 id="adding-capacity-constraints">Adding capacity constraints</h3>
+<p>It is possible to add some constraints. A recurrent case is that the assortment of product will be placed in store and we need to take into account the available space.</p>
+<p>For the example we will imaginary values for each item size and a maximum total size of the assortment of 35.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">assortment</span><span class="p">))</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The random items sizes are:&quot;</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Capacity of previous optimal assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sizes</span> <span class="o">*</span> <span class="n">assortment</span><span class="p">))</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Higher than our limit of 35!&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>The random items sizes are: [3 3 7 2 4 7 2 1 2 1 1 4 5 1 1 5 2 8 4 3 5 8 3 5 9]
+Capacity of previous optimal assortment: 43.0
+Higher than our limit of 35!
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">opt</span> <span class="o">=</span> <span class="n">LatentClassAssortmentOptimizer</span><span class="p">(</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">class_weights</span><span class="o">=</span><span class="n">age_frequencies</span><span class="p">,</span> <span class="c1"># Weights of each class</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">class_utilities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">predicted_utilities</span><span class="p">),</span> <span class="c1"># utilities in the shape (n_classes, n_items)</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="n">itemwise_values</span><span class="o">=</span><span class="n">future_prices</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1"># Values to optimize for each item, here price that is used to compute turnover</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">assortment_size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># Size of the assortment we want</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">opt</span><span class="o">.</span><span class="n">add_maximal_capacity_constraint</span><span class="p">(</span><span class="n">itemwise_capacities</span><span class="o">=</span><span class="n">sizes</span><span class="p">,</span> <span class="n">maximum_capacity</span><span class="o">=</span><span class="mi">35</span><span class="p">)</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">assortment</span><span class="p">,</span> <span class="n">opt_obj</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Our Optimal Assortment is:&quot;</span><span class="p">)</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">assortment</span><span class="p">)</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With an estimated average revenue of:&quot;</span><span class="p">,</span> <span class="n">opt_obj</span><span class="p">)</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Size of our assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">assortment</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)),</span> <span class="s2">&quot;which is fine with our limit of 12!&quot;</span><span class="p">)</span>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Capacity of our new assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sizes</span> <span class="o">*</span> <span class="n">assortment</span><span class="p">),</span> <span class="s2">&quot;which is below our limit of 35!&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Our Optimal Assortment is:
+[0. 1. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 1.
+ 0.]
+With an estimated average revenue of: 35.46667393198682
+Size of our assortment: 10 which is fine with our limit of 12!
+Capacity of our new assortment: 34.0 which is below our limit of 35!
+</code></pre></div>
+<p>The opposite constraint exists with .add_minimal_capacity_constraint() that adds a minimal value to be exceeded.</p>
+<h2 id="pricing-and-assortment-optimization">Pricing and Assortment Optimization</h2>
+<p>Since our model takes the price into consideration, it is possible to optimize both the assortment and the price of the products of the assortment at the same time !</p>
+<p>The optimization is slightly more complex. The idea is to define a discretization of the prices with the correspondign utilities and itemwise values.</p>
+<p>Let's take as an example a product $i$ whose utility function is $U(i) = u_i - p_i$ with $u_i$=1.5 and $p_i$ its price.\
+We decide that the price range we accept to sell $i$ at is [2.5, 3.5] and to discretize into 6 values.\
+If we have the cost $c_i=2.0$ we can use the margin $m_i = p_i -c_i$ as itemwise value otherwise we can take the revenue, $r_i=p_i$.</p>
+<center>
+
+| Price | Utility | Margin | Revenue |
+| --- | --- | --- | --- |
+| 2.5 | -1.0 | 0.5 | 2.5 |
+| 2.7 | -1.2 | 0.7 | 2.7 |
+| 2.9 | -1.4 | 0.9 | 2.9 |
+| 3.1 | -1.6 | 1.1 | 3.1 |
+| 3.3 | -1.8 | 1.3 | 3.3 |
+| 3.5 | -2.0 | 1.5 | 3.5 |
+
+</center>
+
+<p>The idea in the optimization is either not to choose the item because another item is more valuable or to choose at most one price that is optimal toward our objective.</p>
+<p>Coming back to our example:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Lets create a discretized grid of prices for each item</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">prices_grid</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="k">for</span> <span class="n">item_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">25</span><span class="p">):</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">min_price</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">items_features_by_choice</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">item_index</span><span class="p">])</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">max_price</span> <span class="o">=</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">items_features_by_choice</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">item_index</span><span class="p">])</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">prices_grid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_price</span><span class="p">,</span> <span class="n">max_price</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">prices_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">prices_grid</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="c1"># Computing the corresponding utilities</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="n">items_utilities</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="k">for</span> <span class="n">age_index</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    <span class="n">age_category</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">prices_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>    <span class="n">age_category</span><span class="p">[:,</span> <span class="n">age_index</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>    <span class="n">predicted_utilities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_batch_utility</span><span class="p">(</span><span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">age_category</span><span class="p">,</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>                                                  <span class="n">items_features_by_choice</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">prices_grid</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>                                                  <span class="n">available_items_by_choice</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>                                                  <span class="n">choices</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>                                                  <span class="p">)</span>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>    <span class="n">items_utilities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">predicted_utilities</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="n">item_utilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">items_utilities</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="nb">print</span><span class="p">(</span><span class="n">prices_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">item_utilities</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>(25, 10) (3, 25, 10)
+</code></pre></div>
+<p>We use another AssortmentOptimizer class:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.toolbox.assortment_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LatentClassPricingOptimizer</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">opt</span> <span class="o">=</span> <span class="n">LatentClassPricingOptimizer</span><span class="p">(</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="n">class_weights</span><span class="o">=</span><span class="n">age_frequencies</span><span class="p">,</span> <span class="c1"># Weights of each class</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    <span class="n">class_utilities</span><span class="o">=</span><span class="n">item_utilities</span><span class="p">,</span> <span class="c1"># utilities in the shape (n_classes, n_items)</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>    <span class="n">itemwise_values</span><span class="o">=</span><span class="n">prices_grid</span><span class="p">,</span> <span class="c1"># Values to optimize for each item, here price that is used to compute turnover</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>    <span class="n">assortment_size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># Size of the assortment we want</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="c1"># opt.add_maximal_capacity_constraint(itemwise_capacities=sizes, maximum_capacity=35)</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="n">assortment</span><span class="p">,</span> <span class="n">opt_obj</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Our Optimal Assortment is:&quot;</span><span class="p">)</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">assortment</span><span class="p">)</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With an estimated average revenue of:&quot;</span><span class="p">,</span> <span class="n">opt_obj</span><span class="p">)</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Size of our assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">assortment</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)),</span> <span class="s2">&quot;which is fine with our limit of 12!&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Our Optimal Assortment is:
+[ 0.         59.7        59.7        41.8        41.8        41.8
+  0.          0.          0.          0.         60.01111111 41.8
+  0.          0.         59.62222222 56.06666667 57.6         0.
+  0.         53.12222222  0.          0.          0.         56.7
+  0.        ]
+With an estimated average revenue of: 41.21468607531388
+Size of our assortment: 12 which is fine with our limit of 12!
+</code></pre></div>
+<p>We can first observe that the estimated average revenue is higher than the previous one with the chosen prices.\
+Let's look at the difference:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| Previous price&quot;</span><span class="p">,</span><span class="s2">&quot;|&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimized price |&quot;</span><span class="p">)</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------&quot;</span><span class="p">)</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">assortment</span><span class="p">)):</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    <span class="k">if</span> <span class="n">assortment</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;|     &quot;</span><span class="p">,</span> <span class="n">future_prices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;     |     &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">assortment</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;      |&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>| Previous price | Optimized price |
+------------------------------------
+|      72.0      |      59.7       |
+|      72.0      |      59.7       |
+|      38.0      |      41.8       |
+|      38.0      |      41.8       |
+|      38.0      |      41.8       |
+|      88.0      |      60.0       |
+|      38.0      |      41.8       |
+|      79.0      |      59.6       |
+|      72.0      |      56.1       |
+|      88.0      |      57.6       |
+|      35.0      |      53.1       |
+|      99.0      |      56.7       |
+</code></pre></div>
+<p>As previously, we can add capacity constraints:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">opt</span> <span class="o">=</span> <span class="n">LatentClassPricingOptimizer</span><span class="p">(</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    <span class="n">class_weights</span><span class="o">=</span><span class="n">age_frequencies</span><span class="p">,</span> <span class="c1"># Weights of each class</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    <span class="n">class_utilities</span><span class="o">=</span><span class="n">item_utilities</span><span class="p">,</span> <span class="c1"># utilities in the shape (n_classes, n_items)</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>    <span class="n">itemwise_values</span><span class="o">=</span><span class="n">prices_grid</span><span class="p">,</span> <span class="c1"># Values to optimize for each item, here price that is used to compute turnover</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="n">assortment_size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># Size of the assortment we want</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="n">opt</span><span class="o">.</span><span class="n">add_maximal_capacity_constraint</span><span class="p">(</span><span class="n">itemwise_capacities</span><span class="o">=</span><span class="n">sizes</span><span class="p">,</span> <span class="n">maximum_capacity</span><span class="o">=</span><span class="mi">35</span><span class="p">)</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="n">assortment</span><span class="p">,</span> <span class="n">opt_obj</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Our Optimal Assortment is:&quot;</span><span class="p">)</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">assortment</span><span class="p">)</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With an estimated average revenue of:&quot;</span><span class="p">,</span> <span class="n">opt_obj</span><span class="p">)</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Size of our assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">assortment</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)),</span> <span class="s2">&quot;which is fine with our limit of 12!&quot;</span><span class="p">)</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Capacity of our new assortment:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sizes</span> <span class="o">*</span> <span class="p">(</span><span class="n">assortment</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)),</span> <span class="s2">&quot;which is below our limit of 35!&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Our Optimal Assortment is:
+[ 0.         59.7        59.7        41.8         0.          0.
+  0.          0.         41.8         0.         60.01111111 41.8
+  0.          0.         59.62222222 56.06666667 57.6         0.
+  0.         53.12222222  0.          0.          0.         56.7
+  0.        ]
+With an estimated average revenue of: 41.164100003155916
+Size of our assortment: 11 which is fine with our limit of 12!
+Capacity of our new assortment: 35 which is below our limit of 35!
+</code></pre></div>
+<h2 id="ending-notes">Ending Notes</h2>
+<ul>
+<li>In this example, the outside option is automatically integrated in the AssortmentOptimizer and not computed through the model. If you compute the outside option utility and give it to AssortmentOptimizer you can set its attribute <em>outside_option_given</em> to True.</li>
+<li>The current AssortmentOptimzer uses <a href="https://www.gurobi.com/">Gurobi</a> for which you need a license (free for Academics) or <a href="https://developers.google.com/optimization?hl=fr">OR-Tools</a> that is OpenSource.</li>
+<li>If you want to add custom constraints you can use the base code of the AssortmentOptimizer and manually add your constraints. Future developments will add an easy interface to integrate such needs.</li>
+</ul>
+<h2 id="references">References</h2>
+<p>[1] Isabel Méndez-Díaz, Juan José Miranda-Bront, Gustavo Vulcano, Paula Zabala,
+A branch-and-cut algorithm for the latent-class logit assortment problem,
+Discrete Applied Mathematics,
+Volume 164, Part 1,
+2014,
+Pages 246-263,
+ISSN 0166-218X,
+https://doi.org/10.1016/j.dam.2012.03.003.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>

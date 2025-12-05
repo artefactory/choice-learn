@@ -1,0 +1,3219 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../models/simple_mnl/">
+      
+      
+        <link rel="next" href="../../models/nested_logit/">
+      
+      
+      <link rel="icon" href="../../../logo_choice_learn.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>Conditional Logit Usage - Choice-Learn</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.50c56a3b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../docs/.overrides/assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction-to-choice-learns-modelling" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Choice-Learn" class="md-header__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Choice-Learn
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Conditional Logit Usage
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 12a10 10 0 0 0 13 9.54 10 10 0 0 1 0-19.08A10 10 0 0 0 2 12Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3.55 19.09 1.41 1.41 1.8-1.79-1.42-1.42M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6c0-3.32-2.69-6-6-6m8 7h3v-2h-3m-2.76 7.71 1.8 1.79 1.41-1.41-1.79-1.8M20.45 5l-1.41-1.4-1.8 1.79 1.42 1.42M13 1h-2v3h2M6.76 5.39 4.96 3.6 3.55 5l1.79 1.81 1.42-1.42M1 13h3v-2H1m12 9h-2v3h2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Choice-Learn" class="md-nav__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    Choice-Learn
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HomePage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1_introductive_example/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introductive Example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2_data_handling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to choice modelling with the Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to model customization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    How-To Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data Handling
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Data Handling
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2_data_handling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/dataset_creation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Exhaustive example of ChoiceDataset creation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/features_byID_examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimize RAM usage with Features Storage, in-depth examples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket Data Handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Single Choices
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Single Choices
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to Choice Models - the SimpleMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Conditional Logit Usage
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit Usage
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-1-swissmetro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: SwissMetro
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example 1: SwissMetro">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-conditional-logit-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Conditional Logit model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional-logit-estimation-with-choice-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Logit Estimation with Choice-Learn
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-2-the-modecanada-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example #2: the ModeCanada Dataset
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example #2: the ModeCanada Dataset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#utility-formulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Utility formulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-formulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Formulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#faster-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Faster Specification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-with-other-implementations-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison with other implementations results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimate-utility-probabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimate Utility &amp; probabilities
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-gradient-descent-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Gradient Descent Optimizers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Building a custom choice model and handling hyper-parameters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/latent_class_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNLs Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/logistic_regression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    A reproductive example, the logistic regression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/models_finetuning/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Model Finetuning and general hyperparamters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SHOPPER model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Basket of purchases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Basket of purchases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction data handling, the TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AleaCarta model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox for choice modellers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox for choice modellers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../auxiliary_tools/assortment_example/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizing a product assortment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    References
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            References
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_choice_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_indexer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset Indexer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Features Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Available Open-Source Datasets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Available Open-Source Datasets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_tafeng/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TaFeng Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_expedia/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ICDM Expedia Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/references_bakery/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bakery Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/synthetic_dataset.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Badminton Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Choice Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Choice Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_baseline_models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Baseline Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SimpleMNL Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class BaseModel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Basket Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Basket Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The AleaCarta model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_basic_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_self_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Self Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Trip and TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_preprocessing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket preprocessing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/utils/references_permutation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permutation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/toolbox/references_assortment_optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Assortment Optimizer and Pricing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/tf_ops.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tensorflow Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/utils/metrics.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Explanations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-1-swissmetro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: SwissMetro
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example 1: SwissMetro">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-conditional-logit-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Conditional Logit model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional-logit-estimation-with-choice-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Logit Estimation with Choice-Learn
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-2-the-modecanada-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example #2: the ModeCanada Dataset
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example #2: the ModeCanada Dataset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#utility-formulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Utility formulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-formulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Formulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#faster-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Faster Specification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-with-other-implementations-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison with other implementations results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimate-utility-probabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimate Utility &amp; probabilities
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-gradient-descent-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Gradient Descent Optimizers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="introduction-to-choice-learns-modelling">Introduction to choice-learn's modelling</h1>
+<p><a href="https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install necessary requirements</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># If you run this notebook on Google Colab, or in standalone mode, you need to install the required packages.</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Uncomment the following lines:</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># !pip install choice-learn</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># If you run the notebook within the GitHub repository, you need to run the following lines, that can skipped otherwise:</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># Enabling eager execution sometimes decreases fitting time</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">enable_eager_execution</span><span class="p">()</span>
+</span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><a href="#example-1-swissmetro">Example 1: ConditionalLogit with Swissmetro</a><ul>
+<li><a href="#the-conditional-logit-model">A few words on c-MNL formulation</a></li>
+<li><a href="#conditional-logit-estimation-with-choice-learn">Instantiation and estimation with Choice-Learn</a></li>
+</ul>
+</li>
+<li><a href="#example-2-the-modecanada-dataset">Example 2: ConditionalLogit with ModeCanda</a><ul>
+<li><a href="#utility-formulation">Utility Formulation</a></li>
+<li><a href="#model-formulation">Model Specification</a></li>
+<li><a href="#faster-specification">Lighter method for specification</a></li>
+<li><a href="#comparison-with-other-implementations-results">Comparison with other implementations</a></li>
+<li><a href="#estimate-utility--probabilities">Get utility estimation and probabilities</a></li>
+<li><a href="#using-gradient-descent-optimizers">Using Gradient Descent Optimizers</a></li>
+</ul>
+</li>
+</ul>
+<p>For model customization and more explanation on ChoiceModel and the endpoints, you can go <a href="./custom_model.ipynb">here</a></p>
+<h2 id="example-1-swissmetro">Example 1: SwissMetro</h2>
+<p>The choice-learn package offers a high level API to conceive and estimate discrete choice models. Several models are ready to be used, you can check the list <a href="../../README.md">here</a>. If you want to create your own model or another one that is not in the list, the lower level API can help you. Check the notebook <a href="./4_model_customization.ipynb">here</a>.</p>
+<p>Let's begin this tutorial with the estimation of a Conditional Logit Model on the SwissMetro dataset[3].
+It follows the specifications described in <a href="https://github.com/timothyb0912/pylogit/blob/master/examples/notebooks/Main%20PyLogit%20Example.ipynb">PyLogit</a> and <a href="https://github.com/mncosta/biogeme_tutorial/blob/master/6.1-MultinomialLogitAndProbitModels/01-biogeme-basics.ipynb">Biogeme</a>.</p>
+<p>First, we download our data as a ChoiceDataset. See the <a href="./2_data_handling.ipynb">data management tutorial</a> first if needed.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_swissmetro</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">swiss_dataset</span> <span class="o">=</span> <span class="n">load_swissmetro</span><span class="p">(</span><span class="n">preprocessing</span><span class="o">=</span><span class="s2">&quot;tutorial&quot;</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">swiss_dataset</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</span></code></pre></div>
+<h3 id="the-conditional-logit-model">The Conditional Logit model</h3>
+<p>The conditional Logit [2] specifies a linear utility for each features of item $i$:
+<script type="math/tex; mode=display">
+U(i) = \sum_{features} a(i) * feature(i)
+</script>
+The probability to choose $i$ among the set of available alternatives $\mathcal{A}$ is then:</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbb{P}(i) = \frac{e^{U(i)}}{\sum_{j \in \mathcal{A}} e^{U(j)}}
+</script>
+</p>
+<p>With the SwissMetro dataset we are trying to predict a customer mean of transport among train, swissmetro and car from the features:
+- TT (transit time)
+- CO (cost)
+- HE (headway)
+- Survey (where the survey took place)
+- Luggage number
+- seats configuration in the swissmetro
+- first class or not</p>
+<p>An important step is to define the right utility function for the model to fit well the dataset. Let's take the following formulation defined in PyLogit:</p>
+<ul>
+<li>
+<p>$
+U(train) = \beta_{train}^{inter} + \beta^{tt}<em train="train">{train/sm} \cdot TT(train) + \beta^{co}</em> \cdot SV(train)$} \cdot CO(train) + \beta^{he}_{train} \cdot HE(train) + \beta^{survey</p>
+</li>
+<li>
+<p>$
+U(sm) = \beta_{sm}^{inter} + \beta^{tt}<em sm="sm">{train/sm} \cdot TT(sm) + \beta^{co}</em> \cdot FC(sm)$} \cdot CO(sm) + \beta^{he}_{sm} \cdot HE(sm) + \beta^{survey} \cdot SV(sm) + \beta^{seat} \cdot SEAT(sm) + \beta^{first_class</p>
+</li>
+<li>
+<p>$
+U(car) = \beta^{tt}<em car="car">{car} \cdot TT(car) + \beta^{co}</em>} \cdot CO(car) + \beta^{luggage==1} \cdot \mathbb{1<em Luggage_1="Luggage&gt;1">{Luggage==1} + \beta^{luggage&gt;1} \cdot \mathbb{1}</em>$</p>
+</li>
+</ul>
+<p>Note that we want to estimate:</p>
+<ul>
+<li>one $\beta^{tt}<em car="car">{train/sm}$ <strong>shared</strong> for train and sm items and one $\beta^{tt}</em>$ for the car item. Indeed, one can argue that customers have the same sensibility toward travel time for all public transport and a different one for private ones.</li>
+<li>one $\beta^{co}$ coefficient for <strong>each</strong> item.</li>
+<li>one $\beta^{inter}$ and $\beta^{he}$ for train and sm, and zeroed for the car alternative</li>
+<li>one $\beta^{survey}$, $\beta^{seat}$, $\beta^{first_class}$, $\beta^{luggage==1}$ and $\beta^{luggage&gt;1}$ shared or not by different items</li>
+</ul>
+<p>To build a model, we need to specify for each weight $\beta$:
+- the name of the feature it goes with:
+    - it must match the feature name in the ChoiceDataset
+    - "intercept" is the standardized name used for intercept, pay attention not to override it
+- items_indexes: the items concerned, as indexed in the ChoiceDataset
+- (optionally) a unique weight name</p>
+<blockquote>
+<p><strong>Attention</strong></p>
+<ul>
+<li><em>add_coefficients</em> is to be used to get one coefficient by given items_indexes\</li>
+<li><em>add_shared_coefficients</em> is to be used to get on coefficient that is used for utility of all given items_indexes</li>
+</ul>
+</blockquote>
+<p>Here is how to create a model following our defined utility functions:</p>
+<h3 id="conditional-logit-estimation-with-choice-learn">Conditional Logit Estimation with Choice-Learn</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConditionalLogit</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Initialization of the model</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">swiss_model</span> <span class="o">=</span> <span class="n">ConditionalLogit</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;lbfgs&quot;</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Intercept for train &amp; sm</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;intercept&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># beta_he for train &amp; sm</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;headway&quot;</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>                             <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_he&quot;</span><span class="p">)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># beta_co for all items</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;cost&quot;</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># beta first_class for train</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;regular_class&quot;</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># beta seats for train</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;seats&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="c1"># betas luggage for car</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;single_luggage_piece&quot;</span><span class="p">,</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>                             <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_luggage=1&quot;</span><span class="p">)</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;multiple_luggage_piece&quot;</span><span class="p">,</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>                             <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_luggage&gt;1&quot;</span><span class="p">)</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="c1"># beta TT only for car</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;travel_time&quot;</span><span class="p">,</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>                             <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_tt_car&quot;</span><span class="p">)</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="c1"># betas TT and HE shared by train and sm</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_shared_coefficient</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;travel_time&quot;</span><span class="p">,</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>                                   <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">add_shared_coefficient</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;train_survey&quot;</span><span class="p">,</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>                                   <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>                                   <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_survey&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Estimation of the model</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">history</span> <span class="o">=</span> <span class="n">swiss_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">swiss_dataset</span><span class="p">,</span> <span class="n">get_report</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Once the model is estimated, we can look at the weights with the .trainable_weights argument:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">trainable_weights</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&lt;tf.Variable &#39;beta_intercept:0&#39; shape=(1, 2) dtype=float32, numpy=array([[-1.2929296, -0.5025745]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_he:0&#39; shape=(1, 2) dtype=float32, numpy=array([[-0.31433573, -0.37731653]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_cost:0&#39; shape=(1, 3) dtype=float32, numpy=array([[-0.5617626 , -0.2816758 , -0.51384646]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_regular_class:0&#39; shape=(1, 1) dtype=float32, numpy=array([[0.5650171]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_seats:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.78244746]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_luggage=1:0&#39; shape=(1, 1) dtype=float32, numpy=array([[0.42275968]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_luggage&gt;1:0&#39; shape=(1, 1) dtype=float32, numpy=array([[1.4139789]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_tt_car:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.7229831]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_travel_time:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.69901365]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_survey:0&#39; shape=(1, 1) dtype=float32, numpy=array([[2.542475]], dtype=float32)&gt;]
+</code></pre></div>
+<p>We can easily acces the negative log likelihood value for the training dataset or another one using the .evaluate() method:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">len</span><span class="p">(</span><span class="n">swiss_dataset</span><span class="p">)</span> <span class="o">*</span> <span class="n">swiss_model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">swiss_dataset</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>&lt;tf.Tensor: shape=(), dtype=float32, numpy=5159.3047&gt;
+</code></pre></div>
+<p>If you set get_report to True in .fit, the model automatically creates a report for each of the coefficient, with its estimation, its standard deviation and more:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Let&#39;s add items for better readability</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;sm&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;sm&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;sm&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;sm&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;train &amp; sm&quot;</span><span class="p">,</span> <span class="s2">&quot;train &amp; sm&quot;</span><span class="p">]</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">report</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">swiss_model</span><span class="o">.</span><span class="n">report</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;item&quot;</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">swiss_model</span><span class="o">.</span><span class="n">report</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Coefficient Name</th>
+      <th>Coefficient Estimation</th>
+      <th>Std. Err</th>
+      <th>z_value</th>
+      <th>P(.&gt;z)</th>
+      <th>item</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>beta_intercept_0</td>
+      <td>-1.292930</td>
+      <td>0.145000</td>
+      <td>-8.916755</td>
+      <td>0.000000e+00</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>beta_intercept_1</td>
+      <td>-0.502575</td>
+      <td>0.109712</td>
+      <td>-4.580845</td>
+      <td>4.649162e-06</td>
+      <td>sm</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>beta_he_0</td>
+      <td>-0.314336</td>
+      <td>0.064734</td>
+      <td>-4.855812</td>
+      <td>1.192093e-06</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>beta_he_1</td>
+      <td>-0.377317</td>
+      <td>0.191370</td>
+      <td>-1.971662</td>
+      <td>4.864824e-02</td>
+      <td>sm</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>beta_cost_0</td>
+      <td>-0.561763</td>
+      <td>0.094500</td>
+      <td>-5.944569</td>
+      <td>0.000000e+00</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>beta_cost_1</td>
+      <td>-0.281676</td>
+      <td>0.042252</td>
+      <td>-6.666523</td>
+      <td>0.000000e+00</td>
+      <td>sm</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>beta_cost_2</td>
+      <td>-0.513846</td>
+      <td>0.101592</td>
+      <td>-5.057931</td>
+      <td>4.768372e-07</td>
+      <td>car</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>beta_regular_class</td>
+      <td>0.565017</td>
+      <td>0.079958</td>
+      <td>7.066461</td>
+      <td>0.000000e+00</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>beta_seats</td>
+      <td>-0.782447</td>
+      <td>0.085864</td>
+      <td>-9.112632</td>
+      <td>0.000000e+00</td>
+      <td>sm</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>beta_luggage=1</td>
+      <td>0.422760</td>
+      <td>0.063327</td>
+      <td>6.675845</td>
+      <td>0.000000e+00</td>
+      <td>car</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>beta_luggage&gt;1</td>
+      <td>1.413979</td>
+      <td>0.190378</td>
+      <td>7.427222</td>
+      <td>0.000000e+00</td>
+      <td>car</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>beta_tt_car</td>
+      <td>-0.722983</td>
+      <td>0.044959</td>
+      <td>-16.080963</td>
+      <td>0.000000e+00</td>
+      <td>car</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>beta_travel_time</td>
+      <td>-0.699014</td>
+      <td>0.038635</td>
+      <td>-18.092785</td>
+      <td>0.000000e+00</td>
+      <td>train &amp; sm</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>beta_survey</td>
+      <td>2.542475</td>
+      <td>0.098162</td>
+      <td>25.900934</td>
+      <td>0.000000e+00</td>
+      <td>train &amp; sm</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>We find the same results (estimation of parameters and negative log-likelihood) as the PyLogit package.
+One can easily interpret the coefficient. For example $\beta_{cost}$ represent the average price elasticity of the customers. First, it's negative meaning that the most expensive it is the less likely the alternative will be chose, second we can observe that the elasticity is smaller for the SwissMetro. It is not suprising for a "premium" product, meaning that people choosing this alternative agreed to pay more for comfort for example and are less regarding on the price.</p>
+<p>We can also observe that $\beta_{luggage&gt;1} &gt; \beta_{luggage=1} &gt;  \beta_{luggage=0} = 0$ meaning that customers with luggae are more likely to use their car for transport, and it is event further the case if they have more than one piece of luggage.</p>
+<h2 id="example-2-the-modecanada-dataset">Example #2: the ModeCanada Dataset</h2>
+<h3 id="utility-formulation">Utility formulation</h3>
+<p>Let's reproduce a common example from <a href="https://gsbdbi.github.io/torch-choice/conditional_logit_model_mode_canada/">Torch-Choice</a> on the ModeCanada [1] dataset:
+<script type="math/tex; mode=display">
+U(i, c) = \beta^{inter}_i + \beta^{price} \cdot price(i, c) + \beta^{freq} \cdot freq(i, c) + \beta^{ovt} \cdot ovt(i, c) + \beta^{income}_i \cdot income(c) + \beta^{ivt}_i \cdot ivt(i, c) + \epsilon(i, c)
+</script>
+</p>
+<p>A description of the dataset and the features can be found in [1]. We want to predict the future mean of transport from [train, air, bus, car] using frequence, price, in-vehicule transport time (ivt) and out-of-vehicule transport time (ovt).</p>
+<h3 id="model-formulation">Model Formulation</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># If you want to check what&#39;s in the dataset:</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_modecanada</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">transport_df</span> <span class="o">=</span> <span class="n">load_modecanada</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">transport_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Unnamed: 0</th>
+      <th>case</th>
+      <th>alt</th>
+      <th>choice</th>
+      <th>dist</th>
+      <th>cost</th>
+      <th>ivt</th>
+      <th>ovt</th>
+      <th>freq</th>
+      <th>income</th>
+      <th>urban</th>
+      <th>noalt</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>1</td>
+      <td>train</td>
+      <td>0</td>
+      <td>83</td>
+      <td>28.25</td>
+      <td>50</td>
+      <td>66</td>
+      <td>4</td>
+      <td>45.0</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>1</td>
+      <td>car</td>
+      <td>1</td>
+      <td>83</td>
+      <td>15.77</td>
+      <td>61</td>
+      <td>0</td>
+      <td>0</td>
+      <td>45.0</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>2</td>
+      <td>train</td>
+      <td>0</td>
+      <td>83</td>
+      <td>28.25</td>
+      <td>50</td>
+      <td>66</td>
+      <td>4</td>
+      <td>25.0</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>2</td>
+      <td>car</td>
+      <td>1</td>
+      <td>83</td>
+      <td>15.77</td>
+      <td>61</td>
+      <td>0</td>
+      <td>0</td>
+      <td>25.0</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>3</td>
+      <td>train</td>
+      <td>0</td>
+      <td>83</td>
+      <td>28.25</td>
+      <td>50</td>
+      <td>66</td>
+      <td>4</td>
+      <td>70.0</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>We want to estimate:</p>
+<ul>
+<li>one $\beta^{price}$, $\beta^{freq}$ and $\beta^{ovt}$ coefficient. They are <strong>shared</strong> by all items.</li>
+<li>one $\beta^{ivt}$ coefficient for <strong>each</strong> item.</li>
+<li>one $\beta^{inter}$ and $\beta^{income}$ coefficient for <strong>each</strong> item, with <strong>additional constraint</strong> to be 0 for the first item (air).</li>
+</ul>
+<p>One notes that it makes sense to include an intercept $\beta^{inter}$ for each item since $ivt(i, c)$ and $income(c)$ depends on each choice $c$.</p>
+<p>Additionally to previous example we manually specify the weights names:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Loading the ChoiceDataset</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">canada_dataset</span> <span class="o">=</span> <span class="n">load_modecanada</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">preprocessing</span><span class="o">=</span><span class="s2">&quot;tutorial&quot;</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">canada_dataset</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>%=====================================================================%
+%%% Summary of the dataset:
+%=====================================================================%
+Number of items: 4
+Number of choices: 2779
+%=====================================================================%
+ Shared Features by Choice:
+ 1 shared features
+ with names: ([&#39;income&#39;],)
+
+
+ Items Features by Choice:
+4 items features 
+ with names: ([&#39;cost&#39;, &#39;freq&#39;, &#39;ovt&#39;, &#39;ivt&#39;],)
+%=====================================================================%
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConditionalLogit</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1"># Initialization of the model</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">model</span> <span class="o">=</span> <span class="n">ConditionalLogit</span><span class="p">()</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="c1"># Creation of the different weights:</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1"># shared_coefficient add one coefficient that is used for all items specified in the items_indexes:</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="c1"># Here, cost, freq and ovt coefficients are shared between all items</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="n">model</span><span class="o">.</span><span class="n">add_shared_coefficient</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;cost&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="c1"># You can specify you own coefficient name</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="n">model</span><span class="o">.</span><span class="n">add_shared_coefficient</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;freq&quot;</span><span class="p">,</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>                             <span class="n">coefficient_name</span><span class="o">=</span><span class="s2">&quot;beta_frequence&quot;</span><span class="p">,</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>                             <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="n">model</span><span class="o">.</span><span class="n">add_shared_coefficient</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;ovt&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="c1"># ivt is added for each item:</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="n">model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;ivt&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="c1"># add_coefficients adds one coefficient for each specified item_index</span>
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="c1"># intercept, and income are added for each item except the first one that needs to be zeroed</span>
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="n">model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;intercept&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="n">model</span><span class="o">.</span><span class="n">add_coefficients</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="s2">&quot;income&quot;</span><span class="p">,</span> <span class="n">items_indexes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">,</span> <span class="n">get_report</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">model</span><span class="o">.</span><span class="n">trainable_weights</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&lt;tf.Variable &#39;beta_cost:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.03333882]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_frequence:0&#39; shape=(1, 1) dtype=float32, numpy=array([[0.09252929]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_ovt:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.04300351]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_ivt:0&#39; shape=(1, 4) dtype=float32, numpy=
+ array([[ 0.05950943, -0.00678369, -0.00646029, -0.00145037]],
+       dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_intercept:0&#39; shape=(1, 3) dtype=float32, numpy=array([[0.6983663, 1.8440988, 3.2741835]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;beta_income:0&#39; shape=(1, 3) dtype=float32, numpy=array([[-0.08908683, -0.02799302, -0.03814651]], dtype=float32)&gt;]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The average neg-loglikelihood is:&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The total neg-loglikelihood is:&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">))</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>The average neg-loglikelihood is: 0.67447394
+The total neg-loglikelihood is: 1874.3630829453468
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">model</span><span class="o">.</span><span class="n">report</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Coefficient Name</th>
+      <th>Coefficient Estimation</th>
+      <th>Std. Err</th>
+      <th>z_value</th>
+      <th>P(.&gt;z)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>beta_cost</td>
+      <td>-0.033339</td>
+      <td>0.007095</td>
+      <td>-4.699046</td>
+      <td>2.622604e-06</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>beta_frequence</td>
+      <td>0.092529</td>
+      <td>0.005097</td>
+      <td>18.151926</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>beta_ovt</td>
+      <td>-0.043004</td>
+      <td>0.003225</td>
+      <td>-13.335685</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>beta_ivt_0</td>
+      <td>0.059509</td>
+      <td>0.010073</td>
+      <td>5.908032</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>beta_ivt_1</td>
+      <td>-0.006784</td>
+      <td>0.004433</td>
+      <td>-1.530138</td>
+      <td>1.259825e-01</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>beta_ivt_2</td>
+      <td>-0.006460</td>
+      <td>0.001898</td>
+      <td>-3.403067</td>
+      <td>6.663799e-04</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>beta_ivt_3</td>
+      <td>-0.001450</td>
+      <td>0.001187</td>
+      <td>-1.221395</td>
+      <td>2.219366e-01</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>beta_intercept_0</td>
+      <td>0.698366</td>
+      <td>1.280191</td>
+      <td>0.545517</td>
+      <td>5.853977e-01</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>beta_intercept_1</td>
+      <td>1.844099</td>
+      <td>0.708427</td>
+      <td>2.603088</td>
+      <td>9.238839e-03</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>beta_intercept_2</td>
+      <td>3.274184</td>
+      <td>0.624342</td>
+      <td>5.244213</td>
+      <td>1.192093e-07</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>beta_income_0</td>
+      <td>-0.089087</td>
+      <td>0.018347</td>
+      <td>-4.855648</td>
+      <td>1.192093e-06</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>beta_income_1</td>
+      <td>-0.027993</td>
+      <td>0.003872</td>
+      <td>-7.228693</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>beta_income_2</td>
+      <td>-0.038147</td>
+      <td>0.004083</td>
+      <td>-9.342735</td>
+      <td>0.000000e+00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3 id="faster-specification">Faster Specification</h3>
+<p>A faster specification can be done using a dictionnary. It follows torch-choice method to create conditional logit models.
+The parameters dict needs to be as follows:
+- The key is the feature name
+- The value is the mode. Currently three modes are available:
+    - constant: the learned coefficient is shared by all items
+    - item: one coefficient by item is estimated, the value for the item at index 0 is set to 0
+    - item-full: one coefficient by item is estimated</p>
+<p>In order to create the same model for the ModeCanada dataset, it looks as follows:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Instantiation with the coefficients dictionnary</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">coefficients</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;income&quot;</span><span class="p">:</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a> <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a> <span class="s2">&quot;freq&quot;</span><span class="p">:</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a> <span class="s2">&quot;ovt&quot;</span><span class="p">:</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a> <span class="s2">&quot;ivt&quot;</span><span class="p">:</span> <span class="s2">&quot;item-full&quot;</span><span class="p">,</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a> <span class="s2">&quot;intercept&quot;</span><span class="p">:</span> <span class="s2">&quot;item&quot;</span><span class="p">}</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="c1"># Instantiation of the model</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="n">cmnl</span> <span class="o">=</span> <span class="n">ConditionalLogit</span><span class="p">(</span><span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;lbfgs&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">history</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">cmnl</span><span class="o">.</span><span class="n">trainable_weights</span><span class="p">)</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">cmnl</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&lt;tf.Variable &#39;income_w_0:0&#39; shape=(1, 3) dtype=float32, numpy=array([[-0.08908679, -0.02799301, -0.0381465 ]], dtype=float32)&gt;, &lt;tf.Variable &#39;cost_w_1:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.03333884]], dtype=float32)&gt;, &lt;tf.Variable &#39;freq_w_2:0&#39; shape=(1, 1) dtype=float32, numpy=array([[0.09252931]], dtype=float32)&gt;, &lt;tf.Variable &#39;ovt_w_3:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.04300352]], dtype=float32)&gt;, &lt;tf.Variable &#39;ivt_w_4:0&#39; shape=(1, 4) dtype=float32, numpy=
+array([[ 0.05950936, -0.00678372, -0.0064603 , -0.00145037]],
+      dtype=float32)&gt;, &lt;tf.Variable &#39;intercept_w_5:0&#39; shape=(1, 3) dtype=float32, numpy=array([[0.69836473, 1.8440932 , 3.2741785 ]], dtype=float32)&gt;]
+0.67447394
+</code></pre></div>
+<h3 id="comparison-with-other-implementations-results">Comparison with other implementations results</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="c1"># Here are the values obtained in the references:</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">gt_weights</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.0890796</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0279925</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.038146</span><span class="p">]]),</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.0333421</span><span class="p">]]),</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">0.0925304</span><span class="p">]]),</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.0430032</span><span class="p">]]),</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">0.0595089</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00678188</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00645982</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00145029</span><span class="p">]]),</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">0.697311</span><span class="p">,</span> <span class="mf">1.8437</span><span class="p">,</span> <span class="mf">3.27381</span><span class="p">]]),</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="p">]</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="n">gt_model</span> <span class="o">=</span> <span class="n">ConditionalLogit</span><span class="p">(</span><span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">)</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="n">gt_model</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="n">canada_dataset</span>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="c1"># Here we estimate the negative log-likelihood with these coefficients (also, we obtain same value as in those papers):</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="n">gt_model</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="n">gt_weights</span>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&#39;Ground Truth&#39; Negative LogLikelihood:&quot;</span><span class="p">,</span> <span class="n">gt_model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">))</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Using L-BFGS optimizer, setting up .fit() function
+&#39;Ground Truth&#39; Negative LogLikelihood: tf.Tensor(1874.3633, shape=(), dtype=float32)
+</code></pre></div>
+<h3 id="estimate-utility-probabilities">Estimate Utility &amp; probabilities</h3>
+<p>In order to estimate the utilities, use the .predict_utility() method. In order to estimate the probabilities, use the .predict_probas() method.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Utilities of each item for the first 5 sessions:&quot;</span><span class="p">,</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">compute_batch_utility</span><span class="p">(</span><span class="o">*</span><span class="n">canada_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[:</span><span class="mi">5</span><span class="p">]))</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Utilities of each item for the first 5 sessions: tf.Tensor(
+[[ -4.250798   -8.238913   -3.4962516  -3.5083752]
+ [ -4.250798  -10.466084   -4.196077   -4.4620376]
+ [ -4.250798   -7.348045   -3.2163215  -3.1269102]
+ [ -4.250798  -10.466084   -4.196077   -4.4620376]
+ [ -4.250798  -10.466084   -4.196077   -4.4620376]], shape=(5, 4), dtype=float32)
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Purchase probability of each item for the first 5 sessions:&quot;</span><span class="p">,</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">predict_probas</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)[:</span><span class="mi">5</span><span class="p">])</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Purchase probability of each item for the first 5 sessions: tf.Tensor(
+[[0.1906133  0.00353295 0.40536723 0.40048242]
+ [0.348695   0.00069692 0.3683078  0.2822966 ]
+ [0.14418297 0.00651324 0.40567806 0.44362125]
+ [0.348695   0.00069692 0.3683078  0.2822966 ]
+ [0.348695   0.00069692 0.3683078  0.2822966 ]], shape=(5, 4), dtype=float32)
+</code></pre></div>
+<h3 id="using-gradient-descent-optimizers">Using Gradient Descent Optimizers</h3>
+<p>For very large datasets that do not fit entirely in the memory, we have to work with data batches. In this case, the LBFGS method cannot be used, because of the large memory usage of the algorithm. In those cases, we will prefer stochastic gradient descent optimizers.</p>
+<p>In this case, it is possible to obtain the same coefficients estimation, also it is a little tricky to get it quickly. We need to adjust the learning rate over time for the optimization not to be too slow.
+L-BFGS is more efficient for small dataset - Gradient Descent for large ones !</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">cmnl</span> <span class="o">=</span> <span class="n">ConditionalLogit</span><span class="p">(</span><span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">history</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span> <span class="o">/</span> <span class="mi">5</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">4000</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">history2</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span>  <span class="o">/</span> <span class="mi">10</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">20000</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">history3</span> <span class="o">=</span> <span class="n">cmnl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Epoch 1999 Train Loss 0.6801: 100%|██████████| 2000/2000 [00:11&lt;00:00, 176.83it/s]
+Epoch 3999 Train Loss 0.6776: 100%|██████████| 4000/4000 [00:20&lt;00:00, 198.77it/s]
+Epoch 19999 Train Loss 0.6767: 100%|██████████| 20000/20000 [01:38&lt;00:00, 202.55it/s]
+</code></pre></div>
+<p>It can be useful to look at the loss (negative loglikelihood) over time to see how the estimation goes:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">])</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;First part of the gradient descent.&quot;</span><span class="p">)</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history2</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">history3</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">])</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Second and third part of the gradient descent.&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Text(0.5, 1.0, &#39;Second and third part of the gradient descent.&#39;)
+</code></pre></div>
+<p><img alt="png" src="output_43_1.png" /></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">trainable_weights</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&lt;tf.Variable &#39;income_w_0:0&#39; shape=(1, 3) dtype=float32, numpy=array([[-0.08402919, -0.02359896, -0.03233599]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;cost_w_1:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.05140902]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;freq_w_2:0&#39; shape=(1, 1) dtype=float32, numpy=array([[0.09645309]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;ovt_w_3:0&#39; shape=(1, 1) dtype=float32, numpy=array([[-0.04099115]], dtype=float32)&gt;,
+ &lt;tf.Variable &#39;ivt_w_4:0&#39; shape=(1, 4) dtype=float32, numpy=
+ array([[ 0.05871323, -0.00726116, -0.00368665, -0.00105638]],
+       dtype=float32)&gt;,
+ &lt;tf.Variable &#39;intercept_w_5:0&#39; shape=(1, 3) dtype=float32, numpy=array([[-1.687437  , -0.39638832,  1.1344599 ]], dtype=float32)&gt;]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">cmnl</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">canada_dataset</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>&lt;tf.Tensor: shape=(), dtype=float32, numpy=0.67665595&gt;
+</code></pre></div>
+<h3 id="references">References</h3>
+<p>[1] ModeCanada dataset in <em>Application and interpretation of nested logit models of intercity mode choice</em>, Christophier, V. F.; Koppelman, S. (1993)\
+[2] Conditional MultinomialLogit, Train, K.; McFadden, D.; Ben-Akiva, M. (1987)\
+[3] Siwssmetro dataset in <em>The acceptance of modal innovation: The case of Swissmetro</em>, Bierlaire, M.; Axhausen, K.; Abay, G (2001)\</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>
