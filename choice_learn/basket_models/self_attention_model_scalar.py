@@ -251,7 +251,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         Applying a mask to ignore padding items. Also applied a mask on
         the diagonal to avoid attending to the same item, if activated
         """
-        batch_size = tf.shape(basket_batch)[0]
+        # batch_size = tf.shape(basket_batch)[0]
         mask = tf.not_equal(
             basket_batch, self.n_items
         )  # shape: (batch_size, L), True si pas padding
@@ -261,12 +261,12 @@ class SelfAttentionModelScalar(BaseBasketModel):
 
         else:
             # Masque de la diagonale, désactivé pour l'instant
-            diag_mask = tf.eye(tf.shape(basket_batch)[1], batch_shape=[batch_size], dtype=tf.bool)
-            scaled_scores = tf.where(
-                diag_mask,
-                tf.constant(-np.inf, dtype=scaled_scores.dtype),
-                scaled_scores,
-            )
+            # diag_mask = tf.eye(tf.shape(basket_batch)[1], batch_shape=[batch_size], dtype=tf.bool)
+            # scaled_scores = tf.where(
+            #    diag_mask,
+            #    tf.constant(-np.inf, dtype=scaled_scores.dtype),
+            #    scaled_scores,
+            # )
 
             # Masque des padding items
             mask_col = tf.expand_dims(mask, axis=1)  # (batch_size, 1, L)
@@ -337,7 +337,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
             tf.reduce_sum(masked_attention_output, axis=1, keepdims=True),
             num_items_by_basket[:, tf.newaxis, :],
         )
-        basket_embedding = tf.squeeze(basket_embedding, axis=1)  # Shape: (batch_size,)
+        basket_embedding = tf.squeeze(basket_embedding, axis=1)  # Shape: (batch_size,d)
 
         return basket_embedding, attention_weights
 
@@ -353,7 +353,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         item_batch: or tf.Tensor
             Batch of the purchased items ID (integers) for which to compute the distance from their
             basket.
-            Shape must be (batch_size,)
+            Shape must be (batch_size,None)
             (positive and negative samples concatenated together)
         basket_embedding: tf.Tensor
             Batch of context embeddings for each purchased item
@@ -365,11 +365,11 @@ class SelfAttentionModelScalar(BaseBasketModel):
             Distance of all the items in item_batch from their ground truth embedding (X)
             Shape must be (batch_size,)
         """
-        x_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, d)
+        x_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, None, d)
 
         return tf.reduce_sum(
             tf.expand_dims(basket_embedding, axis=1) * x_item_target, axis=-1
-        )  # Shape: (batch_size,)
+        )  # Shape: (batch_size, None)
 
     def compute_batch_long_utility(
         self,
@@ -532,7 +532,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         ----------
         item_batch: np.ndarray or tf.Tensor
             Batch of the purchased items ID (integers) for which to compute the utility
-            Shape must be (batch_size,)
+            Shape must be (batch_size,None)
             (positive and negative samples concatenated together)
         basket_batch: np.ndarray
             Batch of baskets (ID of items already in the baskets) (arrays) for each purchased item
@@ -543,17 +543,19 @@ class SelfAttentionModelScalar(BaseBasketModel):
         """
         store_batch = tf.cast(store_batch, dtype=tf.int32)
         price_batch = tf.cast(price_batch, dtype=tf.float32)
-        x_item = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, L, d)
+        x_item = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, None, d)
 
         if self.store_effects:
             theta_store = tf.gather(self.theta, indices=store_batch)
             # Compute the dot product along the last dimension
             store_preferences = tf.einsum("kj,klj->kl", theta_store, x_item)
         else:
-            store_preferences = tf.zeros_like(item_batch, dtype=tf.float32)
+            store_preferences = tf.zeros_like(
+                item_batch, dtype=tf.float32
+            )  # Shape: (batch_size,None)
 
         if self.item_intercept:
-            item_intercept = tf.gather(self.alpha, indices=item_batch)
+            item_intercept = tf.gather(self.alpha, indices=item_batch)  # Shape: (batch_size,None)
         else:
             item_intercept = tf.zeros_like(store_preferences)
         if self.price_effects:
@@ -581,7 +583,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
                 price_effects,
             ],
             axis=0,
-        )  # Shape: (batch_size,)
+        )  # Shape: (batch_size,None)
 
     # @tf.function  # Graph mode
     def compute_batch_loss(
@@ -670,7 +672,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         basket_batch = basket_batch_ragged.to_tensor(self.n_items)
         augmented_price_batch = tf.gather(
             params=price_batch, indices=augmented_item_batch, batch_dims=1
-        )
+        )  # Shape: (batch_size, 1 + n_negative_samples)
         all_utilities = self.compute_batch_utility(
             item_batch=augmented_item_batch,
             basket_batch=basket_batch,
