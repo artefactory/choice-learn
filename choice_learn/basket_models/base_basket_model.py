@@ -820,15 +820,9 @@ class BaseBasketModel:
 
                 if verbose > 1:
                     if metrics is not None:
-                        print("Validation Metrics:", list(val_loss.values())[0].numpy())
-                        desc += ", Val Metrics " + ", ".join(
-                            str(np.round(float(v), 4))
-                            for v in val_loss
-                            if isinstance(v, (int, float, np.floating))
-                        )
-                        history["val_metrics"] = history.get("val_metrics", []) + [
-                            list(val_loss.values())[0]
-                        ]
+                        print("Validation Metrics:", val_loss.numpy())
+                        desc += f", Val Metrics {np.round(float(val_loss.numpy()), 4)}"
+                        history["val_metrics"] = history.get("val_metrics", []) + [val_loss.numpy()]
                     else:
                         print("Test Negative-LogLikelihood:", val_loss.numpy())
                         desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
