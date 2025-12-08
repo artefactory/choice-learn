@@ -36,6 +36,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         price_effects: bool = False,
         store_effects: bool = False,
         epsilon_price: float = 1e-4,
+        value_matrix: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the model with hyperparameters.
@@ -98,6 +99,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
         self.price_effects = price_effects
         self.store_effects = store_effects
         self.epsilon_price = epsilon_price
+        self.value_matrix = value_matrix
         super().__init__(
             optimizer=optimizer,
             callbacks=callbacks,
@@ -208,6 +210,12 @@ class SelfAttentionModelScalar(BaseBasketModel):
             trainable=True,
             name="Wk",
         )
+        if self.value_matrix:
+            self.Wv = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.01, seed=42)(shape=(self.d, self.d)),
+                trainable=True,
+                name="Wv",
+            )
 
         self.instantiated = True
 
@@ -221,6 +229,8 @@ class SelfAttentionModelScalar(BaseBasketModel):
                 List of trainable weights (X, V, U, Wq, Wk).
         """
         weights = [self.X, self.V, self.U, self.Wq, self.Wk]
+        if self.value_matrix:
+            weights.extend([self.Wv])
         if self.item_intercept:
             weights.extend([self.alpha])
         if self.price_effects:
@@ -260,7 +270,7 @@ class SelfAttentionModelScalar(BaseBasketModel):
             attention_weights = tf.ones_like(scaled_scores)  # Shape: (batch_size, L, 1)
 
         else:
-            # Masque de la diagonale, désactivé pour l'instant
+            # Diagonal mask to avoid attending to the same item
             # diag_mask = tf.eye(tf.shape(basket_batch)[1], batch_shape=[batch_size], dtype=tf.bool)
             # scaled_scores = tf.where(
             #    diag_mask,
@@ -323,7 +333,13 @@ class SelfAttentionModelScalar(BaseBasketModel):
             basket_batch, scaled_scores
         )  # Shape: (batch_size, L, L)
 
-        attention_output = tf.matmul(attention_weights, x_basket)  # Shape: (batch_size, L, d)
+        if self.value_matrix:
+            value_matrix = tf.nn.relu(tf.matmul(x_basket, self.Wv))  # Shape: (batch_size, L, d)
+            attention_output = tf.matmul(
+                attention_weights, value_matrix
+            )  # Shape: (batch_size, L, d)
+        else:
+            attention_output = tf.matmul(attention_weights, x_basket)  # Shape: (batch_size, L, d)
 
         mask = tf.not_equal(basket_batch, self.n_items)
         mask_float = tf.cast(mask, dtype=tf.float32)
