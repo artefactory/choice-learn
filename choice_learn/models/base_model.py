@@ -346,6 +346,9 @@ class ChoiceModel:
                         inner_range.set_description(
                             f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
+                    if self.stop_training:
+                        print("Training stopped with early stopping taking effect")
+                        break
 
             # In this case we do not need to batch the sample_weights
             else:
@@ -431,7 +434,7 @@ class ChoiceModel:
                 if verbose > 1:
                     print("Test Negative-LogLikelihood:", test_loss.numpy())
                     desc += f", Test Loss {np.round(test_loss.numpy(), 4)}"
-                losses_history["test_loss"] = losses_history.get("test_loss", []) + [
+                losses_history["val_loss"] = losses_history.get("val_loss", []) + [
                     test_loss.numpy()
                 ]
                 train_logs = {**train_logs, **val_logs}
@@ -439,7 +442,7 @@ class ChoiceModel:
             temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
             self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
             if self.stop_training:
-                print("Early Stopping taking effect")
+                print("Training stopped with early stopping taking effect")
                 break
             t_range.set_description(desc)
             t_range.refresh()
