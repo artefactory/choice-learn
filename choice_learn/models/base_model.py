@@ -385,6 +385,9 @@ class ChoiceModel:
                         inner_range.set_description(
                             f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
+                    if self.stop_training:
+                        print("Training stopped with early stopping taking effect")
+                        break
 
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
