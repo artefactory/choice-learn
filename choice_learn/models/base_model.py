@@ -265,7 +265,7 @@ class ChoiceModel:
             Input data in the form of a ChoiceDataset
         sample_weight : np.ndarray, optional
             Sample weight to apply, by default None
-        val_dataset : ChoiceDataset, optional
+        val_dataset : ChoiceDataset or (ChoiceDataset, samples_weight), optional
             Test ChoiceDataset to evaluate performances on test at each epoch, by default None
         verbose : int, optional
             print level, for debugging, by default 0
