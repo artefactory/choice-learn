@@ -414,56 +414,52 @@ class ChoiceModel:
             if val_dataset is not None and ((epoch_nb + 1) % validation_freq) == 0:
                 test_losses = []
 
+                val_samples_weight = None
                 if isinstance(val_dataset, tuple):
                     if not len(val_dataset) == 2:
                         raise ValueError(
-                            """if argument val_dataset is a tuple,
-                            should in the form (ChoiceDataset, weights)"""
+                            """if argument val_dataset is a tuple, it should be
+                            in the form (ChoiceDataset, weights)"""
                         )
                     validation_dataset, val_samples_weight = val_dataset
-                    for batch_nb, (
-                        (
-                            shared_features_batch,
-                            items_features_batch,
-                            available_items_batch,
-                            choices_batch,
-                        ),
-                        weight_batch,
-                    ) in enumerate(
-                        validation_dataset.iter_batch(
-                            shuffle=False, sample_weight=val_samples_weight, batch_size=batch_size
-                        )
-                    ):
-                        self.callbacks.on_batch_begin(batch_nb)
-                        self.callbacks.on_test_batch_begin(batch_nb)
-                        test_losses.append(
-                            self.batch_predict(
-                                shared_features_batch,
-                                items_features_batch,
-                                available_items_batch,
-                                choices_batch,
-                                sample_weight=weight_batch,
-                            )[0]["optimized_loss"]
-                        )
+                elif isinstance(val_dataset, ChoiceDataset):
+                    validation_dataset = val_dataset
                 else:
-                    if not isinstance(val_dataset, ChoiceDataset):
-                        raise ValueError("val_dataset should be a ChoiceDataset object.")
-                    for batch_nb, (
+                    raise ValueError(
+                        """val_dataset should be a ChoiceDataset or
+                        a tuple of (ChoiceDataset, weights)."""
+                    )
+
+                val_iterator = validation_dataset.iter_batch(
+                    shuffle=False, sample_weight=val_samples_weight, batch_size=batch_size
+                )
+
+                for batch_nb, batch_data in enumerate(val_iterator):
+                    weight_batch = None
+                    if val_samples_weight is not None:
+                        batch_features, weight_batch = batch_data
+                    else:
+                        batch_features = batch_data
+
+                    (
                         shared_features_batch,
                         items_features_batch,
                         available_items_batch,
                         choices_batch,
-                    ) in enumerate(val_dataset.iter_batch(shuffle=False, batch_size=batch_size)):
-                        self.callbacks.on_batch_begin(batch_nb)
-                        self.callbacks.on_test_batch_begin(batch_nb)
-                        test_losses.append(
-                            self.batch_predict(
-                                shared_features_batch,
-                                items_features_batch,
-                                available_items_batch,
-                                choices_batch,
-                            )[0]["optimized_loss"]
-                        )
+                    ) = batch_features
+
+                    self.callbacks.on_batch_begin(batch_nb)
+                    self.callbacks.on_test_batch_begin(batch_nb)
+
+                    loss = self.batch_predict(
+                        shared_features_batch,
+                        items_features_batch,
+                        available_items_batch,
+                        choices_batch,
+                        sample_weight=weight_batch,
+                    )[0]["optimized_loss"]
+                    test_losses.append(loss)
+
                     val_logs["val_loss"].append(test_losses[-1])
                     temps_logs = {k: tf.reduce_mean(v) for k, v in val_logs.items()}
                     self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
