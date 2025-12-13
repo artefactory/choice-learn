@@ -255,6 +255,7 @@ class ChoiceModel:
         choice_dataset,
         sample_weight=None,
         val_dataset=None,
+        validation_freq=1,
         verbose=0,
     ):
         """Train the model with a ChoiceDataset.
@@ -273,6 +274,10 @@ class ChoiceModel:
             Number of epochs, default is None, meaning we use self.epochs
         batch_size : int, optional
             Batch size, default is None, meaning we use self.batch_size
+        validation_freq: int, optional
+            Only relevant if validation data is provided. Specifies how many training epochs
+            to run before a new validation run is performed, e.g. validation_freq=2 runs validation
+            every 2 epochs.
 
         Returns
         -------
@@ -406,7 +411,7 @@ class ChoiceModel:
                 )
 
             # Test on val_dataset if provided
-            if val_dataset is not None:
+            if val_dataset is not None and ((epoch_nb + 1) % validation_freq) == 0:
                 test_losses = []
 
                 if isinstance(val_dataset, tuple):
