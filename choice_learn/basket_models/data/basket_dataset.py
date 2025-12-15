@@ -799,7 +799,7 @@ class TripDataset:
                 weights.extend([1 / len(additional_trip_data[0])] * len(additional_trip_data[0]))
 
             # Yield the whole dataset
-            yield buffer, np.array(weights)
+            yield buffer, np.array(weights).astype("float32")
 
         else:
             # Yield batches of size batch_size while going through all the trips
@@ -822,7 +822,7 @@ class TripDataset:
                     if index >= num_trips:
                         # Then the buffer is not full but there are no more trips to consider
                         # Yield the batch partially filled
-                        yield buffer, np.array(weights)
+                        yield buffer, np.array(weights).astype("float32")
 
                         # Exit the TWO while loops when all trips have been considered
                         outer_break = True
@@ -849,4 +849,4 @@ class TripDataset:
                     break
 
                 # Yield the batch
-                yield buffer, np.array(weights)
+                yield buffer, np.array(weights).astype("float32")
