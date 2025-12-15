@@ -897,7 +897,7 @@ class BaseBasketModel:
             metric.reset_state()
 
         # for trip in trip_dataset.trips:
-        for data_batch, identifier_batch in trip_dataset.iter_batch_evaluate(
+        for data_batch, weights_batch in trip_dataset.iter_batch_evaluate(
             trip_batch_size=trip_batch_size
         ):
             # Sum of the log-likelihoods of all the baskets in the batch
@@ -914,7 +914,9 @@ class BaseBasketModel:
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
                 metric.update_state(
-                    y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
+                    y_true=data_batch[0],
+                    y_pred=predicted_probabilities,
+                    sample_weight=weights_batch,
                 )
 
         # After the loops, get the final results
