@@ -841,7 +841,9 @@ class TripDataset:
                             np.concatenate((buffer[i], additional_trip_data[i]))
                             for i in range(len(buffer))
                         )
-                        weights.extend([1 / additional_trip_data[0]] * len(additional_trip_data[0]))
+                        weights.extend(
+                            [1 / len(additional_trip_data[0])] * len(additional_trip_data[0])
+                        )
 
                 if outer_break:
                     break
