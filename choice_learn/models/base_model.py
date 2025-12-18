@@ -929,3 +929,25 @@ class ChoiceModel:
             raise NotImplementedError(
                 f"Learning rate cannot be changed for optimizer: {self.optimizer}"
             )
+
+    def get_weights(self) -> list[np.ndarray]:
+        """Return the values of `model.trainable_weights` as a list of NumPy arrays."""
+        return [v.numpy() for v in self.trainable_weights]
+
+    def set_weights(self, weights: list[np.ndarray]) -> None:
+        """Set the values of `model.trainable_weights` from a list of NumPy arrays."""
+        layer_weights = self.trainable_weights
+        if len(layer_weights) != len(weights):
+            raise ValueError(
+                f"You called `set_weights(weights)` on a model "
+                f"with a weight list of length {len(weights)}, but the model "
+                f"was expecting {len(layer_weights)} weights."
+            )
+        for variable, value in zip(layer_weights, weights):
+            if variable.shape != value.shape:
+                raise ValueError(
+                    f"Model weight shape {variable.shape} "
+                    "is not compatible with provided weight "
+                    f"shape {value.shape}."
+                )
+            variable.assign(value)
