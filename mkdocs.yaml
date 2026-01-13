@@ -1,7 +1,7 @@
-site_name: choice-learn-private
-
+site_name: Choice-Learn
 theme:
   name: "material"
+  custom_dir: docs/.overrides
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: default
@@ -23,8 +23,12 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+  logo: logo_choice_learn.png
+  favicon: logo_choice_learn.png
 
 markdown_extensions:
+  - tables
+  - attr_list
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -32,11 +36,97 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - mdx_math
+  - md_in_html
+
+extra_css:
+  - docs/.overrides/assets/stylesheets/extra.css
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
 
 plugins:
-  - mkdocstrings
-  - search
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          docstring_style: numpy
+          show_source: true
+- search
+- nbconvert:
+      input_dir: notebooks
+      output_dir: notebooks
 
 nav:
-  - Home: index.md
-  - Source code: code.md
+  - HomePage: index.md
+  - Tutorials:
+    - Introduction: tutorials.md
+    - Introductive Example: notebooks/introduction/1_introductive_example.md
+    - Intoduction to data handling: notebooks/introduction/2_data_handling.md
+    - Introduction to choice modelling with the Conditional Logit: notebooks/introduction/3_model_clogit.md
+    - Introduction to model customization: notebooks/introduction/4_model_customization.md
+  - How-To Guides:
+    - Introduction: how-to-guides.md
+    - Data Handling:
+      - Intoduction to data handling: notebooks/introduction/2_data_handling.md
+      - Exhaustive example of ChoiceDataset creation: notebooks/data/dataset_creation.md
+      - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
+      - Basket Data Handling: notebooks/basket_models/basket_data.md
+    - Modeling Single Choices:
+      - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
+      - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
+      - Nested Logit Usage: notebooks/models/nested_logit.md
+      - Building a custom choice model and handling hyper-parameters: notebooks/introduction/4_model_customization.md
+      - RUMnet model Usage: notebooks/models/rumnet.md
+      - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
+      - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
+      - Model Finetuning and general hyperparamters: notebooks/models/models_finetuning.md
+      - SHOPPER model Usage: notebooks/basket_models/shopper.md
+      - TasteNet model Usage: notebooks/models/tastenet.md
+      - HaloMNL model Usage: notebooks/models/halo_mnl.md
+      - Learning MNL model Usage: notebooks/models/learning_mnl.md
+      - ResLogit model Usage: notebooks/models/reslogit.md
+    - Modeling Basket of purchases:
+      - Introduction data handling, the TripDataset: notebooks/basket_models/basket_data.md
+      - Shopper model Usage: notebooks/basket_models/shopper.md
+      - AleaCarta model Usage: notebooks/basket_models/alea_carta.md
+    - Toolbox for choice modellers:
+      - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
+  - References:
+    - Data:
+      - ChoiceDataset: references/data/references_choice_dataset.md
+      - ChoiceDataset Indexer: references/data/references_indexer.md
+      - Features Storage: references/data/references_storage.md
+    - Available Open-Source Datasets:
+      - Base Datasets: references/datasets/references_base.md
+      - TaFeng Dataset: references/datasets/references_tafeng.md
+      - ICDM Expedia Dataset: references/datasets/references_expedia.md
+      - Bakery Dataset: references/basket_models/datasets/references_bakery.md
+      - Badminton Dataset: references/basket_models/datasets/synthetic_dataset.md
+    - Choice Models:
+      - Base Model: references/models/references_base_model.md
+      - Baseline Models: references/models/references_baseline_models.md
+      - SimpleMNL Model: references/models/references_simple_mnl.md
+      - Conditional Logit: references/models/references_clogit.md
+      - Nested Logit: references/models/references_nested_logit.md
+      - Latent Class BaseModel: references/models/references_latent_class_base_model.md
+      - Latent Class MNL: references/models/references_latent_class_mnl.md
+      - RUMnet: references/models/references_rumnet.md
+      - TasteNet: references/models/references_tastenet.md
+      - Learning MNL: references/models/references_learning_mnl.md
+      - ResLogit: references/models/references_reslogit.md
+      - HaloMNL: references/models/references_halo_mnl.md
+    - Basket Models:
+      - Shopper: references/basket_models/references_shopper.md
+      - The AleaCarta model: references/basket_models/references_alea_carta.md
+      - Basic Attention model: references/basket_models/references_basic_attention_model.md
+      - Self Attention model: references/basket_models/references_self_attention_model.md
+      - Trip and TripDataset: references/basket_models/data/references_dataset.md
+      - Basket preprocessing: references/basket_models/data/references_preprocessing.md
+      - Permutation: references/basket_models/utils/references_permutation.md
+    - Toolbox:
+        - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
+    - Utils:
+        - Tensorflow Operations: references/tf_ops.md
+        - Metrics: references/utils/metrics.md
+  - explanations.md

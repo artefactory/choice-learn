@@ -1,3 +1,6 @@
--e .
-pandas==1.5.3
-numpy==1.24.2
+numpy>=1.24
+pandas>=1.5
+tensorflow>=2.18, <2.19
+tensorflow_probability>=0.22
+tf_keras>=2.18, <2.19
+tqdm>=4.0

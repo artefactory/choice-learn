@@ -1,23 +1,48 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "choice-learn-private"
+name = "choice-learn"
+version = "1.3.1"
+description = "Large-scale choice modeling through the lens of machine learning."
 authors = [
-  { name = "VincentAuriau", email = "vincent.auriau@artefact.com" }
+  { name = "Vincent Auriau", email = "vincent.auriau.dev@gmail.com" },
+  { name = "artefactory", email = "vincent.auriau@artefact.com" },
+  ]
+maintainers = [
+  { name = "Vincent Auriau", email = "vincent.auriau.dev@gmail.com" },
+  { name = "artefactory", email = "vincent.auriau@artefact.com" },
 ]
-description = "choice-learn is a Python package designed to help you build with ease a discrete choice model."
-version = "0.0.1"
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.8"
+keywords = ["discrete", "choice", "model", "machine", "learning", "assortment", "pricing", "retail", "supermarket"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development"
+]
+requires-python = ">=3.9,<3.13"
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=1.5.3",
+  "tensorflow >=2.14, <2.17.0",
+  "tensorflow-probability >=0.22",
+  "tqdm >=4.0.0",
+  "tf_keras <3",
+]
+
+[project.optional-dependencies]
+gurobi = [ "gurobipy>=11.0" ]
+ortools = [ "ortools>=9.6" ]
 
 [project.urls]
-"Homepage" = "https://github.com/artefactory/choice-learn-private"
-"Documentation" = "https://artefactory.github.io/choice-learn-private"
-
-[tool.setuptools]
-packages = ["lib", "config", "tests"]
+homepage = "https://github.com/artefactory/choice-learn"
+repository = "https://github.com/artefactory/choice-learn"
+documentation = "https://artefactory.github.io/choice-learn"
+"Bug Tracker" = "https://github.com/artefactory/choice-learn/issues"
 
 [tool.ruff]
 select = [
@@ -34,9 +59,8 @@ select = [
   "PTH",
   "PD",
 ] # See: https://beta.ruff.rs/docs/rules/
-ignore = ["D203", "D213", "ANN101", "ANN102"]
+ignore = ["D203", "D213", "ANN101", "ANN102", "ANN204", "ANN001", "ANN002", "ANN202", "ANN201", "ANN206", "ANN003", "PTH100", "PTH110", "PTH118", "PTH123","PTH113", "PTH104", "PTH208"]
 line-length = 100
-target-version = "py310"
 exclude = [
   ".bzr",
   ".direnv",
@@ -56,10 +80,44 @@ exclude = [
 ]
 
 [tool.ruff.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"
 
 [tool.ruff.isort]
-known-first-party = ["lib", "config", "tests"]
+known-first-party = ["choice_learn", "config", "tests"]
+
+[tool.bandit.assert_used]
+exclude_dirs = ["tests/"]
+
+[tool.pytest.ini_options]
+pythonpath = ["./"]
+testpaths = ["tests/"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.3.2"
+pre-commit = ">=3.3"
+ipykernel = ">=6.9"
+nbstripout = ">=0.7"
+ruff = ">=0.1.2"
+pytest-cov = ">=4.1"
+pytest-xdist = ">=3.6"
+codespell = ">=2.2"
+python-markdown-math = ">=0.8"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = ">=1.5"
+mkdocs-material = {extras = ["pygments"], version = ">=9.5.3"}
+mkdocs-nbconvert = ">=0.2.1"
+mkdocstrings-python = ">=1.10.8"
+python-markdown-math = ">=0.8"
+bandit = ">=1.7.5"
+nbstripout = ">=0.7"
+
+[tool.setuptools]
+packages = ["choice_learn"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
