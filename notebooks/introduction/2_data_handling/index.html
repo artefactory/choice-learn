@@ -1,0 +1,3686 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../../how-to-guides/">
+      
+      
+        <link rel="next" href="../../data/dataset_creation/">
+      
+      
+      <link rel="icon" href="../../../logo_choice_learn.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>Intoduction to data handling - Choice-Learn</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.50c56a3b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../docs/.overrides/assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction-to-choice-learns-data-management" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Choice-Learn" class="md-header__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Choice-Learn
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Intoduction to data handling
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 12a10 10 0 0 0 13 9.54 10 10 0 0 1 0-19.08A10 10 0 0 0 2 12Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3.55 19.09 1.41 1.41 1.8-1.79-1.42-1.42M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6c0-3.32-2.69-6-6-6m8 7h3v-2h-3m-2.76 7.71 1.8 1.79 1.41-1.41-1.79-1.8M20.45 5l-1.41-1.4-1.8 1.79 1.42 1.42M13 1h-2v3h2M6.76 5.39 4.96 3.6 3.55 5l1.79 1.81 1.42-1.42M1 13h3v-2H1m12 9h-2v3h2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Choice-Learn" class="md-nav__button md-logo" aria-label="Choice-Learn" data-md-component="logo">
+      
+  <img src="../../../logo_choice_learn.png" alt="logo">
+
+    </a>
+    Choice-Learn
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HomePage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1_introductive_example/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introductive Example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#an-introduction-to-choicedataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      An introduction to ChoiceDataset
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#our-example-dataset-swissmetro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Our example dataset: SwissMetro
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-different-type-of-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      The different type of data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hands-on-example-from-a-pandas-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hands-on: example from a pandas' DataFrame
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hands-on: example from a pandas' DataFrame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-wide-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a wide DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-long-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a long DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instantiation-from-different-objects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instantiation from different objects
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instantiation from different objects">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separating-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Separating data types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stacking-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacking Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-choicedataset-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the ChoiceDataset object
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the ChoiceDataset object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estimating-choice-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimating choice models
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-and-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slicing and batching
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-advanced-use-the-featurestorage-ram-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Advanced use: the FeatureStorage &amp; RAM optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="More Advanced use: the FeatureStorage & RAM optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#featuresstorage-why-should-i-use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      FeaturesStorage, why should I use it ?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-on-the-swissmetro-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example on the SwissMetro dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-case-of-the-onehot-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Specific case of the OneHot Storage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-modecanada-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      The ModeCanada dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-manual-example-of-featuresstorage" class="md-nav__link">
+    <span class="md-ellipsis">
+      A manual example of FeaturesStorage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ready-to-use-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ready-to-use datasets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ready-to-use datasets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3_model_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to choice modelling with the Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to model customization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    How-To Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data Handling
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Data Handling
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Intoduction to data handling
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#an-introduction-to-choicedataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      An introduction to ChoiceDataset
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#our-example-dataset-swissmetro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Our example dataset: SwissMetro
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-different-type-of-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      The different type of data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hands-on-example-from-a-pandas-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hands-on: example from a pandas' DataFrame
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hands-on: example from a pandas' DataFrame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-wide-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a wide DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-long-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a long DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instantiation-from-different-objects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instantiation from different objects
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instantiation from different objects">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separating-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Separating data types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stacking-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacking Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-choicedataset-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the ChoiceDataset object
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the ChoiceDataset object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estimating-choice-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimating choice models
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-and-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slicing and batching
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-advanced-use-the-featurestorage-ram-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Advanced use: the FeatureStorage &amp; RAM optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="More Advanced use: the FeatureStorage & RAM optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#featuresstorage-why-should-i-use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      FeaturesStorage, why should I use it ?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-on-the-swissmetro-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example on the SwissMetro dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-case-of-the-onehot-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Specific case of the OneHot Storage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-modecanada-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      The ModeCanada dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-manual-example-of-featuresstorage" class="md-nav__link">
+    <span class="md-ellipsis">
+      A manual example of FeaturesStorage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ready-to-use-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ready-to-use datasets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ready-to-use datasets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/dataset_creation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Exhaustive example of ChoiceDataset creation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/features_byID_examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimize RAM usage with Features Storage, in-depth examples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket Data Handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Single Choices
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Single Choices
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to Choice Models - the SimpleMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3_model_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4_model_customization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Building a custom choice model and handling hyper-parameters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/latent_class_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNLs Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/logistic_regression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    A reproductive example, the logistic regression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/models_finetuning/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Model Finetuning and general hyperparamters
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SHOPPER model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modeling Basket of purchases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Modeling Basket of purchases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/basket_data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction data handling, the TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basket_models/alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AleaCarta model Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox for choice modellers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox for choice modellers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../auxiliary_tools/assortment_example/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizing a product assortment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    References
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            References
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_choice_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_indexer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChoiceDataset Indexer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/data/references_storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Features Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Available Open-Source Datasets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Available Open-Source Datasets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_tafeng/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TaFeng Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/datasets/references_expedia/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ICDM Expedia Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/references_bakery/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bakery Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/datasets/synthetic_dataset.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Badminton Dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Choice Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Choice Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_baseline_models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Baseline Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_simple_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SimpleMNL Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_clogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Conditional Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_nested_logit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nested Logit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_base_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class BaseModel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_latent_class_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Latent Class MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_rumnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RUMnet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_tastenet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TasteNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_learning_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learning MNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_reslogit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ResLogit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/models/references_halo_mnl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HaloMNL
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Basket Models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Basket Models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_shopper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shopper
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_alea_carta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The AleaCarta model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_basic_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/references_self_attention_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Self Attention model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Trip and TripDataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/data/references_preprocessing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basket preprocessing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/basket_models/utils/references_permutation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permutation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/toolbox/references_assortment_optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Assortment Optimizer and Pricing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/tf_ops.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tensorflow Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/utils/metrics.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Explanations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#an-introduction-to-choicedataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      An introduction to ChoiceDataset
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#our-example-dataset-swissmetro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Our example dataset: SwissMetro
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-different-type-of-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      The different type of data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hands-on-example-from-a-pandas-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hands-on: example from a pandas' DataFrame
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hands-on: example from a pandas' DataFrame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-wide-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a wide DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-choicedataset-from-a-long-dataframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a ChoiceDataset from a long DataFrame
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instantiation-from-different-objects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instantiation from different objects
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instantiation from different objects">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separating-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Separating data types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stacking-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacking Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-choicedataset-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the ChoiceDataset object
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the ChoiceDataset object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estimating-choice-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimating choice models
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-and-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slicing and batching
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-advanced-use-the-featurestorage-ram-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Advanced use: the FeatureStorage &amp; RAM optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="More Advanced use: the FeatureStorage & RAM optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#featuresstorage-why-should-i-use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      FeaturesStorage, why should I use it ?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-on-the-swissmetro-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example on the SwissMetro dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-case-of-the-onehot-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Specific case of the OneHot Storage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-modecanada-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      The ModeCanada dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-manual-example-of-featuresstorage" class="md-nav__link">
+    <span class="md-ellipsis">
+      A manual example of FeaturesStorage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ready-to-use-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ready-to-use datasets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ready-to-use datasets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="introduction-to-choice-learns-data-management">Introduction to choice-learn's data management</h1>
+<p><a href="https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/2_data_handling.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install necessary requirements</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># If you run this notebook on Google Colab, or in standalone mode, you need to install the required packages.</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Uncomment the following lines:</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># !pip install choice-learn</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># If you run the notebook within the GitHub repository, you need to run the following lines, that can skipped otherwise:</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span></code></pre></div>
+<h2 id="an-introduction-to-choicedataset">An introduction to ChoiceDataset</h2>
+<p>Choice-Learn's ChoiceDataset aims at being able to handle large datasets, typically by limiting the usage of memory to store several times the same feature. Its structure is made to fit a choice modelling setup it is needed to estimate choice models weights. 
+This notebook introduces how the package handles data. Here is a summary of the different points that will be adressed:</p>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><a href="#an-introduction-to-choicedataset"><strong>Introduction</strong></a><ul>
+<li><a href="#our-example-dataset-swissmetro">Example dataset: SwissMetro</a></li>
+<li><a href="#the-different-type-of-data">The different types of data</a></li>
+</ul>
+</li>
+<li><a href="#hands-on:-example-from-a-panda's-dataframe"><strong>ChoiceDataset's Instantiation from a single DataFrame</strong></a><ul>
+<li><a href="#creating-a-choicedataset-from-a-wide-dataframe">Wide format</a></li>
+<li><a href="#creating-a-choicedataset-from-a-long-dataframe">Long format</a></li>
+</ul>
+</li>
+<li><a href="#instantiation-from-different-objects"><strong>ChoiceDataset's Instantiation from separate objects</strong></a><ul>
+<li><a href="#separating-data-types">Specifying each data type</a></li>
+<li><a href="#stacking-features">Stacking features</a></li>
+</ul>
+</li>
+<li><a href="#using-the-choicedataset-object"><strong>How to use the ChoiceDataset?</strong></a><ul>
+<li><a href="#estimating-choice-models">Estimating choice models</a></li>
+<li><a href="#slicing-and-batching">Slicing into batches</a></li>
+</ul>
+</li>
+<li><a href="#more-advanced-use-the-featurestorage--ram-optimization"><strong>Further optimizing RAM usage</strong></a><ul>
+<li><a href="#featuresstorage-why-should-i-use-it">The FeaturesStorage object</a></li>
+<li><a href="#example-on-the-swissmetro-dataset">Complete example of FeaturesStorage use</a></li>
+<li><a href="#specific-case-of-the-onehot-storage">Specific example of the OneHotStorage</a></li>
+</ul>
+</li>
+<li><a href="#additional-examples"><strong>Additional Examples</strong></a><ul>
+<li><a href="#the-modecanada-dataset">The ModeCanada Dataset</a></li>
+<li><a href="#a-manual-example-of-featuresstorage">A step-by-step FeaturesStorage use</a></li>
+</ul>
+</li>
+<li><a href="#ready-to-use-datasets"><strong>List of Ready-To-Use datasets</strong></a></li>
+<li><a href="#references"><strong>References</strong></a></li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChoiceDataset</span>
+</span></code></pre></div>
+<h3 id="our-example-dataset-swissmetro">Our example dataset: SwissMetro</h3>
+<p>The SwissMetro[2] is a well-known dataset used to illustrate choice modelling. The dataset is provided with the Choice-Learn package and can be downloaded as follows:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_swissmetro</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">swissmetro_df</span> <span class="o">=</span> <span class="n">load_swissmetro</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The SwissMetro is a collection of answers to a survey about mode transportation choice in Switzerland. Before building a costly new public transport line the government decided to better understand the needs of the future customers.
+A complete description of the dataset and the columns can be found <a href="https://artefactory.github.io/choice-learn/references/data/references_choice_dataset/">here</a>. We will use a subset of the information during the tutorial.</p>
+<p><ins><strong>Available Modes:</strong></ins>
+- The current, existing train, 'TRAIN'
+- The potentially future SwissMetro, 'SM'
+- The customer car, 'CAR'</p>
+<p><ins><strong>Columns:</strong></ins>
+- PURPOSE: What is the customer's travel purpose:
+- AGE: The customer's age category
+- mode_AV: Whether the mode is available (1) or not (0)
+- mode_TT: The mode travel time
+- mode_CO: The mode cost
+- CHOICE: the transport mode chosen by the customer</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">kept_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">,</span> <span class="s2">&quot;ORIGIN&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;TRAIN_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_TT&quot;</span><span class="p">,</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                <span class="s2">&quot;TRAIN_TT&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_TT&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TRAIN_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;CHOICE&quot;</span><span class="p">]</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">swissmetro_df</span> <span class="o">=</span> <span class="n">swissmetro_df</span><span class="p">[</span><span class="n">kept_columns</span><span class="p">]</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">swissmetro_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="the-different-type-of-data">The different type of data</h3>
+<p>We can split the columns into three distincts categories that are common to most choice modelling use-cases:</p>
+<ul>
+<li>Choices - or outputs of our model: it's what we want to predict</li>
+<li>Features - or inputs of our model</li>
+<li>Availabilities - or the description of the set among which the customer chooses</li>
+</ul>
+<p>Going further, we have two types of features: the features describing the customer and the features describing the mean of transportation. Those are the four types of data that can be specified in a ChoiceDataset.</p>
+<p><strong>Vocabulary:</strong></p>
+<p><ins><em>Items</em></ins> represent a product, an alternative that can be chosen by the customer at some point.</p>
+<p>Throughout Choice-Learn examples and code here is the naming of our four types of data:</p>
+<ul>
+<li>
+<p><strong>choices:</strong> which item has been chosen among all availables</p>
+</li>
+<li>
+<p><strong>shared_features_by_choice:</strong> It represents all the features that might change from one choice to another and that are <strong>common</strong> to all items (e.g. day of week, customer features, etc...).</p>
+</li>
+<li>
+<p><strong>items_features_by_choice:</strong> The features each of the available item for a choice (e.g. prices might change from one choice to another and are specific to each sold item).</p>
+</li>
+<li>
+<p><strong>available_items_by_choice:</strong> For each choice it represents whether each item is proposed to the customer (1.) or not (0.).</p>
+</li>
+</ul>
+<p><strong>Summary:</strong></p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>feature</th>
+<th>typical shape</th>
+<th>Example</th>
+<th>Taken Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>shared_features_by_choice</td>
+<td>(n_choices, n_features)</td>
+<td>customer age, day of week</td>
+<td>float, int</td>
+</tr>
+<tr>
+<td>2</td>
+<td>items_features_by_choice</td>
+<td>(n_choices, n_items, n_items_features)</td>
+<td>price</td>
+<td>float, int</td>
+</tr>
+<tr>
+<td>3</td>
+<td>available_items_by_choice</td>
+<td>(n_choices, n_items)</td>
+<td></td>
+<td>1.(av) or 0. (not av.)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>choices</td>
+<td>(n_choices,)</td>
+<td></td>
+<td>int: index of chosen item</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="DatasetDiagram" src="../../docs/illustrations/choice_learn_dataset.png" /></p>
+<h2 id="hands-on-example-from-a-pandas-dataframe">Hands-on: example from a pandas' DataFrame</h2>
+<p>The easiest way create a ChoiceDataset is to use a pandas DataFrame.</p>
+<p>First, here is a small explanation about wide vs long format, in case you have never heard about it, from <a href="https://en.wikipedia.org/wiki/Wide_and_narrow_data">Wikipedia</a>.</p>
+<p><em>Long (or narrow) Format:</em>  One column containing all the values and another column listing the context of the value\
+<em>Wide Format:</em> Each different data variable in a separate column.</p>
+<table>
+<tr><th>Example Long Format: </th><th>Example Wide Format:</th></tr>
+
+<tr><td>
+
+| choice id | item | price | availability | choice |
+|---|---|---|---|---|
+| 1 | A | 2.0 | 1 | 1 |
+| 1 | B | 6.0 | 1 | 0 |
+| 2 | A | 1.5 | 1 | 0 |
+| 2 | B | 5.5 | 1 | 1 |
+
+</td><td>
+
+| choice id | price_A | price_B | availability_A | availability_B | choice |
+|---|---|---|---|---|---|
+| 1 | 2.0 | 6.0 | 1 | 1 | A |
+| 2 | 1.5 | 5.5 | 1 | 1 | B |
+
+</td></tr> </table>
+
+<p>Choice-Learn handles both formats, but slightly differently:
+- example for <a href="#creating-a-choicedataset-from-a-wide-dataframe">wide</a> format
+- example for <a href="#creating-a-choicedataset-from-a-long-dataframe">long</a> format</p>
+<h3 id="creating-a-choicedataset-from-a-wide-dataframe">Creating a ChoiceDataset from a wide DataFrame</h3>
+<p>Our example dataframe on SwissMetro is on the wide format. Each row indicates a choice and each item has its specific features columns.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="o">.</span><span class="n">from_single_wide_df</span><span class="p">(</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="c1"># The main DataFrame</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">df</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="c1"># The names of the items, will be used to find columns and organize them</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">items_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TRAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;SM&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR&quot;</span><span class="p">],</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="c1"># The column containing the choices</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">choices_column</span><span class="o">=</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="c1"># How the choices are encoded: item_index means that the choice is the index of the item in the items_id list</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">choice_format</span><span class="o">=</span><span class="s2">&quot;items_index&quot;</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="c1"># Columns for shared_features_by_choice</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">shared_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">],</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="c1"># Columns for items_features_by_choice</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="c1"># They will be reconstructed as item_id + delimiter + feature_suffix</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    <span class="n">items_features_suffixes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">],</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="c1"># Same with availabilities</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="n">available_items_suffix</span><span class="o">=</span><span class="s2">&quot;AV&quot;</span><span class="p">,</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Options</strong></p>
+<p>choice_format: "items_index" or "items_id"</p>
+<table>
+<tr><th>"items_index" </th><th>"items_id"</th></tr>
+
+<tr><td>
+
+| choice_column|
+|---|
+| 0 |
+| 1 |
+| 0 |
+| 2 |
+
+</td><td>
+
+| choice_column|
+|---|
+| "TRAIN" |
+| "SM" |
+| "TRAIN" |
+| "CAR" |
+
+</td></tr> </table>
+
+<p>items_features_by_choice and available_items_by_choice:</p>
+<p>It is possible to precise:
+- Suffixes: in this case the column used will be "item_id" + "delimiter" + "suffix"
+- Prefixes: in this case the column used will be "prefix" + "delimiter" + "item_id"
+- Columns: each item's features in list. In this case it is you duty to ensure coherence in terms of items and features orders. For our example it would be:</p>
+<div class="language-text highlight"><pre><span></span><code>```python
+items_features_by_choice_columns=[[&quot;TRAIN_CO&quot;, &quot;TRAIN_TT&quot;], [&quot;SM_CO&quot;, &quot;SM_TT&quot;], [&quot;CAR_CO&quot;, &quot;CAR_TT&quot;]],
+available_items_by_choice_columns=[&quot;TRAIN_AV&quot;, &quot;SM_AV&quot;, &quot;CAR_AV&quot;],
+```
+</code></pre></div>
+<h3 id="creating-a-choicedataset-from-a-long-dataframe">Creating a ChoiceDataset from a long DataFrame</h3>
+<p>The long format is also commonly used in which each row represents an alternative. One of its benefits is represent unavailability through missing rows - taking litteraly zero memory space. On the contrary the 'shared_features' such as customer features must be duplicated on each row.\
+The ChoiceDataset object can be instantiated from a long DF. It will infer the availabilities from existing/missing rows, if it is not specified.\
+It is needed to precise:
+- columns representing the features ('shared_features_columns' and 'items_features_columns')
+- the column in which the choice is given and how it is formatted ('choices_columns' and 'choice_format')
+- which column can identify the items ('items_id_column')
+- which column can identify all the rows corresponding to the same choice ('choices_id_column')</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Transformation of our dataset on the long format</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">long_df</span> <span class="o">=</span> <span class="n">load_swissmetro</span><span class="p">(</span><span class="n">preprocessing</span><span class="o">=</span><span class="s2">&quot;long_format&quot;</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">long_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Example of the long format instantiation</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="o">.</span><span class="n">from_single_long_df</span><span class="p">(</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">df</span><span class="o">=</span><span class="n">long_df</span><span class="p">,</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">items_id_column</span><span class="o">=</span><span class="s2">&quot;item_id&quot;</span><span class="p">,</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">choices_id_column</span><span class="o">=</span><span class="s2">&quot;choice_id&quot;</span><span class="p">,</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">shared_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">],</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">items_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TT&quot;</span><span class="p">,</span> <span class="s2">&quot;CO&quot;</span><span class="p">],</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="n">choices_column</span><span class="o">=</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">,</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="n">choice_format</span><span class="o">=</span><span class="s2">&quot;one_zero&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Options</strong></p>
+<p>choice_format: "one_zero" or "items_id"</p>
+<table>
+<tr><th>"one_zero" </th><th>"items_id"</th></tr>
+
+<tr><td>
+
+| choice_id_column | item_id_column | choice_column|
+|---|---|---|
+| 1 | "CAR" | 0 |
+| 1 | "SM" | 1 |
+| 2 | "CAR" | 1 |
+| 2 | "SM" | 0 |
+
+</td><td>
+
+| choice_id_column | item_id_column | choice_column|
+|---|---|---|
+| 1 | "CAR" | "SM" |
+| 1 | "SM" | "SM" |
+| 2 | "CAR" | "CAR" |
+| 2 | "SM" | "CAR" |
+
+</td></tr> </table>
+
+<h2 id="instantiation-from-different-objects">Instantiation from different objects</h2>
+<p>For RAM optimization purposes or just because of the format of the data source, it might happen that a dataset is split into separate files. You can instantiate a ChoiceDataset keeping this structure, saving time to concatenate everything.\
+You can work either with pandas.DataFrames or numpy.ndarrays.</p>
+<h3 id="separating-data-types">Separating data types</h3>
+<p>The four distinct data types: choices, shared_features_by_choice, items_features_by_choice, available_items_by_choice can be manually given to the ChoiceDataset:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Using pandas.DataFrames</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">choices</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">[</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">],</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">]],</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">items_features_by_choice</span><span class="o">=</span><span class="n">long_df</span><span class="p">[[</span><span class="s2">&quot;choice_id&quot;</span><span class="p">,</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="s2">&quot;CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">]]</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Note that if you pass items_features_by_choice as a pandas.DataFrame, it needs to be in the long format and with the columns 'choice_id' and 'item_id'. They will be used to get the features in the right order.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Using numpy.ndarrays</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1"># Be aware of items_features_by_choices shape that is (n_choices, n_items, n_features)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">items_features_by_choice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;TRAIN_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TRAIN_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>                                     <span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;SM_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>                                     <span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;CAR_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()],</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>                                     <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">shared_features_by_choice</span> <span class="o">=</span> <span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="n">available_items_by_choice</span> <span class="o">=</span> <span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;TRAIN_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_AV&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The data shapes are:&quot;</span><span class="p">)</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;choices: </span><span class="si">{</span><span class="n">swissmetro_df</span><span class="p">[</span><span class="s1">&#39;CHOICE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shared_features_by_choice: </span><span class="si">{</span><span class="n">shared_features_by_choice</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;items_features_by_choice: </span><span class="si">{</span><span class="n">items_features_by_choice</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;available_items_by_choice: </span><span class="si">{</span><span class="n">available_items_by_choice</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>    <span class="n">choices</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">[</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>    <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">shared_features_by_choice</span><span class="p">,</span>
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>    <span class="n">items_features_by_choice</span><span class="o">=</span><span class="n">items_features_by_choice</span><span class="p">,</span>
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>    <span class="n">available_items_by_choice</span><span class="o">=</span><span class="n">available_items_by_choice</span><span class="p">,</span>
+</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>
+</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>    <span class="c1"># Features names can optionally be provided</span>
+</span><span id="__span-10-24"><a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>    <span class="c1"># the structure of data and names must match</span>
+</span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>    <span class="n">shared_features_by_choice_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">],</span>
+</span><span id="__span-10-26"><a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>    <span class="n">items_features_by_choice_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">],</span>
+</span><span id="__span-10-27"><a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="stacking-features">Stacking Features</h3>
+<p>It is allowed to specify more than one features object by wrapping them in a tuple. This structure is kept inside the ChoiceDataset object as well as with the slicing into batches.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Using pandas.DataFrames - Similar with np.ndarrays</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">choices</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">[</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">],</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="p">(</span><span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">]],</span> <span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;AGE&quot;</span><span class="p">]]),</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">items_features_by_choice</span><span class="o">=</span><span class="p">(</span><span class="n">long_df</span><span class="p">[[</span><span class="s2">&quot;choice_id&quot;</span><span class="p">,</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="s2">&quot;CO&quot;</span><span class="p">]],</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>                              <span class="n">long_df</span><span class="p">[[</span><span class="s2">&quot;choice_id&quot;</span><span class="p">,</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">]]),</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">available_items_by_choice</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="p">[[</span><span class="s2">&quot;TRAIN_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_AV&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_AV&quot;</span><span class="p">]],</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Other examples are provided <a href="data/dataset_creation.ipynb">here</a>.</p>
+<h2 id="using-the-choicedataset-object">Using the ChoiceDataset object</h2>
+<h3 id="estimating-choice-models">Estimating choice models</h3>
+<p>With your ChoiceDataset instantiated, it can be used as is to fit choice models. An illustration can be found in the conditional MNL introduction <a href="./3_model_clogit.ipynb">notebook</a>.</p>
+<h3 id="slicing-and-batching">Slicing and batching</h3>
+<p>ChoiceDatasets are indexed by choice, meaning that accessing the i-th index corresponds to the i-th choice. Differently said it is the i-th value of the object given as 'choices' in the ChoiceDataset instantiation.</p>
+<p>A ChoiceDataset can be sliced commonly using the [.] Python method:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">sub_dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+</span></code></pre></div>
+<p>sub_dataset will be a ChoiceDataset containing only the 0th, 2nd and 4th choice of dataset. The other data (shared_featurs_by_choice, items_features_by_choice and available_items_by_choice) are also kept and sliced accordingly.</p>
+<p>In order to only get a chunk of data, it is possible to use .batch[.]. It will return the different data types sliced along choices in a raw np.ndarray format. Use .iter_batch() to iterate over all data in the ChoiceDataset by setting the batch_size argument to control the length of each chunk.</p>
+<p>Also note that <code>batch_size=-1</code>returns the whole dataset</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">dataset</span><span class="o">.</span><span class="n">choices</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iter_batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Num choices:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+</span></code></pre></div>
+<h2 id="more-advanced-use-the-featurestorage-ram-optimization">More Advanced use: the FeatureStorage &amp; RAM optimization</h2>
+<p>In many use-cases we will see features or group of features values being repeated over the dataset. For example if one customer comes several times, its features will be repeated. With One-Hot representations, it can create memory-heavy repetitions.\
+Choice-Learn introduces FeaturesStorage and FeaturesByIds in order to limit the memory usage before accessing a batch of data.</p>
+<h3 id="featuresstorage-why-should-i-use-it">FeaturesStorage, why should I use it ?</h3>
+<p>If you are not using a large dataset with many features you can pass this part. FeaturesStorage are here if you want to further optimize your memory consumption and if you take some time to understand it.\
+It is mainly built to work well with ChoiceDataset, but here is a small introduction on how it works.</p>
+<p><img alt="StorageDiagram" src="../../docs/illustrations/choice_learn_features_storage.png" /></p>
+<h3 id="example-on-the-swissmetro-dataset">Example on the SwissMetro dataset</h3>
+<p><strong>/!\ Disclaimer</strong>
+For the sake of the example, some features will be introduced and created. They are totally made up and do not exist in the original - and true - version of the SwissMetro Dataset.</p>
+<p>Let's consider the survey that happened in the three cantons: Geneva, Berne and Zürich. Now we want to integrate localization features.</p>
+<table>
+<thead>
+<tr>
+<th>Canton</th>
+<th>Inhabitants (M)</th>
+<th>Surface (km^2)</th>
+<th>Origin Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Geneva</td>
+<td>0.5</td>
+<td>282</td>
+<td>25</td>
+</tr>
+<tr>
+<td>Zürich</td>
+<td>1.5</td>
+<td>1729</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Berne</td>
+<td>1.0</td>
+<td>5959</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>A naive way to integreate those features is to add them as 'shared_features_by_choice'.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Filtering cantons</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">swiss_df</span> <span class="o">=</span> <span class="n">swissmetro_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">swissmetro_df</span><span class="o">.</span><span class="n">ORIGIN</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">25</span><span class="p">])]</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Adding features</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">swiss_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;CANTON_SURFACE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">swiss_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mi">1729</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">5959</span><span class="p">,</span> <span class="mi">25</span><span class="p">:</span> <span class="mi">282</span><span class="p">}[</span><span class="n">row</span><span class="o">.</span><span class="n">ORIGIN</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">swiss_df</span><span class="p">[</span><span class="s2">&quot;CANTON_INHAB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">swiss_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">25</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}[</span><span class="n">row</span><span class="o">.</span><span class="n">ORIGIN</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="o">.</span><span class="n">from_single_wide_df</span><span class="p">(</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">df</span><span class="o">=</span><span class="n">swiss_df</span><span class="p">,</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="n">items_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TRAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;SM&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR&quot;</span><span class="p">],</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>    <span class="n">choices_column</span><span class="o">=</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">,</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="n">choice_format</span><span class="o">=</span><span class="s2">&quot;items_index&quot;</span><span class="p">,</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>    <span class="c1"># The new features are added here compared to example above</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>    <span class="n">shared_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;AGE&quot;</span><span class="p">,</span> <span class="s2">&quot;CANTON_SURFACE&quot;</span><span class="p">,</span> <span class="s2">&quot;CANTON_INHAB&quot;</span><span class="p">],</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>    <span class="n">items_features_suffixes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">],</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>    <span class="n">available_items_suffix</span><span class="o">=</span><span class="s2">&quot;AV&quot;</span><span class="p">,</span>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>The main caveat is that the same features are repeated over the rows of the dataset. If we consider hundreds of stores on several millions - or billions - of choices, it would become... unreasonable!\
+One idea is to regroup the features behind an ID (the canton id for example) and to reconstruct the features only in batches.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeaturesStorage</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">origin_canton_features</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">1729</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">5959</span><span class="p">],</span> <span class="mi">25</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">282</span><span class="p">]}</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">canton_storage</span> <span class="o">=</span> <span class="n">FeaturesStorage</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">origin_canton_features</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ORIGIN&quot;</span><span class="p">)</span> <span class="c1"># Remark that the name matches the ID column name in the DF</span>
+</span></code></pre></div>
+<p>The FeaturesStorage is basically a Python dictionnary with a wrap-up to easily get batches of data.\
+You can ask for a sequence of features with .batch. It works with the keys of our dictionnary that can be int, float, str, etc...</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrieving features of canton id 1:&quot;</span><span class="p">)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">canton_storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrieving a batch of features:&quot;</span><span class="p">)</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">canton_storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+</span></code></pre></div>
+<p>The FeaturesStorage is handy for its transparent use with ChoiceDataset. For it to work well it is needed to:
+- specify a FeaturesStorage name that matches the feature names given to the ChoiceDataset
+- match FeaturesStorage ids with the sequence (types and values)
+- specify the FeaturesStorage objects listed with the features_by_ids argument</p>
+<p>In our case we call our FeaturesStorage "canton_storage", the ids are now strings, let's make the sequence match:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">storage_dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">swiss_df</span><span class="p">[</span><span class="s2">&quot;CHOICE&quot;</span><span class="p">],</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>                                <span class="n">items_features_by_choice</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">swiss_df</span><span class="p">[[</span><span class="s2">&quot;TRAIN_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TRAIN_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>                                                                   <span class="n">swiss_df</span><span class="p">[[</span><span class="s2">&quot;SM_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;SM_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>                                                                   <span class="n">swiss_df</span><span class="p">[[</span><span class="s2">&quot;CAR_CO&quot;</span><span class="p">,</span> <span class="s2">&quot;CAR_TT&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()],</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>                                                                   <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>                                <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">swiss_df</span><span class="p">[[</span><span class="s2">&quot;AGE&quot;</span><span class="p">,</span> <span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;ORIGIN&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>                                <span class="n">features_by_ids</span><span class="o">=</span><span class="p">[</span><span class="n">canton_storage</span><span class="p">],</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>                                <span class="n">items_features_by_choice_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CO&quot;</span><span class="p">,</span> <span class="s2">&quot;TT&quot;</span><span class="p">],</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>                                <span class="n">shared_features_by_choice_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AGE&quot;</span><span class="p">,</span> <span class="s2">&quot;PURPOSE&quot;</span><span class="p">,</span> <span class="s2">&quot;ORIGIN&quot;</span><span class="p">],</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Looking at a batch of data, here is how it looks like:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># batching the dataset as before</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">storage_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch of shared_features_by_choice:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch of choices:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span></code></pre></div>
+<p>The features stored in the FeaturesStorage have been stacked with the usual 'shared_features_by_choice' !</p>
+<h3 id="specific-case-of-the-onehot-storage">Specific case of the OneHot Storage</h3>
+<p>Manually looking for canton features is quiet time consuming. Another idea is to represent each canton by a unique one-hot vector.
+A recurring usecase is the use of <strong>OneHot</strong> representation of features. The OneHotStorage is built specifically for one-hot encoded features and further improves memory consumption. The storage is to be used the same way as FeaturesStorage, but behind will only keep the index of the one of each element and will consitute the one-hot vector only when needed.\
+In order terms it stores a sparse version of the vectors and returns a dense representation when batched.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotStorage</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">storage</span> <span class="o">=</span> <span class="n">OneHotStorage</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">swissmetro_df</span><span class="o">.</span><span class="n">ORIGIN</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;RAM storage of the OneHotStore:&quot;</span><span class="p">,</span> <span class="n">storage</span><span class="o">.</span><span class="n">storage</span><span class="p">)</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># When indexing with .batch, we can access the one-hot encoding of the element using its id</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;One-hot vector batch: storage.batch[2]&quot;</span><span class="p">,</span> <span class="n">storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;One-hot vector batch: storage.batch[[5, 20, 18, 23, 25, 15,  5, 20]]&quot;</span><span class="p">)</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span>  <span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">]])</span>
+</span></code></pre></div>
+<p>Other examples of features_by_ids usage can be found <a href="data/features_byID_examples.ipynb">here</a>.</p>
+<h2 id="additional-examples">Additional Examples</h2>
+<h3 id="the-modecanada-dataset">The ModeCanada dataset</h3>
+<p>We will use the ModeCanada [1] dataset for this example. The dataset is originally in the long format. It is provided with the choice-learn package and can loaded as follows:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_modecanada</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">canada_transport_df</span> <span class="o">=</span> <span class="n">load_modecanada</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="n">canada_transport_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<p>An extensive description of the dataset can be found <a href="https://www.ssc.wisc.edu/~bhansen/econometrics/Koppelman_description.pdf">here</a>. An extract indicates:</p>
+<p>"The dataset was assembled in 1989 by VIA Rail (the Canadian national rail carrier) to estimate the demand for high-speed rail in the Toronto-Montreal corridor. The main information source was a Passenger Review administered to business travelers augmented by information about each trip. The observations consist of a choice between four modes of transportation (train, air, bus, car) with information about the travel mode and about the passenger. The posted dataset has been balanced to only include cases where all four travel modes are recorded. The file contains 11,116 observations on 2779 individuals. "</p>
+<p>Alright ! If we go back to our dataframe, we can see the following columns:</p>
+<p>case: an ID of the traveler
+alt: the alternative concerned by the row
+choice: 1 if the alternative was chosen, 0 otherwise
+dist: trip distance
+cost: trip cost
+ivt: travel time in-vehicule (minutes)
+ovt: travel time out-vehicule (minutes)
+income: housold income of traveler ($)
+urban: 1 if origin or destination is a large city
+noalt: the number of alternative among which the traveler had to chose
+freq: the frequence of the alternative (0 for car) (e.g. how many train by hour)
+Following our specification, we can see that one case corresponds to one customer thus one choice. In our choice-learn language it corresponds to "one context": a set of available alternatives and their features/specificites resulting in one choice. Let's regroup our features:</p>
+<p><strong>choices:</strong> Easy ! It is the alternative whenever the value is one.</p>
+<p><strong>shared_features_by_choice:</strong> The income, urban and distance (also noalt which is not really a feature) features are the same for all the alternatives within a single choice. They are all constant with respect to (case=traveler_ID).</p>
+<p><strong>items_features_by_choice:</strong> Ivt, Ovt, cost and freq depends on and describe each of the alternative.</p>
+<p><strong>available_items_by_choice:</strong> It in not directly indicated, however it can be easily deduced. Whenever an alternative is not available, it is not precised for its case. For example for the case=1, our first choice, only train and car are given as alternatives, meaning that air and bus could not be chosen/were not available.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="o">.</span><span class="n">from_single_long_df</span><span class="p">(</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="n">df</span><span class="o">=</span><span class="n">canada_transport_df</span><span class="p">,</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="n">choices_column</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>    <span class="n">items_id_column</span><span class="o">=</span><span class="s2">&quot;alt&quot;</span><span class="p">,</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="n">choices_id_column</span><span class="o">=</span><span class="s2">&quot;case&quot;</span><span class="p">,</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="n">shared_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;income&quot;</span><span class="p">,</span> <span class="s2">&quot;urban&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">],</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>    <span class="n">items_features_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cost&quot;</span><span class="p">,</span> <span class="s2">&quot;freq&quot;</span><span class="p">,</span> <span class="s2">&quot;ovt&quot;</span><span class="p">,</span> <span class="s2">&quot;ivt&quot;</span><span class="p">],</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>    <span class="n">choice_format</span><span class="o">=</span><span class="s2">&quot;one_zero&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>In this example the 'choice_format' is "one_zero" while it was "item_id" in our previous SwissMetro example. As a short memento it specifies how the chosen alternative is precised: with ones (chosen) and zeros (not chosen) or directlu with the item_id of the chosen item.</p>
+<table>
+<tr><th>"one_zero" </th><th>"item_id"</th></tr>
+
+<tr><td>
+
+
+| | case | alt | choice | dist | cost | ivt | ovt | freq |  income |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | train | 0 | 83 | 28.25 | 50 | 66 | 4 | 45 |
+| 2 | 1 | car | 1 | 83 | 15.77 | 61 | 0 | 0 | 45 |
+| 3 | 2 | train | 0 | 83 | 28.25 | 50 | 66 | 4 | 25 |
+| 4 | 2 | car | 1 | 83 | 15.77 | 61 | 0 | 0 | 25 |
+| 5 | 3 | train | 0 | 83 | 28.25 | 50 | 66 | 4 | 70 |
+
+</td><td>
+
+
+| | case | alt | choice | dist | cost | ivt | ovt | freq |  income |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | train | car | 83 | 28.25 | 50 | 66 | 4 | 45 |
+| 2 | 1 | car | car | 83 | 15.77 | 61 | 0 | 0 | 45 |
+| 3 | 2 | train | car | 83 | 28.25 | 50 | 66 | 4 | 25 |
+| 4 | 2 | car | car | 83 | 15.77 | 61 | 0 | 0 | 25 |
+| 5 | 3 | train | car | 83 | 28.25 | 50 | 66 | 4 | 70 |
+
+</td></tr> </table>
+
+<p>In the first 5 examples, the chosen transportation is always the car.</p>
+<p>That's it !</p>
+<h3 id="a-manual-example-of-featuresstorage">A manual example of FeaturesStorage</h3>
+<p>Let's consider a case where we consider three supermarkets: 
+- supermarket_1 with surface of 100 and 250 average nb of customers
+- supermarket_2 with surface of 150 and 500 average nb of customers
+- supermarket_3 with surface of 80 and 100 average nb of customers </p>
+<p>In each store, we have 4 available products for which we have little information. For the example'sake, let's consider the following utility:
+<script type="math/tex; mode=display">U(i) = u_i + \beta_1 \cdot S_s + \beta_2 \cdot C_s</script>
+With $S_s$ the surface of the store and $C_s$ its average number of customers.</p>
+<p>We want to estimate the base utilities $u_i$ and the two coefficients: $\beta_1$ and $\beta_2$.</p>
+<p>Let's start with creating a ChoiceDataset without the FeaturesStorage:</p>
+<p>Let's consider a case where we consider three supermarkets: 
+- supermarket_1 with surface of 100 and 250 average nb of customers
+- supermarket_2 with surface of 150 and 500 average nb of customers
+- supermarket_3 with surface of 80 and 100 average nb of customers </p>
+<p>In each store, we have 4 available products for which we have little information. For the example'sake, let's consider the following utility:
+<script type="math/tex; mode=display">U(i) = u_i + \beta_1 \cdot S_s + \beta_2 \cdot C_s</script>
+With $S_s$ the surface of the store and $C_s$ its average number of customers.</p>
+<p>We want to estimate the base utilities $u_i$ and the two coefficients: $\beta_1$ and $\beta_2$.</p>
+<p>Let's start with creating a ChoiceDataset without the FeaturesStorage:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Here are our choices:</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">supermarket_features</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">250</span><span class="p">],</span> <span class="p">[</span><span class="mi">150</span><span class="p">,</span> <span class="mi">500</span><span class="p">],</span> <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mi">100</span><span class="p">]]</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Now our store sequence of supermarkets is:</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">supermarkets_sequence</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># The usual way to store the features would be to create the contexts_features array that contains</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="c1"># the right features:</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">usual_supermarket_features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">supermarket_features</span><span class="p">[</span><span class="n">supermarket_id</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">supermarket_id</span> <span class="ow">in</span> <span class="n">supermarkets_sequence</span><span class="p">])</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Usual Supermakerket Features Shape:&quot;</span><span class="p">,</span> <span class="n">usual_supermarket_features</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Usual Supermakerket Features Shape: (18, 2)
+</code></pre></div>
+<p>Supermarket features being repeated several times, it's a great opportunity to use a FeaturesStorage !\
+Let's see how to use strings as IDs.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">features_dict</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;supermarket_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">supermarket_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">storage</span> <span class="o">=</span> <span class="n">FeaturesStorage</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">features_dict</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;supermarket_features&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrieving features of first supermarket:&quot;</span><span class="p">)</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;supermarket_1&quot;</span><span class="p">])</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrieving a batch of features:&quot;</span><span class="p">)</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="s2">&quot;supermarket_1&quot;</span><span class="p">,</span> <span class="s2">&quot;supermarket_2&quot;</span><span class="p">,</span> <span class="s2">&quot;supermarket_1&quot;</span><span class="p">]])</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Retrieving features of first supermarket:
+[100 250]
+Retrieving a batch of features:
+[[100 250]
+ [150 500]
+ [100 250]]
+</code></pre></div>
+<p><ins>Reminder:</ins></p>
+<p>It is needed to:
+- specify a FeaturesStorage name
+- match FeaturesStorage ids with the sequence</p>
+<p>In our case we call our FeaturesStorage "supermarket_features", the ids are now strings, let's make the sequence match:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">str_supermarkets_sequence</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">f</span><span class="s2">&quot;supermarket_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">supermarkets_sequence</span><span class="p">]</span>
+</span></code></pre></div>
+<p>And now we can create our ChoiceDataset:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">storage_dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">choices</span><span class="p">,</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>                                <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">str_supermarkets_sequence</span><span class="p">,</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>                                <span class="n">shared_features_by_choice_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;supermarket_features&quot;</span><span class="p">],</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>                                <span class="n">available_items_by_choice</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">),</span> <span class="mi">3</span><span class="p">)),</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>                                <span class="n">features_by_ids</span><span class="o">=</span><span class="p">[</span><span class="n">storage</span><span class="p">],</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>And now let's see how batches work:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">storage_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Shared Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Choice:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%-------------------------%</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">storage_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Shared Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Choice:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%-------------------------%</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">storage_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
+</span><span id="__span-29-12"><a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Shared Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-29-13"><a id="__codelineno-29-13" name="__codelineno-29-13" href="#__codelineno-29-13"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-29-14"><a id="__codelineno-29-14" name="__codelineno-29-14" href="#__codelineno-29-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Choice:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Batch Shared Items Features: [100 250]
+Batch Items Features: None
+Batch Choice: 0
+%-------------------------%
+Batch Shared Items Features: [[100 250]
+ [150 500]
+ [ 80 100]]
+Batch Items Features: None
+Batch Choice: [1 2 0]
+%-------------------------%
+Batch Shared Items Features: [[100 250]
+ [100 250]
+ [100 250]]
+Batch Items Features: None
+Batch Choice: [0 1 1]
+</code></pre></div>
+<p>Everything is mapped as needed. And the great thing is that you can easily mix ''classical'' features with FeaturesStorages.\
+Let's add a 'is_week_end' feature to our problem that will also be stored as a contexts_features.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">shared_features</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;supermarket_features&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">str_supermarkets_sequence</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="s2">&quot;is_week_end&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]})</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">shared_features</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>supermarket_features</th>
+      <th>is_week_end</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>supermarket_1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>supermarket_1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>supermarket_2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>supermarket_3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>supermarket_2</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Creation of the ChoiceDataset</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="n">storage_dataset</span> <span class="o">=</span> <span class="n">ChoiceDataset</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">choices</span><span class="p">,</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>                                <span class="n">shared_features_by_choice</span><span class="o">=</span><span class="n">shared_features</span><span class="p">,</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>                                <span class="n">available_items_by_choice</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">),</span> <span class="mi">3</span><span class="p">)),</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>                                <span class="n">features_by_ids</span><span class="o">=</span><span class="p">[</span><span class="n">storage</span><span class="p">],</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># And now it&#39;s ready</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">storage_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Shared Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Items Features:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Choice:&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span></code></pre></div>
+<p><strong>Note that:</strong>
+- We use strings as ids for the example, however we recommend to use integers.
+- FeaturesStorage can be instantiated from dict, np.ndarray, list, pandas.DataFrame, etc...
+- More in-depth examples and explanations can be found <a href="./features_byID_example.ipynb">here</a></p>
+<h2 id="ready-to-use-datasets">Ready-to-use datasets</h2>
+<p>A few well-known open source datasets are directly integrated and the package and can be downloaded in one line:
+- SwissMetro from Bierlaire et al (2001) [2]
+- ModeCanada from Koppleman et al. (1993) [1]
+- The Train dataset from Ben Akiva et al. (1993) [4]
+- The Heating &amp; Electricity datasets from Kenneth Train [3]
+- The TaFeng dataset from Kaggle [5]</p>
+<p>If you feel like another open-source dataset could be included, reach out !</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">choice_learn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">load_swissmetro</span><span class="p">,</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>                                   <span class="n">load_modecanada</span><span class="p">,</span>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>                                   <span class="n">load_train</span><span class="p">,</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>                                   <span class="n">load_heating</span><span class="p">,</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>                                   <span class="n">load_electricity</span><span class="p">,</span>
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>                                   <span class="n">load_tafeng</span>
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>                                   <span class="p">)</span>
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a>
+</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a><span class="n">canada_choice_dataset</span> <span class="o">=</span> <span class="n">load_modecanada</span><span class="p">()</span>
+</span><span id="__span-33-10"><a id="__codelineno-33-10" name="__codelineno-33-10" href="#__codelineno-33-10"></a><span class="n">swissmetro_choice_dataset</span> <span class="o">=</span> <span class="n">load_swissmetro</span><span class="p">()</span>
+</span></code></pre></div>
+<p>The datasets can also be downloaded as dataframes:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="n">swissmetro_df</span> <span class="o">=</span> <span class="n">load_swissmetro</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="n">swissmetro_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="references">References</h3>
+<p>[1] Koppelman et al. (1993), <em>Application and Interpretation of Nested Logit Models of Intercity Mode Choice</em>\
+[2] Bierlaire, M., Axhausen, K. and Abay, G. (2001), <em>The Acceptance of Modal Innovation: The Case of SwissMetro</em>\
+[3] Train, K.E. (2003) <em>Discrete Choice Methods with Simulation.</em> Cambridge University Press.\
+[4] Ben-Akiva M.; Bolduc D.; Bradley M. (1993) <em>Estimation of Travel Choice Models with Randomly Distributed Values of Time</em>\
+[5] The Ta Feng Grocery dataset on <a href="https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset">Kaggle</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>
