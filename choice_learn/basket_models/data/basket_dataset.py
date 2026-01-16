@@ -783,11 +783,12 @@ class TripDataset:
             np.empty(0, dtype=int),  # Weeks
             np.empty((0, self.n_items), dtype=int),  # Prices
             np.empty((0, self.n_items), dtype=int),  # Available items
+            np.empty(0, dtype=int),  # Users
         )
 
         if trip_batch_size == -1:
             # Get the whole dataset in one batch
-            identifiers = []
+            weights = []
             for trip_index in trip_indexes:
                 additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
                     trip_index
@@ -795,17 +796,18 @@ class TripDataset:
                 buffer = tuple(
                     np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
                 )
-                identifiers.extend([trip_index] * len(additional_trip_data[0]))
+                weights.extend([1 / len(additional_trip_data[0])] * len(additional_trip_data[0]))
 
             # Yield the whole dataset
-            yield buffer, np.array(identifiers)
+            yield buffer, np.array(weights).astype("float32")
 
         else:
             # Yield batches of size batch_size while going through all the trips
             index = 0
             outer_break = False
             while index < num_trips:
-                trip_identifier = []
+                weights = []
+                trip_count = 0
                 buffer = (
                     np.empty(0, dtype=int),  # Items
                     np.empty((0, self.max_length), dtype=int),  # Baskets
@@ -816,11 +818,11 @@ class TripDataset:
                     np.empty((0, self.n_items), dtype=int),  # Available items
                     np.empty(0, dtype=int),  # Users
                 )
-                while np.max(trip_identifier, initial=-1) + 1 < trip_batch_size:
+                while trip_count + 1 < trip_batch_size:
                     if index >= num_trips:
                         # Then the buffer is not full but there are no more trips to consider
                         # Yield the batch partially filled
-                        yield buffer, np.array(trip_identifier)
+                        yield buffer, np.array(weights).astype("float32")
 
                         # Exit the TWO while loops when all trips have been considered
                         outer_break = True
@@ -832,18 +834,19 @@ class TripDataset:
                             trip_indexes[index]
                         )
                         index += 1
+                        trip_count += 1
 
                         # Fill the buffer with the new trip
                         buffer = tuple(
                             np.concatenate((buffer[i], additional_trip_data[i]))
                             for i in range(len(buffer))
                         )
-                        trip_identifier.extend(
-                            [np.max(trip_identifier, initial=-1) + 1] * len(additional_trip_data[0])
+                        weights.extend(
+                            [1 / len(additional_trip_data[0])] * len(additional_trip_data[0])
                         )
 
                 if outer_break:
                     break
 
                 # Yield the batch
-                yield buffer, np.array(trip_identifier)
+                yield buffer, np.array(weights).astype("float32")
