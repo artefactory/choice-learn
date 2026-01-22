@@ -338,9 +338,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             df=swiss_df,
             items_id=items,
             shared_features_columns=shared_features_by_choice_names,
-            items_features_suffixes=items_features_by_choice_names
-            + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"],
-            available_items_suffix=availabilities_column,
+            items_features_patterns=["*_%s" % column for column in (
+                items_features_by_choice_names + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"])],
+            available_items_pattern="*_%s" % availabilities_column,
             choices_column=choice_column,
             choice_format="items_index",
         )
@@ -532,8 +532,8 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         df=swiss_df,
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
-        items_features_suffixes=items_features_by_choice_names,
-        available_items_suffix=availabilities_column,
+        items_features_patterns=["*_%s" % s for s in items_features_by_choice_names],
+        available_items_pattern="*_%s" % availabilities_column,
         choices_column=choice_column,
         choice_format="items_index",
     )
@@ -927,9 +927,7 @@ def load_train(
         df=train_df,
         items_id=["1", "2"],
         shared_features_columns=["id"],
-        items_features_prefixes=["price", "time", "change", "comfort"],
-        delimiter="",
-        available_items_suffix=None,
+        items_features_patterns=["price*", "time*", "change*", "comfort*"],
         choices_column="choice",
         choice_format="items_id",
     )
@@ -974,17 +972,17 @@ def load_car_preferences(
     cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
     shared_features = ["college", "hsg2", "coml5"]
     items_features = [
-        "type",
-        "fuel",
-        "price",
-        "range",
-        "acc",
-        "speed",
-        "pollution",
-        "size",
-        "space",
-        "cost",
-        "station",
+        "type*",
+        "fuel*",
+        "price*",
+        "range*",
+        "acc*",
+        "speed*",
+        "pollution*",
+        "size*",
+        "space*",
+        "cost*",
+        "station*",
     ]
     items_id = [f"{i}" for i in range(1, 7)]
 
@@ -992,8 +990,7 @@ def load_car_preferences(
         df=cars_df,
         items_id=items_id,
         shared_features_columns=shared_features,
-        items_features_prefixes=items_features,
-        delimiter="",
+        items_features_patterns=items_features,
         choices_column="choice",
         choice_format="items_id",
     )
@@ -1060,8 +1057,7 @@ def load_hc(
     return ChoiceDataset.from_single_wide_df(
         df=hc_df,
         shared_features_columns=["income"],
-        items_features_prefixes=["ich", "och", "occa", "icca"],
-        delimiter=".",
+        items_features_patterns=["ich.*", "och.*", "occa.*", "icca.*"],
         items_id=items_id,
         choices_column="depvar",
         choice_format="items_id",
@@ -1206,7 +1202,7 @@ def load_londonpassenger(
         df=london_df,
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
-        items_features_suffixes=items_features_by_choice_names,
+        items_features_patterns=["*_%s" % s for s in items_features_by_choice_names],
         delimiter="_",
         choices_column=choice_column,
         choice_format="items_index",
