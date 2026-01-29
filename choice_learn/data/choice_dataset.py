@@ -929,8 +929,9 @@ class ChoiceDataset:
             shared_features_by_choice_names = None
 
         if items_features_patterns is not None:
-            assert all(["*" in pattern for pattern in items_features_patterns]), \
+            assert all(["*" in pattern for pattern in items_features_patterns]), (
                 "items_features_patterns should all contain '*' character."
+            )
             items_features_by_choice = []
             for item in items_id:
                 columns = [feature.replace("*", item) for feature in items_features_patterns]
@@ -958,8 +959,9 @@ class ChoiceDataset:
                 logging.info("Each column will be matched to an item, given their order")
                 available_items_by_choice = df[available_items_pattern].to_numpy()
             else:
-                assert "*" in available_items_pattern, \
+                assert "*" in available_items_pattern, (
                     "available_items_pattern should contain '*' character."
+                )
                 columns = [available_items_pattern.replace("*", item) for item in items_id]
                 available_items_by_choice = df[columns].to_numpy()
         else:

@@ -338,8 +338,10 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             df=swiss_df,
             items_id=items,
             shared_features_columns=shared_features_by_choice_names,
-            items_features_patterns=["*_%s" % column for column in (
-                items_features_by_choice_names + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"])],
+            items_features_patterns=[
+                "*_%s" % column
+                for column in (items_features_by_choice_names + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"])
+            ],
             available_items_pattern="*_%s" % availabilities_column,
             choices_column=choice_column,
             choice_format="items_index",
