@@ -1,6 +1,7 @@
 """Main classes to handle assortment data."""
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -886,6 +887,7 @@ class ChoiceDataset:
         shared_features_columns=None,
         items_features_patterns=None,
         available_items_pattern=None,
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         choices_column="choice",
         choice_format="items_id",
     ):
@@ -902,11 +904,16 @@ class ChoiceDataset:
         items_features_patterns : list of str, optional
             Patterns of the columns of the dataframe that are items_features_by_choice,
             given as "*suffix" or "prefix*" where "*" is replaced by items_id in df columns.
+            It is possible to specify characters to be ignored by including them between [^ and ].
             default is None
         available_items_pattern: str, optional
             Pattern of the columns of the dataframe that are available_items_by_choice,
             given as "*suffix" or "prefix*" where "*" is replaced by items_id in df columns.
             default is None
+        patterns_ignore_chars: str or list, optional
+            Characters to be ignored in the patterns matching, given as a regex string
+            (e.g. "[^a-zA-Z0-9_]") or as a list of characters (e.g. [" ", "-", "/"]),
+            default is "[^a-zA-Z0-9_]"
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
         choice_format: str, optional
@@ -929,9 +936,8 @@ class ChoiceDataset:
             shared_features_by_choice_names = None
 
         if items_features_patterns is not None:
-            assert all(["*" in pattern for pattern in items_features_patterns]), (
-                "items_features_patterns should all contain '*' character."
-            )
+            if not all(["*" in pattern for pattern in items_features_patterns]):
+                raise ValueError("items_features_patterns should all contain '*' character.")
             items_features_by_choice = []
             for item in items_id:
                 columns = [feature.replace("*", item) for feature in items_features_patterns]
@@ -944,6 +950,20 @@ class ChoiceDataset:
                         df[col] = 0
                 items_features_by_choice.append(df[columns].to_numpy())
             items_features_by_choice = np.stack(items_features_by_choice, axis=1)
+            items_features_names = [
+                features.replace("*", "") for features in items_features_patterns
+            ]
+            if isinstance(patterns_ignore_chars, list):
+                for char in patterns_ignore_chars:
+                    items_features_names = [name.replace(char, "") for name in items_features_names]
+            elif isinstance(patterns_ignore_chars, str):
+                regex = re.compile(patterns_ignore_chars)
+                items_features_names = [regex.sub("", name) for name in items_features_names]
+            elif items_features_patterns is not None:
+                raise ValueError(
+                    f"""patterns_ignore_chars should either be a list of characters,
+                    a regex string or None, got {type(patterns_ignore_chars)}"""
+                )
         else:
             items_features_by_choice = None
             items_features_names = None
@@ -959,9 +979,8 @@ class ChoiceDataset:
                 logging.info("Each column will be matched to an item, given their order")
                 available_items_by_choice = df[available_items_pattern].to_numpy()
             else:
-                assert "*" in available_items_pattern, (
-                    "available_items_pattern should contain '*' character."
-                )
+                if "*" not in available_items_pattern:
+                    raise ValueError("available_items_pattern should contain '*' character.")
                 columns = [available_items_pattern.replace("*", item) for item in items_id]
                 available_items_by_choice = df[columns].to_numpy()
         else:
