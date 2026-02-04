@@ -887,7 +887,7 @@ class ChoiceDataset:
         shared_features_columns=None,
         items_features_patterns=None,
         available_items_pattern=None,
-        patterns_ignore_chars="[^a-zA-Z0-9_]",
+        patterns_ignore_chars="[^a-zA-Z0-9]",
         choices_column="choice",
         choice_format="items_id",
     ):
@@ -959,6 +959,7 @@ class ChoiceDataset:
             elif isinstance(patterns_ignore_chars, str):
                 regex = re.compile(patterns_ignore_chars)
                 items_features_names = [regex.sub("", name) for name in items_features_names]
+                print(">>>", items_features_names)
             elif items_features_patterns is not None:
                 raise ValueError(
                     f"""patterns_ignore_chars should either be a list of characters,
@@ -973,7 +974,7 @@ class ChoiceDataset:
                 if not len(available_items_pattern) == len(items_id):
                     raise ValueError(
                         "You have given a list of columns for availabilities."
-                        "We consider that it is one for each item however lenghts do not match"
+                        "We consider that it is one for each item however lengths do not match"
                     )
                 logging.info("You have given a list of columns for availabilities.")
                 logging.info("Each column will be matched to an item, given their order")
@@ -982,6 +983,7 @@ class ChoiceDataset:
                 if "*" not in available_items_pattern:
                     raise ValueError("available_items_pattern should contain '*' character.")
                 columns = [available_items_pattern.replace("*", item) for item in items_id]
+                print(">>>", columns, available_items_pattern, items_id)
                 available_items_by_choice = df[columns].to_numpy()
         else:
             available_items_by_choice = None

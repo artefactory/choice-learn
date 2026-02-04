@@ -1060,6 +1060,7 @@ def load_hc(
         df=hc_df,
         shared_features_columns=["income"],
         items_features_patterns=["ich.*", "och.*", "occa.*", "icca.*"],
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         items_id=items_id,
         choices_column="depvar",
         choice_format="items_id",
@@ -1205,7 +1206,6 @@ def load_londonpassenger(
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
         items_features_patterns=["*_%s" % s for s in items_features_by_choice_names],
-        delimiter="_",
         choices_column=choice_column,
         choice_format="items_index",
     )
