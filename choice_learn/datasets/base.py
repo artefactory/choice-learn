@@ -1206,6 +1206,7 @@ def load_londonpassenger(
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
         items_features_patterns=["*_%s" % s for s in items_features_by_choice_names],
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         choices_column=choice_column,
         choice_format="items_index",
     )
