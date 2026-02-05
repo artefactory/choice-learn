@@ -43,13 +43,14 @@ dataset = ChoiceDataset.from_single_wide_df(
         "inc_cooling.*",
         "inc_room.*",
     ],
+    patterns_ignore_chars="[^a-zA-Z0-9_]",
     items_id=items_id,
     choices_column="depvar",
     choice_format="items_id",
 )
 
 
-def test_fit_hc_formul_1():
+def test_fit_hc_formula_1():
     """Tests specific config of NestedLogit on HC dataset."""
     tf.config.run_functions_eagerly(True)
     global dataset
