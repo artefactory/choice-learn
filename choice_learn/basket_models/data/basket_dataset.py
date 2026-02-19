@@ -584,6 +584,74 @@ class TripDataset:
             np.array([trip.user_id]),  # User IDs
         )
 
+    def get_pair_wised_data_from_trip_index(
+        self,
+        trip_index: int,
+        max_pairs_per_item: int = 5,
+    ) -> tuple[np.ndarray]:
+        """Get pair-wised data from a trip index.
+
+        Pair-wised data consists in creating pairs of items from the same basket
+        that will be used as positive samples and pairs of items from different
+        baskets that will be used as negative samples. It leads to returning:
+            - items,
+            - baskets with one item removed,
+            - stores,
+            - weeks,
+            - prices,
+            - available items.
+        """
+        trip = self.trips[trip_index]
+        length_trip = len(trip.purchases)
+        purchases = np.array(trip.purchases)
+
+        # for each item in the basket, we create a pair with each of the other items in the basket
+        item_purchases = []
+        baskets_without_target = []
+        for i in range(length_trip):
+            context_indices = [j for j in range(length_trip) if j != i]
+            if len(context_indices) > max_pairs_per_item:
+                context_indices = random.sample(context_indices, max_pairs_per_item)  # nosec
+
+            for j in context_indices:
+                item_purchases.append(purchases[i])
+                padded_basket = np.concatenate(([purchases[j]], -1 * np.ones(self.max_length - 1)))
+                baskets_without_target.append(padded_basket)
+
+        if len(item_purchases) == 0:
+            item_purchases = np.empty(0, dtype=int)
+            baskets_without_target = np.empty((0, self.max_length), dtype=int)
+        else:
+            item_purchases = np.array(item_purchases, dtype=int)
+            baskets_without_target = np.array(baskets_without_target, dtype=int)
+
+        n_pairs = len(item_purchases)
+
+        if not (isinstance(trip.assortment, np.ndarray) or isinstance(trip.assortment, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            assortment = self.available_items[trip.assortment]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            assortment = trip.assortment
+
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            prices = trip.prices
+
+        return (
+            item_purchases,  # Items
+            baskets_without_target,  # Baskets
+            np.zeros((n_pairs, self.max_length), dtype=int),  # Future purchases (Dummy)
+            np.full(n_pairs, trip.store),  # Stores
+            np.full(n_pairs, trip.week),  # Weeks
+            np.tile(prices, (n_pairs, 1)),  # Prices
+            np.tile(assortment, (n_pairs, 1)),  # Available items
+            np.full(n_pairs, trip.user_id),  # User IDs
+        )
+
     def iter_batch(
         self,
         batch_size: int,
@@ -605,6 +673,8 @@ class TripDataset:
                 data = self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
             elif data_method == "sequential":
                 data = self.get_sequential_data_from_trip_index(trip_index)
+            elif data_method == "prod2vec":
+                data = self.get_pair_wised_data_from_trip_index(trip_index)
             else:
                 raise ValueError(f"Unknown data method: {data_method}")
 
