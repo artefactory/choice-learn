@@ -35,7 +35,7 @@ class SABAC(BaseBasketModel):
         momentum: float = 0.0,
         l2_regularization: float = 0.0,
         dropout_rate: float = 0.0,
-        intercept: bool = True,
+        item_intercept: bool = True,
         price_effects: bool = False,
         store_effects: bool = False,
         epsilon_price: float = 1e-4,
@@ -52,9 +52,11 @@ class SABAC(BaseBasketModel):
 
         Parameters
         ----------
-        latent_size : int
-            Size of the item embeddings.
-        short_term_weight : float
+        latent_size : latent_sizes : dict[str, int]
+            Dictionary specifying the sizes of different latent dimensions:
+            'short_term' for short-term preferences, 'long_term' for long-term preferences,
+            and 'price' for price effects.
+        short_term_ratio : float
             Weighting factor between long-term and short-term preferences.
         n_negative_samples : int
             Number of negative samples to use in training.
@@ -110,9 +112,9 @@ class SABAC(BaseBasketModel):
         if "short_term" not in latent_sizes:
             latent_sizes["short_term"] = 10
         if "long_term" not in latent_sizes:
-            latent_sizes["long_term"] = 10
+            latent_sizes["long_term"] = 0
         if "price" not in latent_sizes:
-            latent_sizes["price"] = 4
+            latent_sizes["price"] = 0
 
         self.short_term_ratio = short_term_ratio
         self.n_negative_samples = n_negative_samples
@@ -123,7 +125,7 @@ class SABAC(BaseBasketModel):
         self.ffn_hidden_dim = self.d * 4
         self.l2_regularization = l2_regularization
         self.dropout_rate = dropout_rate
-        self.item_intercept = intercept
+        self.item_intercept = item_intercept
         self.price_effects = price_effects
         self.store_effects = store_effects
         self.epsilon_price = epsilon_price
@@ -169,10 +171,18 @@ class SABAC(BaseBasketModel):
             Item embedding matrix for long-term preferences, size (n_items, d_long).
         U : tf.Variable
             User embedding matrix for long-term preferences, size (n_users, d_long).
-        Wq : tf.Variable
-            Weight matrix for query transformation in attention mechanism, size (d, d).
-        Wk : tf.Variable
-            Weight matrix for key transformation in attention mechanism, size (d, d).
+        theta : tf.Variable, optional
+            Store effects embedding matrix, size (n_stores, d).
+        beta : tf.Variable, optional
+            Item price sensitivity embedding matrix, size (n_items, latent_sizes["price"]).
+        delta : tf.Variable, optional
+            Store price sensitivity embedding matrix, size (n_stores, latent_sizes["price"]).
+        alpha : tf.Variable, optional
+            Item intercept vector, size (n_items,).
+        CLS_token : tf.Variable, optional
+            CLS token embedding, size (1, d).
+        W_Q, W_K, W_V, W_O, W1, W2, b1, b2, gamma1, beta1, gamma2, beta2, S : tf.Variable, optional
+            Weights and biases for TransformerBlocks and attention pooling.
         """
         self.n_items = n_items
         self.n_users = n_users
@@ -275,7 +285,8 @@ class SABAC(BaseBasketModel):
         Returns
         -------
             list
-                List of trainable weights (X, V, U, Wq, Wk).
+                List of trainable weights (X, V, U, alpha, CLS_token, beta, delta,
+                and TransformerBlock weights)
         """
         weights = [self.X, self.V, self.U]
         if self.item_intercept:
@@ -305,7 +316,9 @@ class SABAC(BaseBasketModel):
         """
         return "aleacarta"
 
-    def embed_basket(self, basket_batch: tf.Tensor, is_training: bool = False) -> tf.Tensor:
+    def embed_basket(
+        self, basket_batch: tf.Tensor, is_training: bool = False
+    ) -> tuple[tf.Tensor, list[tf.Tensor]]:
         """Compute the embedding of the baskets in basket_batch.
 
         Parameters
@@ -321,6 +334,10 @@ class SABAC(BaseBasketModel):
         tf.Tensor
             Embedding of each basket in basket_batch.
             Shape must be (batch_size, d).
+        list[tf.Tensor]
+            Attention weights for each block in the model.
+            Shape of each tensor in the list must be (batch_size, num_heads, L, L)
+            for blocks with attention_pooling=False,
         """
         padding_vector = tf.zeros(shape=[1, self.d])
         padded_items = tf.concat([self.X, padding_vector], axis=0)
@@ -570,7 +587,7 @@ class SABAC(BaseBasketModel):
             axis=0,
         )
 
-    # @tf.function  # Graph mode
+    @tf.function  # Graph mode
     def compute_batch_loss(
         self,
         item_batch: np.ndarray,
@@ -678,7 +695,7 @@ class SABAC(BaseBasketModel):
             ]
         )
 
-        epsilon = 0.0
+        epsilon = 1e-8
         loglikelihood = tf.reduce_sum(
             tf.math.log(
                 tf.sigmoid(
@@ -717,10 +734,11 @@ class SABAC(BaseBasketModel):
 
     def save_model(self, path: str) -> None:
         """
-        Surchage de save_model pour gérer la sérialisation de self.blocks.
+        Override of save_model to handle serialization of self.blocks.
 
-        Cette méthode convertit temporairement les objets TransformerBlock en dictionnaires
-        avant d'appeler la méthode de sauvegarde de la classe parente.
+        This method saves the weights of the TransformerBlock objects in separate .npy files
+        and their configurations in the params.json file, while ensuring that the original
+        self.blocks list is not modified.
         """
         if os.path.exists(path):
             current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -728,7 +746,6 @@ class SABAC(BaseBasketModel):
 
         Path(path).mkdir(parents=True, exist_ok=True)
 
-        # Sauvegarder les poids (avant toute modification de self.blocks)
         weights_to_save = self.trainable_weights
         for latent_parameter in weights_to_save:
             parameter_name = latent_parameter.name.split(":")[0]
@@ -750,12 +767,10 @@ class SABAC(BaseBasketModel):
                 json.dump(params_to_save, f, indent=4)
 
         finally:
-            # Restaure les objets originaux pour que le modèle reste fonctionnel
             self.blocks = original_blocks
 
     @classmethod
     def load_model(cls, path: str):
-        # docstring in english
         """
         Override of load_model to handle deserialization of self.blocks.
 
