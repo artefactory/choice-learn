@@ -372,19 +372,24 @@ class SABAC(BaseBasketModel):
         elif self.attention_pooling:
             basket_embedding = x  # Shape: (batch_size, 1, d)
             basket_embedding = tf.squeeze(basket_embedding, axis=1)  # Shape: (batch_size, d)
+        elif self.loss == "max_loss_pooling":
+            # We keep the per-item utilities and perform max pooling on them in the loss function
+            # We need to pad the tensor x to have a fixed shape of (batch_size, max_basket_size, d)
+            basket_embedding = x  # Shape: (batch_size, L, d)
         else:
             basket_embedding = tf.math.divide_no_nan(
                 tf.reduce_sum(x, axis=1),
                 tf.squeeze(tf.reduce_sum(num_items_by_basket, axis=2), axis=-1),
             )  # Shape: (batch_size, d)
 
-        basket_embedding = tf.nn.l2_normalize(basket_embedding, axis=1)
+        basket_embedding = tf.nn.l2_normalize(basket_embedding, axis=-1)
         return basket_embedding, attention_weights
 
     def compute_batch_short_utility(
         self,
         item_batch: Union[np.ndarray, tf.Tensor],
         basket_embedding: tf.Tensor,
+        basket_batch: tf.Tensor = None,
     ) -> tf.Tensor:
         """Compute the short distance of the items in item_batch given the items in basket_batch.
 
@@ -406,10 +411,29 @@ class SABAC(BaseBasketModel):
             Shape must be (batch_size,)
         """
         x_item_target = tf.gather(self.X, indices=item_batch)  # Shape: (batch_size, d)
+        if self.loss == "max_loss_pooling":
+            # basket_embedding Shape: (batch_size, L, d)
+            pairwise_utility = tf.einsum(
+                "bkd,bld->bkl", x_item_target, basket_embedding
+            )  # Shape: (batch_size, K, L)
 
-        return tf.reduce_sum(
-            tf.expand_dims(basket_embedding, axis=1) * x_item_target, axis=-1
-        )  # Shape: (batch_size,)
+            if basket_batch is not None:
+                padding_mask = tf.equal(basket_batch, self.n_items)  # True pour le padding
+                padding_mask = tf.expand_dims(padding_mask, axis=1)  # Shape: (batch_size, 1, L)
+
+                pairwise_utility = tf.where(
+                    padding_mask,
+                    tf.constant(-np.inf, dtype=pairwise_utility.dtype),
+                    pairwise_utility,
+                )
+
+            # Max Pooling on basket dim (L)
+            short_term_distance = tf.reduce_max(pairwise_utility, axis=2)  # Shape: (batch_size, K)
+        else:
+            short_term_distance = tf.reduce_sum(
+                tf.expand_dims(basket_embedding, axis=1) * x_item_target, axis=-1
+            )  # Shape: (batch_size,)
+        return short_term_distance
 
     def compute_batch_long_utility(
         self,
@@ -485,13 +509,16 @@ class SABAC(BaseBasketModel):
             dtype=tf.int32,
         )
         basket_batch = basket_batch_ragged.to_tensor(self.n_items)
-        basket_embedding, _ = self.embed_basket(basket_batch, is_training)  # Shape: (batch_size, d)
+        basket_embedding, _ = self.embed_basket(
+            basket_batch, is_training
+        )  # Shape: (batch_size, d) or (batch_size, L, d) if self.loss == 'max_loss_pooling'
 
         long_utility = self.compute_batch_long_utility(item_batch, user_batch)
-
+        basket_batch_tensor = basket_batch_ragged.to_tensor(self.n_items)
         short_utility = self.compute_batch_short_utility(
-            item_batch, basket_embedding
+            item_batch, basket_embedding, basket_batch=basket_batch_tensor
         ) + self.compute_psi(item_batch, price_batch, store_batch)
+        # Shape: (batch_size,None) or (batch_size, None,L) if self.loss == 'max_loss_pooling'
         return self.short_term_ratio * long_utility + (1 - self.short_term_ratio) * short_utility
 
     def get_negative_samples_vectorized(
@@ -708,7 +735,7 @@ class SABAC(BaseBasketModel):
                 + epsilon
             ),
         )  # Shape of loglikelihood: (1,))
-        if self.loss == "bce":
+        if self.loss in ["bce", "max_loss_pooling"]:
             loss = tf.keras.backend.binary_crossentropy(
                 # Target: 1 for positive samples, 0 for negative samples
                 target=tf.concat(
