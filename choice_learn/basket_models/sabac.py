@@ -46,6 +46,7 @@ class SABAC(BaseBasketModel):
         attention_pooling: bool = False,
         rc_ln: bool = True,
         loss: str = "bce",
+        order_inversed: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the model with hyperparameters.
@@ -100,9 +101,16 @@ class SABAC(BaseBasketModel):
             Whether to use the Residual_Connexion and Layer_Normalization architecture in the
             transformer blocks, by default True
         loss: str, optional
-            Loss function to use, either 'bce' for binary cross-entropy or 'scce' for
-            sparse categorical cross-entropy, by default 'bce'
-
+            Loss function to use, either 'bce' for binary cross-entropy or 'scce' for sparse
+            categorical cross-entropy, by default 'bce' or max_loss_pooling for max loss pooling.
+            Please note that max_loss_pooling brings a lot of changes in the core architecture of
+            the model and is not compatible with some features such as the CLS architecture or
+            attention pooling.
+        order_inversed: bool, optional
+            Whether to inverse the order of items in the basket for the attention mechanism.
+            False mean ffn+pooling and True means pooling+ffn
+            --> By default value is not yet fixed !!
+            --> To be fixed for paper
         """
         self.instantiated = False
 
@@ -136,6 +144,7 @@ class SABAC(BaseBasketModel):
         self.attention_pooling = attention_pooling
         self.rc_ln = rc_ln
         self.loss = loss
+        self.order_inversed = order_inversed
         super().__init__(
             optimizer=optimizer,
             callbacks=callbacks,
@@ -260,6 +269,7 @@ class SABAC(BaseBasketModel):
                 dropout_rate=self.dropout_rate,
                 attention_pooling=False,
                 rc_ln=self.rc_ln,
+                order_inversed=self.order_inversed,
                 name=f"block_{i}",
             )
             self.blocks.append(block)
@@ -273,6 +283,8 @@ class SABAC(BaseBasketModel):
                 use_value_matrix=self.value_matrix,
                 dropout_rate=self.dropout_rate,
                 attention_pooling=True,
+                rc_ln=False,
+                order_inversed=False,
                 name="attention_pooling_block",
             )
             self.blocks.append(block)
@@ -352,6 +364,8 @@ class SABAC(BaseBasketModel):
             tf.expand_dims(mask_float, axis=-1), axis=1
         )  # (batch_size, 1)
 
+        # cls_architecture: if True, instead of doing Pooling we keep the representation of
+        # the [CLS] token
         if self.cls_architecture:
             batch_size = tf.shape(x)[0]
             cls_tokens = tf.repeat(
@@ -367,6 +381,10 @@ class SABAC(BaseBasketModel):
         for block in self.blocks:
             x, attention_weight = block.call(x, mask=attention_mask, training=is_training)
             attention_weights.append(attention_weight)
+
+        if self.order_inversed:
+            # means that we already have performed pooling
+            basket_embedding = x[:, 0, :]  # Shape: (batch_size, d)
         if self.cls_architecture:
             basket_embedding = x[:, 0, :]  # Shape: (batch_size, d)
         elif self.attention_pooling:
@@ -846,6 +864,7 @@ class TransformerBlock:
         dropout_rate=0.1,
         attention_pooling=False,
         rc_ln=True,
+        order_inversed=False,
         name="transformer_block",
     ):
         self.d_model = d_model
@@ -857,6 +876,7 @@ class TransformerBlock:
         self.attention_pooling = attention_pooling
         self._trainable_weights = []
         self.rc_ln = rc_ln
+        self.order_inversed = order_inversed
         self.name = name
 
         def add_var(shape, var_name, zeros=False):
@@ -933,6 +953,21 @@ class TransformerBlock:
         if self.num_heads > 1:
             output = tf.matmul(output, self.W_O)
 
+        if self.order_inversed:
+            # pooling before ffn and layer norm
+            output = tf.reduce_mean(
+                output, axis=1, keepdims=True
+            )  # Shape: (batch_size, 1, d_model)
+            # output = self._layer_norm(output, self.gamma1, self.beta1)
+            residual = output
+            ffn_out = tf.matmul(output, self.W1) + self.b1
+            ffn_out = tf.nn.gelu(ffn_out)
+            if training:
+                ffn_out = tf.nn.dropout(ffn_out, rate=self.dropout_rate / 4)
+            ffn_out = tf.matmul(ffn_out, self.W2) + self.b2
+            x = self._layer_norm(residual + ffn_out, self.gamma2, self.beta2)
+            return x, attention_weights
+
         if self.attention_pooling:
             x = output
         else:
@@ -972,5 +1007,6 @@ class TransformerBlock:
             "dropout_rate": self.dropout_rate,
             "attention_pooling": self.attention_pooling,
             "rc_ln": self.rc_ln,
+            "order_inversed": self.order_inversed,
             "name": self.name,
         }
