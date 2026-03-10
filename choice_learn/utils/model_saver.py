@@ -93,7 +93,7 @@ def _load_weights(model, directory):
             )
 
 
-def load_model(cls, path: str) -> object:
+def load_model(model_class, path: str) -> object:
     """Load a model previously saved with save_model().
 
     Parameters
@@ -120,7 +120,7 @@ def load_model(cls, path: str) -> object:
             non_init_params[key] = val
 
     # Initialize model
-    model = cls(**init_params)
+    model = model_class(**init_params)
 
     # Set non-init parameters
     for key, val in non_init_params.items():

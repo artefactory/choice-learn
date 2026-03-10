@@ -16,6 +16,7 @@ import tqdm
 
 from ..tf_ops import softmax_with_availabilities
 from ..utils.metrics import NegativeLogLikeliHood
+from ..utils.model_saver import save_model, load_model
 from .data.basket_dataset import Trip, TripDataset
 from .utils.permutation import permutations
 
@@ -988,6 +989,8 @@ class BaseBasketModel:
         BasketModel
             Loaded BasketModel
         """
+        #model = load_model(cls, path)
+        #return model
         import inspect
 
         # Load parameters
