@@ -929,6 +929,7 @@ class BaseBasketModel:
         path: str
             path to the folder where to save the model
         """
+        #save_model(self, path, save_optimizer=False)
         if os.path.exists(path):
             # Add current date and time to the folder name
             # if the folder already exists
