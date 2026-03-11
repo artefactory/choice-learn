@@ -13,6 +13,7 @@ import tqdm
 
 import choice_learn.tf_ops as tf_ops
 from choice_learn.data import ChoiceDataset
+from choice_learn.utils.model_saver import load_model, save_model
 
 
 class ChoiceModel:
@@ -571,48 +572,7 @@ class ChoiceModel:
         path : str
             path to the folder where to save the model
         """
-        if not os.path.exists(path):
-            Path(path).mkdir(parents=True)
-
-        for i, weight in enumerate(self.trainable_weights):
-            np.save(Path(path) / f"weight_{i}.npy", weight.numpy())
-
-        # To improve for non-string attributes
-        params = {}
-        for k, v in self.__dict__.items():
-            if isinstance(v, (int, float, str, dict, tuple)):
-                params[k] = v
-            elif isinstance(v, (list, tuple)):
-                if all(isinstance(item, (int, float, str, dict)) for item in v):
-                    params[k] = v
-                elif k != "_trainable_weights":
-                    logging.warning(
-                        """Attribute '%s' is a list with non-serializable
-                         types and will not be saved.""",
-                        k,
-                    )
-        with open(Path(path) / "params.json", "w") as f:
-            json.dump(params, f)
-
-        # Save optimizer state
-        if save_opt and not isinstance(self.optimizer, str):
-            (Path(path) / "optimizer").mkdir(parents=True, exist_ok=True)
-            config = self.optimizer.get_config()
-            weights_store = {}
-            self.optimizer.save_own_variables(weights_store)
-            for key, value in weights_store.items():
-                if isinstance(value, tf.Variable):
-                    value = value.numpy()
-                weights_store[key] = value.tolist()
-            if "learning_rate" in config.keys():
-                if isinstance(config["learning_rate"], tf.Variable):
-                    config["learning_rate"] = config["learning_rate"].numpy()
-                if isinstance(config["learning_rate"], np.float32):
-                    config["learning_rate"] = config["learning_rate"].tolist()
-            with open(Path(path) / "optimizer" / "config.json", "w") as f:
-                json.dump(config, f)
-            with open(Path(path) / "optimizer" / "weights_store.json", "w") as f:
-                json.dump(weights_store, f)
+        save_model(self, path, save_optimizer=save_opt)
 
     @classmethod
     def load_model(cls, path):
@@ -628,41 +588,7 @@ class ChoiceModel:
         ChoiceModel
             Loaded ChoiceModel
         """
-        # To improve for non string attributes
-        with open(Path(path) / "params.json") as f:
-            params = json.load(f)
-
-        obj = cls(optimizer=params["optimizer_name"])
-        obj._trainable_weights = []
-
-        i = 0
-        weight_path = f"weight_{i}.npy"
-        files_list = []
-        for file in Path(path).iterdir():
-            files_list.append(str(file.name))
-        while weight_path in files_list:
-            obj._trainable_weights.append(tf.Variable(np.load(Path(path) / weight_path)))
-            i += 1
-            weight_path = f"weight_{i}.npy"
-
-        for k, v in params.items():
-            setattr(obj, k, v)
-
-        if Path.is_dir(Path(path) / "optimizer"):
-            with open(Path(path) / "optimizer" / "config.json") as f:
-                config = json.load(f)
-            # obj.optimizer = tf.keras.optimizers.get(params["optimizer_name"]).from_config(config)
-            obj.optimizer = obj.optimizer.from_config(config)
-            obj.optimizer.build(var_list=obj.trainable_weights)
-
-            with open(Path(path) / "optimizer" / "weights_store.json") as f:
-                store = json.load(f)
-            for key, value in store.items():
-                store[key] = np.array(value, dtype=np.float32)
-            obj.optimizer.load_own_variables(store)
-
-        # Load optimizer step
-        return obj
+        return load_model(cls, path)
 
     def predict_probas(self, choice_dataset, batch_size=-1):
         """Predicts the choice probabilities for each choice and each product of a ChoiceDataset.
