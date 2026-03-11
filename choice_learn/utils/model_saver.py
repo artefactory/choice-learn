@@ -1,9 +1,11 @@
-import datetime
+from datetime import datetime
+import inspect
 import json
 import os
 from pathlib import Path 
 
 import numpy as np
+import tensorflow as tf
 
 
 def save_model(model, path: str, save_optimizer=False) -> None:
@@ -30,7 +32,7 @@ def save_model(model, path: str, save_optimizer=False) -> None:
 
     # Save the hyperparameters in a single pickle file
     params = {}
-    for k, v in self.__dict__.items():
+    for k, v in model.__dict__.items():
         if isinstance(v, (int, float, str, dict)):
             params[k] = v
         elif isinstance(v, (list, tuple)):
@@ -41,8 +43,9 @@ def save_model(model, path: str, save_optimizer=False) -> None:
                     """Attribute '%s' is a list with non-serializable
                     types and will not be saved.""",
                     k,
+                    )
     with open(Path(path) / "params.json", "w") as f:
-        json.dump(params, f)            )
+        json.dump(params, f)
 
     # Save the latent parameters in separate numpy files
     for latent_parameter in model.trainable_weights:
@@ -54,7 +57,7 @@ def save_model(model, path: str, save_optimizer=False) -> None:
         (Path(path) / "optimizer").mkdir(parents=True, exist_ok=True)
         config = model.optimizer.get_config()
         weights_store = {}
-        self.optimizer.save_own_variables(weights_store)
+        model.optimizer.save_own_variables(weights_store)
         for key, value in weights_store.items():
             if isinstance(value, tf.Variable):
                 value = value.numpy()
@@ -70,27 +73,37 @@ def save_model(model, path: str, save_optimizer=False) -> None:
             json.dump(weights_store, f)
 
 
-# Fine how-to link to _trainable_weights
-def _load_weights(model, directory):
+def _load_weights(model, path):
     """Load all the .npy weights within a directory.
 
     Parameters
     ----------
-    directory: path
+    path: str
         path of the directory where the weights to be loaded are.
     """
-    for file in os.listdir(directory):
-        if file.endswith(".npy"):
-            weight_name = file.split(".")[0]
-            setattr(
-                model,
-                weight_name,
+
+
+    model._trainable_weights = []
+    for filename in os.listdir(Path(path)):
+        if filename.endswith(".npy"):
+            weight_name = filename.split(".")[0]
+            model._trainable_weights.append(
                 tf.Variable(
-                    np.load(os.path.join(directory, file)),
+                    np.load(os.path.join(Path(path) / filename)),
                     trainable=True,
                     name=weight_name,
                 ),
             )
+            
+        i = 0
+        weight_path = f"weight_{i}.npy"
+        files_list = []
+        for file in Path(path).iterdir():
+            files_list.append(str(file.name))
+        while weight_path in files_list:
+            obj._trainable_weights.append(tf.Variable(np.load(Path(path) / weight_path)))
+            i += 1
+            weight_path = f"weight_{i}.npy"
 
 
 def load_model(model_class, path: str) -> object:
@@ -106,15 +119,15 @@ def load_model(model_class, path: str) -> object:
     BasketModel
         Loaded BasketModel
     """
-    import inspect
 
-    # Load parameters
-    params = json.load(open(os.path.join(path, "params.json")))
+    # Load parameters; To improve for non string attributes
+    with open(Path(path) / "params.json") as f:
+        params = json.load(f)
 
     init_params = {}
     non_init_params = {}
     for key, val in params.items():
-        if key in inspect.signature(cls.__init__).parameters.keys():
+        if key in inspect.signature(model_class.__init__).parameters.keys():
             init_params[key] = val
         else:
             non_init_params[key] = val
@@ -127,6 +140,6 @@ def load_model(model_class, path: str) -> object:
         setattr(model, key, val)
 
     # Load weights
-    model._load_weights(path)
+    _load_weights(model, path)
 
     return model
