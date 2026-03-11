@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 from pathlib import Path 
+import shutil
 
 import numpy as np
 import tensorflow as tf
@@ -71,6 +72,8 @@ def save_model(model, path: str, save_optimizer=False) -> None:
             json.dump(config, f)
         with open(Path(path) / "optimizer" / "weights_store.json", "w") as f:
             json.dump(weights_store, f)
+
+    save_classes_py_files(type(model), path)
 
 
 def _load_weights(model, path):
@@ -143,3 +146,24 @@ def load_model(model_class, path: str) -> object:
     _load_weights(model, path)
 
     return model
+
+
+def save_classes_py_files(model_class, path):
+    py_files = set()
+
+    # Traverse the class hierarchy
+    for base_class in inspect.getmro(model_class):
+        module = inspect.getmodule(base_class)
+        if module and hasattr(module, "__file__"):
+            file_path = module.__file__
+            if file_path.endswith('.py'):
+                py_files.add(file_path)
+            # Also check for .pyc or .pyo files and map to .py
+            elif file_path.endswith(('.pyc', '.pyo')):
+                py_file = file_path[:-1]
+                if os.path.exists(py_file):
+                    py_files.add(py_file)
+
+    os.mkdir(Path(path) / 'python_files')
+    for pyfile in py_files:
+        shutil.copy(pyfile, Path(path) / 'python_files')
