@@ -98,7 +98,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         else:
             self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
-                self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+                self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
             else:
                 self.n_evals.assign(self.n_evals + tf.reduce_sum(sample_weight))
 
@@ -163,7 +163,7 @@ class MRR(tf.keras.metrics.Metric):
             self.n_evals.assign(self.n_evals + 1)
         else:
             self.mrr.assign(self.mrr + tf.reduce_sum(mean_rank))
-            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
 
     def result(self):
         """Compute the current metric value.
@@ -229,7 +229,7 @@ class HitRate(tf.keras.metrics.Metric):
             self.n_evals.assign(self.n_evals + 1)
         else:
             self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hits))
-            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
 
     def result(self):
         """Compute the current metric value.
