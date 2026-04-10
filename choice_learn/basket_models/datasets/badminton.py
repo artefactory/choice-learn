@@ -8,7 +8,7 @@ import numpy as np
 from ..data import Trip, TripDataset
 
 
-class SyntheticDataGenerator:
+class BadmintonDataGenerator:
     """Class to generate synthetic basket data based on predefined item sets and their relations."""
 
     def __init__(
@@ -272,7 +272,7 @@ class SyntheticDataGenerator:
                 A Trip object containing the generated basket.
         """
         user_id = (
-            np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else None
+            np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else 0
         )
         basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
             int
