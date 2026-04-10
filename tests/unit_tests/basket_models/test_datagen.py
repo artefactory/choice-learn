@@ -6,9 +6,9 @@ This module tests the methods of the SyntheticDataGenerator class
 import numpy as np
 
 from choice_learn.basket_models.data import Trip
-from choice_learn.basket_models.datasets.synthetic_dataset import SyntheticDataGenerator
+from choice_learn.basket_models.datasets.badminton import BadmintonDataGenerator
 
-data_gen = SyntheticDataGenerator(
+data_gen = BadmintonDataGenerator(
     proba_complementary_items=0.7,
     proba_neutral_items=0.3,
     noise_proba=0.15,
@@ -175,7 +175,7 @@ def test_generate_trip_dataset():
 def test_init_parameter_validation():
     """Test initialization with various parameter combinations."""
     # Test valid initialization
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         proba_complementary_items=0.8,
         proba_neutral_items=0.2,
         noise_proba=0.1,
@@ -192,7 +192,7 @@ def test_init_parameter_validation():
 
 def test_get_available_sets_edge_cases():
     """Test get_available_sets with edge cases."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [0, 1, 2], 1: [3, 4], 2: [5], 3: [6, 7, 8]},
         nests_interactions=[["", "compl", "neutral", "neutral"] for _ in range(4)],
     )
@@ -219,7 +219,7 @@ def test_select_first_item_deterministic():
     """Test select_first_item with controlled randomness."""
     np.random.seed(123)  # Set seed for reproducibility
 
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [0, 1, 2], 1: [3, 4, 5]}, nests_interactions=[["", "compl"], ["compl", ""]]
     )
 
@@ -235,7 +235,7 @@ def test_select_first_item_deterministic():
 
 def test_select_first_item_single_option():
     """Test select_first_item when only one option is available."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [0, 1, 2], 1: [3, 4, 5]}, nests_interactions=[["", "compl"], ["compl", ""]]
     )
 
@@ -253,7 +253,7 @@ def test_complete_basket_all_relations():
     """Test complete_basket with different relation types."""
     np.random.seed(456)
 
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         proba_complementary_items=1.0,
         proba_neutral_items=1.0,
         noise_proba=0.0,
@@ -276,7 +276,7 @@ def test_complete_basket_all_relations():
 
 def test_complete_basket_unavailable_items():
     """Test complete_basket when complementary/neutral items are unavailable."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         proba_complementary_items=1.0,
         proba_neutral_items=1.0,
         noise_proba=0.0,
@@ -295,7 +295,7 @@ def test_add_noise_functionality():
     """Test add_noise method functionality."""
     np.random.seed(789)
 
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         noise_proba=1.0, items_nest={0: [0, 1]}, nests_interactions=[[""]]
     )
 
@@ -318,7 +318,7 @@ def test_add_noise_functionality():
 
 def test_generate_trip_properties():
     """Test generate_trip creates proper Trip objects."""
-    generator = SyntheticDataGenerator(items_nest={0: [0, 1, 2]}, nests_interactions=[[""]])
+    generator = BadmintonDataGenerator(items_nest={0: [0, 1, 2]}, nests_interactions=[[""]])
 
     assortment = np.array([1, 1, 1, 0, 0])
     trip = generator.generate_trip(assortment)
@@ -332,7 +332,7 @@ def test_generate_trip_properties():
 
 def test_generate_trip_with_length():
     """Test generate_trip with specific length."""
-    generator = SyntheticDataGenerator(items_nest={0: [0, 1, 2, 3]}, nests_interactions=[[""]])
+    generator = BadmintonDataGenerator(items_nest={0: [0, 1, 2, 3]}, nests_interactions=[[""]])
 
     assortment = np.ones(4, dtype=int)
     target_length = 2
@@ -346,7 +346,7 @@ def test_generate_trip_dataset_multiple_assortments():
     """Test generate_trip_dataset with multiple assortments."""
     np.random.seed(111)
 
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [0, 1], 1: [2, 3]}, nests_interactions=[["", "compl"], ["compl", ""]]
     )
 
@@ -365,7 +365,7 @@ def test_generate_trip_dataset_multiple_assortments():
 
 def test_generate_trip_dataset_with_length():
     """Test generate_trip_dataset with specific basket length."""
-    generator = SyntheticDataGenerator(items_nest={0: [0, 1, 2, 3, 4]}, nests_interactions=[[""]])
+    generator = BadmintonDataGenerator(items_nest={0: [0, 1, 2, 3, 4]}, nests_interactions=[[""]])
 
     n_baskets = 3
     assortments_matrix = np.array([[1, 1, 1, 1, 1]])
@@ -380,7 +380,7 @@ def test_generate_trip_dataset_with_length():
 
 def test_nests_interactions_symmetry():
     """Test that asymmetric nest interactions work correctly."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         proba_complementary_items=1.0,
         proba_neutral_items=0.0,
         noise_proba=0.0,
@@ -406,7 +406,7 @@ def test_nests_interactions_symmetry():
 
 def test_empty_nests():
     """Test behavior with empty item nests."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [], 1: [0, 1], 2: []}, nests_interactions=[["", "", ""] for _ in range(3)]
     )
 
@@ -419,7 +419,7 @@ def test_empty_nests():
 
 def test_large_dataset_generation():
     """Test generation of large datasets for performance."""
-    generator = SyntheticDataGenerator(
+    generator = BadmintonDataGenerator(
         items_nest={0: [0, 1, 2], 1: [3, 4, 5]}, nests_interactions=[["", "compl"], ["compl", ""]]
     )
 
