@@ -146,7 +146,7 @@ Here are two tutorials published on Medium that can help you
 | Basket Dataset    | Raw Data | Origin | *from choice_learn.basket_models.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
 | Bakery Dataset | [url](https://www.cs.cornell.edu/~arb/data/uchoice-Bakery/) | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
-| Badminton Dataset | [url]() | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
+| Badminton Dataset | [url]() | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/badminton) |
 
 
 ### Auxiliary tools

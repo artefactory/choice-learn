@@ -272,7 +272,7 @@ class BadmintonDataGenerator:
                 A Trip object containing the generated basket.
         """
         user_id = (
-            np.random.randint(0, len(self.user_profile)) if self.user_profile is not None else 0
+            np.random.choice(list(self.user_profile.keys())) if self.user_profile is not None else 0
         )
         basket = self.generate_basket(assortment, len_basket=len_basket, user_id=user_id).astype(
             int
