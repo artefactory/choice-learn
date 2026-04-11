@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from choice_learn.basket_models.datasets import SyntheticDataGenerator
+from choice_learn.basket_models.datasets.badminton import BadmintonDataGenerator
 from choice_learn.basket_models.self_attention_model import SelfAttentionModel
 
 items_nest = {0: [0, 1, 2], 1: [3, 4, 5], 2: [6, 7, 8]}
@@ -18,7 +18,7 @@ nests_interactions = [
 
 user_profile = {0: {"nest": 0, "item": 0}, 1: {"nest": 0, "item": 1}, 2: {"nest": 0, "item": 2}}
 
-data = SyntheticDataGenerator(
+data = BadmintonDataGenerator(
     items_nest=items_nest,
     nests_interactions=nests_interactions,
     proba_complementary_items=1,
