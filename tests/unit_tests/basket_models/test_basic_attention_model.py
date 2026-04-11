@@ -7,7 +7,6 @@ from choice_learn.basket_models.datasets.badminton import BadmintonDataGenerator
 from choice_learn.basket_models.basic_attention_model import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
 
-
 # Test hyperparameters
 epochs = 4
 lr = 0.01
