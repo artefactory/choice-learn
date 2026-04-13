@@ -717,13 +717,13 @@ class BaseBasketModel:
                 .batch(batch_size, drop_remainder=True)
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
             )
-
-            inner_range = tqdm.tqdm(
-                inner_range,
-                total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
-                position=1,
-                leave=False,
-            )
+            if verbose > 0:
+                inner_range = tqdm.tqdm(
+                    inner_range,
+                    total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
+                    position=1,
+                    leave=False,
+                )
 
             total_loss = 0.0
             total_batches = 0
@@ -779,6 +779,8 @@ class BaseBasketModel:
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
+            if verbose > 0:
+                inner_range.set_description(f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}")
             if verbose > 1:
                 print(
                     f"Loop {epoch_nb} Time:",
@@ -908,7 +910,7 @@ class BaseBasketModel:
                         sparse=True,
                         from_logits=False,
                         epsilon=epsilon_eval,
-                        average_on_trip=True,
+                        average_on_batch=True,
                         name="basketwise-nll",
                     )
                 )

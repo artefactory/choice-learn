@@ -584,14 +584,14 @@ class TripDataset:
             np.array([trip.user_id]),  # User IDs
         )
 
-    def get_pair_wised_data_from_trip_index(
+    def get_pairwise_data_from_trip_index(
         self,
         trip_index: int,
         max_pairs_per_item: int = 5,
     ) -> tuple[np.ndarray]:
-        """Get pair-wised data from a trip index.
+        """Get pairwise data from a trip index.
 
-        Pair-wised data consists in creating pairs of items from the same basket
+        Pairwise data consists in creating pairs of items from the same basket
         that will be used as positive samples and pairs of items from different
         baskets that will be used as negative samples. It leads to returning:
             - items,
@@ -674,7 +674,7 @@ class TripDataset:
             elif data_method == "sequential":
                 data = self.get_sequential_data_from_trip_index(trip_index)
             elif data_method == "prod2vec":
-                data = self.get_pair_wised_data_from_trip_index(trip_index)
+                data = self.get_pairwise_data_from_trip_index(trip_index)
             else:
                 raise ValueError(f"Unknown data method: {data_method}")
 
