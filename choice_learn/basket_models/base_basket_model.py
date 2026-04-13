@@ -789,9 +789,7 @@ class BaseBasketModel:
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
             if verbose > 0:
-                    inner_range.set_description(
-                        f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}"
-                    )
+                inner_range.set_description(f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}")
             if verbose > 1:
                 print(
                     f"Loop {epoch_nb} Time:",
