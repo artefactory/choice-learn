@@ -684,7 +684,7 @@ class BaseBasketModel:
             )
 
         if self.batch_size == -1:
-            batch_size = len(trip_dataset)
+            batch_size = trip_dataset.n_samples
             buffer_size = batch_size
         else:
             batch_size = self.batch_size
@@ -719,11 +719,10 @@ class BaseBasketModel:
                 ),
                 output_signature=signature,
             )
-
             inner_range = (
                 dataset.unbatch()
                 .shuffle(buffer_size=buffer_size)
-                .batch(batch_size, drop_remainder=True)
+                .batch(batch_size, drop_remainder=False)
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
             )
             if verbose > 0:
@@ -788,8 +787,8 @@ class BaseBasketModel:
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
-            if verbose > 0:
-                inner_range.set_description(f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}")
+            if verbose > 0 and isinstance(inner_range, tqdm.tqdm):
+                inner_range.set_description(f"Train Loss: {current_avg_loss:.4f}")
             if verbose > 1:
                 print(
                     f"Loop {epoch_nb} Time:",
