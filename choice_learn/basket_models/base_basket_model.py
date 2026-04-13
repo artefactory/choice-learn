@@ -30,6 +30,7 @@ class BaseBasketModel:
         lr: float = 1e-3,
         epochs: int = 10,
         batch_size: int = 32,
+        buffer_multiplier: int = 10,
         momentum: float = 0.0,
         grad_clip_value: Union[float, None] = None,
         weight_decay: Union[float, None] = None,
@@ -48,6 +49,8 @@ class BaseBasketModel:
             Number of epochs, by default 100
         batch_size: int, optional
             Batch size, by default 32
+        buffer_multiplier: int, optional
+            Buffer Size (* batch_size) for fit, by default, 10
         momentum: float, optional
             Momentum for the optimizer, by default 0. For SGD only
         grad_clip_value: float, optional
@@ -93,6 +96,7 @@ class BaseBasketModel:
         self.lr = lr
         self.epochs = epochs
         self.batch_size = batch_size
+        self.buffer_multiplier = buffer_multiplier
         self.grad_clip_value = grad_clip_value
         self.weight_decay = weight_decay
         self.momentum = momentum
@@ -679,7 +683,12 @@ class BaseBasketModel:
                 n_users=trip_dataset.n_users,
             )
 
-        batch_size = self.batch_size
+        if self.batch_size == -1:
+            batch_size = len(trip_dataset)
+            buffer_size = batch_size
+        else:
+            batch_size = self.batch_size
+            buffer_size = batch_size * 10
 
         history = {"train_loss": [], "val_loss": [], "val_metrics": []}
 
@@ -713,7 +722,7 @@ class BaseBasketModel:
 
             inner_range = (
                 dataset.unbatch()
-                .shuffle(buffer_size=batch_size * 10)
+                .shuffle(buffer_size=buffer_size)
                 .batch(batch_size, drop_remainder=True)
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
             )
@@ -780,7 +789,9 @@ class BaseBasketModel:
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
             if verbose > 0:
-                inner_range.set_description(f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}")
+                    inner_range.set_description(
+                        f"Epoch Negative-LogLikeliHood: {epoch_loss:.4f}"
+                    )
             if verbose > 1:
                 print(
                     f"Loop {epoch_nb} Time:",
