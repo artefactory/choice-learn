@@ -413,7 +413,7 @@ class TripDataset:
         return (
             permuted_purchases,  # Items
             padded_purchases_lacking_one_item,  # Baskets
-            np.empty((0, self.max_length), dtype=int),  # Future purchases
+            np.zeros((length_trip, self.max_length), dtype=int),  # Future purchases (Dummy)
             np.full(length_trip, trip.store),  # Stores
             np.full(length_trip, trip.week),  # Weeks
             np.tile(prices, (length_trip, 1)),  # Prices
@@ -584,142 +584,101 @@ class TripDataset:
             np.array([trip.user_id]),  # User IDs
         )
 
+    def get_pairwise_data_from_trip_index(
+        self,
+        trip_index: int,
+        max_pairs_per_item: int = 5,
+    ) -> tuple[np.ndarray]:
+        """Get pairwise data from a trip index.
+
+        Pairwise data consists in creating pairs of items from the same basket
+        that will be used as positive samples and pairs of items from different
+        baskets that will be used as negative samples. It leads to returning:
+            - items,
+            - baskets with one item removed,
+            - stores,
+            - weeks,
+            - prices,
+            - available items.
+        """
+        trip = self.trips[trip_index]
+        length_trip = len(trip.purchases)
+        purchases = np.array(trip.purchases)
+
+        # for each item in the basket, we create a pair with each of the other items in the basket
+        item_purchases = []
+        baskets_without_target = []
+        for i in range(length_trip):
+            context_indices = [j for j in range(length_trip) if j != i]
+            if len(context_indices) > max_pairs_per_item:
+                context_indices = random.sample(context_indices, max_pairs_per_item)  # nosec
+
+            for j in context_indices:
+                item_purchases.append(purchases[i])
+                padded_basket = np.concatenate(([purchases[j]], -1 * np.ones(self.max_length - 1)))
+                baskets_without_target.append(padded_basket)
+
+        if len(item_purchases) == 0:
+            item_purchases = np.empty(0, dtype=int)
+            baskets_without_target = np.empty((0, self.max_length), dtype=int)
+        else:
+            item_purchases = np.array(item_purchases, dtype=int)
+            baskets_without_target = np.array(baskets_without_target, dtype=int)
+
+        n_pairs = len(item_purchases)
+
+        if not (isinstance(trip.assortment, np.ndarray) or isinstance(trip.assortment, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            assortment = self.available_items[trip.assortment]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            assortment = trip.assortment
+
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the availability matrix
+            prices = trip.prices
+
+        return (
+            item_purchases,  # Items
+            baskets_without_target,  # Baskets
+            np.zeros((n_pairs, self.max_length), dtype=int),  # Future purchases (Dummy)
+            np.full(n_pairs, trip.store),  # Stores
+            np.full(n_pairs, trip.week),  # Weeks
+            np.tile(prices, (n_pairs, 1)),  # Prices
+            np.tile(assortment, (n_pairs, 1)),  # Available items
+            np.full(n_pairs, trip.user_id),  # User IDs
+        )
+
     def iter_batch(
         self,
         batch_size: int,
         shuffle: bool = False,
         data_method: str = "shopper",
     ) -> object:
-        """Iterate over a TripDataset to return batches of items of length batch_size.
-
-        Parameters
-        ----------
-        batch_size: int
-            Batch size (number of items in the batch)
-        shuffle: bool
-            Whether or not to shuffle the dataset
-        data_method: str
-            Method used to generate sub-baskets from a purchased one. Available methods are:
-            - 'shopper': randomly orders the purchases and creates the ordered sub-baskets:
-                         (1|0); (2|1); (3|1,2); (4|1,2,3); etc...
-            - 'aleacarta': creates all the sub-baskets with N-1 items:
-                           (4|1,2,3); (3|1,2,4); (2|1,3,4); (1|2,3,4)
-
-        Yields
-        ------
-        tuple[np.ndarray]
-            For each item in the batch: item, basket, future purchases,
-            store, week, prices, available items, user_id
-        """
-        # Get trip indexes
+        """Iterate over a TripDataset to return batches of data from the trips."""
+        _ = batch_size
         num_trips = len(self)
         trip_indexes = np.arange(num_trips)
 
-        # Shuffle trip indexes
-        # TODO: shuffling on the trip indexes or on the item indexes?
         if shuffle:
-            trip_indexes = np.random.default_rng().permutation(trip_indexes)
+            trip_indexes = np.random.permutation(trip_indexes)
 
-        # Initialize the buffer
-        buffer = (
-            np.empty(0, dtype=int),  # Items
-            np.empty((0, self.max_length), dtype=int),  # Baskets
-            np.empty((0, self.max_length), dtype=int),  # Future purchases
-            np.empty(0, dtype=int),  # Stores
-            np.empty(0, dtype=int),  # Weeks
-            np.empty((0, self.n_items), dtype=int),  # Prices
-            np.empty((0, self.n_items), dtype=int),  # Available items
-            np.empty(0, dtype=int),  # User IDs
-        )
+        for trip_index in trip_indexes:
+            if data_method == "shopper":
+                data = self.get_subbaskets_augmented_data_from_trip_index(trip_index)
+            elif data_method == "aleacarta":
+                data = self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
+            elif data_method == "sequential":
+                data = self.get_sequential_data_from_trip_index(trip_index)
+            elif data_method == "prod2vec":
+                data = self.get_pairwise_data_from_trip_index(trip_index)
+            else:
+                raise ValueError(f"Unknown data method: {data_method}")
 
-        if data_method == "sequential":
-            buffer = (
-                np.empty(0, dtype=int),  # Items
-                np.empty((0, 5), dtype=int),  # Baskets
-                np.empty((0, 3), dtype=int),  # Future purchases
-                np.empty(0, dtype=int),  # Stores
-                np.empty(0, dtype=int),  # Weeks
-                np.empty((0, self.n_items), dtype=int),  # Prices
-                np.empty((0, self.n_items), dtype=int),  # Available items
-                np.empty(0, dtype=int),  # User IDs
-            )
-
-        if batch_size == -1:
-            # Get the whole dataset in one batch
-            for trip_index in trip_indexes:
-                if data_method == "shopper":
-                    additional_trip_data = self.get_subbaskets_augmented_data_from_trip_index(
-                        trip_index
-                    )
-                elif data_method == "aleacarta":
-                    additional_trip_data = self.get_one_vs_all_augmented_data_from_trip_index(
-                        trip_index
-                    )
-                elif data_method == "sequential":
-                    additional_trip_data = self.get_sequential_data_from_trip_index(trip_index)
-                else:
-                    raise ValueError(f"Unknown data method: {data_method}")
-
-                buffer = tuple(
-                    np.concatenate((buffer[i], additional_trip_data[i])) for i in range(len(buffer))
-                )
-
-            # Yield the whole dataset
-            yield buffer
-
-        else:
-            # Yield batches of size batch_size while going through all the trips
-            index = 0
-            outer_break = False
-            while index < num_trips:
-                # Fill the buffer with trips' augmented data until it reaches the batch size
-                while len(buffer[0]) < batch_size:
-                    if index >= num_trips:
-                        # Then the buffer is not full but there are no more trips to consider
-                        # Yield the batch partially filled
-                        yield buffer
-
-                        # Exit the TWO while loops when all trips have been considered
-                        outer_break = True
-                        break
-
-                    else:
-                        # Consider a new trip to fill the buffer
-                        if data_method == "shopper":
-                            additional_trip_data = (
-                                self.get_subbaskets_augmented_data_from_trip_index(
-                                    trip_indexes[index]
-                                )
-                            )
-                        elif data_method == "aleacarta":
-                            additional_trip_data = (
-                                self.get_one_vs_all_augmented_data_from_trip_index(
-                                    trip_indexes[index]
-                                )
-                            )
-                        elif data_method == "sequential":
-                            additional_trip_data = self.get_sequential_data_from_trip_index(
-                                trip_indexes[index]
-                            )
-                        else:
-                            raise ValueError(f"Unknown data method: {data_method}")
-                        index += 1
-
-                        # Fill the buffer with the new trip
-                        buffer = tuple(
-                            np.concatenate((buffer[i], additional_trip_data[i]))
-                            for i in range(len(buffer))
-                        )
-
-                if outer_break:
-                    break
-
-                # Once the buffer is full, get the batch and update the next buffer
-                batch = tuple(buffer[i][:batch_size] for i in range(len(buffer)))
-                buffer = tuple(buffer[i][batch_size:] for i in range(len(buffer)))
-
-                # Yield the batch
-                yield batch
+            yield data
 
     def __getitem__(self, index: Union[int, list, np.ndarray, range, slice]) -> object:
         """Return a TripDataset object populated with the trips at index.

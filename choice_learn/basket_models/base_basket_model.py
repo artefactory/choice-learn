@@ -30,6 +30,7 @@ class BaseBasketModel:
         lr: float = 1e-3,
         epochs: int = 10,
         batch_size: int = 32,
+        buffer_multiplier: int = 10,
         momentum: float = 0.0,
         grad_clip_value: Union[float, None] = None,
         weight_decay: Union[float, None] = None,
@@ -48,6 +49,8 @@ class BaseBasketModel:
             Number of epochs, by default 100
         batch_size: int, optional
             Batch size, by default 32
+        buffer_multiplier: int, optional
+            Buffer Size (* batch_size) for fit, by default, 10
         momentum: float, optional
             Momentum for the optimizer, by default 0. For SGD only
         grad_clip_value: float, optional
@@ -93,6 +96,7 @@ class BaseBasketModel:
         self.lr = lr
         self.epochs = epochs
         self.batch_size = batch_size
+        self.buffer_multiplier = buffer_multiplier
         self.grad_clip_value = grad_clip_value
         self.weight_decay = weight_decay
         self.momentum = momentum
@@ -673,9 +677,18 @@ class BaseBasketModel:
         """
         if not self.instantiated:
             # Lazy instantiation
-            self.instantiate(n_items=trip_dataset.n_items, n_stores=trip_dataset.n_stores)
+            self.instantiate(
+                n_items=trip_dataset.n_items,
+                n_stores=trip_dataset.n_stores,
+                n_users=trip_dataset.n_users,
+            )
 
-        batch_size = self.batch_size
+        if self.batch_size == -1:
+            batch_size = trip_dataset.n_samples
+            buffer_size = batch_size
+        else:
+            batch_size = self.batch_size
+            buffer_size = batch_size * 10
 
         history = {"train_loss": [], "val_loss": [], "val_metrics": []}
 
@@ -689,24 +702,39 @@ class BaseBasketModel:
             val_logs = {"val_loss": []}
             epoch_losses = []
 
+            signature = (
+                tf.TensorSpec(shape=(None,), dtype=tf.int32),  # item
+                tf.TensorSpec(shape=(None, None), dtype=tf.int32),  # basket (None, max_length)
+                tf.TensorSpec(shape=(None, None), dtype=tf.int32),  # future
+                tf.TensorSpec(shape=(None,), dtype=tf.int32),  # store
+                tf.TensorSpec(shape=(None,), dtype=tf.int32),  # week
+                tf.TensorSpec(shape=(None, None), dtype=tf.float32),  # prices
+                tf.TensorSpec(shape=(None, None), dtype=tf.float32),  # availabilities
+                tf.TensorSpec(shape=(None,), dtype=tf.int32),  # user
+            )
+
+            dataset = tf.data.Dataset.from_generator(
+                lambda: trip_dataset.iter_batch(
+                    shuffle=True, batch_size=1, data_method=self.train_iter_method
+                ),
+                output_signature=signature,
+            )
+            inner_range = (
+                dataset.unbatch()
+                .shuffle(buffer_size=buffer_size)
+                .batch(batch_size, drop_remainder=False)
+                .prefetch(buffer_size=tf.data.AUTOTUNE)
+            )
             if verbose > 0:
                 inner_range = tqdm.tqdm(
-                    trip_dataset.iter_batch(
-                        shuffle=True,
-                        batch_size=batch_size,
-                        data_method=self.train_iter_method,
-                    ),
+                    inner_range,
                     total=int(trip_dataset.n_samples / np.max([batch_size, 1])),
                     position=1,
                     leave=False,
                 )
-            else:
-                inner_range = trip_dataset.iter_batch(
-                    shuffle=True,
-                    batch_size=batch_size,
-                    data_method=self.train_iter_method,
-                )
 
+            total_loss = 0.0
+            total_batches = 0
             for batch_nb, (
                 item_batch,
                 basket_batch,
@@ -731,17 +759,18 @@ class BaseBasketModel:
                     user_batch=user_batch,
                 )
 
-                train_logs["train_loss"].append(batch_loss)
-                temps_logs = {k: tf.reduce_sum(v) for k, v in train_logs.items()}
-                self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
+                batch_loss_scalar = batch_loss
 
+                total_loss += batch_loss_scalar
+                total_batches += 1
+
+                if self.callbacks is not None:
+                    current_avg_loss = total_loss / total_batches
+                    temps_logs = {"train_loss": current_avg_loss}
+                    self.callbacks.on_train_batch_end(batch_nb, logs=temps_logs)
                 # Optimization Steps
                 epoch_losses.append(batch_loss)
 
-                if verbose > 0:
-                    inner_range.set_description(
-                        f"Epoch Negative-LogLikeliHood: {np.sum(epoch_losses):.4f}"
-                    )
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
             if batch_size != -1:
@@ -758,6 +787,8 @@ class BaseBasketModel:
             history["train_loss"].append(epoch_loss)
             print_loss = history["train_loss"][-1].numpy()
             desc = f"Epoch {epoch_nb} Train Loss {print_loss:.4f}"
+            if verbose > 0 and isinstance(inner_range, tqdm.tqdm):
+                inner_range.set_description(f"Train Loss: {current_avg_loss:.4f}")
             if verbose > 1:
                 print(
                     f"Loop {epoch_nb} Time:",
@@ -769,60 +800,63 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_loss = self.evaluate(val_dataset, metrics=metrics)
-                for batch_nb, (
-                    item_batch,
-                    basket_batch,
-                    future_batch,
-                    store_batch,
-                    week_batch,
-                    price_batch,
-                    available_item_batch,
-                    user_batch,
-                ) in enumerate(
-                    val_dataset.iter_batch(
-                        shuffle=False,
-                        batch_size=-1,
-                        data_method=self.train_iter_method,
-                    )
-                ):
-                    self.callbacks.on_test_batch_begin(batch_nb)
-
-                    val_losses.append(
-                        self.compute_batch_loss(
-                            item_batch=item_batch,
-                            basket_batch=basket_batch,
-                            future_batch=future_batch,
-                            store_batch=store_batch,
-                            week_batch=week_batch,
-                            price_batch=price_batch,
-                            available_item_batch=available_item_batch,
-                            user_batch=user_batch,
-                        )[0]
-                    )
-                    val_logs["val_loss"].append(val_losses[-1])
-                    temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
-                    self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
-
-                if batch_size != -1:
-                    last_batch_size = len(item_batch)
-                    coefficients = tf.concat(
-                        [
-                            tf.ones(len(val_losses) - 1) * batch_size,
-                            [last_batch_size],
-                        ],
-                        axis=0,
-                    )
-                    val_losses = tf.multiply(val_losses, coefficients)
-                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+                    val_metric = self.evaluate(val_dataset, metrics=metrics)[f"{metrics[0].name}"]
                 else:
-                    val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+                    for batch_nb, (
+                        item_batch,
+                        basket_batch,
+                        future_batch,
+                        store_batch,
+                        week_batch,
+                        price_batch,
+                        available_item_batch,
+                        user_batch,
+                    ) in enumerate(
+                        val_dataset.iter_batch(
+                            shuffle=False,
+                            batch_size=-1,
+                            data_method=self.train_iter_method,
+                        )
+                    ):
+                        self.callbacks.on_test_batch_begin(batch_nb)
+
+                        val_losses.append(
+                            self.compute_batch_loss(
+                                item_batch=item_batch,
+                                basket_batch=basket_batch,
+                                future_batch=future_batch,
+                                store_batch=store_batch,
+                                week_batch=week_batch,
+                                price_batch=price_batch,
+                                available_item_batch=available_item_batch,
+                                user_batch=user_batch,
+                            )[0]
+                        )
+                        val_logs["val_loss"].append(val_losses[-1])
+                        temps_logs = {k: tf.reduce_sum(v) for k, v in val_logs.items()}
+                        self.callbacks.on_test_batch_end(batch_nb, logs=temps_logs)
+
+                    if batch_size != -1:
+                        last_batch_size = len(item_batch)
+                        coefficients = tf.concat(
+                            [
+                                tf.ones(len(val_losses) - 1) * batch_size,
+                                [last_batch_size],
+                            ],
+                            axis=0,
+                        )
+                        val_losses = tf.multiply(val_losses, coefficients)
+                        val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
+                    else:
+                        val_loss = tf.reduce_sum(val_losses) / trip_dataset.n_samples
 
                 if verbose > 1:
                     if metrics is not None:
-                        print("Validation Metrics:", val_loss.numpy())
-                        desc += f", Val Metrics {np.round(float(val_loss.numpy()), 4)}"
-                        history["val_metrics"] = history.get("val_metrics", []) + [val_loss.numpy()]
+                        print("Validation Metrics:", val_metric.numpy())
+                        desc += f", Val Metrics {np.round(float(val_metric.numpy()), 4)}"
+                        history["val_metrics"] = history.get("val_metrics", []) + [
+                            val_metric.numpy()
+                        ]
                     else:
                         print("Test Negative-LogLikelihood:", val_loss.numpy())
                         desc += f", Test Loss {np.round(val_loss.numpy(), 4)}"
