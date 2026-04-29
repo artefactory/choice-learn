@@ -28,7 +28,7 @@ requires-python = ">=3.9,<3.13"
 dependencies = [
   "numpy>=1.24",
   "pandas>=1.5.3",
-  "tensorflow >=2.15",
+  "tensorflow >=2.15, <3",
   "tensorflow-probability >=0.22",
   "tqdm >=4.0.0",
   "tf_keras <3",
