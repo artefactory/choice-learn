@@ -151,7 +151,7 @@ Here are two tutorials published on Medium that can help you
 
 ### Auxiliary tools
 Algorithms leveraging choice models are integrated within the library:
-- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb)[[Colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb)
+- Assortment & Pricing optimization algorithms [[Example]](notebooks/auxiliary_tools/assortment_example.ipynb) [[Colab]](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/auxiliary_tools/assortment_example.ipynb)
 
 ## :trident: Installation
 
