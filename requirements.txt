@@ -1,3 +1,8 @@
--e .
-pandas==1.5.3
-numpy==1.24.2
+numpy>=1.24
+pandas>=1.5
+tensorflow>=2.18; python_version > '3.9'
+tensorflow<2.16; python_version < '3.10'
+tensorflow_probability>=0.23; python_version > '3.9'
+tensorflow_probability==0.23; python_version < '3.10'
+tf_keras<3
+tqdm>=4.0
