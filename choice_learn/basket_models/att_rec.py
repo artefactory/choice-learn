@@ -8,8 +8,8 @@ import tensorflow as tf
 from .base_basket_model import BaseBasketModel
 
 
-class SelfAttentionModel(BaseBasketModel):
-    """Class for the self attention model for basket recommendation.
+class AttRec(BaseBasketModel):
+    """Class for AttRec.
 
     Basket Choice Modeling
     Inspired by the paper: "Next Item Recommendation with Self-Attention"  Shuai Zhang, Lina Yao,
