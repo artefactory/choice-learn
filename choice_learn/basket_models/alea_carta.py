@@ -224,7 +224,7 @@ class AleaCarta(BaseBasketModel):
             )
 
         if not self.tied_embeddings:
-            # unties the gamma emebedding
+            # unties the gamma embedding
             self.gamma_basket = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(n_items, self.latent_sizes["preferences"])
