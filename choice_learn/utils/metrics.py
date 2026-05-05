@@ -24,7 +24,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         self,
         from_logits=False,
         sparse=False,
-        average_on_batch=False,
+        average_on_trip=False,
         epsilon=1e-10,
         name="negative_log_likelihood",
         axis=-1,
@@ -40,9 +40,8 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
             Whether y_true is given as an index or a one-hot, by default False
         epsilon : float, optional
             Lower bound for log(.), by default 1e-10
-        average_on_batch: bool, optional
-            Whether the metric should be averaged over each batch. Typically used to
-            get metrics averaged by Trip, by default False
+        average_on_trip: bool, optional
+            Whether the metric should be averaged over each trip, by default False
         name : str, optional
             Name of operation, by default "negative_log_likelihood"
         axis : int, optional
@@ -53,7 +52,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
         self.from_logits = from_logits
         self.sparse = sparse
-        self.average_on_batch = average_on_batch
+        self.average_on_trip = average_on_trip
         self.epsilon = epsilon
         self.axis = axis
 
@@ -91,10 +90,13 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
                 axis=self.axis,
             )
 
-        if batch is not None and self.average_on_batch:
-            for _, idx in zip(*tf.unique(batch)):
-                self.nll.assign(self.nll + tf.reduce_mean(nll_value[idx]))
-                self.n_evals.assign(self.n_evals + 1)
+        if batch is not None and self.average_on_trip:
+            int_batch = tf.cast(batch, tf.int32)
+            self.nll.assign(self.nll + tf.reduce_sum(tf.math.segment_mean(nll_value, int_batch)))
+            self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
+            # for _, idx in zip(*tf.unique(batch)):
+            #     self.nll.assign(self.nll + tf.reduce_mean(nll_value[idx]))
+            #     self.n_evals.assign(self.n_evals + 1)
         else:
             self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
@@ -118,7 +120,7 @@ class MRR(tf.keras.metrics.Metric):
 
     def __init__(
         self,
-        average_on_batch=False,
+        average_on_trip=False,
         name="mean_reciprocal_rank",
         axis=-1,
         **kwargs,
@@ -126,7 +128,7 @@ class MRR(tf.keras.metrics.Metric):
         super().__init__(name=name, **kwargs)
         self.mrr = self.add_variable(shape=(), initializer="zeros", name="mrr")
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
-        self.average_on_batch = average_on_batch
+        self.average_on_trip = average_on_trip
         self.axis = axis
 
     def update_state(
@@ -158,12 +160,10 @@ class MRR(tf.keras.metrics.Metric):
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
         rec_rank = tf.cast(1 / item_ranks, dtype=tf.float32)
 
-        if batch is not None and self.average_on_batch:
+        if batch is not None and self.average_on_trip:
             int_batch = tf.cast(batch, tf.int32)
             self.mrr.assign(self.mrr + tf.reduce_sum(tf.math.segment_mean(rec_rank, int_batch)))
             self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
-            # self.mrr.assign(self.mrr + tf.reduce_mean(rec_rank))
-            # self.n_evals.assign(self.n_evals + 1)
         else:
             self.mrr.assign(self.mrr + tf.reduce_sum(rec_rank))
             self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
@@ -184,7 +184,7 @@ class MeanRank(tf.keras.metrics.Metric):
 
     def __init__(
         self,
-        average_on_batch=False,
+        average_on_trip=False,
         name="mean_rank",
         axis=-1,
         **kwargs,
@@ -192,7 +192,7 @@ class MeanRank(tf.keras.metrics.Metric):
         super().__init__(name=name, **kwargs)
         self.mr = self.add_variable(shape=(), initializer="zeros", name="mr")
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
-        self.average_on_batch = average_on_batch
+        self.average_on_trip = average_on_trip
         self.axis = axis
 
     def update_state(
@@ -224,7 +224,7 @@ class MeanRank(tf.keras.metrics.Metric):
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
         float_rank = tf.cast(item_ranks, dtype=tf.float32)
 
-        if batch is not None and self.average_on_batch:
+        if batch is not None and self.average_on_trip:
             int_batch = tf.cast(batch, tf.int32)
             self.mr.assign(self.mr + tf.reduce_sum(tf.math.segment_mean(float_rank, int_batch)))
             self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
@@ -248,7 +248,7 @@ class HitRate(tf.keras.metrics.Metric):
 
     def __init__(
         self,
-        average_on_batch=False,
+        average_on_trip=False,
         top_k: int = 10,
         name=None,
         axis=-1,
@@ -262,7 +262,7 @@ class HitRate(tf.keras.metrics.Metric):
             shape=(), initializer="zeros", name=f"hit_rate_at_{self.top_k}"
         )
         self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
-        self.average_on_batch = average_on_batch
+        self.average_on_trip = average_on_trip
         self.axis = axis
 
     def update_state(self, y_true, y_pred, batch=None):
@@ -290,10 +290,13 @@ class HitRate(tf.keras.metrics.Metric):
             ),
             axis=1,
         )
-        hits = tf.reduce_sum(tf.cast(hits_per_batch, tf.float32), axis=self.axis)
-        if batch is not None and self.average_on_batch:
-            self.hit_rate.assign(self.hit_rate + tf.reduce_mean(hits))
-            self.n_evals.assign(self.n_evals + 1)
+        hits = tf.cast(hits_per_batch, tf.float32)
+        if batch is not None and self.average_on_trip:
+            int_batch = tf.cast(batch, tf.int32)
+            self.hit_rate.assign(
+                self.hit_rate + tf.reduce_sum(tf.math.segment_mean(hits, int_batch))
+            )
+            self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
         else:
             self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hits))
             self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
