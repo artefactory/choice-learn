@@ -918,7 +918,7 @@ class BaseBasketModel:
                         sparse=True,
                         from_logits=False,
                         epsilon=epsilon_eval,
-                        average_on_batch=True,
+                        average_on_trip=True,
                         name="basketwise-nll",
                     )
                 )
