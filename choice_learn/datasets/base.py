@@ -212,6 +212,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         "DEST",
     ]
     items_features_by_choice_names = ["CO", "TT", "HE", "SEATS"]
+    for feature in items_features_by_choice_names + ["AV"]:
+        for item in items:
+            swiss_df = swiss_df.rename(columns={f"{item}_{feature}": f"{item}-{feature}"})
     choice_column = "CHOICE"
     availabilities_column = "AV"
 
@@ -220,9 +223,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         for item in items:
             for item2 in items:
                 if item == item2:
-                    swiss_df[f"{item}_oh_{item}"] = 1
+                    swiss_df[f"{item}-oh_{item}"] = 1
                 else:
-                    swiss_df[f"{item2}_oh_{item}"] = 0
+                    swiss_df[f"{item2}-oh_{item}"] = 0
 
     if return_desc:
         return description
@@ -244,15 +247,15 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             }
 
             for item_index, item_id in enumerate(["TRAIN", "SM", "CAR"]):
-                if row[f"{item_id}_AV"] > 0:
+                if row[f"{item_id}-AV"] > 0:
                     if item_index == row.CHOICE:
                         df_dict["CHOICE"].append(1)
                     else:
                         df_dict["CHOICE"].append(0)
 
                     df_dict["item_id"].append(item_id)
-                    df_dict["TT"].append(row[f"{item_id}_TT"])
-                    df_dict["CO"].append(row[f"{item_id}_CO"])
+                    df_dict["TT"].append(row[f"{item_id}-TT"])
+                    df_dict["CO"].append(row[f"{item_id}-CO"])
 
                     df_dict["PURPOSE"].append(row["PURPOSE"])
                     df_dict["AGE"].append(row["AGE"])
@@ -266,17 +269,17 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
 
     if preprocessing == "tastenet":
         swiss_df = swiss_df.loc[swiss_df.AGE != 6]
-        swiss_df["TRAIN_ASC_TRAIN"] = 1.0
-        swiss_df["SM_ASC_TRAIN"] = 0.0
-        swiss_df["CAR_ASC_TRAIN"] = 0.0
+        swiss_df["TRAIN-ASC_TRAIN"] = 1.0
+        swiss_df["SM-ASC_TRAIN"] = 0.0
+        swiss_df["CAR-ASC_TRAIN"] = 0.0
 
-        swiss_df["TRAIN_ASC_SM"] = 0.0
-        swiss_df["SM_ASC_SM"] = 1.0
-        swiss_df["CAR_ASC_SM"] = 0.0
+        swiss_df["TRAIN-ASC_SM"] = 0.0
+        swiss_df["SM-ASC_SM"] = 1.0
+        swiss_df["CAR-ASC_SM"] = 0.0
 
-        swiss_df["TRAIN_ASC_CAR"] = 0.0
-        swiss_df["SM_ASC_CAR"] = 0.0
-        swiss_df["CAR_ASC_CAR"] = 1.0
+        swiss_df["TRAIN-ASC_CAR"] = 0.0
+        swiss_df["SM-ASC_CAR"] = 0.0
+        swiss_df["CAR-ASC_CAR"] = 1.0
 
         swiss_df["FEMALE"] = 1 - swiss_df["MALE"]
         shared_features_by_choice_names = ["MALE", "FEMALE"]
@@ -319,18 +322,18 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df = pd.concat([swiss_df, luggage_dummy], axis=1)
         shared_features_by_choice_names += luggage_dummy.columns.to_list()
 
-        swiss_df["SM_CO"] = swiss_df["SM_CO"] * (swiss_df["GA"] == 0)
-        swiss_df["TRAIN_CO"] = swiss_df["TRAIN_CO"] * (swiss_df["GA"] == 0)
+        swiss_df["SM-CO"] = swiss_df["SM-CO"] * (swiss_df["GA"] == 0)
+        swiss_df["TRAIN-CO"] = swiss_df["TRAIN-CO"] * (swiss_df["GA"] == 0)
 
         for col in [
-            "TRAIN_TT",
-            "TRAIN_HE",
-            "TRAIN_CO",
-            "SM_TT",
-            "SM_HE",
-            "SM_CO",
-            "CAR_TT",
-            "CAR_CO",
+            "TRAIN-TT",
+            "TRAIN-HE",
+            "TRAIN-CO",
+            "SM-TT",
+            "SM-HE",
+            "SM-CO",
+            "CAR-TT",
+            "CAR-CO",
         ]:
             swiss_df[col] = swiss_df[col] / 100
 
@@ -338,9 +341,12 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
             df=swiss_df,
             items_id=items,
             shared_features_columns=shared_features_by_choice_names,
-            items_features_suffixes=items_features_by_choice_names
-            + ["ASC_TRAIN", "ASC_SM", "ASC_CAR"],
-            available_items_suffix=availabilities_column,
+            items_features_patterns=[
+                "*_%s" % column
+                for column in (items_features_by_choice_names + ["ASC-TRAIN", "ASC-SM", "ASC-CAR"])
+            ],
+            available_items_pattern="*-%s" % availabilities_column,
+            patterns_ignore_chars="[^a-zA-Z0-9_]",
             choices_column=choice_column,
             choice_format="items_index",
         )
@@ -352,8 +358,8 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
 
         # Normalizing values
-        swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] = swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] / 60.0
-        swiss_df[["TRAIN_HE", "SM_HE"]] = swiss_df[["TRAIN_HE", "SM_HE"]] / 60.0
+        swiss_df[["TRAIN-TT", "SM-TT", "CAR-TT"]] = swiss_df[["TRAIN-TT", "SM-TT", "CAR-TT"]] / 60.0
+        swiss_df[["TRAIN-HE", "SM-HE"]] = swiss_df[["TRAIN-HE", "SM-HE"]] / 60.0
 
         swiss_df["train_free_ticket"] = swiss_df.apply(
             lambda row: ((row["GA"] == 1 or row["WHO"] == 2) > 0).astype(int), axis=1
@@ -364,12 +370,12 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df["car_free_ticket"] = 0
 
         swiss_df["train_travel_cost"] = swiss_df.apply(
-            lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
+            lambda row: (row["TRAIN-CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
         )
         swiss_df["sm_travel_cost"] = swiss_df.apply(
-            lambda row: (row["SM_CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
+            lambda row: (row["SM-CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
         )
-        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR_CO"] / 100, axis=1)
+        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR-CO"] / 100, axis=1)
 
         swiss_df["single_luggage_piece"] = swiss_df.apply(
             lambda row: (row["LUGGAGE"] == 1).astype(int), axis=1
@@ -383,9 +389,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         shared_features_by_choice = swiss_df[
             ["train_survey", "regular_class", "single_luggage_piece", "multiple_luggage_piece"]
         ].to_numpy()
-        train_features = swiss_df[["train_travel_cost", "TRAIN_TT", "TRAIN_HE"]].to_numpy()
-        sm_features = swiss_df[["sm_travel_cost", "SM_TT", "SM_HE", "SM_SEATS"]].to_numpy()
-        car_features = swiss_df[["car_travel_cost", "CAR_TT"]].to_numpy()
+        train_features = swiss_df[["train_travel_cost", "TRAIN-TT", "TRAIN-HE"]].to_numpy()
+        sm_features = swiss_df[["sm_travel_cost", "SM-TT", "SM-HE", "SM-SEATS"]].to_numpy()
+        car_features = swiss_df[["car_travel_cost", "CAR-TT"]].to_numpy()
 
         # We need to have the same number of features for each item, we create dummy ones:
         car_features = np.concatenate([car_features, np.zeros((len(car_features), 2))], axis=1)
@@ -394,7 +400,7 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         )
         items_features_by_choice = np.stack([train_features, sm_features, car_features], axis=1)
 
-        available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        available_items_by_choice = swiss_df[["TRAIN-AV", "SM-AV", "CAR-AV"]].to_numpy()
         # Re-Indexing choices from 1 to 3 to 0 to 2
         choices = swiss_df.CHOICE.to_numpy()
 
@@ -416,32 +422,31 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df = swiss_df.loc[swiss_df.PURPOSE.isin([1, 3])]
 
         # Normalizing values by 100
-        swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] = (
-            swiss_df[["TRAIN_TT", "SM_TT", "CAR_TT"]] / 100.0
+        swiss_df[["TRAIN-TT", "SM-TT", "CAR-TT"]] = (
+            swiss_df[["TRAIN-TT", "SM-TT", "CAR-TT"]] / 100.0
         )
 
-        swiss_df["train_free_ticket"] = swiss_df.apply(
+        swiss_df["train-free_ticket"] = swiss_df.apply(
             lambda row: (row["GA"] == 1).astype(int), axis=1
         )
-        swiss_df["sm_free_ticket"] = swiss_df.apply(
+        swiss_df["sm-free_ticket"] = swiss_df.apply(
             lambda row: (row["GA"] == 1).astype(int), axis=1
         )
 
-        swiss_df["train_travel_cost"] = swiss_df.apply(
-            lambda row: (row["TRAIN_CO"] * (1 - row["train_free_ticket"])) / 100, axis=1
+        swiss_df["train-travel_cost"] = swiss_df.apply(
+            lambda row: (row["TRAIN-CO"] * (1 - row["train-free_ticket"])) / 100, axis=1
         )
-        swiss_df["sm_travel_cost"] = swiss_df.apply(
-            lambda row: (row["SM_CO"] * (1 - row["sm_free_ticket"])) / 100, axis=1
+        swiss_df["sm-travel_cost"] = swiss_df.apply(
+            lambda row: (row["SM-CO"] * (1 - row["sm-free_ticket"])) / 100, axis=1
         )
-        swiss_df["car_travel_cost"] = swiss_df.apply(lambda row: row["CAR_CO"] / 100, axis=1)
+        swiss_df["car-travel_cost"] = swiss_df.apply(lambda row: row["CAR-CO"] / 100, axis=1)
 
-        train_features = swiss_df[["train_travel_cost", "TRAIN_TT"]].to_numpy()
-        sm_features = swiss_df[["sm_travel_cost", "SM_TT"]].to_numpy()
-        car_features = swiss_df[["car_travel_cost", "CAR_TT"]].to_numpy()
-
+        train_features = swiss_df[["train-travel_cost", "TRAIN-TT"]].to_numpy()
+        sm_features = swiss_df[["sm-travel_cost", "SM-TT"]].to_numpy()
+        car_features = swiss_df[["car-travel_cost", "CAR-TT"]].to_numpy()
         items_features_by_choice = np.stack([train_features, sm_features, car_features], axis=1)
 
-        available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        available_items_by_choice = swiss_df[["TRAIN-AV", "SM-AV", "CAR-AV"]].to_numpy()
         # Re-Indexing choices from 1 to 3 to 0 to 2
         choices = swiss_df.CHOICE.to_numpy()
 
@@ -457,12 +462,12 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         swiss_df["One"] = 1.0
         swiss_df["Zero"] = 0.0
 
-        available_items_by_choice = swiss_df[["TRAIN_AV", "SM_AV", "CAR_AV"]].to_numpy()
+        available_items_by_choice = swiss_df[["TRAIN-AV", "SM-AV", "CAR-AV"]].to_numpy()
         items_features_by_choice = np.stack(
             [
-                swiss_df[["One", "Zero", "Zero", "TRAIN_TT", "TRAIN_CO", "TRAIN_HE"]].to_numpy(),
-                swiss_df[["Zero", "One", "Zero", "SM_TT", "SM_CO", "SM_HE"]].to_numpy(),
-                swiss_df[["Zero", "Zero", "One", "CAR_TT", "CAR_CO", "CAR_HE"]].to_numpy(),
+                swiss_df[["One", "Zero", "Zero", "TRAIN-TT", "TRAIN-CO", "TRAIN-HE"]].to_numpy(),
+                swiss_df[["Zero", "One", "Zero", "SM-TT", "SM-CO", "SM-HE"]].to_numpy(),
+                swiss_df[["Zero", "Zero", "One", "CAR-TT", "CAR-CO", "CAR-HE"]].to_numpy(),
             ],
             axis=1,
         )
@@ -532,8 +537,9 @@ def load_swissmetro(add_items_one_hot=False, as_frame=False, return_desc=False, 
         df=swiss_df,
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
-        items_features_suffixes=items_features_by_choice_names,
-        available_items_suffix=availabilities_column,
+        items_features_patterns=["*-%s" % s for s in items_features_by_choice_names],
+        available_items_pattern="*-%s" % availabilities_column,
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         choices_column=choice_column,
         choice_format="items_index",
     )
@@ -927,9 +933,8 @@ def load_train(
         df=train_df,
         items_id=["1", "2"],
         shared_features_columns=["id"],
-        items_features_prefixes=["price", "time", "change", "comfort"],
-        delimiter="",
-        available_items_suffix=None,
+        items_features_patterns=["price*", "time*", "change*", "comfort*"],
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         choices_column="choice",
         choice_format="items_id",
     )
@@ -974,17 +979,17 @@ def load_car_preferences(
     cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
     shared_features = ["college", "hsg2", "coml5"]
     items_features = [
-        "type",
-        "fuel",
-        "price",
-        "range",
-        "acc",
-        "speed",
-        "pollution",
-        "size",
-        "space",
-        "cost",
-        "station",
+        "type*",
+        "fuel*",
+        "price*",
+        "range*",
+        "acc*",
+        "speed*",
+        "pollution*",
+        "size*",
+        "space*",
+        "cost*",
+        "station*",
     ]
     items_id = [f"{i}" for i in range(1, 7)]
 
@@ -992,8 +997,7 @@ def load_car_preferences(
         df=cars_df,
         items_id=items_id,
         shared_features_columns=shared_features,
-        items_features_prefixes=items_features,
-        delimiter="",
+        items_features_patterns=items_features,
         choices_column="choice",
         choice_format="items_id",
     )
@@ -1060,8 +1064,8 @@ def load_hc(
     return ChoiceDataset.from_single_wide_df(
         df=hc_df,
         shared_features_columns=["income"],
-        items_features_prefixes=["ich", "och", "occa", "icca"],
-        delimiter=".",
+        items_features_patterns=["ich.*", "och.*", "occa.*", "icca.*"],
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         items_id=items_id,
         choices_column="depvar",
         choice_format="items_id",
@@ -1202,12 +1206,15 @@ def load_londonpassenger(
     # Shift the index of the travel mode to start at 0
     london_df["travel_mode"] = london_df["travel_mode"] - 1
 
+    for feat in items_features_by_choice_names:
+        for item in items:
+            london_df = london_df.rename(columns={f"{item}_{feat}": f"{item}-{feat}"})
     return ChoiceDataset.from_single_wide_df(
         df=london_df,
         items_id=items,
         shared_features_columns=shared_features_by_choice_names,
-        items_features_suffixes=items_features_by_choice_names,
-        delimiter="_",
+        items_features_patterns=["*-%s" % s for s in items_features_by_choice_names],
+        patterns_ignore_chars="[^a-zA-Z0-9_]",
         choices_column=choice_column,
         choice_format="items_index",
     )
