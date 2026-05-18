@@ -225,12 +225,12 @@ class AleaCarta(BaseBasketModel):
 
         if not self.tied_embeddings:
             # unties the gamma embedding
-            self.gamma_basket = tf.Variable(
+            self.gamma_input = tf.Variable(
                 tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
                     shape=(n_items, self.latent_sizes["preferences"])
                 ),  # Dimension for 1 item: latent_sizes["preferences"]
                 trainable=True,
-                name="gamma_basket",
+                name="gamma_input",
             )
 
         self.instantiated = True
@@ -256,7 +256,7 @@ class AleaCarta(BaseBasketModel):
             weights.extend([self.mu, self.nu])
 
         if not self.tied_embeddings:
-            weights.extend([self.gamma_basket])
+            weights.extend([self.gamma_input])
 
         return weights
 
@@ -401,7 +401,7 @@ class AleaCarta(BaseBasketModel):
                 )
             else:
                 gamma_by_basket = tf.ragged.map_flat_values(
-                    tf.gather, self.gamma_basket, item_indices_ragged
+                    tf.gather, self.gamma_input, item_indices_ragged
                 )
             basket_size = tf.cast(item_indices_ragged.row_lengths(), dtype=tf.float32)
 
