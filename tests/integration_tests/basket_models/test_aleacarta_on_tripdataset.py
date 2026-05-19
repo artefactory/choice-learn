@@ -199,6 +199,7 @@ def test_untied_embeddings() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
+    assert len(model.trainable_weights) == 3
     batch_size = 2
     utilities = model.compute_batch_utility(
         item_batch=np.array([0, 1]),
