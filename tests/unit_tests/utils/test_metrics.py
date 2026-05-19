@@ -75,6 +75,19 @@ def test_custom_categorical_crossentropy():
     assert met.result() > 2.1269
     assert met.result() < 2.1270
 
+    met = NegativeLogLikeliHood(sparse=True, average_on_trip=True)
+    met.update_state(
+        y_true=[2, 0, 1],
+        y_pred=[
+            [0.1, 0.2, 0.7],
+            [0.1, 0.6, 0.3],
+            [0.3, 0.5, 0.2],
+        ],
+        batch=[0, 0, 1],
+    )
+    assert met.result() > 1.0113
+    assert met.result() < 1.0114
+
 
 def test_sample_weights():
     """Test sample_weight use for NLL metric."""
@@ -130,6 +143,20 @@ def test_mrr_metric():
     )
     assert np.allclose(met.result().numpy(), 0.75)
 
+    met = MRR(average_on_trip=True)
+    met.update_state(
+        y_true=[2, 0, 1],
+        y_pred=np.array(
+            [
+                [0.1, 0.2, 0.7],
+                [0.1, 0.6, 0.3],
+                [0.3, 0.5, 0.2],
+            ]
+        ),
+        batch=[0, 0, 1],
+    )
+    assert np.allclose(met.result().numpy(), 5.0 / 6)
+
 
 def test_mean_rank_metric():
     """Test the MeanRank metric."""
@@ -145,6 +172,20 @@ def test_mean_rank_metric():
     )
     assert np.allclose(met.result().numpy(), 2.0)
 
+    met = MeanRank(average_on_trip=True)
+    met.update_state(
+        y_true=[2, 0, 1],
+        y_pred=np.array(
+            [
+                [0.1, 0.2, 0.7],
+                [0.1, 0.6, 0.3],
+                [0.3, 0.5, 0.2],
+            ]
+        ),
+        batch=[0, 0, 1],
+    )
+    assert np.allclose(met.result().numpy(), 1.5)
+
 
 def test_hit_rate_metric():
     """Test the HitRate metric."""
@@ -159,10 +200,7 @@ def test_hit_rate_metric():
     )
     assert np.allclose(met.result().numpy(), 0.5)
 
-
-def test_average_on_trip():
-    """Test the average_on_trip logic using batch clustering for metrics."""
-    met = MeanRank(average_on_trip=True)
+    met = HitRate(top_k=2, average_on_trip=True)
     met.update_state(
         y_true=[2, 0, 1],
         y_pred=np.array(
@@ -174,4 +212,4 @@ def test_average_on_trip():
         ),
         batch=[0, 0, 1],
     )
-    assert np.allclose(met.result().numpy(), 1.5)
+    assert np.allclose(met.result().numpy(), 0.75)
