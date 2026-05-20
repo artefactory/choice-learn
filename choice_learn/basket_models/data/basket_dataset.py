@@ -208,7 +208,7 @@ class TripDataset:
         """Return the numbers of samples/transations of the TripDataset."""
         n_samples = 0
         for trip in self.trips:
-            n_samples += len(trip)
+            n_samples += len(trip.purchases)
 
         return n_samples
 
