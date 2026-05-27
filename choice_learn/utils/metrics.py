@@ -89,7 +89,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
                 y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1),
                 axis=self.axis,
             )
-            
+
         if batch is not None and self.average_on_trip:
             unique_trips, segment_ids = tf.unique(batch)
             trip_nlls = tf.math.unsorted_segment_mean(
@@ -158,7 +158,7 @@ class MRR(tf.keras.metrics.Metric):
             [tf.range(len(y_true)), y_true], axis=1
         )  # Shape: (batch_size, 2)
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
-        
+
         # mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32), axis=self.axis)
         if batch is not None and self.average_on_trip:
             unique_trips, segment_ids = tf.unique(batch)
