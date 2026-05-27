@@ -205,12 +205,8 @@ class TripDataset:
         return self.trips[index]
 
     def get_n_samples(self) -> int:
-        """Return the numbers of samples/transations of the TripDataset."""
-        n_samples = 0
-        for trip in self.trips:
-            n_samples += len(trip.purchases)
-
-        return n_samples
+        """Return the number of samples/transactions of the TripDataset."""
+        return sum(len(trip.purchases) for trip in self.trips)
 
     def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
