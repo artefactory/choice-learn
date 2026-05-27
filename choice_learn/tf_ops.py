@@ -33,9 +33,11 @@ def softmax_with_availabilities(
         Probabilities of each product for each choice computed from Logits
     """
     # Substract max utility to avoid overflow
-    numerator = tf.multiply(items_logit_by_choice, available_items_by_choice)
-    normalizer = tf.reduce_max(numerator, axis=axis, keepdims=True)
-    numerator = tf.exp(numerator - normalizer)
+    large_negative = tf.constant(-1e9, dtype=items_logit_by_choice.dtype)
+    masked_logits = tf.where(available_items_by_choice > 0.5, items_logit_by_choice, large_negative)
+
+    normalizer = tf.reduce_max(masked_logits, axis=axis, keepdims=True)
+    numerator = tf.exp(masked_logits - normalizer)
 
     # Set unavailable products utility to 0
     numerator = tf.multiply(numerator, available_items_by_choice)

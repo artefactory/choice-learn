@@ -163,7 +163,6 @@ class AleaCarta(BaseBasketModel):
             # (By default, the store id is 0)
             n_stores = 1
         self.n_stores = n_stores
-        tf.random.set_seed(42)
         self.gamma = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=0.1)(
                 shape=(n_items, self.latent_sizes["preferences"])
