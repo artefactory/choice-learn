@@ -11,15 +11,16 @@ def test_instantiation():
     """Test the different instantion issues and all."""
     model = AleaCarta(
         item_intercept=True,
-        price_effects=False,
-        seasonal_effects=False,
+        price_effects=True,
+        seasonal_effects=True,
         n_negative_samples=50,
         lr=0.001,
-        n_epochs=10,
+        epochs=10,
         batch_size=512,
         latent_sizes={},
     )
     assert "preferences" in model.latent_sizes.keys()
+    print(model.latent_sizes)
     assert "price" in model.latent_sizes.keys()
     assert "season" in model.latent_sizes.keys()
 
@@ -30,7 +31,7 @@ def test_instantiation():
             seasonal_effects=False,
             n_negative_samples=-50,
             lr=0.001,
-            n_epochs=10,
+            epochs=10,
             batch_size=512,
             latent_sizes={},
         )
@@ -46,7 +47,7 @@ def test_compute_basket_utility():
         seasonal_effects=False,
         n_negative_samples=50,
         lr=0.001,
-        n_epochs=10,
+        epochs=10,
         batch_size=512,
         latent_sizes={"preferences": 2, "price": 0, "season": 0},
     )
@@ -54,7 +55,5 @@ def test_compute_basket_utility():
     model.instantiate(n_items=10, n_stores=2)
 
     model.compute_basket_utility(
-        Trip(purchases=[1, 2], assortment=np.ones((10,)), prices=np.zeros((10,))),
-        store_id=0,
-        season_id=0,
+        trip=Trip(purchases=[1, 2], assortment=np.ones((10,)), prices=np.zeros((10,))),
     )
