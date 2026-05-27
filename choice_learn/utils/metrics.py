@@ -229,9 +229,12 @@ class MeanRank(tf.keras.metrics.Metric):
         float_rank = tf.cast(item_ranks, dtype=tf.float32)
 
         if batch is not None and self.average_on_trip:
-            int_batch = tf.cast(batch, tf.int32)
-            self.mr.assign(self.mr + tf.reduce_sum(tf.math.segment_mean(float_rank, int_batch)))
-            self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
+            unique_trips, segment_ids = tf.unique(batch)
+            batch_mr = tf.math.unsorted_segment_mean(
+                float_rank, segment_ids, tf.shape(unique_trips)[0]
+            )
+            self.mr.assign_add(tf.reduce_sum(batch_mr))
+            self.n_evals.assign_add(tf.cast(tf.shape(unique_trips)[0], self.n_evals.dtype))
         else:
             self.mr.assign(self.mr + tf.reduce_sum(float_rank))
             self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))

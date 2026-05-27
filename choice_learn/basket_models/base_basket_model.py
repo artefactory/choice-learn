@@ -308,6 +308,7 @@ class BaseBasketModel:
             available_items_by_choice=available_items_copy,  # Shape: (n_items,)
             axis=-1,
             normalize_exit=False,
+            eps=None,
         )
 
     def compute_ordered_basket_likelihood(
