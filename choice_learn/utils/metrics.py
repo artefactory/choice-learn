@@ -41,8 +41,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         epsilon : float, optional
             Lower bound for log(.), by default 1e-10
         average_on_trip: bool, optional
-            Whether the metric should be averaged over each batch. Typically used to
-            get metrics averaged by Trip, by default False
+            Whether the metric should be averaged over each trip, by default False
         name : str, optional
             Name of operation, by default "negative_log_likelihood"
         axis : int, optional
@@ -90,6 +89,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
                 y_true * tf.math.log(y_pred) * tf.expand_dims(sample_weight, axis=-1),
                 axis=self.axis,
             )
+            
         if batch is not None and self.average_on_trip:
             unique_trips, segment_ids = tf.unique(batch)
             trip_nlls = tf.math.unsorted_segment_mean(
@@ -100,7 +100,7 @@ class NegativeLogLikeliHood(tf.keras.metrics.Metric):
         else:
             self.nll.assign(self.nll + tf.reduce_sum(nll_value))
             if sample_weight is None:
-                self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+                self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
             else:
                 self.n_evals.assign(self.n_evals + tf.reduce_sum(sample_weight))
 
@@ -158,6 +158,7 @@ class MRR(tf.keras.metrics.Metric):
             [tf.range(len(y_true)), y_true], axis=1
         )  # Shape: (batch_size, 2)
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
+        
         # mean_rank = tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32), axis=self.axis)
         if batch is not None and self.average_on_trip:
             unique_trips, segment_ids = tf.unique(batch)
@@ -180,6 +181,70 @@ class MRR(tf.keras.metrics.Metric):
             Negative Log Likelihood value
         """
         return tf.math.divide_no_nan(self.mrr, self.n_evals)
+
+
+class MeanRank(tf.keras.metrics.Metric):
+    """Compute Mean Rank."""
+
+    def __init__(
+        self,
+        average_on_trip=False,
+        name="mean_rank",
+        axis=-1,
+        **kwargs,
+    ):
+        super().__init__(name=name, **kwargs)
+        self.mr = self.add_variable(shape=(), initializer="zeros", name="mr")
+        self.n_evals = self.add_variable(shape=(), initializer="zeros", name="n_evals")
+        self.average_on_trip = average_on_trip
+        self.axis = axis
+
+    def update_state(
+        self,
+        y_true,
+        y_pred,
+        batch=None,
+    ):
+        """Accumulate statistics for the metric.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Ground Truth value
+        y_pred : np.ndarray
+            Predicted values
+        """
+        if self.axis == -1:
+            if not len(tf.shape(y_pred)) == 2:
+                raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
+        else:
+            y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.cast(y_true, dtype=tf.int32)
+
+        ranks = tf.argsort(tf.argsort(-y_pred, axis=1), axis=1) + 1  # Shape: (batch_size, n_items)
+        item_batch_indices = tf.stack(
+            [tf.range(len(y_true)), y_true], axis=1
+        )  # Shape: (batch_size, 2)
+        item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
+        float_rank = tf.cast(item_ranks, dtype=tf.float32)
+
+        if batch is not None and self.average_on_trip:
+            int_batch = tf.cast(batch, tf.int32)
+            self.mr.assign(self.mr + tf.reduce_sum(tf.math.segment_mean(float_rank, int_batch)))
+            self.n_evals.assign(self.n_evals + tf.reduce_max(batch) + 1)
+        else:
+            self.mr.assign(self.mr + tf.reduce_sum(float_rank))
+            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
+
+    def result(self):
+        """Compute the current metric value.
+
+        Returns
+        -------
+        float
+            Negative Log Likelihood value
+        """
+        return tf.math.divide_no_nan(self.mr, self.n_evals)
 
 
 class HitRate(tf.keras.metrics.Metric):
@@ -235,9 +300,10 @@ class HitRate(tf.keras.metrics.Metric):
             trip_means = tf.math.unsorted_segment_mean(hits, segment_ids, tf.shape(unique_trips)[0])
             self.hit_rate.assign_add(tf.reduce_sum(trip_means))
             self.n_evals.assign_add(tf.cast(tf.shape(unique_trips)[0], self.n_evals.dtype))
+
         else:
             self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hits))
-            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
 
     def result(self):
         """Compute the current metric value.

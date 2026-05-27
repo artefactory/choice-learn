@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from choice_learn.basket_models.basic_attention_model import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
-from choice_learn.basket_models.datasets import SyntheticDataGenerator
+from choice_learn.basket_models.datasets.badminton import BadmintonDataGenerator
 
 # Test hyperparameters
 epochs = 4
@@ -18,7 +18,7 @@ n_baskets_eval = 10
 
 # Generate Training & Evaluation Data
 
-data_gen = SyntheticDataGenerator(
+data_gen = BadmintonDataGenerator(
     proba_complementary_items=0.7,
     proba_neutral_items=0.3,
     noise_proba=0.15,
