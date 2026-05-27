@@ -170,7 +170,7 @@ class MRR(tf.keras.metrics.Metric):
             self.n_evals.assign_add(tf.cast(tf.shape(unique_trips)[0], self.n_evals.dtype))
         else:
             self.mrr.assign(self.mrr + tf.reduce_sum(tf.cast(1 / item_ranks, dtype=tf.float32)))
-            self.n_evals.assign(self.n_evals + tf.shape(y_true)[0])
+            self.n_evals.assign_add(tf.cast(tf.shape(y_true)[0], self.n_evals.dtype))
 
     def result(self):
         """Compute the current metric value.
@@ -236,8 +236,8 @@ class MeanRank(tf.keras.metrics.Metric):
             self.mr.assign_add(tf.reduce_sum(batch_mr))
             self.n_evals.assign_add(tf.cast(tf.shape(unique_trips)[0], self.n_evals.dtype))
         else:
-            self.mr.assign(self.mr + tf.reduce_sum(float_rank))
-            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
+            self.mr.assign_add(tf.reduce_sum(float_rank))
+            self.n_evals.assign_add(tf.cast(tf.shape(y_true)[0], self.n_evals.dtype))
 
     def result(self):
         """Compute the current metric value.
@@ -305,8 +305,8 @@ class HitRate(tf.keras.metrics.Metric):
             self.n_evals.assign_add(tf.cast(tf.shape(unique_trips)[0], self.n_evals.dtype))
 
         else:
-            self.hit_rate.assign(self.hit_rate + tf.reduce_sum(hits))
-            self.n_evals.assign(self.n_evals + tf.cast(tf.shape(y_true)[0], tf.float32))
+            self.hit_rate.assign_add(tf.reduce_sum(hits))
+            self.n_evals.assign_add(tf.cast(tf.shape(y_true)[0], self.n_evals.dtype))
 
     def result(self):
         """Compute the current metric value.
