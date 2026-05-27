@@ -918,7 +918,7 @@ class BaseBasketModel:
                         sparse=True,
                         from_logits=False,
                         epsilon=epsilon_eval,
-                        average_on_batch=True,
+                        average_on_trip=True,
                         name="basketwise-nll",
                     )
                 )
@@ -950,7 +950,6 @@ class BaseBasketModel:
                 metric.update_state(
                     y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
                 )
-
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}
 

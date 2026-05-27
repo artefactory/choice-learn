@@ -117,7 +117,7 @@ class TripDataset:
         """
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
-        self.n_samples = len(self.get_transactions())
+        self.n_samples = self.get_n_samples()
         self.available_items = available_items
 
     def __len__(self) -> int:
@@ -170,7 +170,7 @@ class TripDataset:
             self.trips += other.trips
             # Update the attributes of the TripDataset
             self.max_length = max([trip.trip_length for trip in self.trips])
-            self.n_samples = len(self.get_transactions())
+            self.n_samples = self.get_n_samples()
             # Concatenate the arrays of availability matrices
             # /!\ When concatenating 2 TripDatasets, the indices of the availability matrices
             # changes
@@ -203,6 +203,10 @@ class TripDataset:
             Trip at the given index
         """
         return self.trips[index]
+
+    def get_n_samples(self) -> int:
+        """Return the number of samples/transactions of the TripDataset."""
+        return sum(len(trip.purchases) for trip in self.trips)
 
     def get_transactions(self) -> np.ndarray:
         """Return the transactions of the TripDataset.
