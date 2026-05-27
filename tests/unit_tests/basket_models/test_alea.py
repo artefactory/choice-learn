@@ -57,3 +57,8 @@ def test_compute_basket_utility():
     model.compute_basket_utility(
         trip=Trip(purchases=[1, 2], assortment=np.ones((10,)), prices=np.zeros((10,))),
     )
+
+    with pytest.raises(ValueError):
+        model.compute_basket_utility(
+            trip=None,
+        )
