@@ -35,6 +35,7 @@ class AleaCarta(BaseBasketModel):
         momentum: float = 0.0,
         epsilon_price: float = 1e-5,
         l2_regularization: float = 0.0,
+        tied_embeddings: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the AleaCarta model.
@@ -76,11 +77,15 @@ class AleaCarta(BaseBasketModel):
             Momentum for the optimizer, by default 0. For SGD only
         epsilon_price: float, optional
             Epsilon value to add to prices to avoid NaN values (log(0)), by default 1e-5
+        tied_embeddings: bool, optional
+            Whether items have two different embeddings, one when they are in the basket,
+            and one when they are not, by default True
         """
         self.item_intercept = item_intercept
         self.price_effects = price_effects
         self.seasonal_effects = seasonal_effects
         self.l2_regularization = l2_regularization
+        self.tied_embeddings = tied_embeddings
 
         if "preferences" not in latent_sizes.keys():
             logging.warning(
@@ -158,16 +163,16 @@ class AleaCarta(BaseBasketModel):
             # (By default, the store id is 0)
             n_stores = 1
         self.n_stores = n_stores
-
+        tf.random.set_seed(42)
         self.gamma = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+            tf.random_normal_initializer(mean=0, stddev=0.1)(
                 shape=(n_items, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
             name="gamma",
         )
         self.theta = tf.Variable(
-            tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+            tf.random_normal_initializer(mean=0, stddev=0.1)(
                 shape=(n_stores, self.latent_sizes["preferences"])
             ),  # Dimension for 1 item: latent_sizes["preferences"]
             trainable=True,
@@ -177,7 +182,7 @@ class AleaCarta(BaseBasketModel):
         if self.item_intercept:
             # Add item intercept
             self.alpha = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
                     shape=(n_items,)  # Dimension for 1 item: 1
                 ),
                 trainable=True,
@@ -187,14 +192,14 @@ class AleaCarta(BaseBasketModel):
         if self.price_effects:
             # Add price sensitivity
             self.beta = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
                     shape=(n_items, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
                 name="beta",
             )
             self.delta = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
                     shape=(n_stores, self.latent_sizes["price"])
                 ),  # Dimension for 1 item: latent_sizes["price"]
                 trainable=True,
@@ -204,18 +209,28 @@ class AleaCarta(BaseBasketModel):
         if self.seasonal_effects:
             # Add seasonal effects
             self.mu = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
                     shape=(n_items, self.latent_sizes["season"])
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
                 name="mu",
             )
             self.nu = tf.Variable(
-                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
                     shape=(52, self.latent_sizes["season"])
                 ),  # Dimension for 1 item: latent_sizes["season"]
                 trainable=True,
                 name="nu",
+            )
+
+        if not self.tied_embeddings:
+            # unties the gamma embedding
+            self.gamma_input = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1)(
+                    shape=(n_items, self.latent_sizes["preferences"])
+                ),  # Dimension for 1 item: latent_sizes["preferences"]
+                trainable=True,
+                name="gamma_input",
             )
 
         self.instantiated = True
@@ -239,6 +254,9 @@ class AleaCarta(BaseBasketModel):
 
         if self.seasonal_effects:
             weights.extend([self.mu, self.nu])
+
+        if not self.tied_embeddings:
+            weights.extend([self.gamma_input])
 
         return weights
 
@@ -377,7 +395,14 @@ class AleaCarta(BaseBasketModel):
             basket_size = tf.ones((len(item_batch),))
         else:
             # Gather the embeddings using a ragged tensor of indices
-            gamma_by_basket = tf.ragged.map_flat_values(tf.gather, self.gamma, item_indices_ragged)
+            if self.tied_embeddings:
+                gamma_by_basket = tf.ragged.map_flat_values(
+                    tf.gather, self.gamma, item_indices_ragged
+                )
+            else:
+                gamma_by_basket = tf.ragged.map_flat_values(
+                    tf.gather, self.gamma_input, item_indices_ragged
+                )
             basket_size = tf.cast(item_indices_ragged.row_lengths(), dtype=tf.float32)
 
         gamma_by_basket = tf.reduce_sum(gamma_by_basket, axis=1) / tf.maximum(

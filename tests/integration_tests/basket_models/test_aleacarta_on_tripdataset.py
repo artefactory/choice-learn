@@ -162,7 +162,7 @@ def test_with_intercept() -> None:
 
 
 def test_no_intercept() -> None:
-    """Test the Shopper model without item intercepts."""
+    """Test the AleaCarta model without item intercepts."""
     model = AleaCarta(item_intercept=False)
     model.instantiate(
         n_items=n_items_1,
@@ -190,6 +190,37 @@ def test_no_intercept() -> None:
         available_item_batch=np.array([np.ones(n_items_1)]),
     )
     assert np.isclose(pre_utilities, tf.squeeze(aft_utilities)).all()
+
+
+def test_untied_embeddings() -> None:
+    """Test the AleaCarta model without tied embeddings."""
+    model = AleaCarta(tied_embeddings=False, item_intercept=False, price_effects=False)
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+    assert len(model.trainable_weights) == 3
+    batch_size = 2
+    utilities = model.compute_batch_utility(
+        item_batch=np.array([0, 1]),
+        basket_batch=np.array([[1], [0]]),
+        store_batch=np.array([0] * batch_size),
+        week_batch=np.array([0] * batch_size),
+        user_batch=np.array([0] * batch_size),
+        price_batch=np.array([1] * batch_size),
+        available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
+    )
+    gamma_0 = model.gamma[0]
+    gamma_input_0 = model.gamma_input[0]
+    gamma_1 = model.gamma[1]
+    gamma_input_1 = model.gamma_input[1]
+    true_utilities = np.array(
+        [
+            np.dot(gamma_0, gamma_input_1 + model.theta[0]),
+            np.dot(gamma_1, gamma_input_0 + model.theta[0]),
+        ]
+    )
+    assert np.isclose(true_utilities, tf.squeeze(utilities)).all()
 
 
 def test_compute_item_likelihood() -> None:
