@@ -935,10 +935,7 @@ def load_train(
     )
 
 
-def load_car_preferences(
-    as_frame=False,
-    return_desc=False,
-):
+def load_car_preferences(as_frame=False, return_desc=False, one_hot_features=False):
     """Load and return the Car dataset from  McFadden, Daniel and Kenneth Train (2000).
 
     “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
@@ -950,6 +947,8 @@ def load_car_preferences(
         by default False.
     return_desc : bool, optional
         Whether to return the description, by default False.
+    one_hot_features: bool, optional
+        Whether to return the dataset with one-hot encoded categorical features, by default False.
 
     Returns
     -------
@@ -973,6 +972,45 @@ def load_car_preferences(
 
     cars_df["choice"] = cars_df.apply(lambda row: row.choice[-1], axis=1)
     shared_features = ["college", "hsg2", "coml5"]
+    items_id = [f"{i}" for i in range(1, 7)]
+    if one_hot_features:
+        items_features = []
+        for i in range(1, 7):
+            for car_type in ["regcar", "sportcar", "sportuv", "stwagon", "truck", "van"][:-1]:
+                cars_df[f"{car_type}{i}"] = cars_df.apply(
+                    lambda row: row[f"type{i}"] == car_type, axis=1
+                ).astype(int)
+        for i in range(1, 7):
+            for fuel_type in ["cng", "electric", "gasoline", "methanol"][:-1]:
+                cars_df[f"{fuel_type}{i}"] = cars_df.apply(
+                    lambda row: row[f"fuel{i}"] == fuel_type, axis=1
+                ).astype(int)
+
+        for car_type in ["regcar", "sportcar", "sportuv", "stwagon", "truck", "van"][:-1]:
+            items_features.append(f"{car_type}")
+        for fuel_type in ["cng", "electric", "gasoline", "methanol"][:-1]:
+            items_features.append(f"{fuel_type}")
+        items_features += [
+            "price",
+            "range",
+            "acc",
+            "speed",
+            "pollution",
+            "size",
+            "space",
+            "cost",
+            "station",
+        ]
+        return ChoiceDataset.from_single_wide_df(
+            df=cars_df,
+            items_id=items_id,
+            shared_features_columns=shared_features,
+            items_features_prefixes=items_features,
+            delimiter="",
+            choices_column="choice",
+            choice_format="items_id",
+        )
+
     items_features = [
         "type",
         "fuel",
@@ -986,7 +1024,6 @@ def load_car_preferences(
         "cost",
         "station",
     ]
-    items_id = [f"{i}" for i in range(1, 7)]
 
     return ChoiceDataset.from_single_wide_df(
         df=cars_df,
