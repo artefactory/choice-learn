@@ -755,7 +755,6 @@ class BaseLatentClassModel:
                 ]
                 train_logs = {**train_logs, **val_logs}
 
-            # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
             # self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
             # if self.stop_training:
             #     print("Early Stopping taking effect")
@@ -763,7 +762,6 @@ class BaseLatentClassModel:
             t_range.set_description(desc)
             t_range.refresh()
 
-        # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         # self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
@@ -813,12 +811,6 @@ class BaseLatentClassModel:
         np.ndarray
             latent probabilities resulting of maximization step
         """
-        # models = [self.model_class(**mp) for mp in self.model_parameters]
-        # for i in range(len(models)):
-        #     for j, var in enumerate(self.models[i].trainable_weights):
-        #         models[i]._trainable_weights[j] = var
-        # self.instantiate_latent_models(choice_dataset)
-
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
             self.models[q].fit(
@@ -853,13 +845,13 @@ class BaseLatentClassModel:
         _ = sample_weight
 
         # Initialization
-        init_sample_weight = np.random.rand(self.n_latent_classes, len(choice_dataset))
-        init_sample_weight = np.clip(
-            init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True), 1e-6, 1
-        )
-        for i, model in enumerate(self.models):
-            # model.instantiate()
-            model.fit(choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose)
+        # init_sample_weight = np.random.rand(self.n_latent_classes, len(choice_dataset))
+        # init_sample_weight = np.clip(
+        #     init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True), 1e-6, 1
+        # )
+        # for i, model in enumerate(self.models):
+        #     # model.instantiate()
+        #     model.fit(choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose)
         for i in tqdm.trange(self.epochs):
             self.weights, loss = self._expectation(choice_dataset)
             self.latent_logits = self._maximization(choice_dataset, verbose=verbose)
