@@ -141,12 +141,12 @@ Here are two tutorials published on Medium that can help you
 | Stated Car Preferences | [csv](./choice_learn/datasets/data/car.csv.gz) | McFadden and Train (2000) [[9]](#trident-references) | *load_car_preferences* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_car_preferences) |
 | TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | *load_tafeng* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_tafeng/) |
 | ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | *load_expedia* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_expedia/) |
-| London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
+| London Passenger Mode Choice | [url](https://transp-or.epfl.ch/documents/technicalReports/CS_LPMC.pdf) | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
 
 | Basket Dataset    | Raw Data | Origin | *from choice_learn.basket_models.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
 | Bakery Dataset | [url](https://www.cs.cornell.edu/~arb/data/uchoice-Bakery/) | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
-| Badminton Dataset | [url](https://transp-or.epfl.ch/documents/technicalReports/CS_LPMC.pdf) | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/badminton) |
+| Badminton Dataset | [url](https://link.springer.com/chapter/10.1007/978-3-032-06118-8_8) | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/badminton) |
 
 
 ### Auxiliary tools
