@@ -1,0 +1,139 @@
+name: "PyPI Poetry Publish"
+description: "GitHub action to automate publishing packages to PyPI - from code-specialist."
+
+
+inputs:
+  ACCESS_TOKEN:
+    description: "Access Token for GitHub with write access on the repository"
+    required: true
+  PYTHON_VERSION:
+    description: "Python Version"
+    required: false
+    default: "3.10"
+  PACKAGE_DIRECTORY:
+    description: "Directory of the package"
+    required: false
+    default: "./"
+  PUBLISH_REGISTRY_PASSWORD:
+    description: "Password for the user to publish to PyPI. May also be a Token - requires the `PUBLISH_REGISTRY_USERNAME` to be `__token__`"
+    required: true
+  PUBLISH_REGISTRY_USERNAME:
+    description: "The username for the registry. Defaults to __token__"
+    required: false
+    default: "__token__"
+  POETRY_VERSION:
+    description: "The version of Poetry to use"
+    required: false
+    default: ""
+  POETRY_CORE_VERSION:
+    description: "The version of Poetry Core to use"
+    required: false
+    default: ""
+  BRANCH:
+    description: "Branch to publish from"
+    required: false
+    default: "main"
+  POETRY_DEPENDENCY_REGISTRY_URL:
+    description: "Allows to define a custom registry to be used by Poetry for dependency installation"
+    required: false
+  POETRY_DEPENDENCY_REGISTRY_NAME:
+    description: "The name used for the custom registry in the dependencies"
+    required: false
+  POETRY_DEPENDENCY_REGISTRY_USERNAME:
+    description: "The username for the custom registry"
+    required: false
+  POETRY_DEPENDENCY_REGISTRY_PASSWORD:
+    description: "The password for the custom registry"
+    required: false
+  POETRY_DEPENDENCY_REGISTRY_AUTH:
+    description: "The authentication type for the custom registry"
+    required: false
+    default: "http-basic"
+  PUBLISH_REGISTRY:
+    description: "The registry to publish to"
+    required: false
+    default: "https://upload.pypi.org/legacy/"
+  UPDATE_CODE_VERSION:
+    description: "Whether or not to apply the version update in the code"
+    required: false
+    default: "true"
+  PUSH_BRANCH:
+    description: "Which branch to push the changes to"
+    required: false
+    default: "main"
+
+runs:
+  using: composite
+  steps:
+    - name: display inputs
+      run: |
+        echo ${{ inputs.BRANCH }}
+      shell: bash
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.BRANCH }}
+        token: ${{ inputs.ACCESS_TOKEN }}
+
+    - name: check install
+      run: |
+        git status
+        git branch
+      shell: bash
+
+    - name: Install poetry
+      run: pip install poetry${{ inputs.POETRY_VERSION != '' && format('=={0}', inputs.POETRY_VERSION) || '' }} poetry-core${{ inputs.POETRY_CORE_VERSION != '' && format('=={0}', inputs.POETRY_CORE_VERSION) || '' }}
+      shell: bash
+
+    - name: Set up Python ${{ inputs.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.PYTHON_VERSION }}
+        cache: poetry
+        check-latest: true
+
+    - name: Set GitHub Tag as Package Version
+      run: |
+        if ${{ inputs.UPDATE_CODE_VERSION }}
+        then
+          vname="${{ github.event.release.tag_name }}"
+          vname=${vname:1}
+          echo $vname
+          sed -i -r 's/__version__ *= *".*"/__version__ = "'"$vname"'"/g' ${{ inputs.PACKAGE_DIRECTORY }}__init__.py
+          sed -i '0,/version =.*/s//version = "'"$vname"'"/' ./pyproject.toml
+        fi
+      shell: bash
+
+    - name: Add and Commit Version
+      run: |
+        if ${{ inputs.UPDATE_CODE_VERSION }}
+        then
+          git checkout -b ${{ inputs.PUSH_BRANCH }}
+          git add ${{ inputs.PACKAGE_DIRECTORY }}__init__.py ./pyproject.toml
+          git config user.name 'VincentAuriau'
+          git config user.email '22350719+VincentAuriau@users.noreply.github.com'
+          git commit -m "Change version to ${{ github.event.release.tag_name }}" --allow-empty
+          git push origin HEAD:${{ inputs.PUSH_BRANCH }}
+        fi
+      shell: bash
+
+    - name: Install dependencies
+      if: inputs.POETRY_DEPENDENCY_REGISTRY_URL != ''
+      run: |
+        poetry config repositories.${{ inputs.POETRY_DEPENDENCY_REGISTRY_NAME }} ${{ inputs.POETRY_DEPENDENCY_REGISTRY_URL }}
+        poetry config ${{ inputs.POETRY_DEPENDENCY_REGISTRY_AUTH }}.${{ inputs.POETRY_DEPENDENCY_REGISTRY_NAME }} ${{ inputs.POETRY_DEPENDENCY_REGISTRY_USERNAME }} ${{ inputs.POETRY_DEPENDENCY_REGISTRY_PASSWORD }}
+        poetry install --no-root
+      shell: bash
+
+    - name: Install dependencies
+      if: inputs.POETRY_DEPENDENCY_REGISTRY_URL == ''
+      run: |
+        poetry install --no-root
+      shell: bash
+
+    - name: Build and Publish
+      run: |
+        poetry config repositories.publish ${{ inputs.PUBLISH_REGISTRY }}
+        poetry publish -p ${{ inputs.PUBLISH_REGISTRY_PASSWORD }} -u ${{ inputs.PUBLISH_REGISTRY_USERNAME }} -r publish --build
+      shell: bash
