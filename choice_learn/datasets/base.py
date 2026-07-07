@@ -935,7 +935,9 @@ def load_train(
     )
 
 
-def load_car_preferences(as_frame=False, return_desc=False, one_hot_features=False):
+def load_car_preferences(
+    as_frame=False, return_desc=False, one_hot_features=False, preprocessing=None
+):
     """Load and return the Car dataset from  McFadden, Daniel and Kenneth Train (2000).
 
     “Mixed MNL models for discrete response”, Journal of Applied Econometrics, 15(5), 447–470.
@@ -1005,6 +1007,27 @@ def load_car_preferences(as_frame=False, return_desc=False, one_hot_features=Fal
             df=cars_df,
             items_id=items_id,
             shared_features_columns=shared_features,
+            items_features_prefixes=items_features,
+            delimiter="",
+            choices_column="choice",
+            choice_format="items_id",
+        )
+
+    if preprocessing in ["adt", "ADT"]:
+        items_features = [
+            "price",
+            "range",
+            "acc",
+            "speed",
+            "pollution",
+            "space",
+            "cost",
+            "station",
+        ]
+        return ChoiceDataset.from_single_wide_df(
+            df=cars_df,
+            items_id=items_id,
+            shared_features_columns=None,
             items_features_prefixes=items_features,
             delimiter="",
             choices_column="choice",

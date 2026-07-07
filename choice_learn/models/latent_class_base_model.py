@@ -92,7 +92,8 @@ class BaseLatentClassModel:
         list
            list of trainable weights.
         """
-        weights = [self.latent_logits]
+        weights = []
+        # weights = [self.weights]
         for model in self.models:
             weights += model.trainable_weights
         return weights
@@ -262,6 +263,12 @@ class BaseLatentClassModel:
             )
 
         if self.fit_method.lower() == "mle":
+            self.weights = tf.Variable(
+                tf.random_normal_initializer(0.0, 0.08)(
+                    shape=(self.n_latent_classes - 1, len(choice_dataset))
+                ),
+                name="Latent-Logits",
+            )
             if isinstance(self.optimizer, str):
                 if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
                     return self._fit_with_lbfgs(
@@ -277,7 +284,6 @@ class BaseLatentClassModel:
                 else:
                     print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
-
             return self._fit_with_gd(
                 choice_dataset=choice_dataset,
                 sample_weight=sample_weight,
@@ -357,7 +363,7 @@ class BaseLatentClassModel:
                 trainable_weights.append(w)
                 w_to_model.append(i)
                 w_to_model_indexes.append(j)
-        trainable_weights.append(self.latent_logits)
+        trainable_weights.append(self.weights)
         w_to_model.append(-1)
         w_to_model_indexes.append(-1)
         shapes = tf.shape_n(trainable_weights)
@@ -393,7 +399,7 @@ class BaseLatentClassModel:
                         tf.reshape(param, shape)
                     )
                 else:
-                    self.latent_logits.assign(tf.reshape(param, shape))
+                    self.weights.assign(tf.reshape(param, shape))
 
         # now create a function that will be returned by this factory
         @tf.function
@@ -542,7 +548,8 @@ class BaseLatentClassModel:
                 choices=choices,
             )
 
-            latent_probabilities = self.get_latent_classes_weights()
+            # latent_probabilities = self.get_latent_classes_weights()
+
             # Compute probabilities from utilities & availabilties
             probabilities = []
             for i, class_utilities in enumerate(utilities):
@@ -552,15 +559,46 @@ class BaseLatentClassModel:
                     normalize_exit=self.add_exit_choice,
                     axis=-1,
                 )
-                probabilities.append(class_probabilities * latent_probabilities[i])
+                probabilities.append(class_probabilities)
+            sample_class_weight = tf.stack(probabilities, axis=1) / tf.reduce_sum(
+                tf.stack(probabilities, axis=1), axis=1, keepdims=True
+            )
+            sample_class_weight = tf.stack(
+                [
+                    tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
+                    for prob in probabilities
+                ],
+                axis=1,
+            )
+            # sample_class_weight = tf.expand_dims(tf.reduce_sum(sample_class_weight,
+            # axis=0, keepdims=True), axis=-1)
+            self._weights = sample_class_weight
+            self.__weights = tf.stack(
+                [
+                    tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
+                    for prob in probabilities
+                ],
+                axis=1,
+            )
             # Summing over the latent classes
-            probabilities = tf.reduce_sum(probabilities, axis=0)
+
+            probabilities = tf.reduce_sum(
+                tf.stack(probabilities, axis=1) * tf.expand_dims(sample_class_weight, axis=-1),
+                axis=1,
+            )
             # Negative Log-Likelihood
             neg_loglikelihood = self.loss(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
+            """neg_loglikelihood += self.loss(
+                y_pred=class_p,
+                y_true=tf.one_hot(choices, depth=utilities[0].shape[1]),
+                sample_weight=tf.gather_nd(sample_class_weight[:, i],
+                tf.stack([np.arange(0, len(choices)), choices], axis=1)),
+            )"""
+
             # if self.regularization is not None:
             #     regularization = tf.reduce_sum(
             #         [self.regularizer(w) for w in self.trainable_weights]
@@ -644,7 +682,6 @@ class BaseLatentClassModel:
                     weight_batch,
                 ) in enumerate(inner_range):
                     # self.callbacks.on_train_batch_begin(batch_nb)
-
                     neg_loglikelihood = self.train_step(
                         shared_features_batch,
                         items_features_batch,
@@ -793,7 +830,7 @@ class BaseLatentClassModel:
         )
 
         return tf.clip_by_value(
-            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-6, 1
+            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 0.0, 1.0
         ), loss
 
     def _maximization(self, choice_dataset, verbose=0):
