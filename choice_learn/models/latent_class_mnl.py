@@ -68,6 +68,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
             epochs=epochs,
+            batch_size=batch_size,
             add_exit_choice=add_exit_choice,
             lbfgs_tolerance=lbfgs_tolerance,
             optimizer=optimizer,
@@ -75,7 +76,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
+    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features, base_seed):
         """Instantiate the Latent Models that are SimpleMNLs.
 
         Parameters
@@ -87,9 +88,12 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         n_items_features : int
             Number of items features
         """
-        for model in self.models:
+        for i, model in enumerate(self.models):
             model.indexes, model.weights = model.instantiate(
-                n_items, n_shared_features, n_items_features
+                n_items=n_items,
+                n_shared_features=n_shared_features,
+                n_items_features=n_items_features,
+                base_seed=(base_seed + i),
             )
             model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
                 from_logits=False,
@@ -102,10 +106,11 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             )
             model.instantiated = True
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, base_seed=42):
         """Instantiate the Latent Class MNL model."""
+        tf.random.set_seed(base_seed)
         self.latent_logits = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.02)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
 
@@ -115,6 +120,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_items=n_items,
             n_shared_features=n_shared_features,
             n_items_features=n_items_features,
+            base_seed=base_seed,
         )
         self.instantiated = True
 
