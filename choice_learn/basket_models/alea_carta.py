@@ -36,6 +36,7 @@ class AleaCarta(BaseBasketModel):
         epsilon_price: float = 1e-5,
         l2_regularization: float = 0.0,
         tied_embeddings: bool = True,
+        add_cannib=False,
         **kwargs,
     ) -> None:
         """Initialize the AleaCarta model.
@@ -86,6 +87,7 @@ class AleaCarta(BaseBasketModel):
         self.seasonal_effects = seasonal_effects
         self.l2_regularization = l2_regularization
         self.tied_embeddings = tied_embeddings
+        self.add_cannib = add_cannib
 
         if "preferences" not in latent_sizes.keys():
             logging.warning(
@@ -233,6 +235,37 @@ class AleaCarta(BaseBasketModel):
                 name="gamma_basket",
             )
 
+        if self.add_cannib:
+            cannib_latent_size = 10
+            self.cannib_W1 = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(self.latent_sizes["preferences"], cannib_latent_size)
+                ),
+                trainable=True,
+                name="cannib_W1",
+            )
+            self.cannib_W2 = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(cannib_latent_size, self.latent_sizes["preferences"])
+                ),
+                trainable=True,
+                name="cannib_W2",
+            )
+            self.cannib_b1 = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(cannib_latent_size,)
+                ),
+                trainable=True,
+                name="cannib_b1",
+            )
+            self.cannib_b2 = tf.Variable(
+                tf.random_normal_initializer(mean=0, stddev=0.1, seed=42)(
+                    shape=(self.latent_sizes["preferences"],)
+                ),
+                trainable=True,
+                name="cannib_b2",
+            )
+
         self.instantiated = True
 
     @property
@@ -257,6 +290,9 @@ class AleaCarta(BaseBasketModel):
 
         if not self.tied_embeddings:
             weights.extend([self.gamma_basket])
+
+        if self.add_cannib:
+            weights.extend([self.cannib_W1, self.cannib_b1, self.cannib_W2, self.cannib_b2])
 
         return weights
 
@@ -310,7 +346,7 @@ class AleaCarta(BaseBasketModel):
         available_item_batch: np.ndarray
             Batch of availability matrices (indicating the availability (1) or not (0)
             of the products) (arrays) for each purchased item
-            Shape must be (batch_size, n_items)
+            Shape must be (fsize, n_items)
 
         Returns
         -------
@@ -319,7 +355,6 @@ class AleaCarta(BaseBasketModel):
             Shape must be (batch_size,)
         """
         _ = user_batch
-        _ = available_item_batch
         item_batch = tf.cast(item_batch, dtype=tf.int32)
         if len(tf.shape(item_batch)) == 1:
             if len(tf.shape(price_batch)) != 1:
@@ -412,10 +447,55 @@ class AleaCarta(BaseBasketModel):
         # Compute the dot product along the last dimension (latent_size)
         basket_interaction_utility = tf.einsum("kj,klj->kl", gamma_by_basket, gamma_item)
 
+        # NOUVEAU effet d'assortiment
+
+        if self.add_cannib:
+            # Mapping
+            hidden = tf.nn.relu(tf.matmul(self.gamma, self.cannib_W1) + self.cannib_b1)
+            mapped_gamma = tf.matmul(hidden, self.cannib_W2) + self.cannib_b2
+
+            # 2. Création d'un masque des items déjà dans le panier (multi-hot encoding)
+            valid_items_mask = tf.cast(basket_batch >= 0, tf.float32)
+            basket_multi_hot = tf.reduce_sum(
+                tf.one_hot(tf.maximum(basket_batch, 0), self.n_items)
+                * tf.expand_dims(valid_items_mask, -1),
+                axis=1,
+            )
+            basket_multi_hot = tf.clip_by_value(basket_multi_hot, 0.0, 1.0)
+
+            # 3. Filtrage : dans l'assortiment MAIS PAS dans le panier
+            if available_item_batch is None:
+                available_mask = tf.ones((tf.shape(item_batch)[0], self.n_items), dtype=tf.float32)
+            else:
+                available_mask = tf.cast(available_item_batch, tf.float32)
+
+            base_cannib_mask = available_mask * (
+                1.0 - basket_multi_hot
+            )  # Shape: (batch_size, n_items)
+            item_one_hot = tf.one_hot(item_batch, self.n_items)
+            cannib_mask_k = tf.expand_dims(base_cannib_mask, axis=1) * (1.0 - item_one_hot)
+
+            # 4. Pooling (moyenne) des embeddings mappés
+            cannib_sum = tf.einsum("bki,il->bkl", cannib_mask_k, mapped_gamma)
+            cannib_count = tf.reduce_sum(cannib_mask_k, axis=-1, keepdims=True)
+            cannib_pool = cannib_sum / tf.maximum(cannib_count, 1.0)
+
+            # 5. Calcul de l'interaction
+            # cannib_pool: (batch_size, latent_size)
+            # gamma_item: (batch_size, num_samples, latent_size)
+            cannib_interaction = tf.reduce_sum(
+                cannib_pool * gamma_item, axis=-1
+            )  # Shape: (batch_size, num_samples)
+        else:
+            cannib_interaction = tf.zeros_like(store_preferences)
+
+        # Ajout du terme de cannibalisation à l'utilité finale
+        final_utility = psi + basket_interaction_utility + cannib_interaction
+
         # Sum over the items in the basket
         if squeeze:
-            return tf.gather(psi + basket_interaction_utility, 0, axis=1)
-        return psi + basket_interaction_utility
+            return tf.gather(final_utility, 0, axis=1)
+        return final_utility
 
     def compute_basket_utility(
         self,
