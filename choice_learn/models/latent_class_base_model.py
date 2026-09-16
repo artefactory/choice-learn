@@ -100,11 +100,10 @@ class BaseLatentClassModel:
 
     def instantiate(self, **kwargs):
         """Instantiate the model."""
-        init_logit = tf.Variable(
+        self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.08, seed=42)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
-        self.latent_logits = init_logit
 
         self.models = self.instantiate_latent_models(**kwargs)
         self.instantiated = True

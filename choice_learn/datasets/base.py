@@ -1024,6 +1024,15 @@ def load_car_preferences(
             "cost",
             "station",
         ]
+
+        cars_df = (
+            cars_df.loc[cars_df.price1 < 12.5]
+            .loc[cars_df.price2 < 12.5]
+            .loc[cars_df.price3 < 12.5]
+            .loc[cars_df.price4 < 12.5]
+            .loc[cars_df.price5 < 12.5]
+            .loc[cars_df.price6 < 12.5]
+        )
         return ChoiceDataset.from_single_wide_df(
             df=cars_df,
             items_id=items_id,
