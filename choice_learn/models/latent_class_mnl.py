@@ -108,9 +108,11 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
 
     def instantiate(self, n_items, n_shared_features, n_items_features, base_seed=42):
         """Instantiate the Latent Class MNL model."""
-        tf.random.set_seed(base_seed)
+        # tf.random.set_seed(base_seed)
         self.latent_logits = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02)(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.02, seed=base_seed)(
+                shape=(self.n_latent_classes - 1,)
+            ),
             name="Latent-Logits",
         )
 

@@ -93,7 +93,7 @@ class BaseLatentClassModel:
            list of trainable weights.
         """
         weights = []
-        # weights = [self.weights]
+        weights = [self.latent_logits]
         for model in self.models:
             weights += model.trainable_weights
         return weights
@@ -559,30 +559,33 @@ class BaseLatentClassModel:
                     axis=-1,
                 )
                 probabilities.append(class_probabilities)
-            sample_class_weight = tf.stack(probabilities, axis=1) / tf.reduce_sum(
-                tf.stack(probabilities, axis=1), axis=1, keepdims=True
-            )
-            sample_class_weight = tf.stack(
-                [
-                    tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
-                    for prob in probabilities
-                ],
-                axis=1,
-            )
-            # sample_class_weight = tf.expand_dims(tf.reduce_sum(sample_class_weight,
-            # axis=0, keepdims=True), axis=-1)
-            self._weights = sample_class_weight
-            self.__weights = tf.stack(
-                [
-                    tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
-                    for prob in probabilities
-                ],
-                axis=1,
-            )
+            # sample_class_weight = tf.stack(probabilities, axis=1) / tf.reduce_sum(
+            # tf.stack(probabilities, axis=1), axis=1, keepdims=True
+            # )
+            # sample_class_weight = tf.stack(
+            #     [
+            #         tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
+            #         for prob in probabilities
+            #     ],
+            #     axis=1,
+            # )
+            # # sample_class_weight = tf.expand_dims(tf.reduce_sum(sample_class_weight,
+            # # axis=0, keepdims=True), axis=-1)
+            # self._weights = sample_class_weight
+            # self.__weights = tf.stack(
+            #     [
+            #         tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
+            #         for prob in probabilities
+            #     ],
+            #     axis=1,
+            # )
             # Summing over the latent classes
 
+            sample_class_weight = self.get_latent_classes_weights()
+
             probabilities = tf.reduce_sum(
-                tf.stack(probabilities, axis=1) * tf.expand_dims(sample_class_weight, axis=-1),
+                tf.stack(probabilities, axis=1)
+                * tf.expand_dims(tf.expand_dims(sample_class_weight, axis=0), axis=-1),
                 axis=1,
             )
             # Negative Log-Likelihood

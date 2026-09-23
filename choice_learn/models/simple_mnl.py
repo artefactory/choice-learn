@@ -41,7 +41,7 @@ class SimpleMNL(ChoiceModel):
         self.instantiated = False
         self.intercept = intercept
 
-    def instantiate(self, n_items, n_shared_features, n_items_features, base_seed=42):
+    def instantiate(self, n_items, n_shared_features, n_items_features):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -60,7 +60,7 @@ class SimpleMNL(ChoiceModel):
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
-        tf.random.set_seed(base_seed)
+        # tf.random.set_seed(base_seed)
         weights = []
         indexes = {}
         for n_feat, feat_name in zip(

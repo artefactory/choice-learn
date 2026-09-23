@@ -979,14 +979,9 @@ def load_car_preferences(
         items_features = []
         for i in range(1, 7):
             for car_type in ["regcar", "sportcar", "sportuv", "stwagon", "truck", "van"][:-1]:
-                cars_df[f"{car_type}{i}"] = cars_df.apply(
-                    lambda row: row[f"type{i}"] == car_type, axis=1
-                ).astype(int)
-        for i in range(1, 7):
+                cars_df[f"{car_type}{i}"] = (cars_df[f"type{i}"] == car_type).astype(int)
             for fuel_type in ["cng", "electric", "gasoline", "methanol"][:-1]:
-                cars_df[f"{fuel_type}{i}"] = cars_df.apply(
-                    lambda row: row[f"fuel{i}"] == fuel_type, axis=1
-                ).astype(int)
+                cars_df[f"{fuel_type}{i}"] = (cars_df[f"fuel{i}"] == fuel_type).astype(int)
 
         for car_type in ["regcar", "sportcar", "sportuv", "stwagon", "truck", "van"][:-1]:
             items_features.append(f"{car_type}")
