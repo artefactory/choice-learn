@@ -1,6 +1,7 @@
 """Main classes to handle assortment data."""
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -884,11 +885,9 @@ class ChoiceDataset:
         df,
         items_id,
         shared_features_columns=None,
-        items_features_suffixes=None,
-        items_features_prefixes=None,
-        available_items_suffix=None,
-        available_items_prefix=None,
-        delimiter="_",
+        items_features_patterns=None,
+        available_items_pattern=None,
+        patterns_ignore_chars="[^a-zA-Z0-9]",
         choices_column="choice",
         choice_format="items_id",
     ):
@@ -902,21 +901,19 @@ class ChoiceDataset:
             List of items ids
         shared_features_columns : list, optional
             List of columns of the dataframe that are shared_features_by_choice, default is None
-        items_features_prefixes : list, optional
-            Prefixes of the columns of the dataframe that are items_features_by_choice,
+        items_features_patterns : list of str, optional
+            Patterns of the columns of the dataframe that are items_features_by_choice,
+            given as "*suffix" or "prefix*" where "*" is replaced by items_id in df columns.
+            It is possible to specify characters to be ignored by including them between [^ and ].
             default is None
-        items_features_suffixes : list, optional
-            Suffixes of the columns of the dataframe that are items_features_by_choice,
+        available_items_pattern: str, optional
+            Pattern of the columns of the dataframe that are available_items_by_choice,
+            given as "*suffix" or "prefix*" where "*" is replaced by items_id in df columns.
             default is None
-        available_items_prefix: str, optional
-            Prefix of the columns of the dataframe that precise available_items_by_choice,
-            default is None
-        available_items_suffix: str, optional
-            Suffix of the columns of the dataframe that precise available_items_by_choice,
-            default is None
-        delimiter: str, optional
-            Delimiter used to separate the given prefix or suffixes and the features names,
-            default is "_"
+        patterns_ignore_chars: str or list, optional
+            Characters to be ignored in the patterns matching, given as a regex string
+            (e.g. "[^a-zA-Z0-9_]") or as a list of characters (e.g. [" ", "-", "/"]),
+            default is "[^a-zA-Z0-9_]"
         choice_column: str, optional
             Name of the column containing the choices, default is "choice"
         choice_format: str, optional
@@ -928,11 +925,6 @@ class ChoiceDataset:
         ChoiceDataset
             corresponding ChoiceDataset
         """
-        if available_items_prefix is not None and available_items_suffix is not None:
-            raise ValueError(
-                "You cannot give both available_items_prefix and\
-                    available_items_suffix."
-            )
         if choice_format not in ["items_index", "items_id"]:
             logging.warning("choice_format not understood, defaulting to 'items_index'")
 
@@ -943,15 +935,12 @@ class ChoiceDataset:
             shared_features_by_choice = None
             shared_features_by_choice_names = None
 
-        if items_features_suffixes is not None and items_features_prefixes is not None:
-            # The list of features names is the concatenation of the two lists of
-            # prefixes and suffixes
-            items_features_names = items_features_prefixes + items_features_suffixes
+        if items_features_patterns is not None:
+            if not all(["*" in pattern for pattern in items_features_patterns]):
+                raise ValueError("items_features_patterns should all contain '*' character.")
             items_features_by_choice = []
             for item in items_id:
-                columns = [f"{feature}{delimiter}{item}" for feature in items_features_prefixes] + [
-                    f"{item}{delimiter}{feature}" for feature in items_features_suffixes
-                ]
+                columns = [feature.replace("*", item) for feature in items_features_patterns]
                 for col in columns:
                     if col not in df.columns:
                         logging.warning(
@@ -961,63 +950,40 @@ class ChoiceDataset:
                         df[col] = 0
                 items_features_by_choice.append(df[columns].to_numpy())
             items_features_by_choice = np.stack(items_features_by_choice, axis=1)
-        elif items_features_suffixes is not None:
-            items_features_names = items_features_suffixes
-            items_features_by_choice = []
-            for item in items_id:
-                columns = [f"{item}{delimiter}{feature}" for feature in items_features_suffixes]
-                for col in columns:
-                    if col not in df.columns:
-                        logging.warning(
-                            f"Column {col} was not in DataFrame,\
-                            dummy creation of the feature with zeros."
-                        )
-                        df[col] = 0
-                items_features_by_choice.append(df[columns].to_numpy())
-            items_features_by_choice = np.stack(items_features_by_choice, axis=1)
-        elif items_features_prefixes is not None:
-            items_features_names = items_features_prefixes
-            items_features_by_choice = []
-            for item in items_id:
-                columns = [f"{feature}{delimiter}{item}" for feature in items_features_prefixes]
-                for col in columns:
-                    if col not in df.columns:
-                        logging.warning(
-                            f"Column {col} was not in DataFrame,\
-                            dummy creation of the feature with zeros."
-                        )
-                        df[col] = 0
-                items_features_by_choice.append(df[columns].to_numpy())
-            items_features_by_choice = np.stack(items_features_by_choice, axis=1)
+            items_features_names = [
+                features.replace("*", "") for features in items_features_patterns
+            ]
+            if isinstance(patterns_ignore_chars, list):
+                for char in patterns_ignore_chars:
+                    items_features_names = [name.replace(char, "") for name in items_features_names]
+            elif isinstance(patterns_ignore_chars, str):
+                regex = re.compile(patterns_ignore_chars)
+                items_features_names = [regex.sub("", name) for name in items_features_names]
+                print(">>>", items_features_names)
+            elif items_features_patterns is not None:
+                raise ValueError(
+                    f"""patterns_ignore_chars should either be a list of characters,
+                    a regex string or None, got {type(patterns_ignore_chars)}"""
+                )
         else:
             items_features_by_choice = None
             items_features_names = None
 
-        if available_items_suffix is not None:
-            if isinstance(available_items_suffix, list):
-                if not len(available_items_suffix) == len(items_id):
+        if available_items_pattern is not None:
+            if isinstance(available_items_pattern, list):
+                if not len(available_items_pattern) == len(items_id):
                     raise ValueError(
                         "You have given a list of columns for availabilities."
-                        "We consider that it is one for each item however lenghts do not match"
+                        "We consider that it is one for each item however lengths do not match"
                     )
                 logging.info("You have given a list of columns for availabilities.")
                 logging.info("Each column will be matched to an item, given their order")
-                available_items_by_choice = df[available_items_suffix].to_numpy()
+                available_items_by_choice = df[available_items_pattern].to_numpy()
             else:
-                columns = [f"{item}{delimiter}{available_items_suffix}" for item in items_id]
-                available_items_by_choice = df[columns].to_numpy()
-        elif available_items_prefix is not None:
-            if isinstance(available_items_prefix, list):
-                if not len(available_items_prefix) == len(items_id):
-                    raise ValueError(
-                        "You have given a list of columns for availabilities."
-                        "We consider that it is one for each item however lenghts do not match"
-                    )
-                logging.info("You have given a list of columns for availabilities.")
-                logging.info("Each column will be matched to an item, given their order")
-                available_items_by_choice = df[available_items_prefix].to_numpy()
-            else:
-                columns = [f"{available_items_prefix}{delimiter}{item}" for item in items_id]
+                if "*" not in available_items_pattern:
+                    raise ValueError("available_items_pattern should contain '*' character.")
+                columns = [available_items_pattern.replace("*", item) for item in items_id]
+                print(">>>", columns, available_items_pattern, items_id)
                 available_items_by_choice = df[columns].to_numpy()
         else:
             available_items_by_choice = None
