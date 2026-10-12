@@ -174,18 +174,18 @@ git clone git@github.com:artefactory/choice-learn.git
 
 ### Dependencies
 For manual installation, Choice-Learn requires the following:
-- Python (>=3.9, <3.13)
+- Python (>=3.10, <3.14)
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
 For modeling you need:
-- TensorFlow (>=2.18 if Python >= 3.10, <=2.16 otherwise)
+- TensorFlow (>=2.18)
 
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
 An optional requirement used for coefficients analysis and L-BFGS optimization is:
-- TensorFlow Probability  (>=0.23 if Python >= 3.10, ==0.23 otherwise)
+- TensorFlow Probability  (>=0.23)
 
 Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
 - gurobipy (>=11.0)
