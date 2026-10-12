@@ -127,6 +127,6 @@ nav:
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
     - Utils:
-        - Tensorflow Operations: references/tf_ops.md
-        - Metrics: references/utils/metrics.md
+        - Tensorflow Operations: references/utils/references_tf_ops.md
+        - Metrics: references/utils/references_metrics.md
   - explanations.md

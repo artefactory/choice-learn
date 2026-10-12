@@ -390,4 +390,4 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
 [16] [Shopper](https://github.com/franrruiz/shopper-src)\
 [17] [AleaCarta](https://github.com/artefactory/alea-carta-est)\
-[20] [SelfAttention](https://github.com/artefactory/rd-self-attentive)
+[20] [SelfAttention](https://github.com/slientGe/Sequential_Recommendation_Tensorflow)
