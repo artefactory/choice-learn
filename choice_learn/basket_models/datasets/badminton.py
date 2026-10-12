@@ -187,10 +187,6 @@ class BadmintonDataGenerator:
         if np.random.rand() <= self.noise_proba:
             try:
                 basket.append(np.random.choice([i for i in available_items if i not in basket]))
-            except IndexError:
-                logging.warning(
-                    "Warning: No more items available to add as noise.Returning the current basket."
-                )
             except ValueError:
                 logging.warning(
                     "Warning: No more items available to add as noise.Returning the current basket."
