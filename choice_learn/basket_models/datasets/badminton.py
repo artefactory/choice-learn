@@ -18,7 +18,6 @@ class BadmintonDataGenerator:
         proba_complementary_items: float = 0.7,
         proba_neutral_items: float = 0.15,
         noise_proba: float = 0.05,
-        plant_seed: int = None,
         user_profile: dict = None,
     ) -> None:
         """Initialize the data generator with parameters for basket generation.
@@ -57,9 +56,6 @@ class BadmintonDataGenerator:
         self.items_nest = items_nest
         self.nests_interactions = nests_interactions
         self.user_profile = user_profile
-
-        if plant_seed is not None:
-            np.random.seed(plant_seed)
 
     def get_available_sets(self, assortment_items: np.ndarray = None) -> np.ndarray:
         """Return the available nests based on the current assortment.
@@ -290,6 +286,7 @@ class BadmintonDataGenerator:
         n_baskets: int = 400,
         assortments_matrix: np.ndarray = None,
         len_basket: int = None,
+        seed: int = None,
     ) -> TripDataset:
         """Generate a TripDataset from the generated baskets.
 
@@ -311,6 +308,8 @@ class BadmintonDataGenerator:
             TripDataset
                 A TripDataset object containing the generated baskets.
         """
+        if seed is not None:
+            np.random.seed(seed)
         trips = []
         assortments = []
         assortment_id = np.random.randint(0, len(assortments_matrix))
