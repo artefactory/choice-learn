@@ -437,43 +437,52 @@ def test_large_dataset_generation():
 def test_seed():
     """Test reproducibility with a fixed random seed."""
     seed = 42
-    generator1 = BadmintonDataGenerator( proba_complementary_items=0.7,
-    proba_neutral_items=0.3,
-    noise_proba=0.15,
-    items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
-    nests_interactions=[
-        ["", "compl", "neutral", "neutral"],
-        ["compl", "", "neutral", "neutral"],
-        ["neutral", "neutral", "", "neutral"],
-        ["neutral", "neutral", "neutral", ""],
-    ])
-    generator2 = BadmintonDataGenerator( proba_complementary_items=0.7,
-    proba_neutral_items=0.3,
-    noise_proba=0.15,
-    items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
-    nests_interactions=[
-        ["", "compl", "neutral", "neutral"],
-        ["compl", "", "neutral", "neutral"],
-        ["neutral", "neutral", "", "neutral"],
-        ["neutral", "neutral", "neutral", ""],
-    ])
+    generator1 = BadmintonDataGenerator(
+        proba_complementary_items=0.7,
+        proba_neutral_items=0.3,
+        noise_proba=0.15,
+        items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+        nests_interactions=[
+            ["", "compl", "neutral", "neutral"],
+            ["compl", "", "neutral", "neutral"],
+            ["neutral", "neutral", "", "neutral"],
+            ["neutral", "neutral", "neutral", ""],
+        ],
+    )
+    generator2 = BadmintonDataGenerator(
+        proba_complementary_items=0.7,
+        proba_neutral_items=0.3,
+        noise_proba=0.15,
+        items_nest={0: [0, 1, 2], 1: [3, 4, 5], 2: [6], 3: [7]},
+        nests_interactions=[
+            ["", "compl", "neutral", "neutral"],
+            ["compl", "", "neutral", "neutral"],
+            ["neutral", "neutral", "", "neutral"],
+            ["neutral", "neutral", "neutral", ""],
+        ],
+    )
 
     n_baskets = 5
     assortments_matrix = np.array([[1, 1, 1, 1, 1, 1, 1, 1]])
 
-    dataset1 = generator1.generate_trip_dataset(n_baskets, assortments_matrix,seed=seed)
-    dataset2 = generator2.generate_trip_dataset(n_baskets, assortments_matrix,seed=seed)
+    dataset1 = generator1.generate_trip_dataset(n_baskets, assortments_matrix, seed=seed)
+    dataset2 = generator2.generate_trip_dataset(n_baskets, assortments_matrix, seed=seed)
 
     baskets = [[6, 3], [6, 0, 2], [7, 3], [0, 5, 7], [6, 7]]
     for n_b, (trip1, trip2) in enumerate(zip(dataset1.trips, dataset2.trips)):
         assert np.array_equal(trip1.purchases, trip2.purchases)
         assert np.array_equal(trip1.purchases, baskets[n_b])
-    
+
+
 def test_errors():
     """Test error handling in BadmintonDataGenerator."""
     generator = BadmintonDataGenerator(
-        items_nest={0: [0, 1, 2], 1: [3, 4, 5]}, nests_interactions=[["", "compl"], ["compl", ""],], noise_proba=1.0
+        items_nest={0: [0, 1, 2], 1: [3, 4, 5]},
+        nests_interactions=[
+            ["", "compl"],
+            ["compl", ""],
+        ],
+        noise_proba=1.0,
     )
     generator.add_noise(basket=[[0, 1]], available_items=np.array([0, 1]))
     generator.add_noise(basket=[[0, 1]], available_items=[])
-    
