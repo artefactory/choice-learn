@@ -11,7 +11,7 @@
 
 <div class="choice-learn-table-container" markdown>
 
-| | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/langfr-400px-GitHub_Invertocat_Logo.svg.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) | |
+| | [<img src="illustrations/logos/gh_logo.png" alt="drawing" width="30"/>](https://github.com/artefactory/choice-learn) | If you are not coming from GitHub, [check it out](https://github.com/artefactory/choice-learn) | |
 |---|---|---|---|
 | | [<img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" alt="drawing" width="25"/>](https://joss.theoj.org/papers/10.21105/joss.06899) | You can also read our [academic paper](https://joss.theoj.org/papers/10.21105/joss.06899) ! | |
 </div>
@@ -41,7 +41,7 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
     - The ICDM-2013 [Expedia](./references/datasets/references_expedia.md) dataset from Kaggle
     - [London Passenger Mode Choice](./references/datasets/references_base.md)
     - [The Bakery Dataset](./references/basket_models/datasets/references_bakery.md)
-    - [The Badminton Dataset](./references/basket_models/datasets/synthetic_dataset.md)
+    - [The Badminton Dataset](./references/basket_models/datasets/references_badminton.md)
 
 ### Single Choice Models
 - [Custom modeling](./notebooks/introduction/4_model_customization.md)
@@ -51,6 +51,8 @@ Here is a quick overview of the different functionalities offered by Choice-Lear
         - [Conditional Logit](./references/models/references_clogit.md)
         - [Latent class MNL](./references/models/references_latent_class_mnl.md)
         - [Nested Logit](./references/models/references_nested_logit.md)
+        - [Halo MNL](./references/models/references_halo_mnl.md)
+        - [Low-Rank Halo MNL](./references/models/references_halo_mnl.md)
     - *Non-Linear Models:*
         - [RUMnet](./references/models/references_rumnet.md)
         - [TasteNet](./references/models/references_tastenet.md)
