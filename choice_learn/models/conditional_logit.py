@@ -404,7 +404,7 @@ class ConditionalLogit(ChoiceModel):
         seed: int, optional
             Random seed for reproducibility, by default None
         """
-        seed_gen = keras.random.SeedGenerator(seed=seed)
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         weights = []
         for weight_nb, weight_name in enumerate(self.coefficients.names):
             n_weights = (
