@@ -2,6 +2,7 @@
 
 import copy
 
+import numpy as np
 import tensorflow as tf
 
 import choice_learn.tf_ops as tf_ops
