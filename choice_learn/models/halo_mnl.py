@@ -74,17 +74,17 @@ class LowRankHaloMNL(MultiNomialLogit):
 
         u_mat = tf.Variable(
             (
-                tf.random_normal_initializer(0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False))))(
-                    (n_items, self.halo_latent_dim)
-                )
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((n_items, self.halo_latent_dim))
             ),
             name="U",
         )
         v_mat = tf.Variable(
             (
-                tf.random_normal_initializer(0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False))))(
-                    (self.halo_latent_dim, n_items)
-                )
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((self.halo_latent_dim, n_items))
             ),
             name="V",
         )
@@ -288,9 +288,9 @@ class HaloMNL(MultiNomialLogit):
 
         halo_matrix = tf.Variable(
             (
-                tf.random_normal_initializer(0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False))))(
-                    (n_items, n_items)
-                )
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((n_items, n_items))
             ),
             name="halo_matrix",
         )

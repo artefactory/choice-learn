@@ -297,9 +297,9 @@ class NestedLogit(ChoiceModel):
                 else len(self.coefficients.get(weight_name)["items_names"])
             )
             weight = tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False))))(
-                    shape=(1, n_weights)
-                ),
+                tf.random_normal_initializer(
+                    0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )(shape=(1, n_weights)),
                 name=weight_name,
             )
             weights.append(weight)
