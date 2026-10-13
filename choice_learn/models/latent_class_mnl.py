@@ -75,7 +75,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
+    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features, seed):
         """Instantiate the Latent Models that are SimpleMNLs.
 
         Parameters
@@ -86,10 +86,13 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             Number of shared features
         n_items_features : int
             Number of items features
+        seed: int
+            Random seed for reproducibility.
         """
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         for model in self.models:
             model.indexes, model.weights = model.instantiate(
-                n_items, n_shared_features, n_items_features
+                n_items, n_shared_features, n_items_features, seed=np.sum(seed_gen.next(ordered=False))
             )
             model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
                 from_logits=False,
@@ -102,10 +105,23 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             )
             model.instantiated = True
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
-        """Instantiate the Latent Class MNL model."""
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
+        """Instantiate the Latent Class MNL model.
+        
+        Parameters
+        ----------
+        n_items : int
+            Number of items/alternatives to consider.
+        n_shared_features : int
+            Number of shared features.
+        n_items_features : int
+            Number of items features.
+        seed: int, optional
+            Random seed for reproducibility.
+        """
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         self.latent_logits = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
 
@@ -115,6 +131,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_items=n_items,
             n_shared_features=n_shared_features,
             n_items_features=n_items_features,
+            seed=np.sum(seed_gen.next(ordered=False)),
         )
         self.instantiated = True
 

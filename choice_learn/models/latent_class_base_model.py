@@ -97,10 +97,17 @@ class BaseLatentClassModel:
             weights += model.trainable_weights
         return weights
 
-    def instantiate(self, **kwargs):
-        """Instantiate the model."""
+    def instantiate(self, seed=None, **kwargs):
+        """Instantiate the model.
+
+        Parameters
+        ----------
+        seed: int, optional
+            Random seed for reproducibility.
+
+        """
         init_logit = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.08, seed=42)(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.08, seed=seed)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
         self.latent_logits = init_logit

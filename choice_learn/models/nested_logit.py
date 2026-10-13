@@ -240,18 +240,20 @@ class NestedLogit(ChoiceModel):
             items_names=items_names,
         )
 
-    def instantiate(self, choice_dataset):
+    def instantiate(self, choice_dataset, seed=None):
         """Instantiate the model using the features in the choice_dataset.
 
         Parameters
         ----------
         choice_dataset: ChoiceDataset
             Used to match the features names with the model coefficients.
+        seed: int, optional
+            Random seed for reproducibility.
         """
         if not self.instantiated:
             if not isinstance(self.coefficients, MNLCoefficients):
                 self._build_coefficients_from_dict(n_items=choice_dataset.get_n_items())
-            self._trainable_weights = self._instantiate_tf_weights()
+            self._trainable_weights = self._instantiate_tf_weights(seed=seed)
 
             # Checking that no weight has been attributed to non existing feature in dataset
             dataset_stacked_features_names = []
@@ -273,8 +275,14 @@ class NestedLogit(ChoiceModel):
             self._store_dataset_features_names(choice_dataset)
             self.instantiated = True
 
-    def _instantiate_tf_weights(self):
+    def _instantiate_tf_weights(self, seed=None):
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         """Instantiate the model from MNLCoefficients object.
+
+        Parameters
+        ----------
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
@@ -289,7 +297,7 @@ class NestedLogit(ChoiceModel):
                 else len(self.coefficients.get(weight_name)["items_names"])
             )
             weight = tf.Variable(
-                tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1, n_weights)),
+                tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(1, n_weights)),
                 name=weight_name,
             )
             weights.append(weight)

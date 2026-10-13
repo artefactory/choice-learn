@@ -488,4 +488,5 @@ def test_errors():
     generator.add_noise(basket=[[0, 1]], available_items=[])
 
     with pytest.raises(TypeError):
-        generator.generate_basket(assortment=[1, 0, 1], len_basket=0)
+        generator.generate_basket(assortment=np.array([1, 1, 1, 1, 1, 1]), len_basket=0)
+
