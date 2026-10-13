@@ -48,6 +48,7 @@ trip_list_1 = [
         week=51,
         prices=[130, 140, 150, 160, 170, 180, 190, 200, 220, 100, 210, 240, 170, 110, 90],
         assortment=0,
+        user_id=1
     ),
 ]
 assortment_1, assortment_2, assortment_3, assortment_4 = (
@@ -81,6 +82,15 @@ def test_getitem():
         trip_dataset_1["a"]
 
 
+def test_get_transactions():
+    """Test that get_transactions works correctly."""
+    global trip_dataset_1
+    
+    transactions = trip_dataset_1.get_transactions()
+    assert isinstance(transactions, dict)
+    assert len(transactions) == 24
+    assert max(list(transactions.keys())) == 23
+
 def test_errors():
     """Test various raised errors."""
     with pytest.raises(ValueError):
@@ -99,6 +109,8 @@ def test_trip_dataset_methods():
 
     for _ in trip_dataset_1:
         pass
+
+    _ = str(trip_dataset_1.trips[0])
 
     assert True
 
@@ -134,10 +146,14 @@ def test_get_all():
     global trip_dataset_1
 
     assert isinstance(trip_dataset_1.get_all_items(), np.ndarray)
+    assert (trip_dataset_1.get_all_items() == np.arange(0, 15)).all()
     assert isinstance(trip_dataset_1.get_all_baskets(), np.ndarray)
     assert isinstance(trip_dataset_1.get_all_stores(), np.ndarray)
     assert isinstance(trip_dataset_1.get_all_weeks(), np.ndarray)
     assert isinstance(trip_dataset_1.get_all_prices(), np.ndarray)
+    assert isinstance(trip_dataset_1.get_all_users(), np.ndarray)
+    assert (trip_dataset_1.get_all_users() == np.array([0, 1])).all()
+    assert isinstance(trip_dataset_1.get_all_users(shuffled=True), np.ndarray)
 
 
 def test_n():

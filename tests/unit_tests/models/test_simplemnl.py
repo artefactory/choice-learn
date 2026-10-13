@@ -168,3 +168,18 @@ def test_weighted_val_dataset():
     assert nll_a < nll_b
 
     assert model.report.to_numpy().shape == (7, 5)
+
+
+def test_seeding():
+    """Tests that setting the random seed produces consistent results."""
+    tf.config.run_functions_eagerly(True)
+    seed = 42
+    model_1 = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model_1.instantiate(n_items=3, n_items_features=2, n_shared_features=3, seed=seed)
+    nll_1 = model_1.evaluate(test_dataset)
+
+    model_2 = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model_2.instantiate(n_items=3, n_items_features=2, n_shared_features=3, seed=seed)
+    nll_2 = model_2.evaluate(test_dataset)
+
+    assert np.isclose(nll_1, nll_2, atol=1e-5)
