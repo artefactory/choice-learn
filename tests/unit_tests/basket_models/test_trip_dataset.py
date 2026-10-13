@@ -48,7 +48,7 @@ trip_list_1 = [
         week=51,
         prices=[130, 140, 150, 160, 170, 180, 190, 200, 220, 100, 210, 240, 170, 110, 90],
         assortment=0,
-        user_id=1
+        user_id=1,
     ),
 ]
 assortment_1, assortment_2, assortment_3, assortment_4 = (
@@ -85,11 +85,12 @@ def test_getitem():
 def test_get_transactions():
     """Test that get_transactions works correctly."""
     global trip_dataset_1
-    
+
     transactions = trip_dataset_1.get_transactions()
     assert isinstance(transactions, dict)
     assert len(transactions) == 24
     assert max(list(transactions.keys())) == 23
+
 
 def test_errors():
     """Test various raised errors."""
