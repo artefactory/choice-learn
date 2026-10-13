@@ -9,16 +9,16 @@ from choice_learn.datasets import load_electricity  # noqa: E402
 from choice_learn.models.latent_class_base_model import BaseLatentClassModel  # noqa: E402
 from choice_learn.models.latent_class_mnl import (  # noqa: E402
     LatentClassConditionalLogit,
-    LatentClassSimpleMNL,
+    LatentClassMNL,
 )
-from choice_learn.models.simple_mnl import SimpleMNL  # noqa: E402
+from choice_learn.models.simple_mnl import MultiNomialLogit  # noqa: E402
 
 elec_dataset = load_electricity(as_frame=False)
 
 
 def test_latent_simple_mnl():
     """Test the simple latent class model fit() method."""
-    lc_model = LatentClassSimpleMNL(
+    lc_model = LatentClassMNL(
         n_latent_classes=2, fit_method="mle", optimizer="lbfgs", epochs=1000, lbfgs_tolerance=1e-12
     )
     _, _ = lc_model.fit(elec_dataset)
@@ -63,7 +63,7 @@ def test_latent_clogit():
 def test_manual_lc():
     """Test manual specification of Latent Class Simple MNL model."""
     manual_lc = BaseLatentClassModel(
-        model_class=SimpleMNL,
+        model_class=MultiNomialLogit,
         model_parameters={"add_exit_choice": False},
         n_latent_classes=3,
         fit_method="mle",
@@ -80,7 +80,7 @@ def test_manual_lc():
 def test_manual_lc_gd():
     """Test manual specification of Latent Class Simple MNL model with gradient descent."""
     manual_lc = BaseLatentClassModel(
-        model_class=SimpleMNL,
+        model_class=MultiNomialLogit,
         model_parameters={"add_exit_choice": False},
         n_latent_classes=3,
         fit_method="mle",
@@ -97,7 +97,7 @@ def test_manual_lc_gd():
 
 def test_em_fit():
     """Test EM algorithm to estimate Latent Class Model."""
-    lc_model_em = LatentClassSimpleMNL(
+    lc_model_em = LatentClassMNL(
         n_latent_classes=3, fit_method="EM", optimizer="lbfgs", epochs=15, lbfgs_tolerance=1e-6
     )
     lc_model_em.instantiate(

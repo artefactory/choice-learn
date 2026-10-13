@@ -9,11 +9,11 @@ import choice_learn.tf_ops as tf_ops
 
 from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
-from .simple_mnl import SimpleMNL
+from .simple_mnl import MultiNomialLogit
 
 
-class LatentClassSimpleMNL(BaseLatentClassModel):
-    """Latent Class for SimpleMNL."""
+class LatentClassMNL(BaseLatentClassModel):
+    """Latent Class for MNL."""
 
     def __init__(
         self,
@@ -44,7 +44,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         lbfgs_tolerance : float, optional
             LBFG-S tolerance, by default 1e-6
         intercept : str, optional
-            Type of intercept to include in the SimpleMNL.
+            Type of intercept to include in the MultiNomialLogit.
             Must be in (None, 'item', 'item-full', 'constant'), by default None
         optimizer : str, optional
             tf.keras.optimizers to be used, by default "Adam"
@@ -64,7 +64,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         }
 
         super().__init__(
-            model_class=SimpleMNL,
+            model_class=MultiNomialLogit,
             model_parameters=model_parameters,
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
@@ -77,7 +77,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         )
 
     def instantiate_latent_models(self, n_items, n_shared_features, n_items_features, seed):
-        """Instantiate the Latent Models that are SimpleMNLs.
+        """Instantiate the Latent Models that are MultiNomialLogits.
 
         Parameters
         ----------
@@ -96,7 +96,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
                 n_items,
                 n_shared_features,
                 n_items_features,
-                seed=np.sum(seed_gen.next(ordered=False)),
+                seed=int(np.sum(seed_gen.next(ordered=False))),
             )
             model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
                 from_logits=False,
@@ -125,7 +125,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         """
         seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         self.latent_logits = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(
+            tf.random_normal_initializer(0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False))))(
                 shape=(self.n_latent_classes - 1,)
             ),
             name="Latent-Logits",
@@ -137,7 +137,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             n_items=n_items,
             n_shared_features=n_shared_features,
             n_items_features=n_items_features,
-            seed=np.sum(seed_gen.next(ordered=False)),
+            seed=int(np.sum(seed_gen.next(ordered=False))),
         )
         self.instantiated = True
 

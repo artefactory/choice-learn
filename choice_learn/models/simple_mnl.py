@@ -72,7 +72,7 @@ class MultiNomialLogit(ChoiceModel):
                 weights += [
                     tf.Variable(
                         tf.random_normal_initializer(
-                            0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                            0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
                         )(shape=(n_feat,)),
                         name=f"Weights_{feat_name}",
                     )
@@ -84,7 +84,7 @@ class MultiNomialLogit(ChoiceModel):
             weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(
-                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
                     )(shape=(n_items - 1,)),
                     name="Intercept",
                 )
@@ -95,7 +95,7 @@ class MultiNomialLogit(ChoiceModel):
             weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(
-                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
                     )(shape=(n_items,)),
                     name="Intercept",
                 )
@@ -105,7 +105,7 @@ class MultiNomialLogit(ChoiceModel):
             weights.append(
                 tf.Variable(
                     tf.random_normal_initializer(
-                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
                     )(shape=(1,)),
                     name="Intercept",
                 )

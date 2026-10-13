@@ -8,7 +8,7 @@ from .conditional_logit import ConditionalLogit
 from .learning_mnl import LearningMNL
 from .nested_logit import NestedLogit
 from .reslogit import ResLogit
-from .simple_mnl import SimpleMNL
+from .simple_mnl import MultiNomialLogit
 from .tastenet import TasteNet
 
 if len(tf.config.list_physical_devices("GPU")) > 0:
@@ -22,7 +22,7 @@ else:
 __all__ = [
     "ConditionalLogit",
     "RUMnet",
-    "SimpleMNL",
+    "MultiNomialLogit",
     "TasteNet",
     "NestedLogit",
     "ResLogit",

@@ -1,4 +1,4 @@
-"""Tests for the SimpleMNL model."""
+"""Tests for the MNL model."""
 
 import shutil
 
@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from choice_learn.data import ChoiceDataset
-from choice_learn.models import SimpleMNL
+from choice_learn.models import MultiNomialLogit
 
 test_dataset = ChoiceDataset(
     shared_features_by_choice=(np.array([[1, 3, 0], [0, 3, 1], [3, 2, 1], [3, 3, 1]]),),
@@ -41,8 +41,8 @@ reduced_small_dataset = ChoiceDataset(
 
 
 def test_simplemnl_instantiation():
-    """Tests SimpleMNL instantiation."""
-    model = SimpleMNL(intercept="abc")
+    """Tests MNL instantiation."""
+    model = MultiNomialLogit(intercept="abc")
     model.instantiate(n_items=4, n_items_features=10, n_shared_features=20)
     assert True
 
@@ -50,7 +50,7 @@ def test_simplemnl_instantiation():
 def test_fit_lbfgs():
     """Tests instantiation with item-full and fit with lbfgs."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(
+    model = MultiNomialLogit(
         intercept="item-full",
         optimizer="lbfgs",
         epochs=20,
@@ -81,7 +81,7 @@ def test_fit_lbfgs():
 def test_fit_adam():
     """Tests instantiation with item and fit with Adam."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
     model.fit(test_dataset, get_report=True, val_dataset=test_dataset)
@@ -94,7 +94,7 @@ def test_fit_adam():
 def test_fit_adam_weights():
     """Tests instantiation with item and fit with Adam."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(
+    model = MultiNomialLogit(
         intercept="item",
         optimizer="Adam",
         epochs=100,
@@ -121,7 +121,7 @@ def test_fit_adam_weights():
 def test_evaluate_weights():
     """Tests instantiation with item and fit with Adam."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(
+    model = MultiNomialLogit(
         intercept="item",
         optimizer="Adam",
         epochs=100,
@@ -144,11 +144,11 @@ def test_evaluate_weights():
 
 def test_save_load():
     """Tests instantiation with item and fit with Adam."""
-    model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
     model.save_model("test_save")
-    loaded_model = SimpleMNL.load_model("test_save")
+    loaded_model = MultiNomialLogit.load_model("test_save")
     nll_a = loaded_model.evaluate(test_dataset)
 
     assert nll_a == nll_b
@@ -158,7 +158,7 @@ def test_save_load():
 def test_weighted_val_dataset():
     """Tests instantiation with item and fit with Adam."""
     tf.config.run_functions_eagerly(True)
-    model = SimpleMNL(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+    model = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
     model.fit(
