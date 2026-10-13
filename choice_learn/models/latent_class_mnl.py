@@ -92,7 +92,10 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         for model in self.models:
             model.indexes, model.weights = model.instantiate(
-                n_items, n_shared_features, n_items_features, seed=np.sum(seed_gen.next(ordered=False))
+                n_items,
+                n_shared_features,
+                n_items_features,
+                seed=np.sum(seed_gen.next(ordered=False)),
             )
             model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
                 from_logits=False,
@@ -107,7 +110,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
 
     def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the Latent Class MNL model.
-        
+
         Parameters
         ----------
         n_items : int
@@ -121,7 +124,9 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         """
         seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         self.latent_logits = tf.Variable(
-            tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(self.n_latent_classes - 1,)),
+            tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(
+                shape=(self.n_latent_classes - 1,)
+            ),
             name="Latent-Logits",
         )
 

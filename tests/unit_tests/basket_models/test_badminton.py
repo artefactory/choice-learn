@@ -489,4 +489,3 @@ def test_errors():
 
     with pytest.raises(TypeError):
         generator.generate_basket(assortment=np.array([1, 1, 1, 1, 1, 1]), len_basket=0)
-

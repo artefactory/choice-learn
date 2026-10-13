@@ -234,7 +234,9 @@ class ResLogit(ChoiceModel):
             if n_feat > 0:
                 mnl_weights += [
                     tf.Variable(
-                        tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(n_feat,)),
+                        tf.random_normal_initializer(
+                            0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                        )(shape=(n_feat,)),
                         name=f"Betas_{feat_name}",
                     )
                 ]
@@ -246,7 +248,9 @@ class ResLogit(ChoiceModel):
         elif self.intercept == "item":
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(n_items - 1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                    )(shape=(n_items - 1,)),
                     name="Intercept",
                 )
             )
@@ -255,7 +259,9 @@ class ResLogit(ChoiceModel):
             logging.info("Simple MNL intercept is not normalized to 0!")
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(n_items,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                    )(shape=(n_items,)),
                     name="Intercept",
                 )
             )
@@ -263,7 +269,9 @@ class ResLogit(ChoiceModel):
         else:
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False)))(shape=(1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=np.sum(seed_gen.next(ordered=False))
+                    )(shape=(1,)),
                     name="Intercept",
                 )
             )
