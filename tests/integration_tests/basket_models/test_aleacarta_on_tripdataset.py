@@ -106,7 +106,7 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=2)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -390,6 +390,7 @@ def test_evaluate_load_and_save() -> None:
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
+    model.save_model("test_aleacarta")
 
 
 def test_randoms_few() -> None:

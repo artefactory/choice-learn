@@ -209,6 +209,14 @@ def test_item_probabilities_sum_to_1() -> None:
         # For a given trip, check at each step that the sum of the probabilities for each
         # item to be the next purchased item given the items already purchased in the basket is 1
         for step in range(len(trip.purchases)):
+            print(model.compute_item_likelihood(
+                            basket=np.array(trip.purchases[:step]),
+                            available_items=np.ones(n_items_1),
+                            store=trip.store,
+                            week=trip.week,
+                            prices=trip.prices,
+                            user=trip.user_id,
+                        ))
             assert (
                 np.abs(
                     np.sum(
@@ -326,9 +334,30 @@ def test_fit() -> None:
     model.instantiate(
         n_items=n_items_1,
     )
-    # Test lazy instantiation + verbose + batch_size=-1
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
 
+def test_fit_wo_instantiate() -> None:
+    """Test the fit method without manual instantiation."""
+    tf.compat.v1.enable_eager_execution()
+    model = AttentionBasedContextEmbedding(batch_size=-1, nce_distribution="non-natural")
+    model.instantiate(
+        n_items=n_items_1,
+    )
+    with pytest.raises(TypeError):
+        model.fit(trip_dataset=np.array([1, 2, 3]))
+
+    # Test lazy instantiation + verbose + batch_size=-1
+    model = AttentionBasedContextEmbedding(batch_size=-1, nce_distribution="non-natural")
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
+
+
+def test_n_ns() -> None:
+    """Test the fit method without manual instantiation and with validation dataset."""
+    tf.compat.v1.enable_eager_execution()
+    model = AttentionBasedContextEmbedding(batch_size=-1, n_negative_samples=12)
+    with pytest.raises(ValueError):
+        model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
+    
 
 def test_evaluate_load_and_save() -> None:
     """Test evaluate endpoint."""
