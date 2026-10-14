@@ -253,6 +253,15 @@ def test_compute_item_likelihood() -> None:
         )
         model.compute_item_likelihood(trip=trip)
 
+    trip = Trip(
+        purchases=[1, 2, 3],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_item_likelihood(trip=trip)
+
 
 def test_compute_ordered_basket_likelihood() -> None:
     """Test the compute_ordered_basket_likelihood method."""
@@ -363,10 +372,10 @@ def test_get_negative_samples() -> None:
 def test_fit() -> None:
     """Test the fit method."""
     model = AleaCarta(batch_size=-1)
-    model.instantiate(
-        n_items=n_items_1,
-        n_stores=n_stores_1,
-    )
+    # model.instantiate(
+    #     n_items=n_items_1,
+    #     n_stores=n_stores_1,
+    # )
     # Test lazy instantiation + verbose + batch_size=-1
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
 
