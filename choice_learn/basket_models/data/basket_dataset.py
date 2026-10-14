@@ -661,6 +661,7 @@ class TripDataset:
         batch_size: int,
         shuffle: bool = False,
         data_method: str = "shopper",
+        **kwargs,
     ) -> object:
         """Iterate over a TripDataset to return batches of data from the trips."""
         _ = batch_size
@@ -676,9 +677,9 @@ class TripDataset:
             elif data_method == "aleacarta":
                 data = self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
             elif data_method == "sequential":
-                data = self.get_sequential_data_from_trip_index(trip_index)
+                data = self.get_sequential_data_from_trip_index(trip_index, **kwargs)
             elif data_method == "prod2vec":
-                data = self.get_pairwise_data_from_trip_index(trip_index)
+                data = self.get_pairwise_data_from_trip_index(trip_index, **kwargs)
             else:
                 raise ValueError(f"Unknown data method: {data_method}")
 

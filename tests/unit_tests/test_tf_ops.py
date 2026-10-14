@@ -125,6 +125,40 @@ def test_nce():
     )
     assert loss_less < loss_ref
 
+    loss_ref = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+        sample_weight=np.array([1.0, 1.0]),
+    )
+
+    loss_more = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.8, 0.8]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+        sample_weight=np.array([1.0, 1.0]),
+    )
+    assert loss_more > loss_ref
+
+    loss_ref = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.1, 0.1]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+        sample_weight=np.array([1.0, 1.0]),
+    )
+
+    loss_less = loss(
+        logit_true=np.array([10.0, 10.0]).astype("float32"),
+        logit_negative=np.array([[0.0, 0.0], [0.0, 0.0]]).astype("float32"),
+        freq_true=np.array([0.8, 0.8]).astype("float32"),
+        freq_negative=np.array([[0.1, 0.1], [0.1, 0.1]]).astype("float32"),
+        sample_weight=np.array([0.1, 0.1]),
+    )
+    assert loss_more > loss_ref
+
 
 def test_sample_weights():
     """Test sample_weight parametrization of CCE loss."""

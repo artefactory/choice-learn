@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 import pytest
 
 from choice_learn.basket_models import Shopper
@@ -44,4 +45,21 @@ def test_optimizers(caplog):
         Shopper(optimizer="not_implemented")
         assert (
             "Optimizer not_implemented not implemented, switching for default Adam" in caplog.text
+        )
+
+
+def test_some_config():
+    """Test some configuration options for the Shopper model."""
+    model = Shopper(price_effects=True)
+    model.instantiate(n_items=10)
+
+    with pytest.raises(ValueError):
+        model.compute_batch_utility(
+            item_batch=np.array([1, 2]),
+            basket_batch=np.array([[0], [1]]),
+            store_batch=np.array([0, 0]),
+            week_batch=np.array([0, 0]),
+            price_batch=np.zeros((2, 10)),
+            available_item_batch=np.ones((2, 10)),
+            user_batch=np.array([0, 0]),
         )
