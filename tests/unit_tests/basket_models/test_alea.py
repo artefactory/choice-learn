@@ -66,7 +66,6 @@ def test_compute_basket_utility():
 
 def test_compute_errors():
     """Test a few raised errors from the model."""
-
     with pytest.raises(ValueError):
         model = AleaCarta(
             item_intercept=True,

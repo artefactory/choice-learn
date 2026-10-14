@@ -56,6 +56,11 @@ def test_fit() -> None:
     # Test lazy instantiation + verbose + batch_size=-1
     model.fit(trip_dataset=data, val_dataset=data, verbose=1)
 
+    model = SelfAttentionModel(epochs=1, hinge_margin=0.0)
+    model.instantiate(n_items=data.n_items, n_users=data.n_users)
+    # Test lazy instantiation + verbose + batch_size=-1
+    model.fit(trip_dataset=data, val_dataset=data, verbose=1)
+
 
 def test_mask_attention() -> None:
     """Test the masked_attention method."""
@@ -179,10 +184,23 @@ def test_compute_distance() -> None:
 
     assert distances.shape == (2, 1)  # Shape = (batch_size,)
 
+    utilities = model.compute_batch_utility(
+        user_batch=tf.constant([0, 1]),
+        item_batch=tf.constant([[1], [2]]),
+        basket_batch=tf.constant([[0, 6, 3], [1, 3, 7]]),
+        store_batch=tf.constant([0, 0]),
+        week_batch=tf.constant([0, 0]),
+        price_batch=tf.constant([[0] * data.n_items] * 2),
+        available_item_batch=tf.constant([[1] * data.n_items] * 2),
+        is_training=False,
+    )
+
+    assert utilities.shape == (2, 1)  # Shape = (batch_size,)
+
 
 def test_compute_loss() -> None:
     """Test the compute_loss method."""
-    model = SelfAttentionModel()
+    model = SelfAttentionModel(latent_sizes={})
     model.instantiate(
         n_items=data.n_items,
         n_users=data.n_users,
@@ -200,3 +218,9 @@ def test_compute_loss() -> None:
         user_batch=tf.constant([0, 1]),
     )
     assert loss.dtype == tf.float32  # Scalar loss
+
+
+def test_raised_errors() -> None:
+    """Test the few raised errors."""
+    with pytest.raises(ValueError):
+        SelfAttentionModel(epochs=1, latent_sizes={"unknwon": 2})
