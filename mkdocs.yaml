@@ -118,7 +118,6 @@ nav:
       - HaloMNL: references/models/references_halo_mnl.md
     - Basket Models:
       - Trip and TripDataset: references/basket_models/data/references_dataset.md
-      - Basket preprocessing: references/basket_models/data/references_preprocessing.md
       - Permutation: references/basket_models/utils/references_permutation.md
       - Shopper: references/basket_models/references_shopper.md
       - The AleaCarta model: references/basket_models/references_alea_carta.md
