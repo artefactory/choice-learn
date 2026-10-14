@@ -44,7 +44,7 @@ You can also use [tf.keras.callbacks](https://www.tensorflow.org/api_docs/python
 
 A weight regularization can be added during model estimation. The regularization type can be chosen among $L_1$ and $L_2$ and an importance coefficient factor can be specified.
 For example:
-```model = SimpleMNL(regularization_type="l2", regularization_strength=0.001, **kwargs)```.
+```model = MultiNomialLogit(regularization_type="l2", regularization_strength=0.001, **kwargs)```.
 
 For a short reminder this will set the following estimation objective:
 $$

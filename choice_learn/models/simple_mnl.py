@@ -6,14 +6,15 @@ It is a multi output logistic regression.
 import logging
 import math
 
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 from .base_model import ChoiceModel
 
 
-class SimpleMNL(ChoiceModel):
-    """Simple MNL with one linear coefficient to estimate by feature."""
+class MultiNomialLogit(ChoiceModel):
+    """MultiNomialLogit with one linear coefficient to estimate by feature."""
 
     def __init__(
         self,
@@ -23,7 +24,7 @@ class SimpleMNL(ChoiceModel):
         lr=0.001,
         **kwargs,
     ):
-        """Initialize of Simple-MNL.
+        """Initialize of MultiNomialLogit.
 
         Parameters
         ----------
@@ -41,7 +42,7 @@ class SimpleMNL(ChoiceModel):
         self.instantiated = False
         self.intercept = intercept
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -52,12 +53,15 @@ class SimpleMNL(ChoiceModel):
             Number of contexts features
         n_items_features : int
             Number of contexts items features
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         weights = []
         indexes = {}
         for n_feat, feat_name in zip(
@@ -67,7 +71,9 @@ class SimpleMNL(ChoiceModel):
             if n_feat > 0:
                 weights += [
                     tf.Variable(
-                        tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
+                        tf.random_normal_initializer(
+                            0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                        )(shape=(n_feat,)),
                         name=f"Weights_{feat_name}",
                     )
                 ]
@@ -77,7 +83,9 @@ class SimpleMNL(ChoiceModel):
         elif self.intercept == "item":
             weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items - 1,)),
                     name="Intercept",
                 )
             )
@@ -86,7 +94,9 @@ class SimpleMNL(ChoiceModel):
             logging.info("Simple MNL intercept is not normalized to 0!")
             weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items,)),
                     name="Intercept",
                 )
             )
@@ -94,7 +104,9 @@ class SimpleMNL(ChoiceModel):
         else:
             weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(1,)),
                     name="Intercept",
                 )
             )
@@ -331,7 +343,7 @@ class SimpleMNL(ChoiceModel):
 
     def clone(self):
         """Return a clone of the model."""
-        clone = SimpleMNL(
+        clone = MultiNomialLogit(
             add_exit_choice=self.add_exit_choice,
             optimizer=self.optimizer_name,
         )

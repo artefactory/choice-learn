@@ -2,14 +2,15 @@
 
 import math
 
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 # from .conditional_logit import ConditionalLogit
-from .simple_mnl import SimpleMNL
+from .simple_mnl import MultiNomialLogit
 
 
-class LowRankHaloMNL(SimpleMNL):
+class LowRankHaloMNL(MultiNomialLogit):
     """Implementation of Low Rank Halo MNL model."""
 
     def __init__(
@@ -21,7 +22,7 @@ class LowRankHaloMNL(SimpleMNL):
         lr=0.001,
         **kwargs,
     ):
-        """Initialize of Simple-MNL.
+        """Initialize of Low Rank Halo MNL.
 
         Parameters
         ----------
@@ -35,13 +36,19 @@ class LowRankHaloMNL(SimpleMNL):
         lr: float
             Learning Rate to be used with optimizer.
         """
-        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(
+            add_exit_choice=add_exit_choice,
+            intercept=intercept,
+            optimizer=optimizer,
+            lr=lr,
+            **kwargs,
+        )
 
         self.halo_latent_dim = halo_latent_dim
         self.instantiated = False
         self.intercept = intercept
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -52,16 +59,35 @@ class LowRankHaloMNL(SimpleMNL):
             Number of contexts features
         n_items_features : int
             Number of contexts items features
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
-        indexes, weights = super().instantiate(n_items, n_shared_features, n_items_features)
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
+        indexes, weights = super().instantiate(
+            n_items, n_shared_features, n_items_features, seed=seed
+        )
 
-        u_mat = tf.Variable((tf.random.normal((n_items, self.halo_latent_dim))), name="U")
-        v_mat = tf.Variable((tf.random.normal((self.halo_latent_dim, n_items))), name="V")
+        u_mat = tf.Variable(
+            (
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((n_items, self.halo_latent_dim))
+            ),
+            name="U",
+        )
+        v_mat = tf.Variable(
+            (
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((self.halo_latent_dim, n_items))
+            ),
+            name="V",
+        )
         weights += [u_mat, v_mat]
 
         self.zero_diag = tf.zeros(n_items)
@@ -200,8 +226,8 @@ class LowRankHaloMNL(SimpleMNL):
         )
 
 
-class HaloMNL(SimpleMNL):
-    """Implementation of Low Rank Halo MNL model."""
+class HaloMNL(MultiNomialLogit):
+    """Implementation of Halo MNL model."""
 
     def __init__(
         self,
@@ -211,7 +237,7 @@ class HaloMNL(SimpleMNL):
         lr=0.001,
         **kwargs,
     ):
-        """Initialize of Simple-MNL.
+        """Initialize of Halo MNL.
 
         Parameters
         ----------
@@ -225,12 +251,18 @@ class HaloMNL(SimpleMNL):
         lr: float
             Learning Rate to be used with optimizer.
         """
-        super().__init__(add_exit_choice=add_exit_choice, optimizer=optimizer, lr=lr, **kwargs)
+        super().__init__(
+            add_exit_choice=add_exit_choice,
+            intercept=intercept,
+            optimizer=optimizer,
+            lr=lr,
+            **kwargs,
+        )
 
         self.instantiated = False
         self.intercept = intercept
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -241,15 +273,27 @@ class HaloMNL(SimpleMNL):
             Number of contexts features
         n_items_features : int
             Number of contexts items features
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
         list of tf.Tensor
             List of the weights created coresponding to the specification.
         """
-        indexes, weights = super().instantiate(n_items, n_shared_features, n_items_features)
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
+        indexes, weights = super().instantiate(
+            n_items, n_shared_features, n_items_features, seed=seed
+        )
 
-        halo_matrix = tf.Variable((tf.random.normal((n_items, n_items))), name="halo_matrix")
+        halo_matrix = tf.Variable(
+            (
+                tf.random_normal_initializer(
+                    0.0, 0.05, seed=int(np.sum(seed_gen.next(ordered=False)))
+                )((n_items, n_items))
+            ),
+            name="halo_matrix",
+        )
         self.zero_diag = tf.zeros(n_items)
         # halo_matrix = tf.linalg.set_diag(halo_matrix, self.zero_diag)
         weights += [halo_matrix]

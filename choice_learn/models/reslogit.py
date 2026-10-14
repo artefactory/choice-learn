@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 import tensorflow as tf
 
 import choice_learn.tf_ops as tf_ops
@@ -193,7 +194,7 @@ class ResLogit(ChoiceModel):
 
         self.instantiated = False
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -204,6 +205,8 @@ class ResLogit(ChoiceModel):
             Number of contexts features
         n_items_features : int
             Number of contexts items features
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
@@ -212,6 +215,7 @@ class ResLogit(ChoiceModel):
         weights : list of tf.Variable
             List of the weights created coresponding to the specification
         """
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         # Instantiate the loss function
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
@@ -231,7 +235,9 @@ class ResLogit(ChoiceModel):
             if n_feat > 0:
                 mnl_weights += [
                     tf.Variable(
-                        tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
+                        tf.random_normal_initializer(
+                            0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                        )(shape=(n_feat,)),
                         name=f"Betas_{feat_name}",
                     )
                 ]
@@ -243,7 +249,9 @@ class ResLogit(ChoiceModel):
         elif self.intercept == "item":
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items - 1,)),
                     name="Intercept",
                 )
             )
@@ -252,7 +260,9 @@ class ResLogit(ChoiceModel):
             logging.info("Simple MNL intercept is not normalized to 0!")
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items,)),
                     name="Intercept",
                 )
             )
@@ -260,7 +270,9 @@ class ResLogit(ChoiceModel):
         else:
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(1,)),
                     name="Intercept",
                 )
             )
