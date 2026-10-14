@@ -205,12 +205,32 @@ def test_pairwise_augmentation():
         len(trip_dataset.get_pairwise_data_from_trip_index(trip_index=0, max_pairs_per_item=3)) == 8
     )
     assert (
+        len(trip_dataset.get_pairwise_data_from_trip_index(trip_index=0, max_pairs_per_item=1)) == 8
+    )
+    assert (
         len(
             trip_dataset.get_sequential_data_from_trip_index(
                 trip_index=0, sequence_length=2, n_future_purchases=2
             )
         )
         == 8
+    )
+
+    trip_dataset = TripDataset(
+        trips=[
+            Trip(
+                purchases=[1],
+                store=0,
+                week=0,
+                prices=[1, 2, 3, 4],
+                # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            )
+        ],
+        available_items=np.array([[1, 1, 1, 1]]),
+    )
+    assert (
+        len(trip_dataset.get_pairwise_data_from_trip_index(trip_index=0, max_pairs_per_item=3)) == 8
     )
 
 
@@ -224,7 +244,7 @@ def test_iter_batch():
                 week=0,
                 prices=[1, 2, 3, 4],
                 # Directly the availability matrix, not an integer
-                assortment=[1, 1, 1, 1],
+                assortment=0,
             ),
             Trip(
                 purchases=[1, 3, 0],
@@ -232,7 +252,7 @@ def test_iter_batch():
                 week=0,
                 prices=[1, 2, 3, 4],
                 # Directly the availability matrix, not an integer
-                assortment=[1, 1, 1, 1],
+                assortment=0,
             ),
         ],
         available_items=np.array([[1, 1, 1, 1]]),
