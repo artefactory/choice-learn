@@ -184,3 +184,85 @@ def test_get_augmented_data_from_trip_index():
 
     assert isinstance(trip_dataset.get_subbaskets_augmented_data_from_trip_index(0), tuple)
     assert isinstance(trip_dataset.get_one_vs_all_augmented_data_from_trip_index(0), tuple)
+
+
+def test_pairwise_augmentation():
+    """Test the get_pairwise_data_from_trip_index method."""
+    trip_dataset = TripDataset(
+        trips=[
+            Trip(
+                purchases=[1, 2, 0],
+                store=0,
+                week=0,
+                prices=[1, 2, 3, 4],
+                # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            )
+        ],
+        available_items=np.array([[1, 1, 1, 1]]),
+    )
+    assert (
+        len(trip_dataset.get_pairwise_data_from_trip_index(trip_index=0, max_pairs_per_item=3)) == 8
+    )
+    assert (
+        len(
+            trip_dataset.get_sequential_data_from_trip_index(
+                trip_index=0, sequence_length=2, n_future_purchases=2
+            )
+        )
+        == 8
+    )
+
+
+def test_iter_batch():
+    """Test the iter_batch method."""
+    trip_dataset = TripDataset(
+        trips=[
+            Trip(
+                purchases=[1, 2, 0],
+                store=0,
+                week=0,
+                prices=[1, 2, 3, 4],
+                # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            ),
+            Trip(
+                purchases=[1, 3, 0],
+                store=0,
+                week=0,
+                prices=[1, 2, 3, 4],
+                # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            ),
+        ],
+        available_items=np.array([[1, 1, 1, 1]]),
+    )
+    for method in ["aleacarta", "shopper", "prod2vec"]:
+        for batch in trip_dataset.iter_batch(batch_size=2, data_method=method, shuffle=True):
+            assert isinstance(batch, tuple)
+
+    for batch in trip_dataset.iter_batch(
+        batch_size=2,
+        data_method="sequential",
+        shuffle=True,
+        sequence_length=2,
+        n_future_purchases=2,
+    ):
+        assert isinstance(batch, tuple)
+    with pytest.raises(ValueError):
+        for batch in trip_dataset.iter_batch(
+            batch_size=2, data_method="invalid_method", shuffle=True
+        ):
+            pass
+
+    count = 0
+    for batch in trip_dataset.iter_batch_evaluate(trip_batch_size=-1):
+        assert isinstance(batch, tuple)
+        count += 1
+    assert count == 1
+
+    count = 0
+    for batch in trip_dataset.iter_batch_evaluate(trip_batch_size=1):
+        assert isinstance(batch, tuple)
+        count += 1
+    assert count == 2
