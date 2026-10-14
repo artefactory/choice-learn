@@ -67,7 +67,6 @@ def test_compute_basket_utility():
 def test_compute_errors():
     """Test a few raised errors from the model."""
 
-
     with pytest.raises(ValueError):
         model = AleaCarta(
             item_intercept=True,
@@ -80,15 +79,15 @@ def test_compute_errors():
             latent_sizes={"pref": 2, "price": 0, "season": 0},
         )
     model = AleaCarta(
-            item_intercept=True,
-            price_effects=False,
-            seasonal_effects=False,
-            n_negative_samples=50,
-            lr=0.001,
-            epochs=10,
-            batch_size=512,
-            latent_sizes={"preferences": 2, "price": 0, "season": 0},
-        )
+        item_intercept=True,
+        price_effects=False,
+        seasonal_effects=False,
+        n_negative_samples=50,
+        lr=0.001,
+        epochs=10,
+        batch_size=512,
+        latent_sizes={"preferences": 2, "price": 0, "season": 0},
+    )
     model.instantiate(n_items=10, n_stores=2)
 
     with pytest.raises(ValueError):
