@@ -244,7 +244,7 @@ def test_iter_batch():
                 week=0,
                 prices=[1, 2, 3, 4],
                 # Directly the availability matrix, not an integer
-                assortment=0,
+                assortment=[1, 1, 1, 1],
             ),
             Trip(
                 purchases=[1, 3, 0],
@@ -252,10 +252,65 @@ def test_iter_batch():
                 week=0,
                 prices=[1, 2, 3, 4],
                 # Directly the availability matrix, not an integer
+                assortment=[1, 1, 1, 1],
+            ),
+        ],
+        available_items=None,
+    )
+    for method in ["aleacarta", "shopper", "prod2vec"]:
+        for batch in trip_dataset.iter_batch(batch_size=2, data_method=method, shuffle=True):
+            assert isinstance(batch, tuple)
+
+    for batch in trip_dataset.iter_batch(
+        batch_size=2,
+        data_method="sequential",
+        shuffle=True,
+        sequence_length=2,
+        n_future_purchases=2,
+    ):
+        assert isinstance(batch, tuple)
+    with pytest.raises(ValueError):
+        for batch in trip_dataset.iter_batch(
+            batch_size=2, data_method="invalid_method", shuffle=True
+        ):
+            pass
+
+    count = 0
+    for batch in trip_dataset.iter_batch_evaluate(trip_batch_size=-1):
+        assert isinstance(batch, tuple)
+        count += 1
+    assert count == 1
+
+    count = 0
+    for batch in trip_dataset.iter_batch_evaluate(trip_batch_size=1):
+        assert isinstance(batch, tuple)
+        count += 1
+    assert count == 2
+
+
+def test_iter_batch_with_prices_matrix():
+    """Test the iter_batch method with prices & availability matrix."""
+    trip_dataset = TripDataset(
+        trips=[
+            Trip(
+                purchases=[1, 2, 0],
+                store=0,
+                week=0,
+                prices=0,
+                # Directly the availability matrix, not an integer
+                assortment=0,
+            ),
+            Trip(
+                purchases=[1, 3, 0],
+                store=0,
+                week=0,
+                prices=1,
+                # Directly the availability matrix, not an integer
                 assortment=0,
             ),
         ],
         available_items=np.array([[1, 1, 1, 1]]),
+        items_prices=np.array([[1, 2, 3, 4], [4, 3, 2, 1]]),
     )
     for method in ["aleacarta", "shopper", "prod2vec"]:
         for batch in trip_dataset.iter_batch(batch_size=2, data_method=method, shuffle=True):

@@ -861,6 +861,13 @@ def test_summary():
     )
     dataset.summary()
     assert True
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        items_features_by_choice=None,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    dataset.summary()
 
 
 def test_getitem():

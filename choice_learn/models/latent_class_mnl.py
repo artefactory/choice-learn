@@ -251,6 +251,7 @@ class LatentClassConditionalLogit(BaseLatentClassModel):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
         self.instantiate_latent_models(choice_dataset)
+        self.instantiated = True
 
     def add_coefficients(
         self, coefficient_name, feature_name, items_indexes=None, items_names=None

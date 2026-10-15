@@ -282,8 +282,8 @@ class BaseBasketModel:
                 available_item_batch=np.expand_dims(available_items_copy, axis=0),
                 user_batch=np.expand_dims(user, axis=0),
             )[0]
-            if len(np.where(basket >= 0)[0]) > 0:
-                available_items_copy[basket[np.where(basket >= 0)[0]]] = 0.0
+            if len(np.where(np.array(basket) >= 0)[0]) > 0:
+                available_items_copy[np.array(basket)[np.where(np.array(basket) >= 0)[0]]] = 0.0
         else:
             all_utilities = self.compute_batch_utility(
                 # All items
@@ -800,7 +800,7 @@ class BaseBasketModel:
             if val_dataset is not None:
                 val_losses = []
                 if metrics is not None:
-                    val_metric = self.evaluate(val_dataset, metrics=metrics)[f"{metrics[0].name}"]
+                    val_metric = self.evaluate(val_dataset, metrics=metrics)[f"{str(metrics[0])}"]
                 else:
                     for batch_nb, (
                         item_batch,
@@ -947,9 +947,12 @@ class BaseBasketModel:
 
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
-                metric.update_state(
-                    y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
-                )
+                if isinstance(metric, tf.keras.metrics.Metric):
+                    metric.update_state(y_true=data_batch[0], y_pred=predicted_probabilities)
+                else:
+                    metric.update_state(
+                        y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
+                    )
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}
 

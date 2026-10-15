@@ -325,6 +325,15 @@ def test_compute_basket_likelihood(caplog) -> None:
         )
         model.compute_basket_likelihood(trip=trip)
 
+    trip = Trip(
+        purchases=[1, 2, 0],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_basket_likelihood(trip=trip)
+
     # With verbose
     model.compute_basket_likelihood(
         basket=np.array([1, 2, 0]),

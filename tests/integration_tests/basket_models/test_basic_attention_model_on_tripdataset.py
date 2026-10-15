@@ -203,7 +203,12 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
     )
 
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
+    model.fit(
+        trip_dataset=trip_dataset_1,
+        val_dataset=trip_dataset_1,
+        metrics=["sparse_categorical_crossentropy"],
+        verbose=2,
+    )
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -336,7 +341,7 @@ def test_fit() -> None:
     model.instantiate(
         n_items=n_items_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=2)
 
 
 def test_fit_wo_instantiate() -> None:
@@ -375,3 +380,22 @@ def test_evaluate_load_and_save() -> None:
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy()), (w1, w2)
     assert np.isclose(eff_loss, loaded_loss)
+
+
+def test_evaluate_on_metrics() -> None:
+    """Test the evaluate method on specific metrics."""
+    model = AttentionBasedContextEmbedding()
+    model.instantiate(
+        n_items=n_items_1,
+    )
+    metrics_1 = model.evaluate(
+        trip_dataset=trip_dataset_1,
+        metrics=["nll", tf.keras.metrics.SparseCategoricalCrossentropy()],
+    )
+    metrics_2 = model.evaluate(
+        trip_dataset=trip_dataset_1, metrics=["sparse_categorical_crossentropy"]
+    )
+    assert "negative_log_likelihood" in metrics_1
+    assert (
+        metrics_1["sparse_categorical_crossentropy"] == metrics_2["sparse_categorical_crossentropy"]
+    )
