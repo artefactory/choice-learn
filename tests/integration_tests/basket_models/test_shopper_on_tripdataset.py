@@ -394,6 +394,15 @@ def test_compute_ordered_basket_likelihood() -> None:
         )
         model.compute_ordered_basket_likelihood(trip=trip)
 
+    trip = Trip(
+        purchases=[1, 2, 0],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_ordered_basket_likelihood(trip=trip)
+
 
 def test_compute_basket_likelihood(caplog) -> None:
     """Test the compute_basket_likelihood method."""

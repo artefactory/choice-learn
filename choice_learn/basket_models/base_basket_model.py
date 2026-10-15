@@ -282,8 +282,8 @@ class BaseBasketModel:
                 available_item_batch=np.expand_dims(available_items_copy, axis=0),
                 user_batch=np.expand_dims(user, axis=0),
             )[0]
-            if len(np.where(basket >= 0)[0]) > 0:
-                available_items_copy[basket[np.where(basket >= 0)[0]]] = 0.0
+            if len(np.where(np.array(basket) >= 0)[0]) > 0:
+                available_items_copy[np.array(basket)[np.where(np.array(basket) >= 0)[0]]] = 0.0
         else:
             all_utilities = self.compute_batch_utility(
                 # All items

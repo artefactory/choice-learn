@@ -131,15 +131,6 @@ class AleaCarta(BaseBasketModel):
             **kwargs,
         )
 
-        if len(tf.config.get_visible_devices("GPU")):
-            # At least one available GPU
-            self.on_gpu = True
-        else:
-            # No available GPU
-            self.on_gpu = False
-        # /!\ If a model trained on GPU is loaded on CPU, self.on_gpu must be set
-        # to False manually after loading the model, and vice versa
-
         self.instantiated = False
 
     def instantiate(
