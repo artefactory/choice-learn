@@ -203,7 +203,12 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
     )
 
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=2)
+    model.fit(
+        trip_dataset=trip_dataset_1,
+        val_dataset=trip_dataset_1,
+        metrics=["sparse_categorical_crossentropy"],
+        verbose=2,
+    )
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -336,7 +341,7 @@ def test_fit() -> None:
     model.instantiate(
         n_items=n_items_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=2)
 
 
 def test_fit_wo_instantiate() -> None:
