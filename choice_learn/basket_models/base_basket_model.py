@@ -947,9 +947,12 @@ class BaseBasketModel:
 
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
-                metric.update_state(
-                    y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
-                )
+                if isinstance(metric, tf.keras.metrics.Metric):
+                    metric.update_state(y_true=data_batch[0], y_pred=predicted_probabilities)
+                else:
+                    metric.update_state(
+                        y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
+                    )
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}
 

@@ -1,6 +1,7 @@
 """Test the metrics functions and classes."""
 
 import numpy as np
+import pytest
 
 from choice_learn.utils.metrics import (
     MRR,
@@ -213,3 +214,32 @@ def test_hit_rate_metric():
         batch=[0, 0, 1],
     )
     assert np.allclose(met.result().numpy(), 0.75)
+
+
+def test_errors():
+    """Test that the metrics raise appropriate errors for invalid inputs."""
+    met = NegativeLogLikeliHood()
+    with pytest.raises(ValueError):
+        met.update_state(
+            y_true=[[0.0, 1.0], [1.0, 0.0]],
+            y_pred=[0.2, 0.8, 0.2, 0.8],
+        )
+
+    met = MRR()
+    with pytest.raises(ValueError):
+        met.update_state(
+            y_true=[[0.0, 1.0], [1.0, 0.0]],
+            y_pred=[0.2, 0.8, 0.2, 0.8],
+        )
+    met = MeanRank()
+    with pytest.raises(ValueError):
+        met.update_state(
+            y_true=[[0.0, 1.0], [1.0, 0.0]],
+            y_pred=[0.2, 0.8, 0.2, 0.8],
+        )
+    met = HitRate()
+    with pytest.raises(ValueError):
+        met.update_state(
+            y_true=[[0.0, 1.0], [1.0, 0.0]],
+            y_pred=[0.2, 0.8, 0.2, 0.8],
+        )
