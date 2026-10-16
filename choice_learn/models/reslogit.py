@@ -291,7 +291,8 @@ class ResLogit(ChoiceModel):
             # Different width for each *hidden* residual layer
             if self.n_layers > 0 and len(self.res_layers_width) != self.n_layers - 1:
                 raise ValueError(
-                    "The length of the res_layers_width list should be equal to n_layers - 1"
+                    "The length of the res_layers_width list should be equal to n_layers - 1, got "
+                    f"{len(self.res_layers_width)} and {self.n_layers - 1}"
                 )
             if self.n_layers > 1 and self.res_layers_width[-1] != n_items:
                 raise ValueError("The width of the last residual layer should be equal to n_items")
@@ -363,13 +364,13 @@ class ResLogit(ChoiceModel):
         """
         (_, _) = available_items_by_choice, choices  # Avoid unused variable warning
 
-        batch_size = shared_features_by_choice.shape[0]  # Other name: n_choices
-        n_items = items_features_by_choice.shape[1]
+        batch_size = len(choices)  # Other name: n_choices
+        n_items = available_items_by_choice.shape[1]
 
         # Deterministic component of the utility
         if "shared_features" in self.indexes.keys():
             if isinstance(shared_features_by_choice, tuple):
-                shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
+                shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=1)
             shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
             shared_features_utilities = tf.tensordot(
                 shared_features_by_choice,
@@ -378,7 +379,7 @@ class ResLogit(ChoiceModel):
             )
             shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
         else:
-            shared_features_utilities = 0
+            shared_features_utilities = tf.zeros((batch_size, 1))
         shared_features_utilities = tf.squeeze(shared_features_utilities)
 
         if "items_features" in self.indexes.keys():
@@ -400,11 +401,12 @@ class ResLogit(ChoiceModel):
             if self.intercept in ["item", "item-full"]:
                 intercept = tf.expand_dims(intercept, axis=0)
         else:
-            intercept = 0
+            intercept = tf.zeros((batch_size, n_items))
 
         shared_features_utilities = tf.tile(
             tf.expand_dims(shared_features_utilities, axis=-1), [1, n_items]
         )
+
         deterministic_utilities_without_intercept = (
             shared_features_utilities + items_features_utilities
         )
@@ -416,15 +418,13 @@ class ResLogit(ChoiceModel):
 
         return deterministic_utilities + residual_utilities
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset, **kwargs):
         """Fit to estimate the parameters.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
-        get_report: bool, optional
-            Whether or not to compute a report of the estimation, by default False
 
         Returns
         -------
@@ -439,7 +439,4 @@ class ResLogit(ChoiceModel):
                 n_items_features=choice_dataset.get_n_items_features(),
             )
             self.instantiated = True
-        fit = super().fit(choice_dataset=choice_dataset, **kwargs)
-        if get_report:
-            self.report = self.compute_report(choice_dataset)
-        return fit
+        return super().fit(choice_dataset=choice_dataset, **kwargs)

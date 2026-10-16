@@ -71,6 +71,20 @@ def test_error_nest():
             shared_gammas_over_nests=True,
         )
         model.add_shared_coefficient(feature_name="sf1", items_indexes=[0, 1, 2])
+    with pytest.raises(ValueError):
+        model = NestedLogit(
+            coefficients={
+                "sf1": "item",
+                "sf2": "item",
+                "sf3": "item",
+                "if1": "constant",
+                "if2": "constante",
+            },
+            items_nests=[[0, 1], [2]],
+            optimizer="lbfgs",
+            shared_gammas_over_nests=True,
+        )
+        model.instantiate(test_dataset)
     assert True
 
 
@@ -167,3 +181,23 @@ def test_fit_adam_specific_specification():
     model.fit(test_dataset_2, get_report=True)
     nll_a = model.evaluate(test_dataset_2)
     assert nll_a < nll_b
+
+
+def test_add_exit():
+    """Tests the Nested Logit fit with add_exit_choice=True."""
+    global test_dataset
+    tf.config.run_functions_eagerly(True)
+
+    model = NestedLogit(
+        items_nests=[[0, 1], [2]],
+        optimizer="Adam",
+        epochs=3,
+        batch_size=-1,
+        shared_gammas_over_nests=True,
+        add_exit_choice=True,
+    )
+    model.add_coefficients(feature_name="sf1", items_indexes=[0, 1, 2])
+    model.add_shared_coefficient(feature_name="if1", items_indexes=[1, 2])
+
+    model.instantiate(test_dataset)
+    model.evaluate(test_dataset)

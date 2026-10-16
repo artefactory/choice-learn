@@ -154,57 +154,6 @@ def test_reslogit_fit_with_other_intercept():
     assert eval_after <= eval_before
 
 
-# def test_reslogit_comparison_with_simple_mnl():
-#     """Tests that ResLogit can fit better than SimpleMNL."""
-#     full_dataset = load_swissmetro() # Use the full dataset to compare the models
-
-#     reslogit = ResLogit(
-#         intercept="item",
-#         n_layers=0,
-#         lr=lr,
-#         epochs=epochs,
-#         optimizer="Adam",
-#         batch_size=batch_size
-#     )
-#     reslogit_indexes, reslogit_initial_weights = reslogit.instantiate(
-#         n_items=n_items, n_shared_features=n_shared_features, n_items_features=n_items_features
-#     )
-#     reslogit.fit(full_dataset)
-#     reslogit_final_weights = reslogit.trainable_weights
-#     reslogit_score = reslogit.evaluate(full_dataset, mode="optim")
-
-#     simple_mnl = SimpleMNL(
-#         intercept="item",
-#         lr=lr,
-#         epochs=epochs,
-#         optimizer="Adam",
-#         batch_size=batch_size
-#     )
-#     simple_mnl_indexes, simple_mnl_initial_weights = simple_mnl.instantiate(
-#         n_items=n_items, n_shared_features=n_shared_features, n_items_features=n_items_features
-#     )
-#     simple_mnl.fit(full_dataset)
-#     simple_mnl_final_weights = simple_mnl.trainable_weights
-#     simple_mnl_score = simple_mnl.evaluate(full_dataset, mode="optim")
-
-#     assert reslogit_indexes == simple_mnl_indexes
-#     for i in range(len(reslogit_initial_weights)):
-#         assert np.allclose(
-#             simple_mnl_initial_weights[i].numpy(),
-#             reslogit_initial_weights[i].numpy(),
-#             rtol=0,
-#             atol=0.01,
-#         )
-#     assert np.abs(simple_mnl_score - reslogit_score) < 0.05
-#     for i in range(len(reslogit_final_weights)):
-#         assert np.allclose(
-#             simple_mnl_final_weights[i].numpy(),
-#             reslogit_final_weights[i].numpy(),
-#             rtol=0,
-#             atol=0.01,
-#         )
-
-
 def test_reslogit_different_n_layers():
     """Tests that ResLogit can fit with different n_layers."""
     global dataset

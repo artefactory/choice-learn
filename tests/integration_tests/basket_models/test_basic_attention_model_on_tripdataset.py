@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from choice_learn.basket_models import AttentionBasedContextEmbedding
 from choice_learn.basket_models.data import Trip, TripDataset
+from choice_learn.utils.metrics import MeanRank
 
 # Toy dataset 1: different items between trips
 trip_list_1 = [
@@ -399,3 +400,4 @@ def test_evaluate_on_metrics() -> None:
     assert (
         metrics_1["sparse_categorical_crossentropy"] == metrics_2["sparse_categorical_crossentropy"]
     )
+    model.evaluate(trip_dataset=trip_dataset_1, metrics=[MeanRank()])
