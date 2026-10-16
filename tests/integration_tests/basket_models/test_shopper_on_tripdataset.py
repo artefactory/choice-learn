@@ -301,7 +301,7 @@ def test_thinking_ahead() -> None:
     batch_size = 4
     model.compute_batch_utility(
         item_batch=np.array([4, 5, 6, 0]),
-        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        basket_batch=np.array([[1, 2, 3], [1, 2, 0], [3, 1, 0], [2, 1, 0]]),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),

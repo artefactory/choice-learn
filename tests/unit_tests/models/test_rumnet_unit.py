@@ -182,6 +182,7 @@ def test_paper_rumnet():
         lr=0.0005,
         epochs=10,
         batch_size=4,
+        regularization=0.01,
     )
     model.instantiate()
     nll_a = model.evaluate(dataset)
@@ -277,3 +278,5 @@ def test_gpu_rumnet():
         dataset.choices,
         None,
     )[1].shape == (4, 3)
+
+    model.trainable_weights

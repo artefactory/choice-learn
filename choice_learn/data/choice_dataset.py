@@ -74,11 +74,15 @@ class ChoiceDataset:
             if not isinstance(shared_features_by_choice, tuple):
                 self._return_shared_features_by_choice_tuple = False
                 if shared_features_by_choice_names is not None:
-                    if len(shared_features_by_choice[0]) != len(shared_features_by_choice_names):
+                    if isinstance(shared_features_by_choice, pd.DataFrame):
+                        n_sfbc = len(shared_features_by_choice.columns) - 1
+                    else:
+                        n_sfbc = len(shared_features_by_choice[0])
+                    if n_sfbc != len(shared_features_by_choice_names):
                         raise ValueError(
                             f"""Number of features given does not match
                                          number of features names given:
-                                           {len(shared_features_by_choice[0])} and
+                                           {n_sfbc} and
                                             {len(shared_features_by_choice_names)}"""
                         )
                 else:
@@ -119,11 +123,17 @@ class ChoiceDataset:
         if not isinstance(items_features_by_choice, tuple) and items_features_by_choice is not None:
             self._return_items_features_by_choice_tuple = False
             if items_features_by_choice_names is not None:
-                if len(items_features_by_choice[0][0]) != len(items_features_by_choice_names):
+                if isinstance(items_features_by_choice, pd.DataFrame):
+                    n_ifbc = (
+                        len(items_features_by_choice.columns) - 2
+                    )  # excluding choice_id and item_id
+                else:
+                    n_ifbc = len(items_features_by_choice[0][0])
+                if n_ifbc != len(items_features_by_choice_names):
                     raise ValueError(
                         f"""Number of items_features_by_choice given does not match
                                      number of items_features_by_choice_names given:
-                                     {len(items_features_by_choice[0][0])} and
+                                     {n_ifbc} and
                                      {len(items_features_by_choice_names)}"""
                     )
             else:
