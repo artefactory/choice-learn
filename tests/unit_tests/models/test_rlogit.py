@@ -23,8 +23,8 @@ def test_reslogit_different_layers_width():
     """Tests that ResLogit can fit with different custom widths for its residual layers."""
     global dataset
 
-    list_n_layers = [3]
-    list_res_layers_width = [[12, n_items, 2]]
+    list_n_layers = [3, 3]
+    list_res_layers_width = [[12, n_items, 2], [12, 2]]
 
     for n_layers, res_layers_width in zip(list_n_layers, list_res_layers_width):
         model = ResLogit(
@@ -36,7 +36,6 @@ def test_reslogit_different_layers_width():
             batch_size=batch_size,
         )
         # The model can fit
-        print(model.n_layers, model.res_layers_width, n_items)
         with pytest.raises(ValueError):
             model.instantiate(n_items, n_shared_features, n_items_features)
 
