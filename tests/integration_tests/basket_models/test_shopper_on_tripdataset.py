@@ -310,6 +310,16 @@ def test_thinking_ahead() -> None:
         user_batch=np.array([0] * batch_size),
     )
 
+    model.compute_batch_utility(
+        item_batch=np.array([[4, 5], [2, 5]]),
+        basket_batch=np.array([[1, 2, 3], [1, 2, 0]]),
+        store_batch=np.array([0] * 2),
+        week_batch=np.array([0] * 2),
+        price_batch=np.random.uniform(1, 10, 2),
+        available_item_batch=np.array([np.ones(n_items_1)] * 2),
+        user_batch=np.array([0] * 2),
+    )
+
     model.thinking_ahead(
         item_batch=tf.constant([4, 5]),
         ragged_basket_batch=tf.cast(
@@ -323,6 +333,28 @@ def test_thinking_ahead() -> None:
         theta_store=tf.gather(model.theta, [0, 0]),
         gamma_store=tf.gather(model.gamma, [0, 0]),
         delta_week=tf.gather(model.delta, [0, 0]),
+    )
+
+    model = Shopper(
+        think_ahead=True, price_effects=False, seasonal_effects=False, item_intercept=False
+    )
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+    model.thinking_ahead(
+        item_batch=tf.constant([4, 5]),
+        ragged_basket_batch=tf.cast(
+            tf.ragged.constant([[1, 0], [1, 2, 3]]),
+            dtype=tf.int32,
+        ),
+        price_batch=tf.constant(np.random.uniform(1, 10, batch_size)),
+        available_item_batch=tf.constant(
+            [np.ones(n_items_1), np.array([0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])]
+        ),
+        theta_store=tf.constant([0, 0]),
+        gamma_store=tf.constant([0, 0]),
+        delta_week=tf.constant([0, 0]),
     )
 
 

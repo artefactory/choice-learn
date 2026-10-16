@@ -182,7 +182,7 @@ def test_paper_rumnet():
         lr=0.0005,
         epochs=10,
         batch_size=4,
-        l2_regularization=0.01,
+        l2_regularization_coef=0.01,
     )
     model.instantiate()
     nll_a = model.evaluate(dataset)
