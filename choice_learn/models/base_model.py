@@ -90,10 +90,13 @@ class ChoiceModel:
         self.optimizer_name = optimizer
         if optimizer.lower() == "adam":
             self.optimizer = tf.keras.optimizers.Adam(lr)
+            self.lr = lr
         elif optimizer.lower() == "sgd":
             self.optimizer = tf.keras.optimizers.SGD(lr)
+            self.lr = lr
         elif optimizer.lower() == "adamax":
             self.optimizer = tf.keras.optimizers.Adamax(lr)
+            self.lr = lr
         elif optimizer.lower() == "lbfgs" or optimizer.lower() == "l-bfgs":
             print("Using L-BFGS optimizer, setting up .fit() function")
             self.optimizer = "lbfgs"
@@ -101,6 +104,7 @@ class ChoiceModel:
         else:
             print(f"Optimizer {optimizer} not implemented, switching for default Adam")
             self.optimizer = tf.keras.optimizers.Adam(lr)
+            self.lr = lr
 
         self.epochs = epochs
         self.batch_size = batch_size
