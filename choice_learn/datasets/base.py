@@ -710,9 +710,6 @@ def load_modecanada(
             choices,
         )
 
-    if len(items_features) == 0:
-        items_features = None
-
     if preprocessing == "tutorial":
         # Following torch-choice guide:
         canada_df = canada_df.loc[canada_df.noalt == 4]

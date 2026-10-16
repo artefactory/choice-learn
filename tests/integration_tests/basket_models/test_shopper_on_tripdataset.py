@@ -345,13 +345,11 @@ def test_thinking_ahead() -> None:
     model.thinking_ahead(
         item_batch=tf.constant([4, 5]),
         ragged_basket_batch=tf.cast(
-            tf.ragged.constant([[1, 0], [1, 2, 3]]),
+            tf.ragged.constant([[1, 2], [1, 2, 3]]),
             dtype=tf.int32,
         ),
         price_batch=tf.constant(np.random.uniform(1, 10, batch_size)),
-        available_item_batch=tf.constant(
-            [np.ones(n_items_1), np.array([0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])]
-        ),
+        available_item_batch=tf.constant([np.ones(n_items_1), np.ones(n_items_1)]),
         theta_store=tf.constant([0, 0]),
         gamma_store=tf.constant([0, 0]),
         delta_week=tf.constant([0, 0]),
