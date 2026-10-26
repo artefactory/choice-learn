@@ -68,8 +68,10 @@ def test_lr_value_change():
         model = ChoiceModel(optimizer="lbfgs", lr=0.1)
         model.assign_lr(0.001)
 
+
 def test_bad_inheritance():
     """Checks that the model raises an error for bad inheritance."""
+
     class BadModel(ChoiceModel):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -85,7 +87,7 @@ def test_bad_inheritance():
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             self.instantiated = False
-            
+
     with pytest.raises(ValueError):
         BadModel(optimizer="Adam").fit(None)
     print(BadModel().instantiated)

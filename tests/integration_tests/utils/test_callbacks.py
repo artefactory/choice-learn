@@ -14,9 +14,12 @@ def test_early_stopping():
     global dataset
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor="train_loss", patience=10, min_delta=1e-3, mode="min")
+        tf.keras.callbacks.EarlyStopping(
+            monitor="train_loss", patience=10, min_delta=1e-3, mode="min"
+        )
     ]
-    model = MultiNomialLogit(epochs=1_000, optimizer="adam", callbacks=callbacks, lr=1e-2, batch_size=-1)
+    model = MultiNomialLogit(
+        epochs=1_000, optimizer="adam", callbacks=callbacks, lr=1e-2, batch_size=-1
+    )
     _ = model.fit(dataset[:64])
     assert model.stop_training
-

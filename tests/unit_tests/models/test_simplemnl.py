@@ -109,7 +109,7 @@ def test_fit_adam_weights():
         sample_weight=np.array([0.2, 0.4, 0.8, 1.0]),
         get_report=True,
         val_dataset=test_dataset,
-        verbose=2
+        verbose=2,
     )
     nll_a = model.evaluate(test_dataset, batch_size=-1)
     nll_c = model.evaluate(test_dataset, batch_size=3)
