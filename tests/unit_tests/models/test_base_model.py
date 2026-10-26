@@ -90,5 +90,3 @@ def test_bad_inheritance():
 
     with pytest.raises(ValueError):
         BadModel(optimizer="Adam").fit(None)
-    print(BadModel().instantiated)
-    BadModel().fit(None)

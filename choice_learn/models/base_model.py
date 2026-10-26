@@ -488,8 +488,9 @@ class ChoiceModel:
             if self.stop_training:
                 print("Training stopped with early stopping taking effect")
                 break
-            t_range.set_description(desc)
-            t_range.refresh()
+            if isinstance(t_range, tqdm.tqdm):
+                t_range.set_description(desc)
+                t_range.refresh()
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
