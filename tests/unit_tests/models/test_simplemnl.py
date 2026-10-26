@@ -134,7 +134,6 @@ def test_fit_adam_weights():
     model.fit(
         test_dataset,
         sample_weight=np.array([0.2, 0.4, 0.8, 1.0]),
-        get_report=True,
         val_dataset=test_dataset,
         verbose=0,
     )
@@ -160,12 +159,15 @@ def test_evaluate_weights():
     nll_1_2 = model.evaluate(reduced_small_dataset, batch_size=1, sample_weight=[2.0, 1.0])
     nll_2 = model.evaluate(small_dataset, batch_size=-1, sample_weight=[1.0, 1.0, 1.0])
     nll_3 = model.evaluate(small_dataset, batch_size=1, sample_weight=[1.0, 1.0, 1.0])
-    nll_4 = model.evaluate(small_dataset, mode="optim")
     assert np.isclose(nll_test, nll_1 * 2 / 3, atol=1e-5)
     assert np.isclose(nll_1_2, nll_1, atol=1e-5)
     assert np.isclose(nll_test, nll_2, atol=1e-5)
     assert np.isclose(nll_test, nll_3, atol=1e-5)
+
+    nll_4 = model.evaluate(small_dataset, mode="optim")
+    nll_5 = model.evaluate(small_dataset, mode="optim", sample_weight=[1.0, 1.0, 1.0])
     assert nll_4 >= nll_test
+    assert np.isclose(nll_4, nll_5, atol=1e-5)
 
 
 def test_save_load():
@@ -196,15 +198,26 @@ def test_weighted_val_dataset():
     assert model.report.to_numpy().shape == (7, 5)
 
     with pytest.raises(ValueError):
+        model = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
         model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
         model.fit(
             test_dataset,
-            get_report=True,
             val_dataset=(
                 test_dataset,
                 np.ones((len(test_dataset),)),
                 np.ones((len(test_dataset),)),
             ),
+        )
+
+    with pytest.raises(ValueError):
+        model = MultiNomialLogit(intercept="item", optimizer="Adam", epochs=100, lr=0.1)
+        model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
+        model.fit(
+            test_dataset,
+            val_dataset={
+                "dataset": test_dataset,
+                "sample_weight": np.ones((len(test_dataset),)),
+            },
         )
 
 
