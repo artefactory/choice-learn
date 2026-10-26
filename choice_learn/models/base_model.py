@@ -356,9 +356,6 @@ class ChoiceModel:
                         inner_range.set_description(
                             f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
-                    if self.stop_training:
-                        print("Training stopped with early stopping taking effect")
-                        break
 
             # In this case we do not need to batch the sample_weights
             else:
@@ -395,9 +392,6 @@ class ChoiceModel:
                         inner_range.set_description(
                             f"Epoch Negative-LogLikeliHood: {np.mean(epoch_losses):.4f}"
                         )
-                    if self.stop_training:
-                        print("Training stopped with early stopping taking effect")
-                        break
 
             # Take into account the fact that the last batch may have a
             # different length for the computation of the epoch loss.
@@ -488,8 +482,9 @@ class ChoiceModel:
             if self.stop_training:
                 print("Training stopped with early stopping taking effect")
                 break
-            t_range.set_description(desc)
-            t_range.refresh()
+            if isinstance(t_range, tqdm.tqdm):
+                t_range.set_description(desc)
+                t_range.refresh()
 
         temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         self.callbacks.on_train_end(logs=temps_logs)
