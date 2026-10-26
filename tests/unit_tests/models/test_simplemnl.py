@@ -59,7 +59,7 @@ def test_fit_lbfgs():
     )
     model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
     nll_b = model.evaluate(test_dataset)
-    model.fit(test_dataset, get_report=True)
+    model.fit(test_dataset, get_report=True, verbose=3)
     nll_a = model.evaluate(test_dataset)
     assert nll_a < nll_b
 
@@ -109,6 +109,7 @@ def test_fit_adam_weights():
         sample_weight=np.array([0.2, 0.4, 0.8, 1.0]),
         get_report=True,
         val_dataset=test_dataset,
+        verbose=2
     )
     nll_a = model.evaluate(test_dataset, batch_size=-1)
     nll_c = model.evaluate(test_dataset, batch_size=3)
