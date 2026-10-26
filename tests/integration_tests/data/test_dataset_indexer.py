@@ -81,6 +81,11 @@ def test_cd_indexer():
     for val_1, val_2 in zip(dataset.batch[[0, 1]], dataset.get_choices_batch([0, 1])):
         assert (val_1 == val_2).all()
 
+    for val_1, val_2 in zip(
+        dataset.get_choices_batch(slice(0, 2, 1)), dataset.get_choices_batch([0, 1])
+    ):
+        assert (val_1 == val_2).all()
+
     # Test 1-D items_features with FeaturesStorage
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features,

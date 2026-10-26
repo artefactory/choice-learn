@@ -44,7 +44,9 @@ def test_simplemnl_instantiation():
     """Tests MNL instantiation."""
     model = MultiNomialLogit(intercept="abc")
     model.instantiate(n_items=4, n_items_features=10, n_shared_features=20)
-    assert True
+
+    for weight_1, weight_2 in zip(model.get_weights(), model._trainable_weights):
+        assert tf.reduce_all(tf.equal(weight_1, weight_2))
 
 
 def test_fit_lbfgs():
@@ -137,10 +139,12 @@ def test_evaluate_weights():
     nll_1_2 = model.evaluate(reduced_small_dataset, batch_size=1, sample_weight=[2.0, 1.0])
     nll_2 = model.evaluate(small_dataset, batch_size=-1, sample_weight=[1.0, 1.0, 1.0])
     nll_3 = model.evaluate(small_dataset, batch_size=1, sample_weight=[1.0, 1.0, 1.0])
+    nll_4 = model.evaluate(small_dataset, mode="optim")
     assert np.isclose(nll_test, nll_1 * 2 / 3, atol=1e-5)
     assert np.isclose(nll_1_2, nll_1, atol=1e-5)
     assert np.isclose(nll_test, nll_2, atol=1e-5)
     assert np.isclose(nll_test, nll_3, atol=1e-5)
+    assert nll_4 >= nll_test
 
 
 def test_save_load():

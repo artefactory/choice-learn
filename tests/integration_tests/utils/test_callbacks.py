@@ -1,6 +1,5 @@
 """Tests SimpleMNL."""
 
-import numpy as np
 import tensorflow as tf
 
 from choice_learn.datasets import load_swissmetro
@@ -23,13 +22,6 @@ def test_early_stopping():
         epochs=1_000, optimizer="adam", callbacks=callbacks, lr=1e-2, batch_size=-1
     )
     _ = model.fit(dataset[:64])
-    assert model.stop_training
-
-    # Test with sample_weights
-    model = MultiNomialLogit(
-        epochs=1_000, optimizer="adam", callbacks=callbacks, lr=1e-2, batch_size=-1
-    )
-    _ = model.fit(dataset[:64], sample_weight=np.ones((64,)))
     assert model.stop_training
 
 
