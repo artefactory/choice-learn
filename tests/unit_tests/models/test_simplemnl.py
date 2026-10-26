@@ -3,6 +3,7 @@
 import shutil
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from choice_learn.data import ChoiceDataset
@@ -120,6 +121,26 @@ def test_fit_adam_weights():
 
     assert model.report.to_numpy().shape == (7, 5)
 
+    model = MultiNomialLogit(
+        intercept="item",
+        optimizer="Adam",
+        epochs=10,
+        lr=0.01,
+        regularization="l1",
+        regularization_strength=0.01,
+    )
+    model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
+    nll_b = model.evaluate(test_dataset)
+    model.fit(
+        test_dataset,
+        sample_weight=np.array([0.2, 0.4, 0.8, 1.0]),
+        get_report=True,
+        val_dataset=test_dataset,
+        verbose=0,
+    )
+    nll_a = model.evaluate(test_dataset, batch_size=-1)
+    assert nll_a < nll_b
+
 
 def test_evaluate_weights():
     """Tests instantiation with item and fit with Adam."""
@@ -173,6 +194,18 @@ def test_weighted_val_dataset():
     assert nll_a < nll_b
 
     assert model.report.to_numpy().shape == (7, 5)
+
+    with pytest.raises(ValueError):
+        model.instantiate(n_items=3, n_items_features=2, n_shared_features=3)
+        model.fit(
+            test_dataset,
+            get_report=True,
+            val_dataset=(
+                test_dataset,
+                np.ones((len(test_dataset),)),
+                np.ones((len(test_dataset),)),
+            ),
+        )
 
 
 def test_seeding():
