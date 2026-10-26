@@ -1009,7 +1009,7 @@ def test_getitem():
         available_items_by_choice=available_items_by_choice,
         choices=choices,
     )
-    assert dataset[[0, 1]].shared_features_by_choice[0] is None
+    assert dataset[[0, 1]].shared_features_by_choice is None
 
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features_by_choice,
@@ -1018,7 +1018,7 @@ def test_getitem():
         available_items_by_choice=available_items_by_choice,
         choices=choices,
     )
-    assert dataset[[0, 1]].items_features_by_choice[0] is None
+    assert dataset[[0, 1]].items_features_by_choice is None
 
 
 def test_batch():
