@@ -23,3 +23,16 @@ def test_early_stopping():
     )
     _ = model.fit(dataset[:64])
     assert model.stop_training
+
+
+def test_reduce_lr_on_plateau():
+    """Tests ReduceLROnPlateau callback."""
+    tf.config.run_functions_eagerly(True)
+    global dataset
+
+    callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor="train_loss", patience=5, mode="min")]
+    model = MultiNomialLogit(
+        epochs=1_00, optimizer="adam", callbacks=callbacks, lr=1e-1, batch_size=-1
+    )
+    _ = model.fit(dataset[:64])
+    assert model.optimizer.learning_rate.numpy() < 1e-1
