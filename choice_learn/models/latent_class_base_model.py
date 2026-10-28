@@ -90,9 +90,8 @@ class BaseLatentClassModel:
         Returns
         -------
         list
-           list of trainable weights.
+           List of trainable weights including latent logits and weights of each latent model.
         """
-        weights = []
         weights = [self.latent_logits]
         for model in self.models:
             weights += model.trainable_weights
@@ -269,12 +268,6 @@ class BaseLatentClassModel:
             )
 
         if self.fit_method.lower() == "mle":
-            self.weights = tf.Variable(
-                tf.random_normal_initializer(0.0, 0.08)(
-                    shape=(self.n_latent_classes - 1, len(choice_dataset))
-                ),
-                name="Latent-Logits",
-            )
             if isinstance(self.optimizer, str):
                 if self.optimizer.lower() == "lbfgs" or self.optimizer.lower() == "l-bfgs":
                     return self._fit_with_lbfgs(
@@ -566,27 +559,6 @@ class BaseLatentClassModel:
                     axis=-1,
                 )
                 probabilities.append(class_probabilities)
-            # sample_class_weight = tf.stack(probabilities, axis=1) / tf.reduce_sum(
-            # tf.stack(probabilities, axis=1), axis=1, keepdims=True
-            # )
-            # sample_class_weight = tf.stack(
-            #     [
-            #         tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
-            #         for prob in probabilities
-            #     ],
-            #     axis=1,
-            # )
-            # # sample_class_weight = tf.expand_dims(tf.reduce_sum(sample_class_weight,
-            # # axis=0, keepdims=True), axis=-1)
-            # self._weights = sample_class_weight
-            # self.__weights = tf.stack(
-            #     [
-            #         tf.gather_nd(prob, tf.stack([np.arange(0, len(choices)), choices], axis=1))
-            #         for prob in probabilities
-            #     ],
-            #     axis=1,
-            # )
-            # Summing over the latent classes
 
             sample_class_weight = self.get_latent_classes_weights()
 
@@ -601,12 +573,6 @@ class BaseLatentClassModel:
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
-            """neg_loglikelihood += self.loss(
-                y_pred=class_p,
-                y_true=tf.one_hot(choices, depth=utilities[0].shape[1]),
-                sample_weight=tf.gather_nd(sample_class_weight[:, i],
-                tf.stack([np.arange(0, len(choices)), choices], axis=1)),
-            )"""
 
             # if self.regularization is not None:
             #     regularization = tf.reduce_sum(
