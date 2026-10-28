@@ -76,7 +76,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
             **kwargs,
         )
 
-    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features, base_seed):
+    def instantiate_latent_models(self, n_items, n_shared_features, n_items_features):
         """Instantiate the Latent Models that are SimpleMNLs.
 
         Parameters
@@ -93,7 +93,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
                 n_items=n_items,
                 n_shared_features=n_shared_features,
                 n_items_features=n_items_features,
-                base_seed=(base_seed + i),
+                # base_seed=(base_seed + i),
             )
             model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
                 from_logits=False,
@@ -119,10 +119,7 @@ class LatentClassSimpleMNL(BaseLatentClassModel):
         self.models = [self.model_class(**mp) for mp in self.model_parameters]
 
         self.instantiate_latent_models(
-            n_items=n_items,
-            n_shared_features=n_shared_features,
-            n_items_features=n_items_features,
-            base_seed=base_seed,
+            n_items=n_items, n_shared_features=n_shared_features, n_items_features=n_items_features
         )
         self.instantiated = True
 
