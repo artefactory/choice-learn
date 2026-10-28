@@ -69,6 +69,7 @@ class LatentClassMNL(BaseLatentClassModel):
             n_latent_classes=n_latent_classes,
             fit_method=fit_method,
             epochs=epochs,
+            batch_size=batch_size,
             add_exit_choice=add_exit_choice,
             lbfgs_tolerance=lbfgs_tolerance,
             optimizer=optimizer,

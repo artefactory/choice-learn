@@ -90,7 +90,7 @@ class BaseLatentClassModel:
         Returns
         -------
         list
-           list of trainable weights.
+           List of trainable weights including latent logits and weights of each latent model.
         """
         weights = [self.latent_logits]
         for model in self.models:
@@ -106,11 +106,10 @@ class BaseLatentClassModel:
             Random seed for reproducibility.
 
         """
-        init_logit = tf.Variable(
+        self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.08, seed=seed)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
-        self.latent_logits = init_logit
 
         self.models = self.instantiate_latent_models(**kwargs)
         self.instantiated = True
@@ -284,7 +283,6 @@ class BaseLatentClassModel:
                 else:
                     print(f"Optimizer {self.optimizer} not implemnted, switching for default Adam")
                     self.optimizer = tf.keras.optimizers.Adam(self.lr)
-
             return self._fit_with_gd(
                 choice_dataset=choice_dataset,
                 sample_weight=sample_weight,
@@ -549,7 +547,8 @@ class BaseLatentClassModel:
                 choices=choices,
             )
 
-            latent_probabilities = self.get_latent_classes_weights()
+            # latent_probabilities = self.get_latent_classes_weights()
+
             # Compute probabilities from utilities & availabilties
             probabilities = []
             for i, class_utilities in enumerate(utilities):
@@ -559,15 +558,22 @@ class BaseLatentClassModel:
                     normalize_exit=self.add_exit_choice,
                     axis=-1,
                 )
-                probabilities.append(class_probabilities * latent_probabilities[i])
-            # Summing over the latent classes
-            probabilities = tf.reduce_sum(probabilities, axis=0)
+                probabilities.append(class_probabilities)
+
+            sample_class_weight = self.get_latent_classes_weights()
+
+            probabilities = tf.reduce_sum(
+                tf.stack(probabilities, axis=1)
+                * tf.expand_dims(tf.expand_dims(sample_class_weight, axis=0), axis=-1),
+                axis=1,
+            )
             # Negative Log-Likelihood
             neg_loglikelihood = self.loss(
                 y_pred=probabilities,
                 y_true=tf.one_hot(choices, depth=probabilities.shape[1]),
                 sample_weight=sample_weight,
             )
+
             # if self.regularization is not None:
             #     regularization = tf.reduce_sum(
             #         [self.regularizer(w) for w in self.trainable_weights]
@@ -651,7 +657,6 @@ class BaseLatentClassModel:
                     weight_batch,
                 ) in enumerate(inner_range):
                     # self.callbacks.on_train_batch_begin(batch_nb)
-
                     neg_loglikelihood = self.train_step(
                         shared_features_batch,
                         items_features_batch,
@@ -762,7 +767,6 @@ class BaseLatentClassModel:
                 ]
                 train_logs = {**train_logs, **val_logs}
 
-            # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
             # self.callbacks.on_epoch_end(epoch_nb, logs=temps_logs)
             # if self.stop_training:
             #     print("Early Stopping taking effect")
@@ -770,48 +774,36 @@ class BaseLatentClassModel:
             t_range.set_description(desc)
             t_range.refresh()
 
-        # temps_logs = {k: tf.reduce_mean(v) for k, v in train_logs.items()}
         # self.callbacks.on_train_end(logs=temps_logs)
         return losses_history
 
     def _expectation(self, choice_dataset):
         predicted_probas = [model.predict_probas(choice_dataset) for model in self.models]
         latent_probabilities = self.get_latent_classes_weights()
-        if np.sum(np.isnan(predicted_probas)) > 0:
-            print("A NaN values has been found. You should try again to fit with")
-            print("smaller tolerance value (for l-bfgs) and epsilon value (in loss computation)")
 
-        latent_model_probas = [
-            latent * proba for latent, proba in zip(latent_probabilities, predicted_probas)
-        ]
-        latent_model_probas = tf.reduce_sum(latent_model_probas, axis=0)
-        predicted_probas = [
-            latent
-            * tf.gather_nd(
+        membership_by_model = [
+            tf.gather_nd(
                 params=proba,
                 indices=tf.stack(
                     [tf.range(0, len(choice_dataset), 1), choice_dataset.choices], axis=1
                 ),
             )
-            for latent, proba in zip(latent_probabilities, predicted_probas)
+            for proba in predicted_probas
         ]
-        predicted_probas = np.stack(predicted_probas, axis=1)
-        loss = self.loss(
-            y_pred=latent_model_probas,
-            y_true=tf.one_hot(choice_dataset.choices, depth=latent_model_probas.shape[1]),
+        memberships_by_choice = tf.stack(membership_by_model, axis=1) * tf.expand_dims(
+            latent_probabilities, axis=0
         )
+        return memberships_by_choice / tf.reduce_sum(memberships_by_choice, axis=1, keepdims=True)
 
-        return tf.clip_by_value(
-            predicted_probas / np.sum(predicted_probas, axis=1, keepdims=True), 1e-6, 1
-        ), loss
-
-    def _maximization(self, choice_dataset, verbose=0):
+    def _maximization(self, choice_dataset, sample_weight, verbose=0):
         """Maximize step.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             dataset to be fitted
+        sample_weight : np.ndarray
+            sample weights to apply, by default None
         verbose : int, optional
             print level, for debugging, by default 0
 
@@ -820,21 +812,16 @@ class BaseLatentClassModel:
         np.ndarray
             latent probabilities resulting of maximization step
         """
-        # models = [self.model_class(**mp) for mp in self.model_parameters]
-        # for i in range(len(models)):
-        #     for j, var in enumerate(self.models[i].trainable_weights):
-        #         models[i]._trainable_weights[j] = var
-        # self.instantiate_latent_models(choice_dataset)
-
         # M-step: MNL estimation
         for q in range(self.n_latent_classes):
             self.models[q].fit(
-                choice_dataset, sample_weight=self.weights[:, q].numpy(), verbose=verbose
+                choice_dataset, sample_weight=sample_weight[:, q].numpy(), verbose=verbose
             )
 
         # M-step: latent probability estimation
-        latent_probas = np.sum(self.weights, axis=0)
-        return tf.math.log((latent_probas / latent_probas[0])[1:])
+        latent_probas = np.sum(sample_weight, axis=0)
+        logits = tf.math.log(latent_probas)
+        return (logits - logits[0] + 1)[1:]
 
     def _em_fit(self, choice_dataset, sample_weight=None, verbose=0):
         """Fit with Expectation-Maximization Algorithm.
@@ -851,27 +838,21 @@ class BaseLatentClassModel:
         Returns
         -------
         list
-            List of logits for each latent class
-        list
             List of losses at each epoch
+        list
+            List of logits (classes membership probabilities) history at each epoch
         """
         hist_logits = []
         hist_loss = []
         _ = sample_weight
 
-        # Initialization
-        init_sample_weight = np.random.rand(self.n_latent_classes, len(choice_dataset))
-        init_sample_weight = np.clip(
-            init_sample_weight / np.sum(init_sample_weight, axis=0, keepdims=True), 1e-6, 1
-        )
-        for i, model in enumerate(self.models):
-            # model.instantiate()
-            model.fit(choice_dataset, sample_weight=init_sample_weight[i], verbose=verbose)
         for i in tqdm.trange(self.epochs):
-            self.weights, loss = self._expectation(choice_dataset)
-            self.latent_logits = self._maximization(choice_dataset, verbose=verbose)
+            memberships_by_choice = self._expectation(choice_dataset)
+            self.latent_logits = self._maximization(
+                choice_dataset, memberships_by_choice, verbose=verbose
+            )
             hist_logits.append(self.latent_logits)
-            hist_loss.append(loss)
+            hist_loss.append(self.evaluate(choice_dataset))
             if np.sum(np.isnan(self.latent_logits)) > 0:
                 print("Nan in logits")
                 break
@@ -954,7 +935,7 @@ class BaseLatentClassModel:
         np.ndarray (n_latent_classes, )
             Latent classes weights/probabilities
         """
-        return tf.nn.softmax(tf.concat([[tf.constant(0.0)], self.latent_logits], axis=0))
+        return tf.nn.softmax(tf.concat([[tf.constant(1.0)], self.latent_logits], axis=0))
 
     def compute_report(self, choice_dataset):
         """Compute a report of the estimated weights.
