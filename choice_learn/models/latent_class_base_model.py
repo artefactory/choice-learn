@@ -107,7 +107,7 @@ class BaseLatentClassModel:
             Random seed for reproducibility.
 
         """
-        init_logit = tf.Variable(
+        self.latent_logits = tf.Variable(
             tf.random_normal_initializer(0.0, 0.08, seed=seed)(shape=(self.n_latent_classes - 1,)),
             name="Latent-Logits",
         )
