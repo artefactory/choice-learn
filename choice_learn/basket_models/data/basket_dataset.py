@@ -22,7 +22,7 @@ class Trip:
     def __init__(
         self,
         purchases: np.ndarray,
-        prices: np.ndarray,
+        prices: Union[int, np.ndarray],
         assortment: Union[int, np.ndarray],
         store: int = 0,
         week: int = 0,
@@ -99,7 +99,8 @@ class TripDataset:
     def __init__(
         self,
         trips: list[Trip],
-        available_items: np.ndarray,
+        available_items: np.ndarray = None,
+        items_prices: np.ndarray = None,
     ) -> None:
         """Initialize the dataset.
 
@@ -114,11 +115,18 @@ class TripDataset:
             (The availability matrix is a binary vector of length n_items
             where 1 means the item is available and 0 means the item is not available)
             Shape must be (n_assortments, n_items)
+        items_prices: np.ndarray
+            Array of item prices
+            items_prices[i]: price vector of the Trip instance whose prices value is i
+            (The price vector is a vector of length n_items
+            indicating the price of each item)
+            Shape must be (n_assortments, n_items)
         """
         self.trips = trips
         self.max_length = max([trip.trip_length for trip in self.trips])
         self.n_samples = self.get_n_samples()
         self.available_items = available_items
+        self.items_prices = items_prices
 
     def __len__(self) -> int:
         """Return the number of trips in the dataset.
@@ -310,6 +318,8 @@ class TripDataset:
         int
             Number of items available in the dataset
         """
+        if self.available_items is None:
+            return len(self.trips[0].assortment)
         return self.available_items.shape[1]
 
     @property
@@ -408,9 +418,9 @@ class TripDataset:
 
         if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
             # Then it is the assortment ID (ie its index in self.available_items)
-            prices = self.prices[trip.prices]
+            prices = self.items_prices[trip.prices]
         else:  # np.ndarray
-            # Then it is directly the availability matrix
+            # Then it is directly the prices matrix
             prices = trip.prices
 
         # Each item is linked to a basket, a store, a week, prices and an assortment
@@ -502,6 +512,13 @@ class TripDataset:
             # Then it is directly the availability matrix
             assortment = trip.assortment
 
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.items_prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the prices matrix
+            prices = trip.prices
+
         # Each item is linked to a basket, the future purchases,
         # a store, a week, prices and an assortment
         return (
@@ -510,7 +527,7 @@ class TripDataset:
             padded_future_purchases,  # Future purchases
             np.full(length_trip, trip.store),  # Stores
             np.full(length_trip, trip.week),  # Weeks
-            np.tile(trip.prices, (length_trip, 1)),  # Prices
+            np.tile(prices, (length_trip, 1)),  # Prices
             np.tile(assortment, (length_trip, 1)),  # Available items
             np.full(length_trip, trip.user_id),  # User IDs
         )
@@ -577,13 +594,20 @@ class TripDataset:
             # Then it is directly the availability matrix
             assortment = trip.assortment
 
+        if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
+            # Then it is the assortment ID (ie its index in self.available_items)
+            prices = self.items_prices[trip.prices]
+        else:  # np.ndarray
+            # Then it is directly the prices matrix
+            prices = trip.prices
+
         return (
             np.array([purchases[sequence_length]]),  # Items
             padded_truncated_purchases,  # Baskets
             padded_future_purchases,  # Future purchases
             np.array([trip.store]),  # Stores
             np.array([trip.week]),  # Weeks
-            np.array(trip.prices),  # Prices
+            np.array(prices),  # Prices
             np.array([assortment]),  # Available items
             np.array([trip.user_id]),  # User IDs
         )
@@ -640,7 +664,7 @@ class TripDataset:
 
         if not (isinstance(trip.prices, np.ndarray) or isinstance(trip.prices, list)):
             # Then it is the assortment ID (ie its index in self.available_items)
-            prices = self.prices[trip.prices]
+            prices = self.items_prices[trip.prices]
         else:  # np.ndarray
             # Then it is directly the availability matrix
             prices = trip.prices
@@ -661,6 +685,7 @@ class TripDataset:
         batch_size: int,
         shuffle: bool = False,
         data_method: str = "shopper",
+        **kwargs,
     ) -> object:
         """Iterate over a TripDataset to return batches of data from the trips."""
         _ = batch_size
@@ -676,9 +701,9 @@ class TripDataset:
             elif data_method == "aleacarta":
                 data = self.get_one_vs_all_augmented_data_from_trip_index(trip_index)
             elif data_method == "sequential":
-                data = self.get_sequential_data_from_trip_index(trip_index)
+                data = self.get_sequential_data_from_trip_index(trip_index, **kwargs)
             elif data_method == "prod2vec":
-                data = self.get_pairwise_data_from_trip_index(trip_index)
+                data = self.get_pairwise_data_from_trip_index(trip_index, **kwargs)
             else:
                 raise ValueError(f"Unknown data method: {data_method}")
 

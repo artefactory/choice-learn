@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 import tensorflow as tf
 
 import choice_learn.tf_ops as tf_ops
@@ -193,7 +194,7 @@ class ResLogit(ChoiceModel):
 
         self.instantiated = False
 
-    def instantiate(self, n_items, n_shared_features, n_items_features):
+    def instantiate(self, n_items, n_shared_features, n_items_features, seed=None):
         """Instantiate the model from ModelSpecification object.
 
         Parameters
@@ -204,6 +205,8 @@ class ResLogit(ChoiceModel):
             Number of contexts features
         n_items_features : int
             Number of contexts items features
+        seed: int, optional
+            Random seed for reproducibility.
 
         Returns
         -------
@@ -212,6 +215,7 @@ class ResLogit(ChoiceModel):
         weights : list of tf.Variable
             List of the weights created coresponding to the specification
         """
+        seed_gen = tf.keras.random.SeedGenerator(seed=seed)
         # Instantiate the loss function
         self.loss = tf_ops.CustomCategoricalCrossEntropy(
             from_logits=False,
@@ -231,7 +235,9 @@ class ResLogit(ChoiceModel):
             if n_feat > 0:
                 mnl_weights += [
                     tf.Variable(
-                        tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_feat,)),
+                        tf.random_normal_initializer(
+                            0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                        )(shape=(n_feat,)),
                         name=f"Betas_{feat_name}",
                     )
                 ]
@@ -243,7 +249,9 @@ class ResLogit(ChoiceModel):
         elif self.intercept == "item":
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items - 1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items - 1,)),
                     name="Intercept",
                 )
             )
@@ -252,7 +260,9 @@ class ResLogit(ChoiceModel):
             logging.info("Simple MNL intercept is not normalized to 0!")
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(n_items,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(n_items,)),
                     name="Intercept",
                 )
             )
@@ -260,7 +270,9 @@ class ResLogit(ChoiceModel):
         else:
             mnl_weights.append(
                 tf.Variable(
-                    tf.random_normal_initializer(0.0, 0.02, seed=42)(shape=(1,)),
+                    tf.random_normal_initializer(
+                        0.0, 0.02, seed=int(np.sum(seed_gen.next(ordered=False)))
+                    )(shape=(1,)),
                     name="Intercept",
                 )
             )
@@ -279,7 +291,8 @@ class ResLogit(ChoiceModel):
             # Different width for each *hidden* residual layer
             if self.n_layers > 0 and len(self.res_layers_width) != self.n_layers - 1:
                 raise ValueError(
-                    "The length of the res_layers_width list should be equal to n_layers - 1"
+                    "The length of the res_layers_width list should be equal to n_layers - 1, got "
+                    f"{len(self.res_layers_width)} and {self.n_layers - 1}"
                 )
             if self.n_layers > 1 and self.res_layers_width[-1] != n_items:
                 raise ValueError("The width of the last residual layer should be equal to n_items")
@@ -351,13 +364,13 @@ class ResLogit(ChoiceModel):
         """
         (_, _) = available_items_by_choice, choices  # Avoid unused variable warning
 
-        batch_size = shared_features_by_choice.shape[0]  # Other name: n_choices
-        n_items = items_features_by_choice.shape[1]
+        batch_size = len(choices)  # Other name: n_choices
+        n_items = available_items_by_choice.shape[1]
 
         # Deterministic component of the utility
         if "shared_features" in self.indexes.keys():
             if isinstance(shared_features_by_choice, tuple):
-                shared_features_by_choice = tf.concat(*shared_features_by_choice, axis=1)
+                shared_features_by_choice = tf.concat([*shared_features_by_choice], axis=1)
             shared_features_by_choice = tf.cast(shared_features_by_choice, tf.float32)
             shared_features_utilities = tf.tensordot(
                 shared_features_by_choice,
@@ -366,7 +379,7 @@ class ResLogit(ChoiceModel):
             )
             shared_features_utilities = tf.expand_dims(shared_features_utilities, axis=-1)
         else:
-            shared_features_utilities = 0
+            shared_features_utilities = tf.zeros((batch_size, 1))
         shared_features_utilities = tf.squeeze(shared_features_utilities)
 
         if "items_features" in self.indexes.keys():
@@ -388,11 +401,12 @@ class ResLogit(ChoiceModel):
             if self.intercept in ["item", "item-full"]:
                 intercept = tf.expand_dims(intercept, axis=0)
         else:
-            intercept = 0
+            intercept = tf.zeros((batch_size, n_items))
 
         shared_features_utilities = tf.tile(
             tf.expand_dims(shared_features_utilities, axis=-1), [1, n_items]
         )
+
         deterministic_utilities_without_intercept = (
             shared_features_utilities + items_features_utilities
         )
@@ -404,15 +418,13 @@ class ResLogit(ChoiceModel):
 
         return deterministic_utilities + residual_utilities
 
-    def fit(self, choice_dataset, get_report=False, **kwargs):
+    def fit(self, choice_dataset, **kwargs):
         """Fit to estimate the parameters.
 
         Parameters
         ----------
         choice_dataset : ChoiceDataset
             Choice dataset to use for the estimation.
-        get_report: bool, optional
-            Whether or not to compute a report of the estimation, by default False
 
         Returns
         -------
@@ -427,7 +439,4 @@ class ResLogit(ChoiceModel):
                 n_items_features=choice_dataset.get_n_items_features(),
             )
             self.instantiated = True
-        fit = super().fit(choice_dataset=choice_dataset, **kwargs)
-        if get_report:
-            self.report = self.compute_report(choice_dataset)
-        return fit
+        return super().fit(choice_dataset=choice_dataset, **kwargs)

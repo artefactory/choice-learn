@@ -67,3 +67,26 @@ def test_lr_value_change():
     with pytest.raises(NotImplementedError):
         model = ChoiceModel(optimizer="lbfgs", lr=0.1)
         model.assign_lr(0.001)
+
+
+def test_bad_inheritance():
+    """Checks that the model raises an error for bad inheritance."""
+
+    class BadModel(ChoiceModel):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+    BadModel().compute_batch_utility(None, None, None, None)
+    with pytest.raises(NotImplementedError):
+        BadModel().trainable_weights
+
+    with pytest.raises(NotImplementedError):
+        BadModel().fit(None)
+
+    class BadModel(ChoiceModel):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.instantiated = False
+
+    with pytest.raises(ValueError):
+        BadModel(optimizer="Adam").fit(None)

@@ -131,21 +131,13 @@ class AleaCarta(BaseBasketModel):
             **kwargs,
         )
 
-        if len(tf.config.get_visible_devices("GPU")):
-            # At least one available GPU
-            self.on_gpu = True
-        else:
-            # No available GPU
-            self.on_gpu = False
-        # /!\ If a model trained on GPU is loaded on CPU, self.on_gpu must be set
-        # to False manually after loading the model, and vice versa
-
         self.instantiated = False
 
     def instantiate(
         self,
         n_items: int,
         n_stores: int = 0,
+        n_users: int = 0,
     ) -> None:
         """Instantiate the Shopper model.
 
@@ -155,6 +147,8 @@ class AleaCarta(BaseBasketModel):
             Number of items to consider, i.e. the number of items in the dataset
         n_stores: int
             Number of stores in the population
+        n_users: int
+            Number of users in the population. Here only for signature reasons.
         """
         self.n_items = n_items
         if n_stores == 0 and self.price_effects:
@@ -163,6 +157,7 @@ class AleaCarta(BaseBasketModel):
             # (By default, the store id is 0)
             n_stores = 1
         self.n_stores = n_stores
+        self.n_users = n_users
 
         self.gamma = tf.Variable(
             tf.random_normal_initializer(mean=0, stddev=0.1)(

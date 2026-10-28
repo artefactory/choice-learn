@@ -106,7 +106,7 @@ def test_item_probabilities_sum_to_1() -> None:
         n_items=n_items_1,
         n_stores=n_stores_1,
     )
-    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1)
+    model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=2)
 
     for trip in trip_dataset_1.trips:
         # For a given trip, check at each step that the sum of the probabilities for each
@@ -253,6 +253,15 @@ def test_compute_item_likelihood() -> None:
         )
         model.compute_item_likelihood(trip=trip)
 
+    trip = Trip(
+        purchases=[1, 2, 3],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_item_likelihood(trip=trip)
+
 
 def test_compute_ordered_basket_likelihood() -> None:
     """Test the compute_ordered_basket_likelihood method."""
@@ -316,6 +325,15 @@ def test_compute_basket_likelihood(caplog) -> None:
         )
         model.compute_basket_likelihood(trip=trip)
 
+    trip = Trip(
+        purchases=[1, 2, 0],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_basket_likelihood(trip=trip)
+
     # With verbose
     model.compute_basket_likelihood(
         basket=np.array([1, 2, 0]),
@@ -363,10 +381,10 @@ def test_get_negative_samples() -> None:
 def test_fit() -> None:
     """Test the fit method."""
     model = AleaCarta(batch_size=-1)
-    model.instantiate(
-        n_items=n_items_1,
-        n_stores=n_stores_1,
-    )
+    # model.instantiate(
+    #     n_items=n_items_1,
+    #     n_stores=n_stores_1,
+    # )
     # Test lazy instantiation + verbose + batch_size=-1
     model.fit(trip_dataset=trip_dataset_1, val_dataset=trip_dataset_1, verbose=1)
 
@@ -390,6 +408,7 @@ def test_evaluate_load_and_save() -> None:
     for w1, w2 in zip(model.trainable_weights, loaded_model.trainable_weights):
         assert np.allclose(w1.numpy(), w2.numpy())
     assert np.isclose(eff_loss, loaded_loss)
+    model.save_model("test_aleacarta")
 
 
 def test_randoms_few() -> None:

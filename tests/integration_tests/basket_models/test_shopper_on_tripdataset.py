@@ -1,6 +1,7 @@
 """Integration tests for Shopper model and TripDataset."""
 
 import logging
+import shutil
 
 import numpy as np
 import pytest
@@ -292,7 +293,7 @@ def test_ordered_basket_probabilities_sum_to_1() -> None:
 
 def test_thinking_ahead() -> None:
     """Test the Shopper model with thinking ahead."""
-    model = Shopper(think_ahead=True)
+    model = Shopper(think_ahead=True, price_effects=True, seasonal_effects=True)
     model.instantiate(
         n_items=n_items_1,
         n_stores=n_stores_1,
@@ -301,12 +302,57 @@ def test_thinking_ahead() -> None:
     batch_size = 4
     model.compute_batch_utility(
         item_batch=np.array([4, 5, 6, 0]),
-        basket_batch=np.array([[1, 2, 3]] * batch_size),
+        basket_batch=np.array([[1, 2, 3], [1, 2, 0], [3, 1, 0], [2, 1, 0]]),
         store_batch=np.array([0] * batch_size),
         week_batch=np.array([0] * batch_size),
         price_batch=np.random.uniform(1, 10, batch_size),
         available_item_batch=np.array([np.ones(n_items_1)] * batch_size),
         user_batch=np.array([0] * batch_size),
+    )
+
+    model.compute_batch_utility(
+        item_batch=np.array([[4, 5], [2, 5]]),
+        basket_batch=np.array([[1, 2, 3], [1, 2, 0]]),
+        store_batch=np.array([0] * 2),
+        week_batch=np.array([0] * 2),
+        price_batch=np.random.uniform(1, 10, 2),
+        available_item_batch=np.array([np.ones(n_items_1)] * 2),
+        user_batch=np.array([0] * 2),
+    )
+
+    model.thinking_ahead(
+        item_batch=tf.constant([4, 5]),
+        ragged_basket_batch=tf.cast(
+            tf.ragged.constant([[1, 0], [1, 2, 3]]),
+            dtype=tf.int32,
+        ),
+        price_batch=tf.constant(np.random.uniform(1, 10, batch_size)),
+        available_item_batch=tf.constant(
+            [np.ones(n_items_1), np.array([0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])]
+        ),
+        theta_store=tf.gather(model.theta, [0, 0]),
+        gamma_store=tf.gather(model.gamma, [0, 0]),
+        delta_week=tf.gather(model.delta, [0, 0]),
+    )
+
+    model = Shopper(
+        think_ahead=True, price_effects=False, seasonal_effects=False, item_intercept=False
+    )
+    model.instantiate(
+        n_items=n_items_1,
+        n_stores=n_stores_1,
+    )
+    model.thinking_ahead(
+        item_batch=tf.constant([4, 5]),
+        ragged_basket_batch=tf.cast(
+            tf.ragged.constant([[1, 2], [1, 2, 3]]),
+            dtype=tf.int32,
+        ),
+        price_batch=tf.constant(np.random.uniform(1, 10, batch_size)),
+        available_item_batch=tf.constant([np.ones(n_items_1), np.ones(n_items_1)]),
+        theta_store=tf.constant([0.0, 0.0]),
+        gamma_store=tf.constant([0.0, 0.0]),
+        delta_week=tf.constant([0.0, 0.0]),
     )
 
 
@@ -393,6 +439,15 @@ def test_compute_ordered_basket_likelihood() -> None:
             assortment=0,
         )
         model.compute_ordered_basket_likelihood(trip=trip)
+
+    trip = Trip(
+        purchases=[1, 2, 0],
+        store=0,
+        week=0,
+        prices=np.random.uniform(1, 10, n_items_1),
+        assortment=np.ones((n_items_1,)),
+    )
+    model.compute_ordered_basket_likelihood(trip=trip)
 
 
 def test_compute_basket_likelihood(caplog) -> None:
@@ -499,3 +554,4 @@ def test_evaluate_load_and_save() -> None:
     loaded_model = Shopper.load_model("test_shopper")
     loaded_loss = loaded_model.evaluate(trip_dataset=trip_dataset_1)["negative_log_likelihood"]
     assert np.isclose(eff_loss, loaded_loss)
+    shutil.rmtree("test_shopper")

@@ -73,7 +73,7 @@ nav:
       - Optimize RAM usage with Features Storage, in-depth examples: notebooks/data/features_byID_examples.md
       - Basket Data Handling: notebooks/basket_models/basket_data.md
     - Modeling Single Choices:
-      - Introduction to Choice Models - the SimpleMNL: notebooks/models/simple_mnl.md
+      - Introduction to Choice Models - the MNL model: notebooks/models/simple_mnl.md
       - Conditional Logit Usage: notebooks/introduction/3_model_clogit.md
       - Nested Logit Usage: notebooks/models/nested_logit.md
       - Building a custom choice model and handling hyper-parameters: notebooks/introduction/4_model_customization.md
@@ -81,7 +81,6 @@ nav:
       - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
       - Model Finetuning and general hyperparamters: notebooks/models/models_finetuning.md
-      - SHOPPER model Usage: notebooks/basket_models/shopper.md
       - TasteNet model Usage: notebooks/models/tastenet.md
       - HaloMNL model Usage: notebooks/models/halo_mnl.md
       - Learning MNL model Usage: notebooks/models/learning_mnl.md
@@ -90,6 +89,10 @@ nav:
       - Introduction data handling, the TripDataset: notebooks/basket_models/basket_data.md
       - Shopper model Usage: notebooks/basket_models/shopper.md
       - AleaCarta model Usage: notebooks/basket_models/alea_carta.md
+    - Various tutorials:
+      - Example of early stopping callback: notebooks/utils/callbacks.md
+      - Example of ReduceLROnPlateau callback: notebooks/utils/callbacks.md
+      - Example of Customizing callbacks: notebooks/utils/callbacks.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:
@@ -102,11 +105,11 @@ nav:
       - TaFeng Dataset: references/datasets/references_tafeng.md
       - ICDM Expedia Dataset: references/datasets/references_expedia.md
       - Bakery Dataset: references/basket_models/datasets/references_bakery.md
-      - Badminton Dataset: references/basket_models/datasets/badminton_dataset.md
+      - Badminton Dataset: references/basket_models/datasets/references_badminton.md
     - Choice Models:
       - Base Model: references/models/references_base_model.md
       - Baseline Models: references/models/references_baseline_models.md
-      - SimpleMNL Model: references/models/references_simple_mnl.md
+      - MultiNomialLogit Model: references/models/references_simple_mnl.md
       - Conditional Logit: references/models/references_clogit.md
       - Nested Logit: references/models/references_nested_logit.md
       - Latent Class BaseModel: references/models/references_latent_class_base_model.md
@@ -117,16 +120,15 @@ nav:
       - ResLogit: references/models/references_reslogit.md
       - HaloMNL: references/models/references_halo_mnl.md
     - Basket Models:
+      - Trip and TripDataset: references/basket_models/data/references_dataset.md
+      - Permutation: references/basket_models/utils/references_permutation.md
       - Shopper: references/basket_models/references_shopper.md
       - The AleaCarta model: references/basket_models/references_alea_carta.md
       - Basic Attention model: references/basket_models/references_basic_attention_model.md
       - Self Attention model: references/basket_models/references_self_attention_model.md
-      - Trip and TripDataset: references/basket_models/data/references_dataset.md
-      - Basket preprocessing: references/basket_models/data/references_preprocessing.md
-      - Permutation: references/basket_models/utils/references_permutation.md
     - Toolbox:
         - Assortment Optimizer and Pricing: references/toolbox/references_assortment_optimizer.md
     - Utils:
-        - Tensorflow Operations: references/tf_ops.md
-        - Metrics: references/utils/metrics.md
+        - Tensorflow Operations: references/utils/references_tf_ops.md
+        - Metrics: references/utils/references_metrics.md
   - explanations.md

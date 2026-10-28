@@ -149,8 +149,8 @@ class MRR(tf.keras.metrics.Metric):
         if self.axis == -1:
             if not len(tf.shape(y_pred)) == 2:
                 raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
-        else:
-            y_pred = tf.convert_to_tensor(y_pred)
+
+        y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, dtype=tf.int32)
 
         ranks = tf.argsort(tf.argsort(-y_pred, axis=1), axis=1) + 1  # Shape: (batch_size, n_items)
@@ -217,8 +217,7 @@ class MeanRank(tf.keras.metrics.Metric):
         if self.axis == -1:
             if not len(tf.shape(y_pred)) == 2:
                 raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
-        else:
-            y_pred = tf.convert_to_tensor(y_pred)
+        y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, dtype=tf.int32)
 
         ranks = tf.argsort(tf.argsort(-y_pred, axis=1), axis=1) + 1  # Shape: (batch_size, n_items)
@@ -285,8 +284,7 @@ class HitRate(tf.keras.metrics.Metric):
         if self.axis == -1:
             if not len(tf.shape(y_pred)) == 2:
                 raise ValueError(f"y_pred must be of shape size 2, is {len(tf.shape(y_pred))}.")
-        else:
-            y_pred = tf.convert_to_tensor(y_pred)
+        y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, dtype=tf.int32)
 
         top_k_indices = tf.math.top_k(y_pred, k=self.top_k).indices  # Shape: (batch_size, top_k)

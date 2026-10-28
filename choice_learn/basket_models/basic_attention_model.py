@@ -411,14 +411,21 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
         self,
         trip_dataset: TripDataset,
         val_dataset: Union[TripDataset, None] = None,
+        metrics: Union[list[str], None] = None,
         verbose: int = 0,
     ) -> None:
         """Trains the model for a specified number of epochs.
 
         Parameters
         ----------
-            dataset : TripDataset
+            trip_dataset : TripDataset
                 Dataset of baskets to train the model on.
+            val_dataset : Union[TripDataset, None], optional
+                Dataset of baskets to validate the model on.
+            metrics : Union[list[str], None], optional
+                List of metrics to evaluate during training.
+            verbose : int, optional
+                Verbosity mode. 0 = silent, 1 = progress bar, 2 = one line per epoch.
         """
         if not self.instantiated:
             self.instantiate(n_items=trip_dataset.n_items)
@@ -441,7 +448,9 @@ class AttentionBasedContextEmbedding(BaseBasketModel):
                 (trip_dataset.n_items,)
             ).astype("float32")
 
-        history = super().fit(trip_dataset=trip_dataset, val_dataset=val_dataset, verbose=verbose)
+        history = super().fit(
+            trip_dataset=trip_dataset, val_dataset=val_dataset, metrics=metrics, verbose=verbose
+        )
 
         self.is_trained = True
 

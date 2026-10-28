@@ -286,6 +286,7 @@ def test_instant_from_df():
         shared_features_by_choice=pd.DataFrame(
             {"budget": [100, 200, 80], "age": [20, 40, 20], "choice_id": [0, 1, 2]}
         ),
+        shared_features_by_choice_names=["a", "b"],
         items_features_by_choice=pd.DataFrame(
             {
                 "price": [100, 140, 200, 100, 120, 200, 0, 120, 180],
@@ -294,6 +295,7 @@ def test_instant_from_df():
                 "item_id": [0, 1, 2, 0, 1, 2, 0, 1, 2],
             }
         ),
+        items_features_by_choice_names=["p1", "p2"],
         available_items_by_choice=pd.DataFrame(
             {
                 "av": [1, 1, 1, 1, 1, 1, 0, 1, 1],
@@ -303,6 +305,9 @@ def test_instant_from_df():
         ),
         choices=pd.DataFrame({"choice_id": [0, 1, 2], "choices": [0, 2, 1]}),
     )
+    print(dataset.shared_features_by_choice_names[0])
+    assert list(dataset.shared_features_by_choice_names[0]) == ["budget", "age"]
+    assert list(dataset.items_features_by_choice_names[0]) == ["price", "promotion"]
     example_dataset = ChoiceDataset(
         shared_features_by_choice=shared_features_by_choice,
         items_features_by_choice=items_features_by_choice,
@@ -850,6 +855,30 @@ def test_from_wide_df():
         )
     ).all()
 
+    wide_df = {
+        "sh_1": [1.1, 2.2, 3.3],
+        "sh_2": [11.1, 22.2, 33.3],
+        "it_1_1": [0.4, 0.5, 0.6],
+        "it_2_1": [0.7, 0.8, 0.9],
+        "it_1_2": [1.4, 1.5, 1.6],
+        "it_2_2": [1.7, 1.8, 1.9],
+        "it_1_3": [2.4, 2.5, 2.6],
+        "it_2_3": [2.7, 2.8, 2.9],
+        "av_it_1": [1, 1, 1],
+        "av_it_2": [1, 0, 1],
+        "choice": ["it_1", "it_1", "it_2"],
+    }
+    dataset = ChoiceDataset.from_single_wide_df(
+        df=pd.DataFrame(wide_df),
+        items_id=["it_1", "it_2"],
+        shared_features_columns=["sh_1", "sh_2"],
+        items_features_suffixes=["1", "2", "3", "4"],
+        available_items_suffix=["av_it_1", "av_it_2"],
+        choices_column="choice",
+        choice_format="items_id",
+    )
+    assert dataset.items_features_by_choice[0].shape == (3, 2, 4)
+
 
 def test_summary():
     """Tests summary method."""
@@ -861,6 +890,21 @@ def test_summary():
     )
     dataset.summary()
     assert True
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        items_features_by_choice=None,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    dataset.summary()
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=None,
+        items_features_by_choice=items_features_by_choice,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    dataset.summary()
 
 
 def test_getitem():
@@ -947,6 +991,34 @@ def test_getitem():
                 )
             ],
         )
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        shared_features_by_choice_names=["budget", "age"],
+        items_features_by_choice=items_features_by_choice,
+        items_features_by_choice_names=["price", "promotion"],
+        available_items_by_choice=None,
+        choices=choices,
+    )
+    assert dataset[[0, 1]].available_items_by_choice is None
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=None,
+        items_features_by_choice=items_features_by_choice,
+        items_features_by_choice_names=["price", "promotion"],
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    assert dataset[[0, 1]].shared_features_by_choice is None
+
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features_by_choice,
+        shared_features_by_choice_names=["budget", "age"],
+        items_features_by_choice=None,
+        available_items_by_choice=available_items_by_choice,
+        choices=choices,
+    )
+    assert dataset[[0, 1]].items_features_by_choice is None
 
 
 def test_batch():

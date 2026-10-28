@@ -45,7 +45,8 @@ def test_fit_adam_and_predict():
         lr=0.001,
         batch_size=32,
     )
-    _ = tastenet.fit(dataset)
+    tastenet.trainable_weights
+    _ = tastenet.fit(dataset, verbose=3)
     _ = tastenet.predict_tastes(dataset.shared_features_by_choice)
     assert True
 

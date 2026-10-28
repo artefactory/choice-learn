@@ -101,12 +101,12 @@ Here are two tutorials published on Medium that can help you
 *List of implemented single choice models:*
 | Model | Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- |  -------- | ------ | ------ | :---: |
-| MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/simple_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/simple_mnl.ipynb) | | *SimpleMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
+| Multinomial Logit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/simple_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/simple_mnl.ipynb) | | *MultiNomialLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_simple_mnl/) |
 | Conditional Logit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/introduction/3_model_clogit.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/introduction/3_model_clogit.ipynb) | Train et al. [[4]](#trident-references) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| *ConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_clogit/) |
 | Nested Logit | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/nested_logit.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/nested_logit.ipynb) | McFadden [[10]](#trident-references)  | *NestedLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_nested_logit/) |
 | Latent Class MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/latent_class_model.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/latent_class_model.ipynb) | | *LatentClassConditionalLogit* | [#](https://artefactory.github.io/choice-learn/references/models/references_latent_class_mnl/) |
-| Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Maragheh et al. [[14]](#trident-references) | *HaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/halo_mnl/) |
-| Low-Rank Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Ko and Li [[15]](#trident-references) | *LowRankHaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/halo_mnl/) |
+| Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Maragheh et al. [[14]](#trident-references) | *HaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_halo_mnl/) |
+| Low-Rank Halo MNL | [![alt text](docs/illustrations/logos/jupyter_logo.png)](notebooks/models/halo_mnl.ipynb) &nbsp; [![Open In Colab](https://img.shields.io/badge/-grey?logo=googlecolab)](https://colab.research.google.com/github/artefactory/choice-learn/blob/main/notebooks/models/halo_mnl.ipynb) | Ko and Li [[15]](#trident-references) | *LowRankHaloMNL* | [#](https://artefactory.github.io/choice-learn/references/models/references_halo_mnl/) |
 
 | NN-based Model  &nbsp; &nbsp;| Example | Related Paper | *from choice_learn.models import* | Doc |
 | ---------- |  ------ | ---- | ------ | :---: |
@@ -141,12 +141,12 @@ Here are two tutorials published on Medium that can help you
 | Stated Car Preferences | [csv](./choice_learn/datasets/data/car.csv.gz) | McFadden and Train (2000) [[9]](#trident-references) | *load_car_preferences* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_car_preferences) |
 | TaFeng Grocery Dataset | [csv](./choice_learn/datasets/data/ta_feng.csv.zip) | [Kaggle](https://www.kaggle.com/datasets/chiranjivdas09/ta-feng-grocery-dataset) | *load_tafeng* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_tafeng/) |
 | ICDM-2013 Expedia | [url](https://www.kaggle.com/c/expedia-personalized-sort) |  Ben Hamner and Friedman (2013) [[6]](#trident-references) | *load_expedia* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_expedia/) |
-| London Passenger Mode Choice | [url]() | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
+| London Passenger Mode Choice | [url](https://transp-or.epfl.ch/documents/technicalReports/CS_LPMC.pdf) | Hillel et al. (2018) [[11]](#trident-references) | *load_londonpassenger* | [#](https://artefactory.github.io/choice-learn/references/datasets/references_base/#choice_learn.datasets.base.load_londonpassenger) |
 
 | Basket Dataset    | Raw Data | Origin | *from choice_learn.basket_models.datasets import* | Doc |
 | ---------- | :----: | ------ | ------ | :---: |
 | Bakery Dataset | [url](https://www.cs.cornell.edu/~arb/data/uchoice-Bakery/) | Benson et al. (2018) [[19]](#trident-references) | *load_bakery* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/bakery) |
-| Badminton Dataset | [url]() | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/badminton) |
+| Badminton Dataset | [url](https://link.springer.com/chapter/10.1007/978-3-032-06118-8_8) | Désir et al. (2025) [[17]](#trident-references) | *BadmintonDataGenerator* | [#](https://artefactory.github.io/choice-learn/references/basket_models/datasets/badminton) |
 
 
 ### Auxiliary tools
@@ -174,18 +174,18 @@ git clone git@github.com:artefactory/choice-learn.git
 
 ### Dependencies
 For manual installation, Choice-Learn requires the following:
-- Python (>=3.9, <3.13)
+- Python (>=3.10, <3.14)
 - NumPy (>=1.24)
 - pandas (>=1.5)
 
 For modeling you need:
-- TensorFlow (>=2.18 if Python >= 3.10, <=2.16 otherwise)
+- TensorFlow (>=2.18)
 
 > :warning: **Warning:** If you are a MAC user with a M1 or M2 chip, importing TensorFlow might lead to Python crashing.
 > In such case, use anaconda to install TensorFlow with `conda install -c apple tensorflow`.
 
 An optional requirement used for coefficients analysis and L-BFGS optimization is:
-- TensorFlow Probability  (>=0.23 if Python >= 3.10, ==0.23 otherwise)
+- TensorFlow Probability  (>=0.23)
 
 Finally for pricing or assortment optimization, you need either Gurobi or OR-Tools:
 - gurobipy (>=11.0)
@@ -390,4 +390,4 @@ The use of this software is under the MIT license, with no limitation of usage, 
 [13] [Learning-MNL](https://github.com/BSifringer/EnhancedDCM)\
 [16] [Shopper](https://github.com/franrruiz/shopper-src)\
 [17] [AleaCarta](https://github.com/artefactory/alea-carta-est)\
-[20] [SelfAttention](https://github.com/artefactory/rd-self-attentive)
+[20] [SelfAttention](https://github.com/slientGe/Sequential_Recommendation_Tensorflow)
