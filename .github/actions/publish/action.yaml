@@ -66,8 +66,10 @@ runs:
   using: composite
   steps:
     - name: display inputs
+      env:
+        BRANCH: ${{ inputs.BRANCH }}
       run: |
-        echo ${{ inputs.BRANCH }}
+        echo $BRANCH
       shell: bash
 
     - name: Checkout Repository
