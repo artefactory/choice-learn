@@ -98,7 +98,7 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
         customer_features = []
         choices = []
 
-        curr_prices = [i for i in init_prices]
+        curr_prices = [*init_prices]
 
         for n_row, row in subdf.iterrows():
             for _ in range(int(row.AMOUNT)):
@@ -112,7 +112,7 @@ def load_tafeng(as_frame=False, return_desc=False, preprocessing=None):
                 customer_features.append(age_groups[age])
                 choices.append(item_index)
                 curr_prices[item_index] = price
-                all_prices.append([i for i in curr_prices])
+                all_prices.append([*curr_prices])
 
         all_prices = np.expand_dims(np.array(all_prices), axis=-1)
         customer_features = np.array(customer_features).astype("float32")
