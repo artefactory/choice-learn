@@ -1,0 +1,38 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Choice-Learn
+message: >-
+  Large-scale choice modeling for operational contexts
+  through the lens of machine learning
+type: software
+authors:
+  - given-names: Vincent
+    family-names: Auriau
+    email: vincent.auriau@artefact.com
+    affiliation: CentraleSupélec
+    orcid: 'https://orcid.org/0009-0002-9640-2639'
+  - given-names: Ali
+    family-names: Aouad
+    orcid: 'https://orcid.org/0000-0002-9812-6140'
+    affiliation: London Business School
+  - given-names: Antoine
+    family-names: Désir
+    affiliation: INSEAD
+    orcid: 'https://orcid.org/0000-0001-5654-3301'
+  - given-names: Emmanuel
+    family-names: Malherbe
+    affiliation: Artefact Research Center
+    orcid: 'https://orcid.org/0009-0006-0898-6873'
+identifiers:
+  - type: doi
+    value: 10.21105/joss.06899
+repository-code: 'https://github.com/artefactory/choice-learn'
+url: 'https://artefactory.github.io/choice-learn/'
+abstract: >-
+  Choice-Learn provides a modular suite of choice modeling
+  tools for practitioners and academic researchers to
+  process choice data, and then formulate, estimate and
+  operationalize choice models.
+license: MIT
