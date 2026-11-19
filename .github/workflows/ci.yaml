@@ -30,6 +30,7 @@ jobs:
         run: |
           pytest -n auto --junitxml=pytest.xml --cov-report=term-missing --cov=choice_learn tests/ | tee pytest-coverage.txt
           cat pytest-coverage.txt
+          cat pytest.xml
 
       - name: Pytest coverage comment
         uses: VincentAuriau/pytest-coverage-comment@main
