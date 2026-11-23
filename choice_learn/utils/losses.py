@@ -1,58 +1,6 @@
-"""Diverse Tensorflow operations used in the ChoiceLearn library."""
+"""Losses implemented using Tensorflow that are used in the Choice-Learn library."""
 
 import tensorflow as tf
-
-
-def softmax_with_availabilities(
-    items_logit_by_choice, available_items_by_choice, axis=-1, normalize_exit=False, eps=1e-5
-):
-    """Compute softmax probabilities from utilities.
-
-    Takes into account availabilities (1 if the product is available, 0 otherwise) to set
-    probabilities to 0 for unavailable products and to renormalize the probabilities of
-    available products.
-
-    Parameters
-    ----------
-    items_logit_by_choice : np.ndarray (n_choices, n_items)
-        Utilities / Logits on which to compute the softmax
-    available_items_by_choice : np.ndarray (n_choices, n_items)
-        Matrix indicating the availability (1) or not (0) of the products
-    axis : int, optional
-        Axis of items_logit_by_choice on which to apply the softmax, by default -1
-    normalize_exit : bool, optional
-        Whether to normalize the probabilities of available products with an exit choice of
-        utility 1, by default False
-    eps : float, optional
-        Value to avoid division by 0 when a product with probability almost 1 is unavailable,
-        by default 1e-5
-
-    Returns
-    -------
-    tf.Tensor (n_choices, n_items)
-        Probabilities of each product for each choice computed from Logits
-    """
-    # Substract max utility to avoid overflow
-    large_negative = tf.constant(-1e9, dtype=items_logit_by_choice.dtype)
-    masked_logits = tf.where(available_items_by_choice > 0.5, items_logit_by_choice, large_negative)
-
-    normalizer = tf.reduce_max(masked_logits, axis=axis, keepdims=True)
-    numerator = tf.exp(masked_logits - normalizer)
-
-    # Set unavailable products utility to 0
-    numerator = tf.multiply(numerator, available_items_by_choice)
-    # Sum of total available utilities
-    denominator = tf.reduce_sum(numerator, axis=axis, keepdims=True)
-
-    # Add 1 to the denominator to take into account the exit choice
-    if normalize_exit:
-        denominator += tf.exp(-normalizer)
-    # Avoid division by 0 when only unavailable items have highest utilities
-    elif eps:
-        denominator += eps
-
-    # Compute softmax
-    return numerator / denominator
 
 
 class CustomCategoricalCrossEntropy(tf.keras.losses.Loss):

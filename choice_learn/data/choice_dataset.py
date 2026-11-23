@@ -1549,3 +1549,96 @@ class ChoiceDataset:
                 n_features += items_features.shape[2]
             return n_features
         return 0
+
+    def get_features_min_max(self, batch_size=128):
+        """Access the min and max values of all features.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the min&max of shared and items features.
+        """
+        descriptions = {
+            "shared_features": None,
+            "items_features": None,
+        }
+        for i, batch in enumerate(self.iter_batch(batch_size=batch_size)):
+            shared_features_batch, items_features_batch, _, _ = batch
+
+            if i == 0:
+                if shared_features_batch is not None:
+                    if isinstance(shared_features_batch, tuple):
+                        shared_descr = ()
+                        for sf in shared_features_batch:
+                            sf_descr = {}
+                            for j in range(sf.shape[1]):
+                                sf_descr[j] = [np.min(sf[:, j]), np.max(sf[:, j])]
+                            shared_descr += (sf_descr,)
+                        descriptions["shared_features"] = shared_descr
+                    else:
+                        sf_descr = {}
+                        for j in range(shared_features_batch.shape[1]):
+                            sf_descr[j] = [
+                                np.min(shared_features_batch[:, j]),
+                                np.max(shared_features_batch[:, j]),
+                            ]
+                        descriptions["shared_features"] = sf_descr
+
+                if items_features_batch is not None:
+                    if isinstance(items_features_batch, tuple):
+                        items_descr = ()
+                        for it in items_features_batch:
+                            it_descr = {}
+                            for j in range(it.shape[2]):
+                                it_descr[j] = [np.min(it[:, :, j]), np.max(it[:, :, j])]
+                            items_descr += (it_descr,)
+                        descriptions["items_features"] = items_descr
+                    else:
+                        it_descr = {}
+                        for j in range(items_features_batch.shape[2]):
+                            it_descr[j] = [
+                                np.min(items_features_batch[:, :, j]),
+                                np.max(items_features_batch[:, :, j]),
+                            ]
+                        descriptions["items_features"] = it_descr
+
+            else:
+                if shared_features_batch is not None:
+                    if isinstance(shared_features_batch, tuple):
+                        for k, sf in enumerate(shared_features_batch):
+                            for j in range(sf.shape[1]):
+                                min_f = np.min(sf[:, j])
+                                max_f = np.max(sf[:, j])
+                                if descriptions["shared_features"][k][j][0] > min_f:
+                                    descriptions["shared_features"][k][j][0] = min_f
+                                if descriptions["shared_features"][k][j][1] < max_f:
+                                    descriptions["shared_features"][k][j][1] = max_f
+                    else:
+                        for j in range(shared_features_batch.shape[1]):
+                            min_f = np.min(shared_features_batch[:, j])
+                            max_f = np.max(shared_features_batch[:, j])
+                            if descriptions["shared_features"][j][0] > min_f:
+                                descriptions["shared_features"][j][0] = min_f
+                            if descriptions["shared_features"][j][1] < max_f:
+                                descriptions["shared_features"][j][1] = max_f
+
+                if items_features_batch is not None:
+                    if isinstance(items_features_batch, tuple):
+                        for k, it in enumerate(items_features_batch):
+                            for j in range(it.shape[2]):
+                                min_f = np.min(it[:, :, j])
+                                max_f = np.max(it[:, :, j])
+                                if descriptions["items_features"][k][j][0] > min_f:
+                                    descriptions["items_features"][k][j][0] = min_f
+                                if descriptions["items_features"][k][j][1] < max_f:
+                                    descriptions["items_features"][k][j][1] = max_f
+                    else:
+                        for j in range(items_features_batch.shape[2]):
+                            min_f = np.min(items_features_batch[:, :, j])
+                            max_f = np.max(items_features_batch[:, :, j])
+                            if descriptions["items_features"][j][0] > min_f:
+                                descriptions["items_features"][j][0] = min_f
+                            if descriptions["items_features"][j][1] < max_f:
+                                descriptions["items_features"][j][1] = max_f
+
+        return descriptions

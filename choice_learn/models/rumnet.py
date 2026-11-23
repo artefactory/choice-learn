@@ -2,8 +2,9 @@
 
 import tensorflow as tf
 
-import choice_learn.tf_ops as tf_ops
 from choice_learn.models.base_model import ChoiceModel
+
+from ..utils.losses import CustomCategoricalCrossEntropy
 
 
 def create_ff_network(
@@ -584,7 +585,7 @@ class PaperRUMnet(ChoiceModel):
             l2_regularization_coeff=self.l2_regularization_coef,
         )
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(
+        self.loss = CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=self.label_smoothing,
             epsilon=self.logmin,
@@ -964,7 +965,7 @@ class GPURUMnet(PaperRUMnet):
             width=self.width_u, depth=self.depth_u, add_last=True
         )
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(
+        self.loss = CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
         self.time_dict = {}

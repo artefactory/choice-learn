@@ -7,7 +7,9 @@ import pandas as pd
 import tensorflow as tf
 import tqdm
 
-import choice_learn.tf_ops as tf_ops
+import choice_learn.utils.tf_ops as tf_ops
+
+from ..utils.losses import CustomCategoricalCrossEntropy
 
 
 class BaseLatentClassModel:
@@ -71,8 +73,8 @@ class BaseLatentClassModel:
         self.lr = lr
         self.batch_size = batch_size
 
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0.0)
-        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+        self.loss = CustomCategoricalCrossEntropy(from_logits=False, label_smoothing=0.0)
+        self.exact_nll = CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=0.0,
             sparse=False,
