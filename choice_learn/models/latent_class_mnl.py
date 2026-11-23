@@ -5,8 +5,7 @@ import copy
 import numpy as np
 import tensorflow as tf
 
-import choice_learn.tf_ops as tf_ops
-
+from ..utils.losses import CustomCategoricalCrossEntropy
 from .conditional_logit import ConditionalLogit, MNLCoefficients
 from .latent_class_base_model import BaseLatentClassModel
 from .simple_mnl import MultiNomialLogit
@@ -98,7 +97,7 @@ class LatentClassMNL(BaseLatentClassModel):
                 n_items_features,
                 seed=int(np.sum(seed_gen.next(ordered=False))),
             )
-            model.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+            model.exact_nll = CustomCategoricalCrossEntropy(
                 from_logits=False,
                 label_smoothing=0.0,
                 sparse=False,

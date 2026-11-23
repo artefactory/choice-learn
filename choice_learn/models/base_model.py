@@ -13,6 +13,7 @@ import tqdm
 
 import choice_learn.utils.tf_ops as tf_ops
 from choice_learn.data import ChoiceDataset
+from choice_learn.utils.losses import CustomCategoricalCrossEntropy
 
 
 class ChoiceModel:
@@ -71,10 +72,10 @@ class ChoiceModel:
 
         # Loss function wrapping tf.keras.losses.CategoricalCrossEntropy
         # with smoothing and normalization options
-        self.loss = tf_ops.CustomCategoricalCrossEntropy(
+        self.loss = CustomCategoricalCrossEntropy(
             from_logits=False, label_smoothing=self.label_smoothing
         )
-        self.exact_nll = tf_ops.CustomCategoricalCrossEntropy(
+        self.exact_nll = CustomCategoricalCrossEntropy(
             from_logits=False,
             label_smoothing=0.0,
             sparse=False,
