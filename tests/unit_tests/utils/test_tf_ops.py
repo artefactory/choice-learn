@@ -53,6 +53,36 @@ def test_exponomial():
     truth = [1.65500e-02, 4.91656e-01, 1.38000e-04, 4.91656e-01]
     assert (np.abs(probabilities - truth) < 0.0001).all()
 
+    probabilities = exponomial_probabilities_with_availabilities(
+        items_logit_by_choice=u,
+        available_items_by_choice=None,
+    ).numpy()
+    assert (np.abs(np.sum(probabilities) - 1.0) < 0.0001).all()
+
+    truth = [1.65500e-02, 4.91656e-01, 1.38000e-04, 4.91656e-01]
+    assert (np.abs(probabilities - truth) < 0.0001).all()
+
+    u = [2.5, 4.0, 1.0, 4.0]
+
+    probabilities = exponomial_probabilities_with_availabilities(
+        items_logit_by_choice=[u, u], available_items_by_choice=None
+    ).numpy()
+    assert (np.abs(np.sum(probabilities[0]) - 1.0) < 0.0001).all()
+    assert (np.abs(np.sum(probabilities[1]) - 1.0) < 0.0001).all()
+
+    truth = [1.65500e-02, 4.91656e-01, 1.38000e-04, 4.91656e-01]
+    assert (np.abs(probabilities[0] - truth) < 0.0001).all()
+    assert (np.abs(probabilities[1] - truth) < 0.0001).all()
+
+    probabilities = exponomial_probabilities_with_availabilities(
+        items_logit_by_choice=[[1.5], [2.5]], available_items_by_choice=None
+    ).numpy()
+    assert (np.abs(np.sum(probabilities[0]) - 1.0) < 0.0001).all()
+    assert (np.abs(np.sum(probabilities[1]) - 1.0) < 0.0001).all()
+
+    assert (np.abs(probabilities[0] - np.array([[1.0]])) < 0.0001).all()
+    assert (np.abs(probabilities[1] - np.array([[1.0]])) < 0.0001).all()
+
 
 def test_exponomial_availabilities():
     """Test exponomial probabilities with availabilities."""
