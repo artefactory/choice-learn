@@ -21,6 +21,12 @@ def test_latent_simple_mnl():
     lc_model = LatentClassMNL(
         n_latent_classes=2, fit_method="mle", optimizer="lbfgs", epochs=1000, lbfgs_tolerance=1e-12
     )
+    lc_model.instantiate(
+        n_items=elec_dataset.get_n_items(),
+        n_shared_features=elec_dataset.get_n_shared_features(),
+        n_items_features=elec_dataset.get_n_items_features(),
+        seed=321,
+    )
     _, _ = lc_model.fit(elec_dataset)
     lc_model.compute_report(elec_dataset)
 

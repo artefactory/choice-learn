@@ -17,6 +17,7 @@ def test_cd_indexer():
         shared_features_by_choice=None, items_features_by_choice=items_features, choices=choices
     )
     assert dataset.batch[[0, 1]][0] is None
+    assert dataset.get_choices_batch([0, 1])[0] is None
     full_dataset = dataset.indexer.get_full_dataset()
     assert full_dataset[0] is None
     assert (
@@ -28,6 +29,7 @@ def test_cd_indexer():
         shared_features_by_choice=shared_features, items_features_by_choice=None, choices=choices
     )
     assert dataset.batch[[0, 1]][1] is None
+    assert dataset.get_choices_batch([0, 1])[1] is None
     full_dataset = dataset.indexer.get_full_dataset()
     assert full_dataset[1] is None
 
@@ -81,6 +83,11 @@ def test_cd_indexer():
     for val_1, val_2 in zip(dataset.batch[[0, 1]], dataset.get_choices_batch([0, 1])):
         assert (val_1 == val_2).all()
 
+    for val_1, val_2 in zip(
+        dataset.get_choices_batch(slice(0, 2, 1)), dataset.get_choices_batch([0, 1])
+    ):
+        assert (val_1 == val_2).all()
+
     # Test 1-D items_features with FeaturesStorage
     dataset = ChoiceDataset(
         shared_features_by_choice=shared_features,
@@ -102,6 +109,25 @@ def test_cd_indexer():
         dataset.batch[0][1] == np.array([[4.4, 3.3, 5.5], [2.2, 1.1, 6.6]], dtype=np.float32)
     ).all()
     assert dataset.batch[[0, 1]][1].shape == (2, 2, 3)
+
+
+def specific_test_get_choices_batch():
+    """Test the get_choices_batch method of the ChoiceDataset."""
+    shared_features = np.array([[0.0, 1.0], [2.0, 4.0]])
+    items_features = np.array([[[0.5, 0.4], [0.2, 0.3]], [[0.4, 0.5], [0.3, 0.2]]])
+    choices = [0, 1]
+    dataset = ChoiceDataset(
+        shared_features_by_choice=shared_features,
+        items_features_by_choice=items_features,
+        available_items_by_choice=np.array([[1.0, 0], [0.0, 1]]),
+        choices=choices,
+    )
+    assert (dataset.batch[[0, 1]][2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
+    full_dataset = dataset.indexer.get_full_dataset()
+    assert (full_dataset[2] == np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)).all()
+
+    for val_1, val_2 in zip(dataset.batch[[0, 1]], dataset.get_choices_batch([0, 1])):
+        assert (val_1 == val_2).all()
 
 
 def test_cd_indexer_w_fs():

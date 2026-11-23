@@ -79,9 +79,9 @@ nav:
       - Building a custom choice model and handling hyper-parameters: notebooks/introduction/4_model_customization.md
       - RUMnet model Usage: notebooks/models/rumnet.md
       - Latent Class MNLs Usage: notebooks/models/latent_class_model.md
+      - Latent Class MNL, another example: notebooks/models/latent_class_cars.md
       - A reproductive example, the logistic regression: notebooks/models/logistic_regression.md
       - Model Finetuning and general hyperparamters: notebooks/models/models_finetuning.md
-      - SHOPPER model Usage: notebooks/basket_models/shopper.md
       - TasteNet model Usage: notebooks/models/tastenet.md
       - HaloMNL model Usage: notebooks/models/halo_mnl.md
       - Learning MNL model Usage: notebooks/models/learning_mnl.md
@@ -90,6 +90,10 @@ nav:
       - Introduction data handling, the TripDataset: notebooks/basket_models/basket_data.md
       - Shopper model Usage: notebooks/basket_models/shopper.md
       - AleaCarta model Usage: notebooks/basket_models/alea_carta.md
+    - Various tutorials:
+      - Example of early stopping callback: notebooks/utils/callbacks.md
+      - Example of ReduceLROnPlateau callback: notebooks/utils/callbacks.md
+      - Example of Customizing callbacks: notebooks/utils/callbacks.md
     - Toolbox for choice modellers:
       - Optimizing a product assortment: notebooks/auxiliary_tools/assortment_example.md
   - References:

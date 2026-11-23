@@ -514,16 +514,12 @@ class ChoiceDatasetIndexer(Indexer):
             all choices
         """
         if self.choice_dataset.shared_features_by_choice is not None:
-            shared_features_by_choice = [
-                feat for feat in self.choice_dataset.shared_features_by_choice
-            ]
+            shared_features_by_choice = [*self.choice_dataset.shared_features_by_choice]
         else:
             shared_features_by_choice = None
 
         if self.choice_dataset.items_features_by_choice is not None:
-            items_features_by_choice = [
-                feat for feat in self.choice_dataset.items_features_by_choice
-            ]
+            items_features_by_choice = [*self.choice_dataset.items_features_by_choice]
         else:
             items_features_by_choice = None
 

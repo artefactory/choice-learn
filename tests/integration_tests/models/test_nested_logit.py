@@ -69,10 +69,12 @@ def test_fit_hc_formul_1():
         items_nests=[[0, 1, 2, 3], [4, 5, 6]],
         optimizer="lbfgs",
         shared_gammas_over_nests=True,
+        lbfgs_tolerance=1e-6,
     )
-
+    model.instantiate(choice_dataset=dataset, seed=321)
     _ = model.fit(dataset, get_report=True, verbose=1)
 
+    print(_)
     nll = model.evaluate(dataset) * len(dataset)
     assert nll < 180.0
     assert model.report.shape == (8, 5)

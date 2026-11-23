@@ -226,7 +226,6 @@ class MeanRank(tf.keras.metrics.Metric):
         )  # Shape: (batch_size, 2)
         item_ranks = tf.gather_nd(ranks, item_batch_indices)  # Shape: (batch_size,)
         float_rank = tf.cast(item_ranks, dtype=tf.float32)
-
         if batch is not None and self.average_on_trip:
             unique_trips, segment_ids = tf.unique(batch)
             batch_mr = tf.math.unsorted_segment_mean(

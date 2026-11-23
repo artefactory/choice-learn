@@ -1,5 +1,6 @@
 """Base Class for basket choice modeling."""
 
+import inspect
 import json
 import logging
 import os
@@ -947,12 +948,12 @@ class BaseBasketModel:
 
             for metric in exec_metrics:
                 # Use update_state, not append(metric(...))
-                if isinstance(metric, tf.keras.metrics.Metric):
-                    metric.update_state(y_true=data_batch[0], y_pred=predicted_probabilities)
-                else:
+                if "batch" in inspect.getfullargspec(metric.update_state).args:
                     metric.update_state(
                         y_true=data_batch[0], y_pred=predicted_probabilities, batch=identifier_batch
                     )
+                else:
+                    metric.update_state(y_true=data_batch[0], y_pred=predicted_probabilities)
         # After the loops, get the final results
         return {metric.name: metric.result() for metric in exec_metrics}
 
