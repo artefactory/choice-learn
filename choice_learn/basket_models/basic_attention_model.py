@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 import tensorflow as tf
 
-from ..tf_ops import NoiseConstrastiveEstimation, softmax_with_availabilities
+from ..utils.tf_ops import NoiseConstrastiveEstimation, softmax_with_availabilities
 from .base_basket_model import BaseBasketModel
 from .data.basket_dataset import TripDataset
 

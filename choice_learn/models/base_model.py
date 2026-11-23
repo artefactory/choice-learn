@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
-import choice_learn.tf_ops as tf_ops
+import choice_learn.utils.tf_ops as tf_ops
 from choice_learn.data import ChoiceDataset
 
 
